@@ -47,6 +47,10 @@ pub struct ModuleInfo {
     pub pattern: Pattern,
     /// One sentence a user would say, shown in the bar and used as the MCP description.
     pub summary: String,
+    /// Community modules only: path to the compiled `.wasm` component, relative to this
+    /// `module.toml`. When absent the host looks for `module.wasm` next to the manifest.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wasm: Option<String>,
 }
 
 /// The kind of control an option renders as.

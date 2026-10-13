@@ -6,7 +6,7 @@ usage: python3 bench.py swiftui|tauri|flutter /path/to/App.app
 import json, os, statistics, subprocess, sys, time, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PORTS = {"swiftui": 47811, "tauri": 47812, "flutter": 47813}
+PORTS = {"swiftui": 47811, "tauri": 47812, "flutter": 47813, "gpui": 47814}
 
 
 def get(port, path, timeout=30):

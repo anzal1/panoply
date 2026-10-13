@@ -1,0 +1,23 @@
+# What the module is. Panoply draws its screen, CLI command and MCP tool from this file.
+accepts = ["text/*"]
+outputs = ["text/plain"]
+
+[module]
+id = "text.uppercase"          # lowercase words joined by dots, unique
+name = "Uppercase text"
+version = "0.1.0"
+pattern = "A"                  # A to I, see docs/FLOWS.md. A = instant transform
+summary = "Turn a text file into UPPERCASE."
+# The compiled module is found at target/wasm32-wasip2/release/module.wasm by default.
+# Set `wasm = "path/to/file.wasm"` here only if you keep it somewhere else.
+
+# Options become form fields in the app and --opt flags in the CLI. Delete if you have none.
+[options.separator]
+type = "text"
+default = ""
+label = "Add to the end of every line"
+
+# Capabilities: the least possible by default. Only the files the user chose, no network.
+[capabilities]
+files = "chosen"
+network = false

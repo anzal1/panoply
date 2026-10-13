@@ -1,0 +1,17 @@
+# What the module is. Panoply draws its screen, CLI command and MCP tool from this file.
+accepts = ["*.csv"]
+outputs = ["application/json"]
+
+[module]
+id = "data.csv_to_json"        # lowercase words joined by dots, unique
+name = "CSV to JSON"
+version = "0.1.0"
+pattern = "A"                  # A to I, see docs/FLOWS.md. A = instant transform
+summary = "Turn a CSV file into a JSON array of objects. The first row is the headers."
+# The compiled module is found at target/wasm32-wasip2/release/module.wasm by default.
+# Set `wasm = "path/to/file.wasm"` here only if you keep it somewhere else.
+
+# Capabilities: the least possible by default. Only the files the user chose, no network.
+[capabilities]
+files = "chosen"
+network = false

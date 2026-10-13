@@ -1,0 +1,14 @@
+# Count lines, words and characters. Pattern I, inspect: reads, reports, writes nothing.
+accepts = ["text/*"]
+outputs = []
+
+[module]
+id = "text.word_count"
+name = "Word count"
+version = "0.1.0"
+pattern = "I"
+summary = "Count the lines, words and characters in a text file."
+
+[capabilities]
+files = "chosen"
+network = false

@@ -4,8 +4,8 @@ use panoply_manifest::Manifest;
 
 use crate::{ModuleError, RunContext};
 
-/// One module. Built-in modules implement this directly. WebAssembly modules will sit behind
-/// the same trait once the runtime lands.
+/// One module. Built-in modules implement this directly. Community modules sit behind the same
+/// trait through `panoply_wasm::WasmModule`.
 pub trait Module: Send + Sync {
     /// The module's manifest.
     fn manifest(&self) -> &Manifest;

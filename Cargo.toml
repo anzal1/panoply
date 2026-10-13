@@ -1,6 +1,9 @@
 [workspace]
 resolver = "3"
 members = ["crates/*"]
+# Module projects (templates, examples, kill-test output) are standalone Cargo projects that
+# build for wasm32-wasip2, so they stay out of the host workspace.
+exclude = ["modules", "crates/panoply-wasm/tests/fixtures"]
 
 [workspace.package]
 version = "0.0.1"
@@ -20,12 +23,17 @@ thiserror = "2"
 clap = { version = "4", features = ["derive"] }
 infer = "0.22"
 sha2 = "0.11"
+# Pinned to the 49 line. Only the runtime, the compiler and the component model are on:
+# no async, no GC, no profiler, no parallel compile threads.
+wasmtime = { version = "49", default-features = false, features = ["runtime", "cranelift", "winch", "component-model", "std"] }
+wasmtime-wasi = { version = "49", default-features = false, features = ["p2"] }
 
 panoply-core = { path = "crates/panoply-core" }
 panoply-manifest = { path = "crates/panoply-manifest" }
 panoply-convert = { path = "crates/panoply-convert" }
 panoply-host = { path = "crates/panoply-host" }
 panoply-mcp = { path = "crates/panoply-mcp" }
+panoply-wasm = { path = "crates/panoply-wasm" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
@@ -43,3 +51,8 @@ strip = true
 
 [profile.dev]
 debug = "line-tables-only"
+
+# Dependencies (wasmtime above all, which compiles every community module before it runs)
+# are optimized even in dev builds, so tests and the kill test measure real module speed.
+[profile.dev.package."*"]
+opt-level = 2

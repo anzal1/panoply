@@ -1,0 +1,797 @@
+# Image corpus. Edge cases follow docs/specs/id-and-image.md (IPC-1 to IPC-3): EXIF rotation, color profiles (Display P3, CMYK, 16-bit), HEIC with depth, animation, HDR gain maps, huge dimensions.
+#
+# One [[file]] table per sample. Files download into tests/corpus/cache/image/ (gitignored).
+#   id        stable id, used by fetch.py --id and by the panoply-bench corpus slices
+#   file      path under cache/image/
+#   url       where fetch.py gets it (commit-pinned or a stable archive URL); absent when generated
+#   license   SPDX id, or Public-Domain / LicenseRef-* with a note
+#   source    where the sample comes from
+#   sha256    pinned digest (empty only for generated files that are not byte-stable)
+#   size      bytes
+#   tags      edge cases the file covers; the vocabulary is shared by all five manifests
+#   why       the case it covers and the spec section that cares
+#   password  open password for encrypted samples, when one is needed
+#   tier      default, large or huge (generated only; generate.py --tier)
+
+[[file]]
+id = "img-exifori-landscape-1"
+file = "exif-orientation/landscape-1.jpg"
+source = "recurser/exif-orientation-examples (MIT)"
+url = "https://raw.githubusercontent.com/recurser/exif-orientation-examples/219294e144531b0c01247913cb58b6f5531b5081/Landscape_1.jpg"
+license = "MIT"
+sha256 = "a23b1b0eac8c5ee5ae0373d07984b8d57df152e6be363d2ab77b304285bcad81"
+size = 347327
+tags = ["exif-rotation", "orientation-1", "jpeg"]
+why = "Same photo stored with EXIF orientation 1, normal (top-left). IPC-1 requires all eight values to decode upright, including the mirrored 2, 4, 5 and 7."
+
+[[file]]
+id = "img-exifori-landscape-2"
+file = "exif-orientation/landscape-2.jpg"
+source = "recurser/exif-orientation-examples (MIT)"
+url = "https://raw.githubusercontent.com/recurser/exif-orientation-examples/219294e144531b0c01247913cb58b6f5531b5081/Landscape_2.jpg"
+license = "MIT"
+sha256 = "4fdadb01889abd7df4bfd24c4c3e9d12017ae8d9b21851fcabd4279f9500f925"
+size = 349209
+tags = ["exif-rotation", "orientation-2", "jpeg"]
+why = "Same photo stored with EXIF orientation 2, mirrored horizontally. IPC-1 requires all eight values to decode upright, including the mirrored 2, 4, 5 and 7."
+
+[[file]]
+id = "img-exifori-landscape-3"
+file = "exif-orientation/landscape-3.jpg"
+source = "recurser/exif-orientation-examples (MIT)"
+url = "https://raw.githubusercontent.com/recurser/exif-orientation-examples/219294e144531b0c01247913cb58b6f5531b5081/Landscape_3.jpg"
+license = "MIT"
+sha256 = "b151bf11b88398f7358a3a74bf8b7f96b9e436f3d4bb2f86034d1c412039d2d3"
+size = 348796
+tags = ["exif-rotation", "orientation-3", "jpeg"]
+why = "Same photo stored with EXIF orientation 3, rotated 180 degrees. IPC-1 requires all eight values to decode upright, including the mirrored 2, 4, 5 and 7."
+
+[[file]]
+id = "img-exifori-landscape-4"
+file = "exif-orientation/landscape-4.jpg"
+source = "recurser/exif-orientation-examples (MIT)"
+url = "https://raw.githubusercontent.com/recurser/exif-orientation-examples/219294e144531b0c01247913cb58b6f5531b5081/Landscape_4.jpg"
+license = "MIT"
+sha256 = "74e91f96c3b9464890a82650043f6a53dd141167854f8197b3f7997ba0e6fcc9"
+size = 348052
+tags = ["exif-rotation", "orientation-4", "jpeg"]
+why = "Same photo stored with EXIF orientation 4, mirrored vertically. IPC-1 requires all eight values to decode upright, including the mirrored 2, 4, 5 and 7."
+
+[[file]]
+id = "img-exifori-landscape-5"
+file = "exif-orientation/landscape-5.jpg"
+source = "recurser/exif-orientation-examples (MIT)"
+url = "https://raw.githubusercontent.com/recurser/exif-orientation-examples/219294e144531b0c01247913cb58b6f5531b5081/Landscape_5.jpg"
+license = "MIT"
+sha256 = "5fbfecd9244a37dd0826df446de84365295ad14d592ab7e6d1bf8b73fc364cff"
+size = 351275
+tags = ["exif-rotation", "orientation-5", "jpeg"]
+why = "Same photo stored with EXIF orientation 5, transposed (mirror plus 270 degrees). IPC-1 requires all eight values to decode upright, including the mirrored 2, 4, 5 and 7."
+
+[[file]]
+id = "img-exifori-landscape-6"
+file = "exif-orientation/landscape-6.jpg"
+source = "recurser/exif-orientation-examples (MIT)"
+url = "https://raw.githubusercontent.com/recurser/exif-orientation-examples/219294e144531b0c01247913cb58b6f5531b5081/Landscape_6.jpg"
+license = "MIT"
+sha256 = "9b344e9f0c869d8637ea22e672df9451d8d3cc1d2d0b291af3b284e538e5f124"
+size = 352727
+tags = ["exif-rotation", "orientation-6", "jpeg"]
+why = "Same photo stored with EXIF orientation 6, rotated 90 degrees clockwise. IPC-1 requires all eight values to decode upright, including the mirrored 2, 4, 5 and 7."
+
+[[file]]
+id = "img-exifori-landscape-7"
+file = "exif-orientation/landscape-7.jpg"
+source = "recurser/exif-orientation-examples (MIT)"
+url = "https://raw.githubusercontent.com/recurser/exif-orientation-examples/219294e144531b0c01247913cb58b6f5531b5081/Landscape_7.jpg"
+license = "MIT"
+sha256 = "a502346769a6adcf0a2f01bc20454eee008fbe859b7f31be29557a1a50f90a98"
+size = 351856
+tags = ["exif-rotation", "orientation-7", "jpeg"]
+why = "Same photo stored with EXIF orientation 7, transverse (mirror plus 90 degrees). IPC-1 requires all eight values to decode upright, including the mirrored 2, 4, 5 and 7."
+
+[[file]]
+id = "img-exifori-landscape-8"
+file = "exif-orientation/landscape-8.jpg"
+source = "recurser/exif-orientation-examples (MIT)"
+url = "https://raw.githubusercontent.com/recurser/exif-orientation-examples/219294e144531b0c01247913cb58b6f5531b5081/Landscape_8.jpg"
+license = "MIT"
+sha256 = "b89a4185fc8b8daa9313cb29957fc950e903e11714519af18862fb67417c39c2"
+size = 352067
+tags = ["exif-rotation", "orientation-8", "jpeg"]
+why = "Same photo stored with EXIF orientation 8, rotated 270 degrees clockwise. IPC-1 requires all eight values to decode upright, including the mirrored 2, 4, 5 and 7."
+
+[[file]]
+id = "img-avif-paris-exif-orientation-5"
+file = "libavif/paris-exif-orientation-5.jpg"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/paris_exif_orientation_5.jpg"
+license = "BSD-2-Clause"
+sha256 = "28dcca536b37386675d951462a2cc9d1a4693fbcb0db8fd5994c959e3eed6234"
+size = 13775
+tags = ["exif-rotation", "orientation-5", "jpeg"]
+why = "JPEG with EXIF orientation 5 (transpose) and nothing else, the smallest orientation sample for the lossless-rotate path."
+
+[[file]]
+id = "img-avif-hdr-p3-pq"
+file = "libavif/colors-hdr-p3-pq.avif"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/colors_hdr_p3.avif"
+license = "BSD-2-Clause"
+sha256 = "ec4b67fa129360f4b44768bdd1027fb32834d1a1f7e49ae53bed44c819def9c4"
+size = 26532
+tags = ["hdr", "display-p3", "pq", "avif", "10bit"]
+why = "HDR AVIF in Display P3 primaries with the PQ transfer function; HDR images must not be tone-clipped silently (specs/id-and-image.md HDR images)."
+
+[[file]]
+id = "img-avif-hdr-rec2020"
+file = "libavif/colors-hdr-rec2020.avif"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/colors_hdr_rec2020.avif"
+license = "BSD-2-Clause"
+sha256 = "9980e58ddf718a923f1738c34aad1c72f8e5795ec07e68f1a5f9bd216ca19740"
+size = 24065
+tags = ["hdr", "rec2020", "avif", "10bit"]
+why = "HDR AVIF with BT.2020 primaries; color conversion to sRGB for web targets must go through the declared primaries."
+
+[[file]]
+id = "img-avif-animated-8bpc"
+file = "libavif/colors-animated-8bpc.avif"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/colors-animated-8bpc.avif"
+license = "BSD-2-Clause"
+sha256 = "2f8683d21725261f37f86e115f0c212cc52d0fefd3a2ddfcc4fa648c1859906d"
+size = 1235
+tags = ["animated", "avif"]
+why = "Animated AVIF (image sequence); modules that do not support animation must say so, those that do must keep frame timing."
+
+[[file]]
+id = "img-avif-gainmap-avif"
+file = "libavif/seine-hdr-gainmap.avif"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/seine_hdr_gainmap_srgb.avif"
+license = "BSD-2-Clause"
+sha256 = "9bf9c6a7606951de07e4079cd63c2cfe379d95139cd99ab9142d8a6ee22d28c7"
+size = 122961
+tags = ["gain-map", "hdr", "avif"]
+why = "AVIF with a 10-bit base image and an 8-bit gain map as a separate image item (IPC-3). Resize and compress must keep or explicitly drop the map."
+
+[[file]]
+id = "img-avif-gainmap-jpeg"
+file = "libavif/seine-sdr-gainmap.jpg"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/seine_sdr_gainmap_srgb.jpg"
+license = "BSD-2-Clause"
+sha256 = "1aaf0a1afa91a485c13e4ad696a3da1fe1ddd2675417e3812a23a9d13f765262"
+size = 142972
+tags = ["gain-map", "hdr", "jpeg", "mpf"]
+why = "JPEG with a gain map in an MPF secondary image (Ultra HDR layout); lossless JPEG operations must carry the second image along."
+
+[[file]]
+id = "img-avif-apple-gainmap"
+file = "libavif/apple-gainmap.jpg"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/apple_gainmap_new.jpg"
+license = "BSD-2-Clause"
+sha256 = "492a94bd0636bcf15b3f560c68142a7783936c1597e78b0d0461d8be7fddc078"
+size = 50824
+tags = ["gain-map", "hdr", "jpeg", "apple"]
+why = "Apple style gain map in a JPEG (HDR photo from an iPhone); IPC-3 handling of Apple auxiliary maps."
+
+[[file]]
+id = "img-avif-png-icc-exif-xmp"
+file = "libavif/paris-icc-exif-xmp.png"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/paris_icc_exif_xmp.png"
+license = "BSD-2-Clause"
+sha256 = "308bb51c3338ed9519cdaaa79186b934a21d1748d94120ed0348eb4f193d0988"
+size = 153217
+tags = ["png", "icc", "exif", "xmp", "metadata"]
+why = "PNG carrying ICC, EXIF and XMP chunks; Privacy and Metadata modules must read and strip all three."
+
+[[file]]
+id = "img-avif-jpeg-extended-xmp"
+file = "libavif/dog-extended-xmp.jpg"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/dog_exif_extended_xmp_icc.jpg"
+license = "BSD-2-Clause"
+sha256 = "fc67748b1f04aba4ae38476adae70bd9c6157ee0d86db1e93c05aca5815b42e4"
+size = 3296423
+tags = ["jpeg", "xmp", "icc", "exif", "metadata", "photo"]
+why = "3 MB real photo with ICC, EXIF and extended XMP split across APP1 segments; the multi-segment case that naive metadata strippers miss."
+
+[[file]]
+id = "img-avif-grid-1x5"
+file = "libavif/grid-1x5.avif"
+source = "libavif tests/data (BSD-2-Clause)"
+url = "https://raw.githubusercontent.com/AOMediaCodec/libavif/c9cb32dbbaa3394d9f57afd2b4965ab0e56aaa62/tests/data/sofa_grid1x5_420.avif"
+license = "BSD-2-Clause"
+sha256 = "c9e04ff9d90d7093454750fa33b7543ee5479e0cfb151e2c3d2ce6a16c1651c1"
+size = 25409
+tags = ["avif", "grid", "tiled"]
+why = "Grid image of five tiles; decoders must stitch tiles and bands without holding the whole canvas twice."
+
+[[file]]
+id = "img-heic-apple-depth-portrait"
+file = "heic/apple-depth-portrait.heic"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif_other/pug.heic"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "1ddce96766efbfa0f6bdf634bdab26bdeff831393df8d67f4cdc7b7a7afebc67"
+size = 1299081
+tags = ["heic", "depth", "apple", "portrait", "photo"]
+why = "iPhone Portrait mode photo with Apple depthData metadata and a depth auxiliary image. IPC-3: we process the primary image only and the result card says the depth map was dropped."
+
+[[file]]
+id = "img-heic-display-p3"
+file = "heic/display-p3.heic"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif_other/arrow.heic"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "73f604d7353df4848505a1f45a5517f736857fe047372f95c2f3d671df92c22c"
+size = 792052
+tags = ["heic", "display-p3", "icc"]
+why = "HEIC tagged Display P3; conversion to sRGB for JPG and web targets must not desaturate or oversaturate (IPC-2)."
+
+[[file]]
+id = "img-heic-rotated-cw90"
+file = "heic/guitar-rotated-cw90.hif"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif_special/guitar_cw90.hif"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "f0d5e88be07b9d70a3715218ca612ccf45b126e5b4b42172dce14a62d2099932"
+size = 5156864
+tags = ["heic", "rotated", "irot", "photo"]
+why = "5 MB HEIC rotated with an irot box (no EXIF); the rotation must be applied at decode and not twice."
+
+[[file]]
+id = "img-heic-200mp-gainmap"
+file = "heic/200mp-gainmap.heic"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif_special/200MP.heic"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "4dd7209010986a50b1049e54de47ae2188faef6d548213a9799e11fae1a317c6"
+size = 2407522
+tags = ["heic", "huge-dimensions", "gain-map", "samsung", "display-p3"]
+why = "A 200 megapixel HEIC with a Samsung HDR gain map: the decode must go in tiles inside the 300 MB image cap, and the gain map is an auxiliary image."
+
+[[file]]
+id = "img-heic-spatial-photo"
+file = "heic/spatial-photo.heic"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif_other/spatial_photo.heic"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "ef941d328072a2df034adb3c3b46f41117606bfc8fcc100dff975d31f55ec028"
+size = 1274535
+tags = ["heic", "spatial", "stereo"]
+why = "Spatial photo sample (stereo content, per the upstream file name); primary image only, with a plain note about anything else dropped."
+
+[[file]]
+id = "img-heic-xiaomi"
+file = "heic/xiaomi.heic"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif_special/xiaomi.heic"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "cb5c7d9131931df4abd9bfe1c3de47617b68d1fae54a1c367fc5981ffea6aeed"
+size = 896013
+tags = ["heic", "android", "photo"]
+why = "HEIC written by a Xiaomi phone; checks decoders beyond the Apple files."
+
+[[file]]
+id = "img-heic-rgb-10bit"
+file = "heic/rgb-10bit.heif"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif/RGB_10__128x128.heif"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "7fbf1573c1e5c1693953b31bb287327c53eaefa74a6f1324e7391a08b3ed1e73"
+size = 11637
+tags = ["heic", "10bit"]
+why = "10-bit HEIF; high bit depth must not silently truncate to 8 on archival outputs."
+
+[[file]]
+id = "img-heic-alpha"
+file = "heic/alpha.heic"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif_other/nokia/alpha.heic"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "4dbbf50e1a0178261c46781bd764626fc75bf11549e744204c68ef212755c4c1"
+size = 443075
+tags = ["heic", "alpha", "aux-image"]
+why = "HEIC with an alpha auxiliary image (urn:mpeg:hevc:2015:auxid:1); transparency must be preserved when saving to PNG and WebP."
+
+[[file]]
+id = "img-heic-unsupported-depth"
+file = "heic/unsupported-depth.heic"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif_special/unsupported_depth_image.heic"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "0b421065e0ec70dde8dace2d300c4c27d2a49e3d19babd15673d626f3c9d3740"
+size = 698
+tags = ["heic", "depth", "aux-image", "tiny"]
+why = "Tiny file with a depth auxiliary image the reference decoder rejects; we must ignore the auxiliary image, not fail the whole file."
+
+[[file]]
+id = "img-heic-corrupted"
+file = "heic/corrupted.heic"
+source = "pillow_heif test images (BSD-3-Clause)"
+url = "https://raw.githubusercontent.com/bigcat88/pillow_heif/64dc06fa7e0142e9133b98ea0d85ffe99544d82f/tests/images/heif_corrupted/corrupted.heic"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "a3a2cc3c5367fb61e02f52330cab9568c469cc8e08f909ad24b7993add1f630e"
+size = 4785
+tags = ["heic", "broken"]
+why = "Corrupted HEIC; fail with a plain message and a next step, never a panic."
+
+[[file]]
+id = "img-turbo-testorig"
+file = "libjpeg-turbo/testorig.jpg"
+source = "libjpeg-turbo testimages (BSD-3-Clause, IJG, zlib)"
+url = "https://raw.githubusercontent.com/libjpeg-turbo/libjpeg-turbo/43ea809765004508d8da72ebe562cf570c6a62b2/testimages/testorig.jpg"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "acc6ec555d41d15b368320edaa3b20958ee6fa97cb6e4a18d1213d5ae8bec73b"
+size = 5770
+tags = ["jpeg", "baseline", "small"]
+why = "The reference 227x149 baseline JPEG every JPEG decoder is checked against; lossless rotate and transcode must be bit exact."
+
+[[file]]
+id = "img-turbo-arithmetic"
+file = "libjpeg-turbo/testimgari.jpg"
+source = "libjpeg-turbo testimages (BSD-3-Clause, IJG, zlib)"
+url = "https://raw.githubusercontent.com/libjpeg-turbo/libjpeg-turbo/43ea809765004508d8da72ebe562cf570c6a62b2/testimages/testimgari.jpg"
+license = "BSD-3-Clause"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "4672c7f08864cd0a8c73a4fa4b66ca32b635d38464551c1ecf06564ae8c89b38"
+size = 5126
+tags = ["jpeg", "arithmetic-coding"]
+why = "JPEG with arithmetic entropy coding, which many decoders refuse; we must either decode it or say so plainly."
+
+[[file]]
+id = "img-vips-ultra-hdr"
+file = "libvips/ultra-hdr.jpg"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/ultra-hdr.jpg"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "e647d3a151a23270ebc2ac2aee34d8ac259c396d0f167d858824794ffe54f86c"
+size = 1190669
+tags = ["gain-map", "hdr", "jpeg", "ultrahdr", "photo"]
+why = "A 1.2 MB 3840 by 2160 Ultra HDR JPEG (Adobe gain map metadata, second image in an MPF segment); Compress, Resize and Metadata strip must keep the gain map or say they dropped it (IPC-3)."
+
+[[file]]
+id = "img-vips-avif-17000"
+file = "libvips/avif-17000x17000.avif"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/17000x17000.avif"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "98fc16f4ee1c4980073cd398d74a4b2bff931cff32c3606e4bcdcd187b1f1e7a"
+size = 1340
+tags = ["avif", "huge-dimensions", "tiny", "dimension-bomb"]
+why = "1.3 KB file that declares a 17000 by 17000 image (289 megapixels): the decoder must refuse or tile it within the memory cap, never allocate 1 GB."
+
+[[file]]
+id = "img-vips-truncated-jpeg"
+file = "libvips/truncated.jpg"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/truncated.jpg"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "a62eceaf456650cd121817b741e57f95fa191a3e3b6ad6e437e1506b0189cc87"
+size = 10000
+tags = ["jpeg", "broken", "truncated"]
+why = "JPEG cut off at 10 KB; the decoder should return the rows it has and flag the file as damaged."
+
+[[file]]
+id = "img-vips-truncated-gif"
+file = "libvips/truncated.gif"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/truncated.gif"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "b985ae249e426f583eeccc3cfe5da326d9375b7555b68ebbc1e8dd191565fc77"
+size = 40524
+tags = ["gif", "broken", "truncated"]
+why = "Truncated GIF; frames before the cut should be kept."
+
+[[file]]
+id = "img-vips-apng-16bit"
+file = "libvips/apng-16bit.png"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/apng-16bit.png"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "b9d956f20f8de5cbd9c5d1b207c59cd3d01c5c45ad969dcda6e04d80851ad12b"
+size = 212
+tags = ["png", "16bit", "animated", "apng", "tiny"]
+why = "16-bit animated PNG; both depth and animation must survive a PNG to PNG pass."
+
+[[file]]
+id = "img-vips-gif-cogs"
+file = "libvips/cogs.gif"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/cogs.gif"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "d7f2f79d6e995018b1782b453e888642ca5e341f7528b9eb2174f3d62ed78e5f"
+size = 2759
+tags = ["gif", "animated"]
+why = "Animated GIF used as the baseline for GIF to video and GIF to WebP."
+
+[[file]]
+id = "img-vips-gif-dispose-previous"
+file = "libvips/dispose-previous.gif"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/dispose-previous.gif"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "bd0beae04d8688100541bec4cd87c87b51bb8ab2c9b7f257bc20a0e0e2011291"
+size = 1092
+tags = ["gif", "animated", "disposal"]
+why = "GIF using the restore-to-previous disposal method, the one most converters get wrong."
+
+[[file]]
+id = "img-vips-exr"
+file = "libvips/sample.exr"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/sample.exr"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "dd7355a2c2a694bae041500af4f61ae96bdc02a6e9474fa53d4e4ccef83c8774"
+size = 378570
+tags = ["hdr", "float", "exr", "lossless"]
+why = "OpenEXR floating point image; HDR values above 1.0 must be kept or tone mapped on purpose."
+
+[[file]]
+id = "img-vips-jp2"
+file = "libvips/world.jp2"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/world.jp2"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "ac78346a830a6bca8eeb99c56d45571dbbbde2e3994907102ff9a099d0bbad34"
+size = 63958
+tags = ["jpeg2000"]
+why = "JPEG 2000 image; a decoder fallback with its own memory profile."
+
+[[file]]
+id = "img-vips-tiff-subsampled"
+file = "libvips/subsampled.tif"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/subsampled.tif"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "264d4955898a35ae70af0ec6eed0dbc49d7929f6c18c92a4ed6198f6db396f4b"
+size = 72766
+tags = ["tiff", "ycbcr", "chroma-subsampling", "lzw"]
+why = "YCbCr TIFF with chroma subsampling and LZW compression, the layout older scanners and some cameras write; strip based streaming decode and the YCbCr to RGB conversion."
+
+[[file]]
+id = "img-vips-ico"
+file = "libvips/favicon.ico"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/favicon.ico"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "461350ef07af2b4376c277ba9cb62a98e535ef6a13760ebfacc82cf95d347acb"
+size = 7406
+tags = ["ico", "multi-resolution"]
+why = "Multi-resolution icon; Convert must choose the largest frame or export all, and say which."
+
+[[file]]
+id = "img-vips-svg"
+file = "libvips/logo.svg"
+source = "libvips test suite images (LGPL-2.1 repository)"
+url = "https://raw.githubusercontent.com/libvips/libvips/06564b0a4c3f473d0e0cb9f9977ab647888aa43d/test/test-suite/images/logo.svg"
+license = "LGPL-2.1"
+license_note = "Repository-level license (LGPL-2.1). Test data only, never linked or shipped; per-file provenance is not itemized upstream."
+sha256 = "0e2e46c26b8335bdca45a930af59366329e6fa66bf186ffeb4a90f2129c8f664"
+size = 4700
+tags = ["svg", "vector"]
+why = "SVG logo with a viewBox, written by Inkscape; the vector input path: rasterizing at a requested size must not depend on the host."
+
+[[file]]
+id = "img-pngsuite-gray-16bit"
+file = "pngsuite/basn0g16.png"
+source = "PngSuite by Willem van Schaik (permission to use, copy, modify and distribute for any purpose)"
+url = "http://www.schaik.com/pngsuite/basn0g16.png"
+license = "LicenseRef-PngSuite"
+license_note = "PngSuite.LICENSE: Permission to use, copy, modify and distribute these images for any purpose and without fee is hereby granted."
+attribution = "Willem van Schaik, PngSuite (c) 1996, 2011"
+sha256 = "1a1fe155f40c11d79350b3f84c7eb2b29719037e57073cb7ae2ab9e8323f9360"
+size = 167
+tags = ["png", "16bit", "grayscale"]
+why = "16-bit grayscale PNG; the deepest grayscale case. Resizing in linear light must keep more than 8 bits until the output encoder (IPC-2)."
+
+[[file]]
+id = "img-pngsuite-rgb-16bit"
+file = "pngsuite/basn2c16.png"
+source = "PngSuite by Willem van Schaik (permission to use, copy, modify and distribute for any purpose)"
+url = "http://www.schaik.com/pngsuite/basn2c16.png"
+license = "LicenseRef-PngSuite"
+license_note = "PngSuite.LICENSE: Permission to use, copy, modify and distribute these images for any purpose and without fee is hereby granted."
+attribution = "Willem van Schaik, PngSuite (c) 1996, 2011"
+sha256 = "1e1c28ec0ee5da6224404b4005076dd30e2335a1a80c0ca722046a245c4a2b3b"
+size = 302
+tags = ["png", "16bit"]
+why = "16-bit RGB PNG; compress and convert must not quantize to 8-bit silently on archival targets."
+
+[[file]]
+id = "img-pngsuite-rgba-16bit"
+file = "pngsuite/basn6a16.png"
+source = "PngSuite by Willem van Schaik (permission to use, copy, modify and distribute for any purpose)"
+url = "http://www.schaik.com/pngsuite/basn6a16.png"
+license = "LicenseRef-PngSuite"
+license_note = "PngSuite.LICENSE: Permission to use, copy, modify and distribute these images for any purpose and without fee is hereby granted."
+attribution = "Willem van Schaik, PngSuite (c) 1996, 2011"
+sha256 = "8f9d81060aebf4576461403c5057de7f23f73157016b659402b906df805845aa"
+size = 3435
+tags = ["png", "16bit", "alpha"]
+why = "16-bit RGBA PNG; alpha at 16 bits must not be thresholded."
+
+[[file]]
+id = "img-pngsuite-interlaced-gray-16bit"
+file = "pngsuite/basi0g16.png"
+source = "PngSuite by Willem van Schaik (permission to use, copy, modify and distribute for any purpose)"
+url = "http://www.schaik.com/pngsuite/basi0g16.png"
+license = "LicenseRef-PngSuite"
+license_note = "PngSuite.LICENSE: Permission to use, copy, modify and distribute these images for any purpose and without fee is hereby granted."
+attribution = "Willem van Schaik, PngSuite (c) 1996, 2011"
+sha256 = "d354026bdd0aa6ed7bedea7c92e5eef2ebbd4854848b8a0a48f562cc71bfe80f"
+size = 299
+tags = ["png", "16bit", "interlaced", "grayscale"]
+why = "Adam7 interlaced 16-bit gray; interlace must be undone before any resampling."
+
+[[file]]
+id = "img-pngsuite-transparent-16bit"
+file = "pngsuite/tbbn2c16.png"
+source = "PngSuite by Willem van Schaik (permission to use, copy, modify and distribute for any purpose)"
+url = "http://www.schaik.com/pngsuite/tbbn2c16.png"
+license = "LicenseRef-PngSuite"
+license_note = "PngSuite.LICENSE: Permission to use, copy, modify and distribute these images for any purpose and without fee is hereby granted."
+attribution = "Willem van Schaik, PngSuite (c) 1996, 2011"
+sha256 = "8fcfd031a5b716201854fdab25691feed6cd3ed7b713a51b94e1f43fc63fe0c1"
+size = 2041
+tags = ["png", "16bit", "transparency"]
+why = "16-bit RGB with a tRNS transparent color and a background chunk."
+
+[[file]]
+id = "img-pngsuite-odd-size-palette"
+file = "pngsuite/s05n3p02.png"
+source = "PngSuite by Willem van Schaik (permission to use, copy, modify and distribute for any purpose)"
+url = "http://www.schaik.com/pngsuite/s05n3p02.png"
+license = "LicenseRef-PngSuite"
+license_note = "PngSuite.LICENSE: Permission to use, copy, modify and distribute these images for any purpose and without fee is hereby granted."
+attribution = "Willem van Schaik, PngSuite (c) 1996, 2011"
+sha256 = "1b9e244a5c1d6cc9830391fff4eac565ada026d000e60faf7525c8add6bdc726"
+size = 129
+tags = ["png", "palette", "odd-dimensions"]
+why = "5 by 5 two-bit palette image; odd sizes and sub-byte pixels at the edge."
+
+[[file]]
+id = "img-pngsuite-broken-signature"
+file = "pngsuite/xs1n0g01.png"
+source = "PngSuite by Willem van Schaik (permission to use, copy, modify and distribute for any purpose)"
+url = "http://www.schaik.com/pngsuite/xs1n0g01.png"
+license = "LicenseRef-PngSuite"
+license_note = "PngSuite.LICENSE: Permission to use, copy, modify and distribute these images for any purpose and without fee is hereby granted."
+attribution = "Willem van Schaik, PngSuite (c) 1996, 2011"
+sha256 = "776701227c7094dd10b78f508430b8ea4f03471d072096382cbcca628dea1d2b"
+size = 164
+tags = ["png", "broken"]
+why = "First byte of the PNG signature damaged; must be rejected by sniffing, not decoded."
+
+[[file]]
+id = "img-pngsuite-broken-ihdr-crc"
+file = "pngsuite/xcrn0g04.png"
+source = "PngSuite by Willem van Schaik (permission to use, copy, modify and distribute for any purpose)"
+url = "http://www.schaik.com/pngsuite/xcrn0g04.png"
+license = "LicenseRef-PngSuite"
+license_note = "PngSuite.LICENSE: Permission to use, copy, modify and distribute these images for any purpose and without fee is hereby granted."
+attribution = "Willem van Schaik, PngSuite (c) 1996, 2011"
+sha256 = "3c0c2a68dd416a7be79400e0e2ceb358ba3191d5309d4bad9dd04b32ff6d5b60"
+size = 145
+tags = ["png", "broken"]
+why = "Bad CRC in a critical chunk (xcr: IHDR); decoders must flag corruption and not crash."
+
+[[file]]
+id = "img-raw-iphone-se-dng"
+file = "raw/Apple---iPhone-SE---16bit-4x3.dng"
+source = "raw.pixls.us (contributors released under CC0)"
+url = "https://raw.pixls.us/getfile.php/1207/nice/Apple%20-%20iPhone%20SE%20-%2016bit%20%284%3A3%29.dng"
+license = "CC0-1.0"
+sha256 = "7a2a9747a0cb1537007233ce7e8b7233c5ee641d683b7b3da29e22387994a0d7"
+size = 11115746
+tags = ["raw", "dng", "phone", "16bit"]
+why = "16-bit DNG from a phone; RAW to JPG/HEIC conversion through the OS decoder with the embedded profile."
+
+[[file]]
+id = "img-raw-pixel-7-pro-dng"
+file = "raw/Google---Pixel-7-Pro---16bit-4x3.dng"
+source = "raw.pixls.us (contributors released under CC0)"
+url = "https://raw.pixls.us/getfile.php/6168/nice/Google%20-%20Pixel%207%20Pro%20-%2016bit%20%284%3A3%29.dng"
+license = "CC0-1.0"
+sha256 = "6b921558944db5fdb4f1c63dc64919b6666ef700857a187e18500099c6e7c6c6"
+size = 12243982
+tags = ["raw", "dng", "phone", "16bit"]
+why = "Pixel DNG with its own opcode lists and a different color pipeline from Apple's."
+
+[[file]]
+id = "img-raw-canon-7d-sraw"
+file = "raw/Canon---EOS-7D---sRAW2-sRAW-3x2.CR2"
+source = "raw.pixls.us (contributors released under CC0)"
+url = "https://raw.pixls.us/getfile.php/129/nice/Canon%20-%20EOS%207D%20-%20sRAW2%20%28sRAW%29%20%283%3A2%29.CR2"
+license = "CC0-1.0"
+sha256 = "3789b1ba5d880613104637c40a06619cd9f3b54b0cf62d2d95b9f9e885edcf6e"
+size = 11062629
+tags = ["raw", "cr2", "camera"]
+why = "Canon sRAW (small raw) in CR2, a format whose decode path differs from full raw."
+
+[[file]]
+id = "img-commons-cmyk-tiff"
+file = "commons/cmyk-logo-300ppi.tif"
+source = "Wikimedia Commons: real CMYK TIFF with an embedded ICC profile"
+url = "https://upload.wikimedia.org/wikipedia/commons/2/2b/Logo-100prozent_cmyk_300ppi.tif"
+license = "CC-BY-SA-4.0"
+attribution = "SystemairEesti via Wikimedia Commons"
+sha256 = "5df018a488977bc822bad28b263a1663f83017cc94b1b434f7aa4edb219eb85d"
+size = 613760
+tags = ["cmyk", "tiff", "icc"]
+why = "A genuine CMYK TIFF with an embedded CMYK profile (the JPEGs on Commons that are named CMYK turned out to be RGB). IPC-2 conversion through lcms2 using the embedded profile."
+
+[[file]]
+id = "img-commons-animated-webp"
+file = "commons/animated-webp-sample.webp"
+source = "Wikimedia Commons: animated WebP with ANIM and ANMF chunks"
+url = "https://upload.wikimedia.org/wikipedia/commons/0/0b/AnimatedWebPSample.webp"
+license = "CC-BY-SA-4.0"
+attribution = "Hqwebsite via Wikimedia Commons"
+sha256 = "3f24267941a9253f49a7d8ab8401132fe868bcb229618a9970db4d3049303d29"
+size = 2930820
+tags = ["animated", "webp"]
+why = "Real animated WebP (68 animation chunks); WebP to GIF/video and frame extraction, and the plain refusal where animation is not kept."
+
+[[file]]
+id = "img-commons-gif-horse"
+file = "commons/muybridge-race-horse.gif"
+source = "Wikimedia Commons: public domain GIF animation"
+url = "https://upload.wikimedia.org/wikipedia/commons/0/05/Muybridge_race_horse_animated_184px.gif"
+license = "Public-Domain"
+sha256 = "b6b2d01837fe70230094010a2bd106d1f6b8e23f1370575e470402987d5a0244"
+size = 297201
+tags = ["gif", "animated", "public-domain"]
+why = "15 frame public domain GIF; frame delay handling and GIF to MP4 / WebP conversion."
+
+[[file]]
+id = "img-commons-panorama"
+file = "commons/an-teallach-panorama.jpg"
+source = "Wikimedia Commons: 10179 by 1400 panorama"
+url = "https://upload.wikimedia.org/wikipedia/commons/b/b8/An_Teallach_panorama.jpg"
+license = "Public-Domain"
+sha256 = "ec2a7983a37e47ac021bdd539bae8e4713e405b5e456746eb1149a31090645be"
+size = 3467681
+tags = ["jpeg", "panorama", "wide", "photo"]
+why = "A 10179 by 1400 panorama (Phase 0 corpus asks for panoramas); extreme aspect ratio exposes tile and band logic bugs in resize and rotate."
+
+[[file]]
+id = "img-commons-wide-nasa"
+file = "commons/day-earth-smiled.jpg"
+source = "Wikimedia Commons: NASA, 9000 by 3500"
+url = "https://upload.wikimedia.org/wikipedia/commons/4/4d/The_Day_the_Earth_Smiled_-_PIA17172.jpg"
+license = "Public-Domain"
+sha256 = "de3151e7c5c786215428e799da596356120cc8d09adb6c98d5af6a7bee034a08"
+size = 5007245
+tags = ["jpeg", "wide", "huge-dimensions", "photo"]
+why = "A 31 megapixel public domain NASA mosaic (5 MB); decode and resize inside the 300 MB cap."
+
+[[file]]
+id = "img-gen-png-16bit-rgba"
+file = "generated/rgba-16bit.png"
+source = "generated"
+generator = "png_16bit_rgba"
+license = "MIT OR Apache-2.0"
+sha256 = "8644ba9494512b45e591f0e040879b6e258645abdc9a338a7cc136b651d9293c"
+size = 2391788
+tags = ["png", "16bit", "alpha", "gradient"]
+why = "A smooth 16-bit RGBA gradient (4096 steps per channel) made so that any truncation to 8 bits shows as banding: the 16-bit round-trip detector."
+
+[[file]]
+id = "img-gen-png-display-p3"
+file = "generated/display-p3.png"
+source = "generated"
+generator = "png_display_p3"
+license = "MIT OR Apache-2.0"
+sha256 = "4a6bf29e1069823120498a81b7ae4bccde8edaa70469ffbb492b6f295fd957f4"
+size = 10753
+tags = ["png", "display-p3", "icc", "wide-gamut"]
+why = "Saturated Display P3 colors that sit outside sRGB, with a Display P3 ICC profile in an iCCP chunk; a converter that ignores the profile visibly desaturates it."
+
+[[file]]
+id = "img-gen-png-400mp"
+file = "generated/huge-20000x20000.png"
+source = "generated"
+generator = "png_huge_400mp"
+license = "MIT OR Apache-2.0"
+sha256 = "48a6221b9341342b10c66bc443e29ce0531a29dd0c46ac33435d8b2276a2f9ae"
+size = 11718304
+tags = ["png", "huge-dimensions", "stress"]
+why = "20000 by 20000 8-bit gray PNG (400 megapixels, about 400 MB decoded, a few MB on disk): a decoder that does not stream rows or bands blows the 300 MB cap."
+
+[[file]]
+id = "img-gen-tiff-cmyk"
+file = "generated/cmyk-8bit.tif"
+source = "generated"
+generator = "tiff_cmyk"
+license = "MIT OR Apache-2.0"
+sha256 = "55711c0b92ca6a157e6fd0314f47189009e4224f8bfd609fbfc951c06da54582"
+size = 3145910
+tags = ["tiff", "cmyk", "gradient"]
+why = "Uncompressed 8-bit CMYK TIFF with no profile; the fallback open CMYK profile path (IPC-2)."
+
+[[file]]
+id = "img-gen-tiff-16bit"
+file = "generated/rgb-16bit.tif"
+source = "generated"
+generator = "tiff_16bit_rgb"
+license = "MIT OR Apache-2.0"
+sha256 = "da37b84cd859abcc093b8c84bac394cee0d1951f8f24d0e0ce0aaa754dea3bd4"
+size = 2880168
+tags = ["tiff", "16bit"]
+why = "Uncompressed 16-bit RGB TIFF; 16-bit TIFF in and out."
+
+[[file]]
+id = "img-gen-jpeg-cmyk"
+file = "generated/cmyk-adobe.jpg"
+source = "generated"
+generator = "jpeg_cmyk"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["jpeg", "cmyk", "adobe-marker"]
+why = "CMYK JPEG with an Adobe APP14 marker: the inverted-CMYK case IPC-2 names, which decoders often render as a negative."
+requires = ["pillow"]
+
+[[file]]
+id = "img-gen-jpeg-display-p3"
+file = "generated/display-p3.jpg"
+source = "generated"
+generator = "jpeg_display_p3"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["jpeg", "display-p3", "icc", "wide-gamut"]
+why = "Display P3 JPEG with an embedded profile and saturated patches; the iPhone photo case in miniature."
+requires = ["pillow"]
+
+[[file]]
+id = "img-gen-jpeg-exif-gps"
+file = "generated/exif-gps-orientation6.jpg"
+source = "generated"
+generator = "jpeg_exif_gps"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["jpeg", "exif", "gps", "exif-rotation", "orientation-6", "privacy"]
+why = "JPEG with GPS coordinates, camera make and model, a timestamp and orientation 6: the Privacy scan must list the location and strip it, and rotation must be applied once."
+requires = ["pillow"]
+
+[[file]]
+id = "img-gen-webp-animated"
+file = "generated/animated.webp"
+source = "generated"
+generator = "webp_animated"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["webp", "animated"]
+why = "A 12 frame animated WebP with per-frame delays; permissively licensed counterpart of the Commons sample."
+requires = ["pillow"]

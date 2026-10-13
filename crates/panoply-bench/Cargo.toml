@@ -1,0 +1,28 @@
+[package]
+name = "panoply-bench"
+description = "Budget harness: runs a module over the test corpus and checks the FLOWS.md budgets"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "panoply_bench"
+path = "src/lib.rs"
+
+[[bin]]
+name = "panoply-bench"
+path = "src/main.rs"
+
+[dependencies]
+panoply-core.workspace = true
+panoply-host.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,266 @@
+# Video corpus. Edge cases follow docs/specs/video-and-audio.md: VFR phone video, HDR, 10-bit, rotated, multiple audio tracks, broken moov, long duration.
+#
+# One [[file]] table per sample. Files download into tests/corpus/cache/video/ (gitignored).
+#   id        stable id, used by fetch.py --id and by the panoply-bench corpus slices
+#   file      path under cache/video/
+#   url       where fetch.py gets it (commit-pinned or a stable archive URL); absent when generated
+#   license   SPDX id, or Public-Domain / LicenseRef-* with a note
+#   source    where the sample comes from
+#   sha256    pinned digest (empty only for generated files that are not byte-stable)
+#   size      bytes
+#   tags      edge cases the file covers; the vocabulary is shared by all five manifests
+#   why       the case it covers and the spec section that cares
+#   password  open password for encrypted samples, when one is needed
+#   tier      default, large or huge (generated only; generate.py --tier)
+
+[[file]]
+id = "vid-bbb-1080-h264"
+file = "blender/bbb-1080p-h264-10s.mp4"
+source = "test-videos.co.uk (Blender Foundation films, free to download and use as the originals are)"
+url = "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_10MB.mp4"
+license = "CC-BY-3.0"
+attribution = "Big Buck Bunny, (c) 2008 Blender Foundation, www.bigbuckbunny.org, CC BY 3.0"
+sha256 = "1bb2a62abfcb5c4bf2e9216b63ba715b358f22c9fa8e68ca7149c4788b906826"
+size = 10484984
+tags = ["h264", "1080p", "mp4", "animation"]
+why = "10 s of 1080p60 H.264 at 8.4 Mb/s; the standard Compress, Trim and GIF source, and a 60 fps case. Video memory must stay flat (hardware pipeline, streamed)."
+
+[[file]]
+id = "vid-bbb-360-h264"
+file = "blender/bbb-360p-h264-10s.mp4"
+source = "test-videos.co.uk (Blender Foundation films, free to download and use as the originals are)"
+url = "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4"
+license = "CC-BY-3.0"
+attribution = "Big Buck Bunny, (c) 2008 Blender Foundation, www.bigbuckbunny.org, CC BY 3.0"
+sha256 = "77145c94c11f3754207499158df22406e1fe7635553c1c86dc5e881dfeb32016"
+size = 991017
+tags = ["h264", "360p", "mp4", "small"]
+why = "1 MB low resolution clip for fast tests and for first-preview timing on a small file."
+
+[[file]]
+id = "vid-bbb-720-vp9"
+file = "blender/bbb-720p-vp9-10s.webm"
+source = "test-videos.co.uk (Blender Foundation films, free to download and use as the originals are)"
+url = "https://test-videos.co.uk/vids/bigbuckbunny/webm/vp9/720/Big_Buck_Bunny_720_10s_5MB.webm"
+license = "CC-BY-3.0"
+attribution = "Big Buck Bunny, (c) 2008 Blender Foundation, www.bigbuckbunny.org, CC BY 3.0"
+sha256 = "f4457bf8cee98b882c659f13883e58ad058d72b80516ecdf3f21b45ef70dd188"
+size = 5248447
+tags = ["vp9", "webm", "720p"]
+why = "VP9 in WebM: decode through the OS where it exists, else the shipped software decoder (specs/video-and-audio.md engine ladder)."
+
+[[file]]
+id = "vid-bbb-720-hevc"
+file = "blender/bbb-720p-hevc-10s.mp4"
+source = "test-videos.co.uk (Blender Foundation films, free to download and use as the originals are)"
+url = "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h265/720/Big_Buck_Bunny_720_10s_5MB.mp4"
+license = "CC-BY-3.0"
+attribution = "Big Buck Bunny, (c) 2008 Blender Foundation, www.bigbuckbunny.org, CC BY 3.0"
+sha256 = "c428adace9fa0f08c987e886bc9e888597970df8c8cb8ffe38dbc1a3f97a65ff"
+size = 5246673
+tags = ["hevc", "mp4", "720p"]
+why = "HEVC in MP4: hardware decode and encode via VideoToolbox, MediaCodec and Media Foundation."
+
+[[file]]
+id = "vid-sintel-720-h264"
+file = "blender/sintel-720p-h264-10s.mp4"
+source = "test-videos.co.uk (Blender Foundation films, free to download and use as the originals are)"
+url = "https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_5MB.mp4"
+license = "CC-BY-3.0"
+attribution = "Sintel, (c) Blender Foundation, durian.blender.org, CC BY 3.0"
+sha256 = "52f127a6e77a8544c80ef635f82fc1098615af1a8fc38b2c5c1bd10a740a7ee8"
+size = 5242780
+tags = ["h264", "720p", "mp4", "animation", "dark-scenes", "dangling-chapter-track"]
+why = "Dark, low key animation that exposes banding and rate control problems that bright Big Buck Bunny hides. ffprobe reports a referenced QuickTime chapter track that is missing: probing must warn and carry on."
+
+[[file]]
+id = "vid-sintel-trailer-480p"
+file = "blender/sintel-trailer-480p.mp4"
+source = "Blender Foundation downloads (Sintel trailer)"
+url = "https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4"
+license = "CC-BY-3.0"
+attribution = "Sintel, (c) Blender Foundation, durian.blender.org, CC BY 3.0"
+sha256 = "b670602fa00934ca27c4351bb0efe7ea7a07fae57284e44226025eeed7c51254"
+size = 4372373
+tags = ["h264", "aac", "480p", "mp4", "audio-video-sync", "trailer"]
+why = "The Sintel trailer with an AAC track, cuts and a music bed; audio and video sync through Trim, Join and Compress."
+
+[[file]]
+id = "vid-commons-phone-webm"
+file = "commons/phone-clip-vid20240601.webm"
+source = "Wikimedia Commons: clip recorded on a phone, transcoded to WebM"
+url = "https://upload.wikimedia.org/wikipedia/commons/0/06/VID20240601163749.mp4.webm"
+license = "CC0-1.0"
+sha256 = "5d83087e7fe53aa61db02e159adb10b46411ab75263a95d5814a09e24214a3d4"
+size = 5133995
+tags = ["phone", "vp9", "webm", "handheld"]
+why = "A handheld phone recording (the original was an MP4 named VID2024...): 1920 by 1080 VP9 at 29.92 fps (a non-integer rate), BT.601 color tags and Opus audio. Real world timing and motion, the closest openly licensed stand-in for a phone video."
+
+[[file]]
+id = "vid-commons-camera-ogv"
+file = "commons/camera-clip-mvi0131.ogv"
+source = "Wikimedia Commons: compact camera clip (MVI naming), Theora"
+url = "https://upload.wikimedia.org/wikipedia/commons/3/30/K%C3%B6rning_av_filhuggningsmaskin_MVI_0131.ogv"
+license = "CC0-1.0"
+sha256 = "3eef53a936f0315eec41cb1d20641d2b2289702ad9186ea894505d67d1b12e66"
+size = 2471650
+tags = ["theora", "ogv", "camera"]
+why = "320 by 240 Theora with Vorbis audio in Ogg from a stills camera movie mode, at 29.97 fps: a codec outside the usual set; Convert must route it through a decoder we ship or refuse with a plain message."
+
+[[file]]
+id = "vid-gen-vfr-phone"
+file = "generated/vfr-phone-portrait.mp4"
+source = "generated"
+generator = "vid_vfr_phone"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["vfr", "phone", "h264", "portrait", "aac"]
+why = "Variable frame rate H.264 (gaps between frames from 16.7 ms to 133 ms, 31.7 fps on average, like a phone under load) in 1080 by 1920 portrait with AAC audio. Trim, speed change and GIF must keep audio sync and never assume a constant frame rate."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-rotated-90"
+file = "generated/rotated-90-display-matrix.mp4"
+source = "generated"
+generator = "vid_rotated_90"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["rotated", "display-matrix", "h264", "phone"]
+why = "Landscape pixels with a 90 degree display matrix, the way phones store portrait video. Every module must apply the rotation (or keep the matrix) and report the displayed size, not the coded size."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-hdr10"
+file = "generated/hdr10-hevc-10bit.mp4"
+source = "generated"
+generator = "vid_hdr10"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["hdr", "hdr10", "hevc", "10bit", "bt2020", "pq"]
+why = "HEVC Main10 with BT.2020 primaries, PQ transfer and mastering display plus MaxCLL metadata: HDR must be detected, kept on HDR targets, and tone mapped (not washed out) when going to SDR."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-hlg"
+file = "generated/hlg-hevc-10bit.mp4"
+source = "generated"
+generator = "vid_hlg"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["hdr", "hlg", "hevc", "10bit", "bt2020"]
+why = "HLG HDR (the iPhone and broadcast flavor): different transfer function from HDR10, needs its own handling in the probe profile."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-h264-10bit"
+file = "generated/h264-high10-10bit.mp4"
+source = "generated"
+generator = "vid_h264_10bit"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["10bit", "h264", "high10"]
+why = "H.264 High 10 profile (yuv420p10le): many hardware decoders do not support it, so the plan must fall back or say so."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-av1"
+file = "generated/av1-svt.mp4"
+source = "generated"
+generator = "vid_av1"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["av1", "mp4"]
+why = "AV1 in MP4 (SVT-AV1); the decode path for AV1 on devices without hardware support."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-prores"
+file = "generated/prores-proxy-720p.mov"
+source = "generated"
+generator = "vid_prores"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["prores", "mov", "intraframe", "720p"]
+why = "ProRes Proxy in MOV: very high bitrate per second of video; Compress to H.264 is a big, valuable reduction."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-multi-audio"
+file = "generated/multi-audio-3-tracks-subs.mkv"
+source = "generated"
+generator = "vid_multi_audio"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["multi-audio", "subtitles", "mkv", "5.1", "mono", "stereo"]
+why = "One video, three audio tracks (stereo English, mono commentary, 5.1 French) and a subtitle track: Extract audio, Trim and Compress must let the user choose a track and keep the others by default."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-moov-at-end"
+file = "generated/moov-at-end.mp4"
+source = "generated"
+generator = "vid_moov_at_end"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["mp4", "moov-at-end", "no-faststart"]
+why = "Valid MP4 whose index (moov) comes after the media data, the way an interrupted-safe recorder or a plain ffmpeg run writes it; probing must seek to the end and a Fast start step should move it."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-broken-moov"
+file = "generated/broken-moov-truncated.mp4"
+source = "generated"
+generator = "vid_broken_moov"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["broken", "broken-moov", "truncated", "mp4"]
+why = "MP4 cut off before the moov box was written (a recording that died): the media data is intact but unindexed; Repair video must say what it recovered or fail plainly."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-interlaced-mpeg2"
+file = "generated/interlaced-mpeg2.ts"
+source = "generated"
+generator = "vid_interlaced_mpeg2"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["interlaced", "mpeg2", "ts", "576i"]
+why = "Interlaced MPEG-2 in a transport stream (top field first): Deinterlace must detect field order and Compress must not output combing."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-4k-hevc"
+file = "generated/4k-hevc-5s.mp4"
+source = "generated"
+generator = "vid_4k_hevc"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["4k", "hevc", "mp4", "high-bitrate"]
+why = "3840 by 2160 HEVC at a high bitrate: the 4K case for hardware paths and thermal limits."
+tier = "large"
+requires = ["ffmpeg"]
+
+[[file]]
+id = "vid-gen-1h-lowres"
+file = "generated/1h-lowres.mp4"
+source = "generated"
+generator = "vid_1h_lowres"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["long", "constant-memory", "h264", "aac"]
+why = "One hour of 320 by 180 video with an AAC track: peak memory must be the same as for a 10 s clip (FLOWS.md peak memory per job, constant for video regardless of length)."
+tier = "large"
+requires = ["ffmpeg"]

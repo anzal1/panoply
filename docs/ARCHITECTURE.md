@@ -55,12 +55,13 @@ bar, the app window, the right-click menu, the share sheet, the CLI and MCP.
 | `crates/panoply-core` | Job model, file sniffing, output naming, cancellation, budgets |
 | `crates/panoply-manifest` | `module.toml` schema and validation |
 | `crates/panoply-host` | Module trait, registry, capability guard, built-in modules |
+| `crates/panoply-wasm` | Community module runtime: wasmtime, the WIT interface (`wit/module.wit`), sandbox limits |
 | `crates/panoply-convert` | Conversion graph loader and router |
 | `crates/panoply-cli` | The `panoply` command |
 | `crates/panoply-mcp` | MCP tool definitions generated from manifests |
 | `crates/panoply-ffi` | Bindings for the native apps (Phase 2) |
 | `conversions/formats.py` | Source of truth for formats and converters; generates `docs/CONVERSIONS.md` and `crates/panoply-convert/data/graph.json` |
-| `modules/` | Module manifests, built-in and examples |
+| `modules/` | Module manifests: built-in examples, `template-rust/` (start here to write a module), `examples-wasm/` (finished community modules) |
 | `apps/` | Native apps per platform (Mac first) |
 | `docs/` | Vision, architecture, flows, modules, decisions, plan, specs, research |
 | `prototypes/` | Kill-test code that informed decisions (not shipped) |
@@ -76,7 +77,11 @@ A module is a manifest plus code.
   stated reason fails validation.
 - **Built-in modules** are native Rust in `panoply-host` for full speed.
 - **Community modules** compile to WebAssembly and run sandboxed: wasmtime on
-  desktop and Android, an interpreter on iOS (no JIT allowed there). Heavy
+  desktop and Android, an interpreter on iOS (no JIT allowed there). The
+  interface is `crates/panoply-wasm/wit/module.wit`: a module exports `run` and
+  can call only the host imports (read a chosen file by handle, write a new
+  output the host names, progress, cancelled). No file system, no network, 256
+  MB of memory, instant cancel, nothing resident between jobs. Heavy
   work never happens inside the sandbox; modules call host-provided engines
   (PDF, image, media, OCR) through imports, so a ten-line module runs at full
   native speed.

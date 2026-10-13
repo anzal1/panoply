@@ -1,0 +1,212 @@
+# Audio corpus. Edge cases follow docs/specs/video-and-audio.md: mono and stereo, clipping, many channels, high sample rate, broken files, long duration.
+#
+# One [[file]] table per sample. Files download into tests/corpus/cache/audio/ (gitignored).
+#   id        stable id, used by fetch.py --id and by the panoply-bench corpus slices
+#   file      path under cache/audio/
+#   url       where fetch.py gets it (commit-pinned or a stable archive URL); absent when generated
+#   license   SPDX id, or Public-Domain / LicenseRef-* with a note
+#   source    where the sample comes from
+#   sha256    pinned digest (empty only for generated files that are not byte-stable)
+#   size      bytes
+#   tags      edge cases the file covers; the vocabulary is shared by all five manifests
+#   why       the case it covers and the spec section that cares
+#   password  open password for encrypted samples, when one is needed
+#   tier      default, large or huge (generated only; generate.py --tier)
+
+[[file]]
+id = "aud-commons-lachmoeweisma-flac"
+file = "commons/lachmoeweisma.flac"
+source = "Wikimedia Commons: field recording, FLAC"
+url = "https://upload.wikimedia.org/wikipedia/commons/6/6b/Lachmoeweisma20052019.flac"
+license = "CC0-1.0"
+sha256 = "cd53a05924b02513cee5ccef00f8b4bc9cc4d90fdc87446202a695823c2af21b"
+size = 1574169
+tags = ["flac", "lossless", "field-recording"]
+why = "A real FLAC field recording: lossless decode, metadata block handling and FLAC to MP3/AAC at a size target."
+
+[[file]]
+id = "aud-commons-glocken-flac"
+file = "commons/glockenweihe.flac"
+source = "Wikimedia Commons: bell consecration recording, FLAC"
+url = "https://upload.wikimedia.org/wikipedia/commons/5/5a/Sch%C3%B6nheide_Glockenweihe_Januar_2013.flac"
+license = "CC0-1.0"
+sha256 = "0c563965a86b422c695892d0dae07b458d200d8b08f741d1a9d01ead37588337"
+size = 1897525
+tags = ["flac", "lossless", "mono", "8khz", "field-recording"]
+why = "175 s of 8 kHz mono FLAC (bells): a low sample rate lossless file, so upsampling to 44.1 kHz, loudness normalization and size estimates are tested on narrowband material."
+
+[[file]]
+id = "aud-commons-netaji-ogg"
+file = "commons/netaji-1943.ogg"
+source = "Wikimedia Commons: 1943 speech, Ogg Vorbis"
+url = "https://upload.wikimedia.org/wikipedia/commons/6/6c/Speech_of_Netaji_Subhas_Chandra_Bose_Tokyo_1943.ogg"
+license = "CC0-1.0"
+sha256 = "6ed2068e155e362ac5eaf208e2c3eaf3247af3b63697a514aea8fe64a45f5532"
+size = 394659
+tags = ["ogg", "vorbis", "stereo", "speech", "archival"]
+why = "53 s of archival speech with noise and a narrow band, stored as two channels at 59 kb/s; Denoise, Normalize, mono detection and speech-to-text on poor audio."
+
+[[file]]
+id = "aud-commons-agnew-ogg"
+file = "commons/agnew-speech.ogg"
+source = "Wikimedia Commons: 1970 speech excerpt, Ogg Vorbis"
+url = "https://upload.wikimedia.org/wikipedia/commons/7/7a/Spiro_Agnew_speech_on_media_excerpt.ogg"
+license = "Public-Domain"
+sha256 = "4c8e4184931ef517e9ffbd379f4d5d6cd4d7372bdd0dc79164f865e0acc5ab3b"
+size = 860904
+tags = ["ogg", "vorbis", "stereo", "speech", "public-domain"]
+why = "71 s public domain speech excerpt at 97 kb/s stereo; Trim silence and transcription samples."
+
+[[file]]
+id = "aud-commons-alaa-wav"
+file = "commons/alaa1.wav"
+source = "Wikimedia Commons: short word recording, WAV"
+url = "https://upload.wikimedia.org/wikipedia/commons/b/b6/Alaa1.wav"
+license = "CC0-1.0"
+sha256 = "322728e6d71288c219919579376112d80cf0d8f5df82212af8c6bf285a4c3988"
+size = 229740
+tags = ["wav", "pcm", "short", "mono"]
+why = "A 2.6 s 16-bit 44.1 kHz mono PCM WAV clip: very short input for module start and first preview timing."
+
+[[file]]
+id = "aud-commons-1915-mp3"
+file = "commons/stay-down-here-1915.mp3"
+source = "Wikimedia Commons: 1915 acoustic recording, MP3"
+url = "https://upload.wikimedia.org/wikipedia/commons/2/2c/Stay_Down_Here_Where_You_Belong_%281915%2C_Burr%29.mp3"
+license = "Public-Domain"
+sha256 = "7727db92e45ab2fba3997ecd396d19230a8b6d98208f097ce91729be04cb2910"
+size = 2803721
+tags = ["mp3", "archival", "stereo", "long"]
+why = "175 s of 1915 acoustic-era recording as 128 kb/s MP3: heavy surface noise and a limited band, the vintage restoration case, and the longest real MP3 here."
+
+[[file]]
+id = "aud-commons-recorder-mp3"
+file = "commons/recorder-improvisation.mp3"
+source = "Wikimedia Commons: recorder improvisation, MP3"
+url = "https://upload.wikimedia.org/wikipedia/commons/b/bb/Piermic_-_Improvisation_with_Sopranino_Recorder_%282015%29.mp3"
+license = "CC0-1.0"
+sha256 = "3f4cd70ef98bbff1e592b4b96f0fa556f94d49da4ec4c3bbc55155684053d43e"
+size = 555278
+tags = ["mp3", "music", "tonal", "stereo", "high-bitrate"]
+why = "24 s of clean tonal music at 185 kb/s stereo for pitch and tempo changes, and for MP3 to AAC without audible damage."
+
+[[file]]
+id = "aud-commons-opus-7kbps"
+file = "commons/speech-opus-7kbps.opus"
+source = "Wikimedia Commons: 7 kbps Opus speech"
+url = "https://upload.wikimedia.org/wikipedia/commons/9/96/Speech_12dB_opus_7kbps.opus"
+license = "CC-BY-3.0"
+attribution = "IETF / OPUS Codec working group via Wikimedia Commons"
+sha256 = "a8ac5f3019f070de83323daf7fd2a010efa8d29e588eb08ae817a8f7f1aac129"
+size = 9657
+tags = ["opus", "speech", "low-bitrate", "mono"]
+why = "10.8 s mono Opus at 7 kb/s: the lowest bitrate Opus path, and Opus in Ogg for the probe profile."
+
+[[file]]
+id = "aud-gen-mono-sine-wav"
+file = "generated/mono-440hz.wav"
+source = "generated"
+generator = "aud_mono_sine"
+license = "MIT OR Apache-2.0"
+sha256 = "fba3647661bf238f3302a9ce44cd72f6ed61459a36152abc549242368c7be2b1"
+size = 441044
+tags = ["wav", "mono", "pcm", "sine"]
+why = "5 s mono 440 Hz PCM: the mono baseline; mono to stereo must duplicate, stereo to mono must not clip on sum."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "aud-gen-stereo-pan-flac"
+file = "generated/stereo-lr-tones.flac"
+source = "generated"
+generator = "aud_stereo_pan"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["flac", "stereo", "lossless"]
+why = "Left 440 Hz, right 880 Hz: channels must stay on their sides through every conversion, and a mono downmix must contain both."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "aud-gen-clipped-wav"
+file = "generated/clipped-overdriven.wav"
+source = "generated"
+generator = "aud_clipped"
+license = "MIT OR Apache-2.0"
+sha256 = "3be3be7e1643a1c902603d920cb4bbc36ae86f013f70636b1edd31f0995bc2ae"
+size = 441044
+tags = ["wav", "clipping", "loud", "mono"]
+why = "A sine driven 6 dB past full scale and hard clipped, so thousands of samples sit at the rails: the clipping detector must flag it, and Normalize must not make it louder."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "aud-gen-24bit-96k-wav"
+file = "generated/stereo-24bit-96khz.wav"
+source = "generated"
+generator = "aud_24bit_96k"
+license = "MIT OR Apache-2.0"
+sha256 = "dc9a2e20431a704193639ab16777b77aa471b4e7875f32be119ad143f7e5ecb2"
+size = 1728044
+tags = ["wav", "24bit", "96khz", "stereo", "hi-res"]
+why = "24-bit 96 kHz stereo: sample rate and bit depth conversion, and the size warning before an archival WAV becomes MP3."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "aud-gen-5-1-flac"
+file = "generated/surround-5-1.flac"
+source = "generated"
+generator = "aud_surround"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["flac", "surround", "6-channels"]
+why = "Six distinct channels with channel layout 5.1; downmix to stereo and per-channel extraction."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "aud-gen-mp3-cover-art"
+file = "generated/tagged-cover-art.mp3"
+source = "generated"
+generator = "aud_mp3_cover"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["mp3", "id3", "cover-art", "metadata", "stereo"]
+why = "MP3 with ID3v2 title, artist, album, track number and an embedded cover picture; Convert and Trim must carry tags and art, and Privacy scan lists them."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "aud-gen-m4a-aac"
+file = "generated/aac-lc-stereo.m4a"
+source = "generated"
+generator = "aud_m4a"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["m4a", "aac", "stereo", "mp4-audio"]
+why = "AAC-LC in M4A with chapter markers; chapters must survive a trim."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "aud-gen-truncated-mp3"
+file = "generated/truncated.mp3"
+source = "generated"
+generator = "aud_truncated_mp3"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["mp3", "broken", "truncated"]
+why = "MP3 cut in the middle of a frame at 60 percent: decode must return the audio it has and report the damage plainly."
+requires = ["ffmpeg"]
+
+[[file]]
+id = "aud-gen-3h-flac"
+file = "generated/3-hours-tone.flac"
+source = "generated"
+generator = "aud_3h_flac"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["flac", "long", "constant-memory"]
+why = "Three hours of 16 kHz mono audio: peak memory must be identical to a 10 s clip (FLOWS.md, constant for audio regardless of length)."
+tier = "large"
+requires = ["ffmpeg"]

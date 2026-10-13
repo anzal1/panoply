@@ -1,0 +1,22 @@
+[package]
+name = "csv-to-json"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# The compiled file is always target/wasm32-wasip2/release/module.wasm, whatever the
+# package is called, so module.toml never needs the file name.
+[lib]
+name = "module"
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = "0.62"
+# preserve_order keeps the columns in header order in the JSON output.
+serde_json = { version = "1", features = ["preserve_order"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true
+panic = "abort"

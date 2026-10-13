@@ -1,0 +1,14 @@
+# Tries to open a network connection. Used only by the sandbox tests.
+accepts = ["*/*"]
+outputs = []
+
+[module]
+id = "test.netcaller"
+name = "Net caller"
+version = "0.1.0"
+pattern = "I"
+summary = "Tries to reach the network, which must be refused before it runs."
+
+[capabilities]
+files = "chosen"
+network = false

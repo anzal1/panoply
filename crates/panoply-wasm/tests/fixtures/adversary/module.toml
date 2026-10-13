@@ -1,0 +1,18 @@
+# A deliberately badly behaved module, used only by the sandbox tests.
+accepts = ["*/*"]
+outputs = ["*/*"]
+
+[module]
+id = "test.adversary"
+name = "Adversary"
+version = "0.1.0"
+pattern = "A"
+summary = "Misbehaves on request, to prove the sandbox holds."
+
+[options.mode]
+type = "text"
+default = "ok"
+
+[capabilities]
+files = "chosen"
+network = false

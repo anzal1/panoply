@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Ada Lovelace",
+    "age": "36",
+    "city": "London",
+    "note": "Wrote the first program, in 1843"
+  },
+  {
+    "name": "Alan Turing",
+    "age": "41",
+    "city": "Wilmslow",
+    "note": ""
+  },
+  {
+    "name": "Grace Hopper",
+    "age": "85",
+    "city": "New York, NY",
+    "note": "Compiler pioneer"
+  }
+]

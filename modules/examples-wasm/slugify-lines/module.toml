@@ -1,0 +1,20 @@
+# Turn every line of a text file into a URL-friendly slug. Pattern A, instant transform.
+accepts = ["text/*"]
+outputs = ["text/plain"]
+
+[module]
+id = "text.slugify_lines"
+name = "Slugify lines"
+version = "0.1.0"
+pattern = "A"
+summary = "Turn every line of a text file into a clean lowercase slug."
+
+[options.separator]
+type = "choice"
+values = ["-", "_"]
+default = "-"
+label = "Separator"
+
+[capabilities]
+files = "chosen"
+network = false

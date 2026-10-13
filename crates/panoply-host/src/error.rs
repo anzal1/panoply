@@ -35,6 +35,16 @@ pub enum ModuleError {
     /// A module with this id is already registered.
     #[error("module already registered: {0}")]
     Duplicate(String),
+    /// A module stopped with its own plain-language message (community modules return
+    /// these, and so does the host when a file is not one the module accepts).
+    #[error("{0}")]
+    Failed(String),
+    /// A module could not be loaded: its manifest or its code is missing or invalid.
+    #[error("module could not be loaded: {0}")]
+    BadModule(String),
+    /// A module crashed or went past a sandbox limit (memory, for example).
+    #[error("module stopped by the sandbox: {0}")]
+    Sandbox(String),
 }
 
 impl ModuleError {
@@ -63,6 +73,9 @@ impl ModuleError {
             Self::BadOption(m) => format!("One of the options is not right: {m}."),
             Self::UnknownModule(id) => format!("There is no module called {id}."),
             Self::Duplicate(id) => format!("A module called {id} is already installed."),
+            Self::Failed(m) => m.clone(),
+            Self::BadModule(m) => format!("This module could not be loaded: {m}"),
+            Self::Sandbox(m) => format!("This module stopped before it finished: {m}"),
         }
     }
 
@@ -87,6 +100,15 @@ impl ModuleError {
             Self::BadOption(_) => "Change the option and run again.".into(),
             Self::UnknownModule(_) => "Run `panoply modules` to see what is installed.".into(),
             Self::Duplicate(_) => "Remove one of the two modules.".into(),
+            Self::Failed(_) => "Check the file and the options, then try again.".into(),
+            Self::BadModule(_) => {
+                "Reinstall the module, or ask its author for a fresh build.".into()
+            }
+            Self::Sandbox(_) => {
+                "Try again, or with a smaller file. If it keeps happening, report it to the \
+                 module author."
+                    .into()
+            }
         }
     }
 

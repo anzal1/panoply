@@ -1,0 +1,231 @@
+# Office corpus. Word, Excel, PowerPoint, OpenDocument: encrypted, comments, tracked changes, right-to-left, macros, legacy binary formats, very large sheets.
+#
+# One [[file]] table per sample. Files download into tests/corpus/cache/office/ (gitignored).
+#   id        stable id, used by fetch.py --id and by the panoply-bench corpus slices
+#   file      path under cache/office/
+#   url       where fetch.py gets it (commit-pinned or a stable archive URL); absent when generated
+#   license   SPDX id, or Public-Domain / LicenseRef-* with a note
+#   source    where the sample comes from
+#   sha256    pinned digest (empty only for generated files that are not byte-stable)
+#   size      bytes
+#   tags      edge cases the file covers; the vocabulary is shared by all five manifests
+#   why       the case it covers and the spec section that cares
+#   password  open password for encrypted samples, when one is needed
+#   tier      default, large or huge (generated only; generate.py --tier)
+
+[[file]]
+id = "off-poi-docx-rtl"
+file = "poi/rtl.docx"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/document/rtl.docx"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "d159b6ac6734f14a9ecf8e97ca5029bdcddbfae2d33ba0128aa774924e0b190d"
+size = 6838
+tags = ["docx", "rtl", "bidi", "ooxml"]
+why = "Word document with right-to-left paragraphs; PDF conversion and translation must keep direction and alignment (specs/pdf.md Convert in edge cases)."
+
+[[file]]
+id = "off-poi-docx-encrypted"
+file = "poi/encrypted-agile.docx"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/document/bug53475-password-is-pass.docx"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "c182f7825ae588fe1c28497588d1bded635a5bef7eb7370fd1c589233a6471d5"
+size = 29696
+tags = ["docx", "encrypted", "password", "ooxml", "agile-encryption"]
+why = "Word file with agile encryption (an OLE container around an encrypted package): sniffing must say 'password protected', not 'unknown file'."
+password = "pass"
+
+[[file]]
+id = "off-poi-docx-tracked-changes"
+file = "poi/tracked-changes.docx"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/document/delins.docx"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "7ecad102602586be7f1371f117fc567ea47f3ed0ca703b353e003002f1ff8d3f"
+size = 17720
+tags = ["docx", "tracked-changes", "ooxml"]
+why = "Document with 32 tracked insertions and 4 tracked deletions; conversion to PDF must show the document as the user sees it and warn about revisions (specs/pdf.md Convert in edge cases)."
+
+[[file]]
+id = "off-poi-docx-comments"
+file = "poi/comments.docx"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/document/testComment.docx"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "06b63b13f0b78a7179151af52c2282557c1ed204899feee9fcef4ca575344f97"
+size = 65298
+tags = ["docx", "comments", "ooxml"]
+why = "Word document with comments; Privacy scan lists comment authors, PDF conversion must say whether comments are printed."
+
+[[file]]
+id = "off-poi-docm-macro"
+file = "poi/macro.docm"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/document/SimpleMacro.docm"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "fd591958fcf5322f72c0a740e9606309c949254bda4c3d9bd966481ddf220563"
+size = 15517
+tags = ["docm", "macros", "ooxml", "vba"]
+why = "Macro enabled document; conversion must never run the macro, and Privacy scan must flag it."
+
+[[file]]
+id = "off-poi-doc-encrypted-rc4"
+file = "poi/encrypted-rc4.doc"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/document/password_tika_binaryrc4.doc"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "9231e724bb17a2e5f74815728d90b06e15684cf5fb2443a6fa24deebd33be952"
+size = 22016
+tags = ["doc", "encrypted", "password", "legacy-binary", "rc4"]
+why = "Legacy binary .doc with RC4 encryption; routes through a different reader than OOXML."
+password = "tika"
+
+[[file]]
+id = "off-poi-doc-legacy"
+file = "poi/sample.doc"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/document/SampleDoc.doc"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "717585c0a88f20862c86220163dd03da87cd743970354c6b29add32725f2e833"
+size = 27136
+tags = ["doc", "legacy-binary", "ole2"]
+why = "Plain legacy .doc, OLE2 compound file; the oldest Word format users still send."
+
+[[file]]
+id = "off-poi-xlsx-encrypted"
+file = "poi/encrypted.xlsx"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/spreadsheet/protected_passtika.xlsx"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "e58713895915de62efead6d99018245cc5490cddd2493c84508b4a67fb001581"
+size = 12800
+tags = ["xlsx", "encrypted", "password", "ooxml"]
+why = "Password protected workbook (OLE container around an encrypted package)."
+password = "tika"
+
+[[file]]
+id = "off-poi-xlsx-charts"
+file = "poi/charts.xlsx"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/spreadsheet/123233_charts.xlsx"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "47e9e8dea87494d17dbacce9aa3a9ec31cb2b26b288de05ca95c0a4622ca7f80"
+size = 12957
+tags = ["xlsx", "charts", "ooxml"]
+why = "Workbook with charts; PDF conversion must render charts and fit sheets to pages (specs/pdf.md Convert in edge cases)."
+
+[[file]]
+id = "off-poi-ods-sample"
+file = "poi/sample.ods"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/spreadsheet/SampleSS.ods"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "a551ef35d3faddae4bf135960bde419f4a0140f9398c2218614b089ae8a4b46f"
+size = 20391
+tags = ["ods", "odf", "opendocument"]
+why = "OpenDocument spreadsheet; the non-Microsoft family reaches Convert through its own reader."
+
+[[file]]
+id = "off-poi-pptx-sample"
+file = "poi/sample.pptx"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/slideshow/SampleShow.pptx"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "bfb4b2f07c9233afd2f32aa5781d849d0c7d225bf03721a10becf487b481d828"
+size = 39083
+tags = ["pptx", "ooxml"]
+why = "Presentation with several slide layouts; PDF conversion keeps slide order, notes handling and fonts."
+
+[[file]]
+id = "off-poi-pptx-smartart"
+file = "poi/smartart.pptx"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/slideshow/SmartArt.pptx"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "b97e4c6d2ee1dd4094f50f9043820610268dd452d7717c537f5456636adcc353"
+size = 41382
+tags = ["pptx", "smartart", "ooxml"]
+why = "Presentation using SmartArt; diagrams that converters often drop must render."
+
+[[file]]
+id = "off-poi-ppt-encrypted"
+file = "poi/encrypted.ppt"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/slideshow/Password_Protected-hello.ppt"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "8d0dd9f53317a720687cf5234af0c021fab665194b09b9bb56a3f71b495bf45a"
+size = 10752
+tags = ["ppt", "encrypted", "password", "legacy-binary"]
+why = "Legacy PowerPoint with a password; the ask-for-password path for binary Office."
+password = "hello"
+
+[[file]]
+id = "off-poi-ppt-legacy"
+file = "poi/sample.ppt"
+source = "Apache POI test data (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/poi/01fb738668df871190d4b9af339bab51a7ee199e/test-data/slideshow/SampleShow.ppt"
+license = "Apache-2.0"
+license_note = "Authored or contributed to the Apache POI project's own test suite; files crawled from third-party sites in that directory are not used."
+sha256 = "64275a6685b8f267827178037dcc59de927475e56385725916f4c6039c7ce7f6"
+size = 125440
+tags = ["ppt", "legacy-binary", "ole2"]
+why = "Legacy .ppt slide show, 125 KB, OLE2."
+
+[[file]]
+id = "off-gen-xlsx-500k-rows"
+file = "generated/500k-rows.xlsx"
+source = "generated"
+generator = "off_xlsx_500k"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["xlsx", "huge", "streaming", "ooxml"]
+why = "500,000 rows by 8 columns (35 MB zipped, 158 MB of sheet XML): conversion to CSV or PDF must stream rows and stay under 300 MB."
+tier = "large"
+
+[[file]]
+id = "off-gen-docx-bidi-tables"
+file = "generated/bidi-tables.docx"
+source = "generated"
+generator = "off_docx_bidi"
+license = "MIT OR Apache-2.0"
+sha256 = "60e558e2e278acd4586f677798022e52609261353b5538ed0b8a567896ae23cd"
+size = 1432
+tags = ["docx", "rtl", "bidi", "tables", "ooxml"]
+why = "Hebrew and Arabic paragraphs mixed with English numerals, inside tables and a right-to-left section; checks paragraph direction, numbering and mirrored table columns."
+
+[[file]]
+id = "off-gen-odt-sample"
+file = "generated/sample.odt"
+source = "generated"
+generator = "off_odt"
+license = "MIT OR Apache-2.0"
+sha256 = "26a6325f96f6e3e3c80aedfec03a7777d5996b24213db81be7039101657d9127"
+size = 1035
+tags = ["odt", "odf", "opendocument"]
+why = "OpenDocument text with headings, a list, a table and a footnote."
+
+[[file]]
+id = "off-gen-odp-sample"
+file = "generated/sample.odp"
+source = "generated"
+generator = "off_odp"
+license = "MIT OR Apache-2.0"
+sha256 = "b8012719061d326ba5b6e7547609da994d15397851f745f252902099b595761a"
+size = 1011
+tags = ["odp", "odf", "opendocument"]
+why = "OpenDocument presentation with three slides and speaker notes."

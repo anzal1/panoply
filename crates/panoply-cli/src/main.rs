@@ -2,12 +2,15 @@
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use clap::{Parser, Subcommand};
 use panoply_convert::Graph;
-use panoply_core::{CancelToken, JobSpec, sniff};
-use panoply_host::Registry;
+use panoply_core::{CancelToken, JobEvent, JobSpec, sniff};
+use panoply_host::{Module, ModuleError, Registry};
 use panoply_manifest::Manifest;
+use panoply_wasm::WasmModule;
 
 #[derive(Parser)]
 #[command(name = "panoply", version, about = "On-device file utilities")]
@@ -44,6 +47,19 @@ enum Command {
         #[arg(required = true)]
         files: Vec<PathBuf>,
     },
+    /// Run a community module: a module.toml with its compiled WebAssembly next to it
+    Run {
+        /// The module's module.toml, or the folder that holds it
+        module: PathBuf,
+        /// Files to run it on
+        files: Vec<PathBuf>,
+        /// An option as key=value, repeatable. See the module's module.toml for the names
+        #[arg(long = "opt", value_name = "KEY=VALUE")]
+        opts: Vec<String>,
+        /// Write outputs into this folder instead of next to each original
+        #[arg(long, value_name = "DIR")]
+        out: Option<PathBuf>,
+    },
     /// Print the version
     Version,
 }
@@ -55,6 +71,12 @@ fn main() -> ExitCode {
         Command::Sniff { file } => sniff_cmd(&file),
         Command::Modules => modules(),
         Command::Hash { files } => hash(files),
+        Command::Run {
+            module,
+            files,
+            opts,
+            out,
+        } => run_module(&module, files, &opts, out.as_deref()),
         Command::Version => {
             println!("panoply {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
@@ -136,13 +158,19 @@ fn sniff_cmd(file: &Path) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-/// Where example manifests live: `$PANOPLY_MODULES`, then `./modules/examples`, then the
+/// Where example manifests live: `$PANOPLY_MODULES`, then `./modules/<name>`, then the
 /// source tree this binary was built from.
-fn examples_dir() -> Option<PathBuf> {
+fn examples_dir(name: &str) -> Option<PathBuf> {
     let candidates = [
-        std::env::var_os("PANOPLY_MODULES").map(PathBuf::from),
-        Some(PathBuf::from("modules/examples")),
-        Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../modules/examples")),
+        std::env::var_os("PANOPLY_MODULES")
+            .map(PathBuf::from)
+            .filter(|_| name == "examples"),
+        Some(PathBuf::from("modules").join(name)),
+        Some(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../modules")
+                .join(name),
+        ),
     ];
     candidates.into_iter().flatten().find(|p| p.is_dir())
 }
@@ -160,7 +188,7 @@ fn modules() -> ExitCode {
         );
         builtin_ids.push(info.id.clone());
     }
-    if let Some(dir) = examples_dir() {
+    if let Some(dir) = examples_dir("examples") {
         let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
             .into_iter()
             .flatten()
@@ -185,7 +213,76 @@ fn modules() -> ExitCode {
             }
         }
     }
+    if let Some(dir) = examples_dir("examples-wasm") {
+        let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .map(|e| e.path().join("module.toml"))
+            .filter(|p| p.is_file())
+            .collect();
+        paths.sort();
+        for path in paths {
+            match Manifest::from_file(&path) {
+                Ok(m) => {
+                    let info = &m.module;
+                    println!(
+                        "{:<22}{:<22}{}  community (run with `panoply run {}`)",
+                        info.id,
+                        info.name,
+                        info.pattern.letter(),
+                        path.display()
+                    );
+                }
+                Err(e) => eprintln!("Skipped {}: {e}", path.display()),
+            }
+        }
+    }
     ExitCode::SUCCESS
+}
+
+fn run_module(module: &Path, files: Vec<PathBuf>, opts: &[String], out: Option<&Path>) -> ExitCode {
+    let result = (|| {
+        let wasm = WasmModule::load(module)?;
+        let options = panoply_wasm::options_from_pairs(wasm.manifest(), opts)?;
+        let spec = JobSpec {
+            module_id: wasm.manifest().module.id.clone(),
+            inputs: files,
+            options,
+        };
+        let mut registry = Registry::new();
+        registry.register(Arc::new(wasm))?;
+        // Progress is for jobs that take a while: stay quiet under 300 ms.
+        let started = Instant::now();
+        let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+        registry.run_job(&spec, out, CancelToken::new(), move |event| {
+            if let JobEvent::Progress { fraction, label } = event
+                && started.elapsed() > slow
+            {
+                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+            }
+        })
+    })();
+    report(result)
+}
+
+fn report(result: Result<panoply_host::JobOutcome, ModuleError>) -> ExitCode {
+    match result {
+        Ok(out) => {
+            for line in out.notes {
+                println!("{line}");
+            }
+            for path in out.outputs {
+                println!("wrote {}", path.display());
+            }
+            ExitCode::SUCCESS
+        }
+        Err(e) => {
+            eprintln!("{}", e.plain_message());
+            eprintln!("{}", e.next_step());
+            ExitCode::FAILURE
+        }
+    }
 }
 
 fn hash(files: Vec<PathBuf>) -> ExitCode {

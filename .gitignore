@@ -40,3 +40,7 @@ models-cache/
 prototypes/agent-killtest/tasks/*/fixtures/
 prototypes/agent-killtest/tasks/*/work/
 prototypes/agent-killtest/results/run-*-work/
+
+# Test corpus: files are fetched or generated on demand, only the manifests are committed
+tests/corpus/cache/
+tests/corpus/**/.part-*

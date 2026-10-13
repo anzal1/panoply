@@ -1,0 +1,547 @@
+# PDF corpus. Edge cases follow docs/specs/pdf.md: encrypted, signed, scanned, forms, huge, broken, right-to-left.
+#
+# One [[file]] table per sample. Files download into tests/corpus/cache/pdf/ (gitignored).
+#   id        stable id, used by fetch.py --id and by the panoply-bench corpus slices
+#   file      path under cache/pdf/
+#   url       where fetch.py gets it (commit-pinned or a stable archive URL); absent when generated
+#   license   SPDX id, or Public-Domain / LicenseRef-* with a note
+#   source    where the sample comes from
+#   sha256    pinned digest (empty only for generated files that are not byte-stable)
+#   size      bytes
+#   tags      edge cases the file covers; the vocabulary is shared by all five manifests
+#   why       the case it covers and the spec section that cares
+#   password  open password for encrypted samples, when one is needed
+#   tier      default, large or huge (generated only; generate.py --tier)
+
+[[file]]
+id = "pdf-qpdf-enc-r2-rc4-40"
+file = "qpdf/enc-r2-rc4-40.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/enc-R2%2CV1%2CU%3Dview%2CO%3Dmaster.pdf"
+license = "Apache-2.0"
+sha256 = "cbd0396c5af37a326cc829b3a031223accf5ea093119eaaa78bf4a386108ed14"
+size = 17134
+tags = ["encrypted", "password", "rc4"]
+why = "Standard security handler R2, RC4 40-bit, user and owner passwords differ. Covers the ask-for-password path on drop (specs/pdf.md Protect and unlock, Merge)."
+password = "view"
+
+[[file]]
+id = "pdf-qpdf-enc-r3-rc4-128"
+file = "qpdf/enc-r3-rc4-128.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/enc-R3%2CV2%2CU%3Dview%2CO%3Dmaster.pdf"
+license = "Apache-2.0"
+sha256 = "5c0683d687e2e020fe172b1dcb7c29fe94f67bc40f038fee2391de610053fc16"
+size = 17139
+tags = ["encrypted", "password", "rc4"]
+why = "Security handler R3, RC4 128-bit with distinct user and owner passwords; the most common legacy encryption in old archives."
+password = "view"
+
+[[file]]
+id = "pdf-qpdf-enc-r3-owner-only"
+file = "qpdf/enc-r3-owner-only.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/enc-R3%2CV2%2CO%3Dmaster.pdf"
+license = "Apache-2.0"
+sha256 = "d0e64612cf946dd19e7421fa3ee17b466b54c8f164b1f95986f14d8ee8e02ba9"
+size = 17144
+tags = ["encrypted", "restrictions"]
+why = "Owner password only: opens without a prompt but carries permission restrictions, which Protect and unlock must remove with no password (specs/pdf.md Protect and unlock edge cases)."
+
+[[file]]
+id = "pdf-qpdf-v4-aes-128"
+file = "qpdf/v4-aes-128.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/V4-aes.pdf"
+license = "Apache-2.0"
+sha256 = "1d8a812844b8d8c7ba085a627eb3b7ab52aa651c6143ca07315084220a113240"
+size = 16474
+tags = ["encrypted", "aes-128", "empty-user-password"]
+why = "V4 crypt filters with AES-128 (AESV2) and an empty user password, so it opens without a prompt but every string and stream is encrypted; Protect and unlock (remove password) must handle crypt filter dictionaries, not just RC4."
+
+[[file]]
+id = "pdf-qpdf-enc-r6-aes-256"
+file = "qpdf/enc-r6-aes-256.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/enc-XI-R6%2CV5%2CU%3Dview%2CO%3Dmaster.pdf"
+license = "Apache-2.0"
+sha256 = "96b9262bfacf1358c7a68ab46c11563677e858888950237fdac8f3a227210edf"
+size = 15670
+tags = ["encrypted", "password", "aes-256"]
+why = "R6 / V5 AES-256 with the ISO 32000-2 hash (SHA-2 key derivation), the modern default; our own encryption handler must match it."
+password = "view"
+
+[[file]]
+id = "pdf-qpdf-enc-r6-attachments"
+file = "qpdf/enc-r6-attachments.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/enc-XI-R6%2CV5%2CU%3Dattachment%2Cencrypted-attachments.pdf"
+license = "Apache-2.0"
+sha256 = "814df59a61f34da60df347ab1a268b6375d2b0de9058d33200d00b4b34e59a66"
+size = 17868
+tags = ["encrypted", "aes-256", "attachments"]
+why = "AES-256 file whose embedded attachments use their own crypt filter (name convention U=attachment; poppler does not enforce it, so this is the case where readers disagree). Attachments and Protect and unlock (remove password) must keep both layers right."
+password = "attachment"
+
+[[file]]
+id = "pdf-qpdf-digitally-signed"
+file = "qpdf/digitally-signed.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/digitally-signed.pdf"
+license = "Apache-2.0"
+sha256 = "05e969415b03d9782b0b132f147b86cb42eafddf6176aaf2710334a9cc643c3c"
+size = 68846
+tags = ["signed", "forms"]
+why = "A document carrying a certificate signature; merge, flatten, linearize and compress must warn that they break it (specs/pdf.md Merge, Flatten, Web optimize edge cases)."
+
+[[file]]
+id = "pdf-qpdf-form-filled-acrobat"
+file = "qpdf/form-filled-acrobat.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/form-filled-by-acrobat.pdf"
+license = "Apache-2.0"
+sha256 = "465e30fe69d3b53d883ea1f01ea56a225ff0498f231ecda6f6fc986b9c5676ff"
+size = 61841
+tags = ["forms", "acroform"]
+why = "AcroForm filled in Acrobat, so values and appearance streams both exist; Fill forms and Flatten must keep them consistent."
+
+[[file]]
+id = "pdf-qpdf-damaged-stream"
+file = "qpdf/damaged-stream.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/damaged-stream.pdf"
+license = "Apache-2.0"
+sha256 = "91e119f2db2e9f738f696ddacea90498d460b0afda0fcdf71bb6281fc5085819"
+size = 77635
+tags = ["broken"]
+why = "Valid structure with a damaged compressed stream; Repair must recover every other page and say which stream was lost."
+
+[[file]]
+id = "pdf-qpdf-bad-xref"
+file = "qpdf/bad-xref.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/bad-xref.pdf"
+license = "Apache-2.0"
+sha256 = "5895dfedf978f600b12e29643617dbb111869b60526d957878e349571e1467d1"
+size = 819
+tags = ["broken", "xref"]
+why = "Cross reference table does not match the objects; normal parse fails and Repair falls back to a full object scan."
+
+[[file]]
+id = "pdf-qpdf-not-a-pdf"
+file = "qpdf/not-a-pdf.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/bad1.pdf"
+license = "Apache-2.0"
+sha256 = "fe19778cf1ce280658154f2b9c01ffbccd825a23460141dcf3794e7a2c0eb629"
+size = 5
+tags = ["broken", "tiny"]
+why = "Five bytes with a .pdf name. Sniffing by bytes must reject it with a plain message instead of crashing (specs/pdf.md Repair, FLOWS.md sniffing)."
+
+[[file]]
+id = "pdf-qpdf-linearized"
+file = "qpdf/linearized.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/c-linearized.pdf"
+license = "Apache-2.0"
+sha256 = "135cee6bd018c06d40c8c46c4a0230b2799adb90f502e214a347b3855039a24e"
+size = 11325
+tags = ["linearized"]
+why = "A linearized (fast web view) file; Web optimize must detect it and do nothing, and Merge must drop the hint tables (specs/pdf.md Web optimize edge cases)."
+
+[[file]]
+id = "pdf-qpdf-image-streams"
+file = "qpdf/image-streams.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/image-streams.pdf"
+license = "Apache-2.0"
+sha256 = "d84a925580d8d336619d819edc5cdbf0fedcc9a87f64d145bca38411df0c69f1"
+size = 2970696
+tags = ["images", "large-ish"]
+why = "About 3 MB of image streams across 9 pages; first real memory and speed check for Compress and Extract images."
+
+[[file]]
+id = "pdf-qpdf-fax-ccitt"
+file = "qpdf/fax-ccitt.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/fax-decode-parms.pdf"
+license = "Apache-2.0"
+sha256 = "6cf3a42a79698eb9a6649d51a78647dccb05dd88dbc0b384b843618963f8755e"
+size = 1565966
+tags = ["scanned", "ccitt", "monochrome", "mixed-encodings", "images"]
+why = "Ten pages of images in mixed encodings: two 2500 by 3250 px, 300 dpi CCITT G4 bilevel pages (the shape of a fax or monochrome scan), plus indexed, JPEG and flate images. Compress and OCR must treat each encoding on its own terms and not re-encode bilevel pages wastefully."
+
+[[file]]
+id = "pdf-qpdf-inherited-rotate"
+file = "qpdf/inherited-rotate.pdf"
+source = "qpdf test suite (Apache-2.0)"
+url = "https://raw.githubusercontent.com/qpdf/qpdf/4eba95899886e851cc41d76886483b347612f2a8/qpdf/qtest/qpdf/inherited-rotate.pdf"
+license = "Apache-2.0"
+sha256 = "69cc42c34812790a88d8275d45ac9b0a72b9e5ad62aa70427d25caeee4a9f46a"
+size = 978
+tags = ["rotated", "page-tree"]
+why = "Rotation inherited from the page tree; Rotate and Reorder must compute the effective angle and never double rotate (specs/pdf.md Organize pages edge cases)."
+
+[[file]]
+id = "pdf-pdfjs-arabic-cid-truetype"
+file = "pdfjs/arabic-cid-truetype.pdf"
+source = "mozilla/pdf.js test/pdfs (Apache-2.0 repository)"
+url = "https://raw.githubusercontent.com/mozilla/pdf.js/6c71c0bf2670e38d689b9ed28cdd9c709e45b758/test/pdfs/ArabicCIDTrueType.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; the file was contributed to the project's test suite, per-file provenance is not itemized."
+sha256 = "1cad1de912ba29f89a6d8b08bc5b0f84382874ffedab2c8f9e05ef608c265bb1"
+size = 39370
+tags = ["rtl", "arabic", "cid-font"]
+why = "Arabic text in a CID TrueType font; logical order text extraction and right-to-left selection (specs/pdf.md OCR, Convert in, Stamps edge cases)."
+
+[[file]]
+id = "pdf-pdfjs-cmyk-jpeg"
+file = "pdfjs/cmyk-jpeg.pdf"
+source = "mozilla/pdf.js test/pdfs (Apache-2.0 repository)"
+url = "https://raw.githubusercontent.com/mozilla/pdf.js/6c71c0bf2670e38d689b9ed28cdd9c709e45b758/test/pdfs/cmykjpeg.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; the file was contributed to the project's test suite, per-file provenance is not itemized."
+sha256 = "659d6b19912f63db988b0b26b9bde0e6d8100667ef162051a4a84ea8e5b90272"
+size = 374080
+tags = ["cmyk", "images"]
+why = "A 200 by 150 CMYK JPEG embedded in a PDF; Extract images and Compress must convert through the profile (IPC-2) and not invert the colors."
+
+[[file]]
+id = "pdf-pdfjs-empty-protected"
+file = "pdfjs/empty-protected.pdf"
+source = "mozilla/pdf.js test/pdfs (Apache-2.0 repository)"
+url = "https://raw.githubusercontent.com/mozilla/pdf.js/6c71c0bf2670e38d689b9ed28cdd9c709e45b758/test/pdfs/empty_protected.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; the file was contributed to the project's test suite, per-file provenance is not itemized."
+sha256 = "69556af04215faec7da3e93e823c64f1b74679e52fd10379176f0e0462dd4b6c"
+size = 5605
+tags = ["encrypted", "restrictions", "aes-256", "empty-user-password"]
+why = "Acrobat AES-256 file with an owner password only: opens without a prompt but forbids copy and change. Protect and unlock must lift the restrictions without asking for any password (specs/pdf.md Protect and unlock edge cases)."
+
+[[file]]
+id = "pdf-pdfjs-xfa"
+file = "pdfjs/xfa.pdf"
+source = "mozilla/pdf.js test/pdfs (Apache-2.0 repository)"
+url = "https://raw.githubusercontent.com/mozilla/pdf.js/6c71c0bf2670e38d689b9ed28cdd9c709e45b758/test/pdfs/xfa_issue14315.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; the file was contributed to the project's test suite, per-file provenance is not itemized."
+sha256 = "d039a40ea28384bae8d1a24929a4288aae1aeb433c441fd39c04fad618fa6f19"
+size = 11568
+tags = ["forms", "xfa"]
+why = "XFA form; Fill forms must use the static fallback if one exists and otherwise explain that a viewer with XFA support is needed (specs/pdf.md Fill forms)."
+
+[[file]]
+id = "pdf-pdfjs-jpx"
+file = "pdfjs/jpx.pdf"
+source = "mozilla/pdf.js test/pdfs (Apache-2.0 repository)"
+url = "https://raw.githubusercontent.com/mozilla/pdf.js/6c71c0bf2670e38d689b9ed28cdd9c709e45b758/test/pdfs/bug_jpx.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; the file was contributed to the project's test suite, per-file provenance is not itemized."
+sha256 = "4010d808557a72278368c05518367735ed186cbdd04974b8506275f9ac40f999"
+size = 5451
+tags = ["jpeg2000", "images"]
+why = "JPEG 2000 image stream; Extract images converts JPX to PNG or lossless (specs/pdf.md Extract images edge cases)."
+
+[[file]]
+id = "pdf-pdfjs-attachment"
+file = "pdfjs/attachment.pdf"
+source = "mozilla/pdf.js test/pdfs (Apache-2.0 repository)"
+url = "https://raw.githubusercontent.com/mozilla/pdf.js/6c71c0bf2670e38d689b9ed28cdd9c709e45b758/test/pdfs/attachment.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; the file was contributed to the project's test suite, per-file provenance is not itemized."
+sha256 = "9acec9f83f1557183c83a87111b85141e657849ac2aa92864ffd63cc91572379"
+size = 15299
+tags = ["attachments"]
+why = "File attachment embedded in the document; Attachments and Privacy scan must find and list it."
+
+[[file]]
+id = "pdf-pdfjs-scan-bad"
+file = "pdfjs/scan-bad.pdf"
+source = "mozilla/pdf.js test/pdfs (Apache-2.0 repository)"
+url = "https://raw.githubusercontent.com/mozilla/pdf.js/6c71c0bf2670e38d689b9ed28cdd9c709e45b758/test/pdfs/scan-bad.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; the file was contributed to the project's test suite, per-file provenance is not itemized."
+sha256 = "d40f31f182cf254ab134826d379875acacb1f7b48bf1a57bce2e30b38d16628e"
+size = 29832
+tags = ["scanned", "jpeg", "300dpi", "no-text-layer"]
+why = "Single letter page that is one 300 dpi JPEG (2550 by 3300 px) with no text layer: the OCR-first route for scans, and Compress for scans."
+
+[[file]]
+id = "pdf-pdfjs-annotation-highlight"
+file = "pdfjs/annotation-highlight.pdf"
+source = "mozilla/pdf.js test/pdfs (Apache-2.0 repository)"
+url = "https://raw.githubusercontent.com/mozilla/pdf.js/6c71c0bf2670e38d689b9ed28cdd9c709e45b758/test/pdfs/annotation-highlight.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; the file was contributed to the project's test suite, per-file provenance is not itemized."
+sha256 = "72b6387356ccfdfb95a0a5eff5e1ceb9b7667019807d7b04abaf64dad7ea143a"
+size = 92397
+tags = ["annotations"]
+why = "Highlight annotations with appearance streams; Flatten and Annotate must keep or burn them correctly."
+
+[[file]]
+id = "pdf-pdfjs-bomb-giant"
+file = "pdfjs/bomb-giant.pdf"
+source = "mozilla/pdf.js test/pdfs (Apache-2.0 repository)"
+url = "https://raw.githubusercontent.com/mozilla/pdf.js/6c71c0bf2670e38d689b9ed28cdd9c709e45b758/test/pdfs/bomb_giant.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; the file was contributed to the project's test suite, per-file provenance is not itemized."
+sha256 = "a33bc9ff49df11644e5790add536df87b702684b729999539df32ae655fd6dd1"
+size = 123242
+tags = ["huge", "stress", "decompression-bomb", "jbig2"]
+why = "A 123 KB page whose four JBIG2 images each declare 100000 by 100000 pixels (about 1.16 GB each, the file says so itself): a decompression bomb. The pipeline must stay under the memory cap and fail with a plain message instead of exhausting RAM."
+
+[[file]]
+id = "pdf-pyhanko-signed-twice"
+file = "pyhanko/signed-twice.pdf"
+source = "pyHanko test data (MIT)"
+url = "https://raw.githubusercontent.com/MatthiasValvekens/pyHanko/266a84093a417ce1ed3c7e067aaa012a20e19a44/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/pdf/minimal-signed-twice-both-created.pdf"
+license = "MIT"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "2ef1b801c4d168d0deb5904f5d272e64e2f080c9273e92d8803272fd9d1721c9"
+size = 107981
+tags = ["signed", "multi-signature"]
+why = "Two signatures with a second revision after the first; Digital signatures must validate each one and report the covered byte range."
+
+[[file]]
+id = "pdf-pyhanko-certified"
+file = "pyhanko/certified.pdf"
+source = "pyHanko test data (MIT)"
+url = "https://raw.githubusercontent.com/MatthiasValvekens/pyHanko/266a84093a417ce1ed3c7e067aaa012a20e19a44/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/pdf/certified-with-indirect-refs-in-dir.pdf"
+license = "MIT"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "c7f4845990b1a4a796a2e043378b68440dafe3e825b132dfe7a73cee19e4f10b"
+size = 13211
+tags = ["signed", "certified", "docmdp"]
+why = "Certified (DocMDP) document: later edits must be flagged against the permitted change level."
+
+[[file]]
+id = "pdf-pyhanko-pades-lta"
+file = "pyhanko/pades-lta.pdf"
+source = "pyHanko test data (MIT)"
+url = "https://raw.githubusercontent.com/MatthiasValvekens/pyHanko/266a84093a417ce1ed3c7e067aaa012a20e19a44/internal/common-test-utils/src/pyhanko_testing_commons/test_data/data/pdf/pades-lta-dss-indirect-arrs-test.pdf"
+license = "MIT"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "30fe330df187588d204519e0eff373de50a10c0fac08483368ccfc7420c1c1e4"
+size = 46884
+tags = ["signed", "pades", "dss"]
+why = "PAdES long-term archive signature with a DSS dictionary; validation verdicts must separate valid, expired and chain-untrusted."
+
+[[file]]
+id = "pdf-pdfbox-password-256"
+file = "pdfbox/password-256.pdf"
+source = "Apache PDFBox test resources (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/pdfbox/7e6236667447bf17b9ab3bc5191ed6b04388a8cc/pdfbox/src/test/resources/org/apache/pdfbox/encryption/PasswordSample-256bit.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "a2f0661092483478686d92891905d9e715c9783b45ecf26376d7119fe5ab4747"
+size = 7664
+tags = ["encrypted", "password", "aes-256"]
+why = "Password sample from PDFBox's own encryption tests, AES-256; second implementation to cross-check our decrypt against."
+password = "user"
+
+[[file]]
+id = "pdf-pdfbox-acroform-rotation"
+file = "pdfbox/acroform-rotation.pdf"
+source = "Apache PDFBox test resources (Apache-2.0)"
+url = "https://raw.githubusercontent.com/apache/pdfbox/7e6236667447bf17b9ab3bc5191ed6b04388a8cc/pdfbox/src/test/resources/org/apache/pdfbox/pdmodel/interactive/form/AcroFormsRotation.pdf"
+license = "Apache-2.0"
+license_note = "Repository-level license; per-file provenance is not itemized upstream."
+sha256 = "43e770cb78cfc976b3b951f7acd068cc8e7dc5260b728d9a22745cc45dd7b01f"
+size = 42637
+tags = ["forms", "rotated", "acroform"]
+why = "Form fields on rotated pages; fields must stay upright and aligned after Rotate, Flatten and Fill forms."
+
+[[file]]
+id = "pdf-pdfassoc-simple-20"
+file = "pdfassoc/simple-pdf-2.0.pdf"
+source = "PDF Association pdf20examples"
+url = "https://raw.githubusercontent.com/pdf-association/pdf20examples/c20f2c17bfcc4baab7cfe62e70fae64caf14d5fa/Simple%20PDF%202.0%20file.pdf"
+license = "CC-BY-SA-4.0"
+attribution = "PDF Association (CC BY-SA 4.0)"
+sha256 = "296d2a0b2ce19b606f29265694f194a754fbc61783982b5b8d730e8637482236"
+size = 5211
+tags = ["pdf2.0"]
+why = "A plain PDF 2.0 file; version handling and the version string we write when saving."
+
+[[file]]
+id = "pdf-irs-f1040-2022"
+file = "gov/irs-f1040-2022.pdf"
+source = "IRS, Form 1040 (2022), archived edition"
+url = "https://www.irs.gov/pub/irs-prior/f1040--2022.pdf"
+license = "Public-Domain"
+license_note = "US federal government work (public domain, 17 USC 105)"
+sha256 = "7f7933e17b2701e8555164f18bd9d93e8891c7bc0d6e45d8df6d84a2cf78b48f"
+size = 156045
+tags = ["forms", "xfa", "fillable", "government"]
+why = "A real government form built in Adobe Designer: an XFA form with a static fallback, many fields and calculated entries. The everyday Fill forms case, and the XFA edge case from specs/pdf.md. Archived edition so the bytes never change."
+
+[[file]]
+id = "pdf-irs-p17-2022"
+file = "gov/irs-p17-2022.pdf"
+source = "IRS, Publication 17 (2022), archived edition"
+url = "https://www.irs.gov/pub/irs-prior/p17--2022.pdf"
+license = "Public-Domain"
+license_note = "US federal government work (public domain, 17 USC 105)"
+sha256 = "9e7b040385b5433fece6be86d8a6c298222dcbbccf0f2ad343484c330ac1b5ca"
+size = 2921289
+tags = ["long-doc", "bookmarks", "tagged", "government"]
+why = "A 100+ page tagged document with a deep outline, many links and tables; the typical long document for Split, Compress, Bookmarks and Page numbers."
+
+[[file]]
+id = "pdf-nist-sp800-53r5"
+file = "gov/nist-sp800-53r5.pdf"
+source = "NIST SP 800-53 Rev. 5"
+url = "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-53r5.pdf"
+license = "Public-Domain"
+license_note = "US federal government work (public domain, 17 USC 105)"
+sha256 = "fc63bcd61715d0181dd8e85998b1e6201ae3515fc6626102101cab1841e11ec6"
+size = 6073678
+tags = ["long-doc", "bookmarks", "tagged", "government", "tables"]
+why = "About 490 pages with large tables, a full outline and tagged structure; stresses page-by-page streaming and Table extraction."
+
+[[file]]
+id = "pdf-commons-ia-scan-public-lands"
+file = "commons/ia-scan-public-lands.pdf"
+source = "Wikimedia Commons: Internet Archive scan hosted on Wikimedia Commons"
+url = "https://upload.wikimedia.org/wikipedia/commons/a/a2/Public_access_to_public_domain_lands_-_two_case_studies_of_landowner-sportsman_conflict_%28IA_publicaccesstopu1122mung%29.pdf"
+license = "Public-Domain"
+sha256 = "d214c554d469db98b74cbde8ff05ff0f573cb61f8824359ed34acea0b117e2b7"
+size = 3880663
+tags = ["scanned", "ocr-text", "long-doc", "jpeg2000"]
+why = "A 76 page scanned book: JPEG 2000 page images (background plus foreground layers) with a hidden OCR text layer. Clean scans, Compress and the 'page already has text, skip OCR' logic."
+
+[[file]]
+id = "pdf-commons-ia-scan-mining-claims"
+file = "commons/ia-scan-mining-claims.pdf"
+source = "Wikimedia Commons: Internet Archive scan hosted on Wikimedia Commons"
+url = "https://upload.wikimedia.org/wikipedia/commons/5/5a/Mining_claims_and_sites_on_public_domain_lands_%28IA_miningclaimssite6775unit%29.pdf"
+license = "Public-Domain"
+sha256 = "c0562b7c09948044dab28a65de4b16f59079a715624b2e3a04b6b71aaebc7eef"
+size = 6526211
+tags = ["scanned", "ocr-text", "long-doc", "jpeg2000", "odd-page-size"]
+why = "32 page scan from a different pipeline with 1830 by 4137 px images and a tall 263 by 595 pt page; non-standard page sizes in Clean scans, deskew and size-target compression."
+
+[[file]]
+id = "pdf-commons-arabic-book"
+file = "commons/arabic-book-lab-al-arab.pdf"
+source = "Wikimedia Commons: Arabic book scan"
+url = "https://upload.wikimedia.org/wikipedia/commons/5/51/%D9%84%D8%B9%D8%A8_%D8%A7%D9%84%D8%B9%D8%B1%D8%A8_%28%D8%A7%D9%84%D8%B7%D8%A8%D8%B9%D8%A9_%D8%A7%D9%84%D8%A3%D9%88%D9%84%D9%89%29.pdf"
+license = "Public-Domain"
+sha256 = "1a15d45c31dbfd21c6d6302becd7f6e0dd492e6f52e91e25939d6967c1062c89"
+size = 1197732
+tags = ["rtl", "arabic", "scanned", "ccitt", "no-text-layer"]
+why = "A 62 page Arabic book scanned as 1-bit CCITT images with no text layer: right-to-left reading order, binding on the right, and Arabic OCR language detection (specs/pdf.md Divide pages, OCR)."
+
+[[file]]
+id = "pdf-commons-arabic-primer-wdl"
+file = "commons/arabic-primer-calligraphy.pdf"
+source = "Wikimedia Commons: Library of Congress World Digital Library"
+url = "https://upload.wikimedia.org/wikipedia/commons/d/d7/Arabic_Primer_of_Calligraphy_WDL3058.pdf"
+license = "Public-Domain"
+sha256 = "395597ce39bdf175da23459c7b9b296084806e908c55b297bb4abcc85e78f0c6"
+size = 5206646
+tags = ["rtl", "arabic", "scanned", "manuscript", "jpeg2000"]
+why = "42 pages of manuscript scans with calligraphy, JPEG 2000 images and an OCR layer from the library's pipeline; deskew and crop must not clip ornaments, OCR must report low confidence."
+
+[[file]]
+id = "pdf-commons-hebrew-parable"
+file = "commons/hebrew-abulafia.pdf"
+source = "Wikimedia Commons: Hebrew manuscript edition"
+url = "https://upload.wikimedia.org/wikipedia/commons/9/93/Abulafia-Parable_of_the_Pearl_in_the_original_Hebrew.pdf"
+license = "CC-BY-SA-4.0"
+attribution = "Monozigote via Wikimedia Commons"
+sha256 = "46381590a6372897461b98368fbd91f85f548835d5e710c2eb986820a7538987"
+size = 467005
+tags = ["rtl", "hebrew"]
+why = "Hebrew text, right-to-left in a born-digital file; text search, redaction and watermark placement on RTL pages."
+
+[[file]]
+id = "pdf-gen-mixed-sizes-rotations"
+file = "generated/mixed-sizes-rotations.pdf"
+source = "generated"
+generator = "pdf_mixed_sizes_rotations"
+license = "MIT OR Apache-2.0"
+sha256 = "b757ffd4820a4cfaeaa4fda9ef45f0869fe1fb85ae487985f687b7201e422efb"
+size = 2949
+tags = ["rotated", "mixed-sizes"]
+why = "A4, Letter, A3 landscape and pages with /Rotate 90 and 270 in one file; Merge, N-up, Stamp and Page numbers must scale and place per page (specs/pdf.md Merge, Page layouts, Stamps edge cases)."
+
+[[file]]
+id = "pdf-gen-3000-pages"
+file = "generated/3000-pages.pdf"
+source = "generated"
+generator = "pdf_3000_pages"
+license = "MIT OR Apache-2.0"
+sha256 = "f6ab011f225a76d5d47472c6c8079efd6ea683c106a18b33b7b29e9f19a54efd"
+size = 1074148
+tags = ["long-doc", "many-pages"]
+why = "3,000 one-line pages: the virtualized page grid, thumbnails on demand and page-range operations must stay inside the memory cap (specs/pdf.md Organize pages)."
+
+[[file]]
+id = "pdf-gen-truncated"
+file = "generated/truncated.pdf"
+source = "generated"
+generator = "pdf_truncated"
+license = "MIT OR Apache-2.0"
+sha256 = "57315de9a76faa5a01e7ea253dc27220da116c40dd54e0fdf1de62bb9d0fce44"
+size = 21337
+tags = ["broken", "truncated"]
+why = "A 40-page file cut at 55 percent, like an interrupted download; Repair must recover every page before the cut."
+
+[[file]]
+id = "pdf-gen-no-xref"
+file = "generated/no-xref.pdf"
+source = "generated"
+generator = "pdf_no_xref"
+license = "MIT OR Apache-2.0"
+sha256 = "a47dc78f5b0c24d8d9482ddd8b726489186ff091c588b75b63e48ead8d404389"
+size = 37016
+tags = ["broken", "xref"]
+why = "Objects intact but the xref table, trailer and startxref removed; Repair has to rebuild everything from an object scan."
+
+[[file]]
+id = "pdf-gen-junk-prefix-bitflip"
+file = "generated/junk-prefix-bitflip.pdf"
+source = "generated"
+generator = "pdf_junk_prefix_bitflip"
+license = "MIT OR Apache-2.0"
+sha256 = "a071e6382cde6e71a4e95a46152838b46b8f383ce4a91a84e888063c9c1e961e"
+size = 39084
+tags = ["broken", "bitflip"]
+why = "Junk bytes before the header and a few flipped bits inside stream data; parse must still find the header and report which pages are damaged."
+
+[[file]]
+id = "pdf-gen-large-300mb"
+file = "generated/large-300mb.pdf"
+source = "generated"
+generator = "pdf_large_300mb"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["huge", "images", "streaming"]
+why = "300 MB of page images in 300 pages with a correct xref: first rung of the huge-file ladder (peak memory must stay under the 300 MB cap)."
+tier = "large"
+
+[[file]]
+id = "pdf-gen-huge-2gb"
+file = "generated/huge-2gb.pdf"
+source = "generated"
+generator = "pdf_huge_2gb"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["huge", "images", "streaming"]
+why = "2 GB of page images in 2048 pages: the FLOWS.md huge-file budget (a 2 GB PDF works within the same memory cap). Opt in with --tier huge."
+tier = "huge"
+
+[[file]]
+id = "pdf-gen-scanned-skewed"
+file = "generated/scanned-skewed.pdf"
+source = "generated"
+generator = "pdf_scanned_skewed"
+license = "MIT OR Apache-2.0"
+sha256 = ""
+size = 0
+tags = ["scanned", "skew", "blank-pages"]
+why = "Image-only pages with text rotated 2.3 degrees, near-blank backs, a punch-hole and scanner edge noise, no text layer: Clean scans deskew and blank page rules (specs/pdf.md Clean scans)."
+requires = ["pillow"]
