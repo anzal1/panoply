@@ -1,0 +1,31 @@
+[package]
+name = "arsenal-gpui-kit"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Standalone project. Same prototype as ../, but the hand-drawn text field is replaced by GPUI Kit's unstyled
+# `gpui-base` Input (IME, selection, undo, caret blink). GPUI Kit pins the crates.io `gpui-pre` snapshot 0.3.9
+# (published 2026-10-12), not the git commit used by ../, so this is a separate crate with its own target dir.
+[workspace]
+
+[dependencies]
+gpui = { package = "gpui-pre", version = "=0.3.9" }
+gpui_platform = { package = "gpui-pre-platform", version = "=0.3.9", features = ["font-kit", "runtime_shaders"] }
+gpui-base = "=0.7.3"
+global-hotkey = "0.7"
+tiny_http = "0.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+futures = "0.3"
+anyhow = "1"
+raw-window-handle = "0.6"
+objc2 = "0.6"
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+strip = true
+panic = "abort"
