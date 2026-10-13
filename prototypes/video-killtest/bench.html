@@ -1,0 +1,51 @@
+<!doctype html><meta charset="utf-8"><title>Arsenal kill test</title>
+<body style="font:14px ui-monospace,monospace;background:#111;color:#ddd;padding:16px">
+<h3>1080p 20s H.264 to 720p H.264, in browser</h3>
+<button id="wc">WebCodecs (mediabunny)</button>
+<button id="st">ffmpeg.wasm single-thread</button>
+<button id="mt">ffmpeg.wasm multi-thread</button>
+<pre id="log"></pre>
+<script type="module">
+import * as MB from '/node_modules/mediabunny/dist/bundles/mediabunny.mjs';
+import { FFmpeg } from '/node_modules/@ffmpeg/ffmpeg/dist/esm/index.js';
+const log = (...a) => { document.getElementById('log').textContent += a.join(' ') + '\n'; console.log(...a); };
+window.results = {};
+log('crossOriginIsolated=' + crossOriginIsolated, 'cores=' + navigator.hardwareConcurrency);
+const getClip = async () => new Uint8Array(await (await fetch('/clip1080.mp4')).arrayBuffer());
+
+window.runWC = async () => {
+  const buf = await getClip();
+  const t0 = performance.now();
+  const input = new MB.Input({ source: new MB.BufferSource(buf.buffer), formats: MB.ALL_FORMATS });
+  const output = new MB.Output({ format: new MB.Mp4OutputFormat(), target: new MB.BufferTarget() });
+  const conv = await MB.Conversion.init({ input, output, video: { width: 1280, height: 720, fit: 'contain', codec: 'avc', bitrate: 3e6, forceTranscode: true } });
+  await conv.execute();
+  const ms = performance.now() - t0;
+  window.results.webcodecs = { ms, bytes: output.target.buffer.byteLength };
+  log('WebCodecs:', (ms/1000).toFixed(2) + 's', 'out', output.target.buffer.byteLength, 'bytes');
+  return window.results.webcodecs;
+};
+
+const runFF = async (mt) => {
+  const ff = new FFmpeg();
+  const base = mt ? '/node_modules/@ffmpeg/core-mt/dist/esm' : '/node_modules/@ffmpeg/core/dist/esm';
+  const cfg = { coreURL: base + '/ffmpeg-core.js', wasmURL: base + '/ffmpeg-core.wasm' };
+  if (mt) cfg.workerURL = base + '/ffmpeg-core.worker.js';
+  await ff.load(cfg);
+  await ff.writeFile('in.mp4', await getClip());
+  const t0 = performance.now();
+  await ff.exec(['-i','in.mp4','-vf','scale=1280:720','-c:v','libx264','-preset','veryfast','-b:v','3M', ...(mt?['-threads','8']:[]), 'out.mp4']);
+  const ms = performance.now() - t0;
+  const out = await ff.readFile('out.mp4');
+  const key = mt ? 'ffmpeg_mt' : 'ffmpeg_st';
+  window.results[key] = { ms, bytes: out.byteLength };
+  log(key + ':', (ms/1000).toFixed(2) + 's', 'out', out.byteLength, 'bytes');
+  ff.terminate();
+  return window.results[key];
+};
+window.runST = () => runFF(false);
+window.runMT = () => runFF(true);
+document.getElementById('wc').onclick = () => window.runWC().catch(e => log('ERR', e));
+document.getElementById('st').onclick = () => window.runST().catch(e => log('ERR', e));
+document.getElementById('mt').onclick = () => window.runMT().catch(e => log('ERR', e));
+</script>

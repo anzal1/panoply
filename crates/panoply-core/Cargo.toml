@@ -1,0 +1,17 @@
+[package]
+name = "panoply-core"
+description = "File sniffing, output naming, cancellation, job types and budgets for Panoply"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+infer.workspace = true
+
+[lints]
+workspace = true

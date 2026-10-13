@@ -1,0 +1,54 @@
+# Resize to exact KB. Pattern B, tuned transform. Spec: docs/specs/id-and-image.md 2.3.
+accepts = ["image/*"]
+outputs = ["image/jpeg", "image/png", "image/webp"]
+
+[module]
+id = "image.resize_to_kb"
+name = "Resize to exact KB"
+version = "0.1.0"
+pattern = "B"
+summary = "Make this photo a set number of KB for the form or portal."
+
+[options.target_kb]
+type = "number"
+default = 50
+min = 5
+label = "Target size (KB)"
+help = "The result lands at or under this size."
+
+[options.format]
+type = "choice"
+values = ["jpg", "png", "webp"]
+default = "jpg"
+label = "Format"
+
+[options.width]
+type = "number"
+min = 1
+label = "Width (px)"
+help = "Leave empty to keep the current width."
+
+[options.height]
+type = "number"
+min = 1
+label = "Height (px)"
+help = "Leave empty to keep the current height."
+
+[options.kb_basis]
+type = "choice"
+values = ["1000", "1024", "both"]
+default = "both"
+label = "What counts as 1 KB"
+help = "Some portals count 1 KB as 1000 bytes. Both keeps the result inside the limit under either reading."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

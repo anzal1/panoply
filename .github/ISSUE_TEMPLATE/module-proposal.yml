@@ -1,0 +1,42 @@
+name: Module proposal
+description: Propose a new tool for Panoply
+labels: ["module"]
+body:
+  - type: input
+    id: job
+    attributes:
+      label: Job
+      description: The sentence a user would say, e.g. "make this PDF small enough to email".
+    validations:
+      required: true
+  - type: dropdown
+    id: pattern
+    attributes:
+      label: Flow pattern (see docs/FLOWS.md)
+      options:
+        - A. Instant transform
+        - B. Tuned transform
+        - C. Visual editor
+        - D. Guided capture
+        - E. Generator
+        - F. Instant answer
+        - G. Always on
+        - H. Find
+        - I. Inspect
+    validations:
+      required: true
+  - type: textarea
+    id: demand
+    attributes:
+      label: Demand evidence
+      description: Search volume, paid apps people buy for it, launches, issues. Links please.
+  - type: textarea
+    id: bar
+    attributes:
+      label: Quality bar
+      description: Which tool must we beat, and how will we measure it?
+  - type: textarea
+    id: engine
+    attributes:
+      label: Engine
+      description: OS engine per platform, and the fallback (library or model with a clean license and its size).

@@ -1,0 +1,18 @@
+[package]
+name = "panoply-host"
+description = "Module trait, capability guard and registry, plus built-in modules"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+panoply-core.workspace = true
+panoply-manifest.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+sha2.workspace = true
+
+[lints]
+workspace = true

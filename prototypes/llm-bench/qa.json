@@ -1,0 +1,54 @@
+[
+ {
+  "q": "How many days of notice must an employee give before resigning?",
+  "a": [
+   "45"
+  ]
+ },
+ {
+  "q": "How much memory does a new hire's laptop have?",
+  "a": [
+   "32"
+  ]
+ },
+ {
+  "q": "How many days before international travel is approval needed, and from whom?",
+  "a": [
+   "21",
+   "regional director"
+  ],
+  "all": true
+ },
+ {
+  "q": "What is the daily meal allowance in metro cities?",
+  "a": [
+   "3,200",
+   "3200"
+  ]
+ },
+ {
+  "q": "On which weekday is working from home not allowed?",
+  "a": [
+   "tuesday"
+  ]
+ },
+ {
+  "q": "How many unused leave days carry over?",
+  "a": [
+   "8"
+  ]
+ },
+ {
+  "q": "How often must passwords be rotated?",
+  "a": [
+   "120"
+  ]
+ },
+ {
+  "q": "What is the yearly learning budget?",
+  "a": [
+   "60,000",
+   "60000"
+  ]
+ }
+]

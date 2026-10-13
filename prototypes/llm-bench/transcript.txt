@@ -1,0 +1,14 @@
+[00:00] Priya: Okay let's start, um, we have three things today, the Q4 launch, the hiring plan and the office move.
+[00:12] Arjun: So for the launch, uh, the beta is basically ready but the payment flow still fails on UPI sometimes.
+[00:25] Priya: How long to fix that?
+[00:28] Arjun: I think I can have it fixed by Friday the 24th, I'll own that.
+[00:35] Meera: I'll write the release notes once Arjun confirms, so say Monday the 27th.
+[00:44] Priya: Good. We decided the public launch date is November 3rd, no later.
+[01:02] Priya: Hiring. We have budget for two backend engineers, not three like we thought.
+[01:10] Meera: Then I'll update the job posts today and remove the third one.
+[01:18] Arjun: Can we, um, also add a take-home task? The last batch was hard to judge.
+[01:25] Priya: Yes, decided, we add a two hour take-home. Arjun, you draft it by next Wednesday.
+[01:40] Priya: Office move, the new place in Indiranagar is available from December 1st.
+[01:48] Meera: I'll get three quotes from movers by end of this month.
+[01:55] Priya: And we are not moving the servers, they stay in the data centre. That's final.
+[02:05] Priya: Anything else? No? Okay thanks everyone.

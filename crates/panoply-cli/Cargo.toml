@@ -1,0 +1,24 @@
+[package]
+name = "panoply-cli"
+description = "The panoply command line"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "panoply"
+path = "src/main.rs"
+
+[dependencies]
+panoply-core.workspace = true
+panoply-manifest.workspace = true
+panoply-convert.workspace = true
+panoply-host.workspace = true
+panoply-mcp.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

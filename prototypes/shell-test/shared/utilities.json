@@ -1,0 +1,859 @@
+[
+ {
+  "id": "merge-pdfs",
+  "name": "Merge PDFs",
+  "subtitle": "Combine files into one",
+  "category": "PDF",
+  "sfSymbol": "doc.on.doc",
+  "lucide": "files-merge",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "split-pdf",
+  "name": "Split PDF",
+  "subtitle": "Pull pages into separate files",
+  "category": "PDF",
+  "sfSymbol": "scissors",
+  "lucide": "scissors",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "compress-pdf",
+  "name": "Compress PDF",
+  "subtitle": "Shrink size, keep it sharp",
+  "category": "PDF",
+  "sfSymbol": "arrow.down.right.and.arrow.up.left",
+  "lucide": "minimize-2",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "rotate-pages",
+  "name": "Rotate Pages",
+  "subtitle": "Turn pages any direction",
+  "category": "PDF",
+  "sfSymbol": "rotate.right",
+  "lucide": "rotate-cw",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "reorder-pages",
+  "name": "Reorder Pages",
+  "subtitle": "Drag pages into order",
+  "category": "PDF",
+  "sfSymbol": "square.grid.2x2",
+  "lucide": "layout-grid",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "edit-pdf-text",
+  "name": "Edit PDF Text",
+  "subtitle": "Change words in place",
+  "category": "PDF",
+  "sfSymbol": "character.cursor.ibeam",
+  "lucide": "type",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "sign-pdf",
+  "name": "Sign PDF",
+  "subtitle": "Add your signature",
+  "category": "PDF",
+  "sfSymbol": "signature",
+  "lucide": "pen-line",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "fill-pdf-form",
+  "name": "Fill PDF Form",
+  "subtitle": "Type into form fields",
+  "category": "PDF",
+  "sfSymbol": "list.bullet.rectangle",
+  "lucide": "form-input",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "ocr-pdf",
+  "name": "OCR PDF",
+  "subtitle": "Make scanned text searchable",
+  "category": "PDF",
+  "sfSymbol": "text.viewfinder",
+  "lucide": "scan-text",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "pdf-to-images",
+  "name": "PDF to Images",
+  "subtitle": "Export pages as PNG or JPG",
+  "category": "PDF",
+  "sfSymbol": "photo.on.rectangle",
+  "lucide": "images",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "images-to-pdf",
+  "name": "Images to PDF",
+  "subtitle": "Bundle images into a PDF",
+  "category": "PDF",
+  "sfSymbol": "doc.richtext",
+  "lucide": "file-image",
+  "accepts": [
+   "png",
+   "jpg",
+   "heic"
+  ]
+ },
+ {
+  "id": "pdf-to-word",
+  "name": "PDF to Word",
+  "subtitle": "Editable DOCX from PDF",
+  "category": "PDF",
+  "sfSymbol": "doc.text",
+  "lucide": "file-text",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "word-to-pdf",
+  "name": "Word to PDF",
+  "subtitle": "DOCX to PDF",
+  "category": "PDF",
+  "sfSymbol": "doc.text.fill",
+  "lucide": "file-output",
+  "accepts": [
+   "docx"
+  ]
+ },
+ {
+  "id": "protect-pdf",
+  "name": "Protect PDF",
+  "subtitle": "Add a password",
+  "category": "PDF",
+  "sfSymbol": "lock.doc",
+  "lucide": "lock",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "unlock-pdf",
+  "name": "Unlock PDF",
+  "subtitle": "Remove a known password",
+  "category": "PDF",
+  "sfSymbol": "lock.open",
+  "lucide": "lock-open",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "redact-pdf",
+  "name": "Redact PDF",
+  "subtitle": "Black out sensitive text",
+  "category": "PDF",
+  "sfSymbol": "eye.slash",
+  "lucide": "eye-off",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "watermark-pdf",
+  "name": "Watermark PDF",
+  "subtitle": "Stamp text or a logo",
+  "category": "PDF",
+  "sfSymbol": "drop",
+  "lucide": "droplet",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "extract-pdf-text",
+  "name": "Extract PDF Text",
+  "subtitle": "Copy all text out",
+  "category": "PDF",
+  "sfSymbol": "text.alignleft",
+  "lucide": "align-left",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "compare-pdfs",
+  "name": "Compare PDFs",
+  "subtitle": "See what changed",
+  "category": "PDF",
+  "sfSymbol": "rectangle.split.2x1",
+  "lucide": "columns-2",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "page-numbers",
+  "name": "Page Numbers",
+  "subtitle": "Number every page",
+  "category": "PDF",
+  "sfSymbol": "number",
+  "lucide": "hash",
+  "accepts": [
+   "pdf"
+  ]
+ },
+ {
+  "id": "compress-image",
+  "name": "Compress Image",
+  "subtitle": "Smaller files, same look",
+  "category": "Image",
+  "sfSymbol": "arrow.down.circle",
+  "lucide": "arrow-down-circle",
+  "accepts": [
+   "png",
+   "jpg",
+   "webp"
+  ]
+ },
+ {
+  "id": "resize-image",
+  "name": "Resize Image",
+  "subtitle": "Exact size or percentage",
+  "category": "Image",
+  "sfSymbol": "arrow.up.left.and.arrow.down.right",
+  "lucide": "maximize-2",
+  "accepts": [
+   "png",
+   "jpg",
+   "webp",
+   "heic"
+  ]
+ },
+ {
+  "id": "heic-to-jpg",
+  "name": "HEIC to JPG",
+  "subtitle": "iPhone photos anywhere",
+  "category": "Image",
+  "sfSymbol": "photo",
+  "lucide": "image",
+  "accepts": [
+   "heic"
+  ]
+ },
+ {
+  "id": "convert-image",
+  "name": "Convert Image",
+  "subtitle": "PNG, JPG, WebP, AVIF",
+  "category": "Image",
+  "sfSymbol": "arrow.triangle.2.circlepath",
+  "lucide": "refresh-cw",
+  "accepts": [
+   "png",
+   "jpg",
+   "webp",
+   "heic",
+   "avif"
+  ]
+ },
+ {
+  "id": "remove-background",
+  "name": "Remove Background",
+  "subtitle": "Cut out the subject",
+  "category": "Image",
+  "sfSymbol": "person.crop.square",
+  "lucide": "user-square",
+  "accepts": [
+   "png",
+   "jpg"
+  ]
+ },
+ {
+  "id": "crop-image",
+  "name": "Crop Image",
+  "subtitle": "Trim to any ratio",
+  "category": "Image",
+  "sfSymbol": "crop",
+  "lucide": "crop",
+  "accepts": [
+   "png",
+   "jpg",
+   "webp"
+  ]
+ },
+ {
+  "id": "strip-metadata",
+  "name": "Strip Metadata",
+  "subtitle": "Remove location and camera data",
+  "category": "Image",
+  "sfSymbol": "location.slash",
+  "lucide": "map-pin-off",
+  "accepts": [
+   "png",
+   "jpg",
+   "heic"
+  ]
+ },
+ {
+  "id": "upscale-image",
+  "name": "Upscale Image",
+  "subtitle": "Sharper at 2x or 4x",
+  "category": "Image",
+  "sfSymbol": "wand.and.stars",
+  "lucide": "wand-sparkles",
+  "accepts": [
+   "png",
+   "jpg"
+  ]
+ },
+ {
+  "id": "image-to-text",
+  "name": "Image to Text",
+  "subtitle": "Copy text from a picture",
+  "category": "Image",
+  "sfSymbol": "text.viewfinder",
+  "lucide": "scan-text",
+  "accepts": [
+   "png",
+   "jpg",
+   "heic"
+  ]
+ },
+ {
+  "id": "color-picker",
+  "name": "Color Picker",
+  "subtitle": "Grab any color on screen",
+  "category": "Image",
+  "sfSymbol": "eyedropper",
+  "lucide": "pipette",
+  "accepts": []
+ },
+ {
+  "id": "make-favicon",
+  "name": "Make Favicon",
+  "subtitle": "All icon sizes from one image",
+  "category": "Image",
+  "sfSymbol": "app.badge",
+  "lucide": "app-window",
+  "accepts": [
+   "png",
+   "svg"
+  ]
+ },
+ {
+  "id": "blur-faces",
+  "name": "Blur Faces",
+  "subtitle": "Hide faces automatically",
+  "category": "Image",
+  "sfSymbol": "face.dashed",
+  "lucide": "scan-face",
+  "accepts": [
+   "png",
+   "jpg"
+  ]
+ },
+ {
+  "id": "batch-rename",
+  "name": "Batch Rename",
+  "subtitle": "Rename many files at once",
+  "category": "Image",
+  "sfSymbol": "character.textbox",
+  "lucide": "text-cursor-input",
+  "accepts": [
+   "*"
+  ]
+ },
+ {
+  "id": "svg-to-png",
+  "name": "SVG to PNG",
+  "subtitle": "Rasterise vector art",
+  "category": "Image",
+  "sfSymbol": "square.on.circle",
+  "lucide": "shapes",
+  "accepts": [
+   "svg"
+  ]
+ },
+ {
+  "id": "trim-video",
+  "name": "Trim Video",
+  "subtitle": "Cut start and end",
+  "category": "Video",
+  "sfSymbol": "timeline.selection",
+  "lucide": "scissors-line-dashed",
+  "accepts": [
+   "mp4",
+   "mov",
+   "mkv"
+  ]
+ },
+ {
+  "id": "compress-video",
+  "name": "Compress Video",
+  "subtitle": "Smaller, ready to send",
+  "category": "Video",
+  "sfSymbol": "film",
+  "lucide": "film",
+  "accepts": [
+   "mp4",
+   "mov",
+   "mkv"
+  ]
+ },
+ {
+  "id": "video-to-gif",
+  "name": "Video to GIF",
+  "subtitle": "Loop any clip",
+  "category": "Video",
+  "sfSymbol": "livephoto",
+  "lucide": "repeat",
+  "accepts": [
+   "mp4",
+   "mov"
+  ]
+ },
+ {
+  "id": "extract-audio",
+  "name": "Extract Audio",
+  "subtitle": "Pull the soundtrack",
+  "category": "Video",
+  "sfSymbol": "waveform",
+  "lucide": "audio-waveform",
+  "accepts": [
+   "mp4",
+   "mov",
+   "mkv"
+  ]
+ },
+ {
+  "id": "change-resolution",
+  "name": "Change Resolution",
+  "subtitle": "4K, 1080p, 720p",
+  "category": "Video",
+  "sfSymbol": "rectangle.expand.vertical",
+  "lucide": "expand",
+  "accepts": [
+   "mp4",
+   "mov",
+   "mkv"
+  ]
+ },
+ {
+  "id": "convert-video",
+  "name": "Convert Video",
+  "subtitle": "MP4, MOV, WebM, MKV",
+  "category": "Video",
+  "sfSymbol": "arrow.triangle.2.circlepath.camera",
+  "lucide": "refresh-ccw",
+  "accepts": [
+   "mp4",
+   "mov",
+   "mkv",
+   "webm"
+  ]
+ },
+ {
+  "id": "mute-video",
+  "name": "Mute Video",
+  "subtitle": "Remove the audio track",
+  "category": "Video",
+  "sfSymbol": "speaker.slash",
+  "lucide": "volume-x",
+  "accepts": [
+   "mp4",
+   "mov"
+  ]
+ },
+ {
+  "id": "speed-up-video",
+  "name": "Speed Up Video",
+  "subtitle": "Faster or slower",
+  "category": "Video",
+  "sfSymbol": "gauge.with.dots.needle.67percent",
+  "lucide": "gauge",
+  "accepts": [
+   "mp4",
+   "mov"
+  ]
+ },
+ {
+  "id": "crop-video",
+  "name": "Crop Video",
+  "subtitle": "Square, vertical, custom",
+  "category": "Video",
+  "sfSymbol": "crop",
+  "lucide": "crop",
+  "accepts": [
+   "mp4",
+   "mov"
+  ]
+ },
+ {
+  "id": "grab-frames",
+  "name": "Grab Frames",
+  "subtitle": "Save stills from a video",
+  "category": "Video",
+  "sfSymbol": "photo.stack",
+  "lucide": "layers",
+  "accepts": [
+   "mp4",
+   "mov"
+  ]
+ },
+ {
+  "id": "add-subtitles",
+  "name": "Add Subtitles",
+  "subtitle": "Burn in or attach captions",
+  "category": "Video",
+  "sfSymbol": "captions.bubble",
+  "lucide": "captions",
+  "accepts": [
+   "mp4",
+   "mov"
+  ]
+ },
+ {
+  "id": "merge-videos",
+  "name": "Merge Videos",
+  "subtitle": "Join clips end to end",
+  "category": "Video",
+  "sfSymbol": "film.stack",
+  "lucide": "clapperboard",
+  "accepts": [
+   "mp4",
+   "mov"
+  ]
+ },
+ {
+  "id": "convert-audio",
+  "name": "Convert Audio",
+  "subtitle": "MP3, WAV, FLAC, AAC",
+  "category": "Audio",
+  "sfSymbol": "music.note",
+  "lucide": "music",
+  "accepts": [
+   "mp3",
+   "wav",
+   "flac",
+   "m4a"
+  ]
+ },
+ {
+  "id": "trim-audio",
+  "name": "Trim Audio",
+  "subtitle": "Cut a clip",
+  "category": "Audio",
+  "sfSymbol": "waveform.path",
+  "lucide": "audio-lines",
+  "accepts": [
+   "mp3",
+   "wav",
+   "m4a"
+  ]
+ },
+ {
+  "id": "transcribe",
+  "name": "Transcribe",
+  "subtitle": "Speech to text, offline",
+  "category": "Audio",
+  "sfSymbol": "text.bubble",
+  "lucide": "message-square-text",
+  "accepts": [
+   "mp3",
+   "wav",
+   "m4a",
+   "mp4"
+  ]
+ },
+ {
+  "id": "normalize-volume",
+  "name": "Normalize Volume",
+  "subtitle": "Even out loudness",
+  "category": "Audio",
+  "sfSymbol": "speaker.wave.2",
+  "lucide": "volume-2",
+  "accepts": [
+   "mp3",
+   "wav"
+  ]
+ },
+ {
+  "id": "remove-noise",
+  "name": "Remove Noise",
+  "subtitle": "Clean up background hum",
+  "category": "Audio",
+  "sfSymbol": "waveform.badge.minus",
+  "lucide": "audio-waveform",
+  "accepts": [
+   "mp3",
+   "wav",
+   "m4a"
+  ]
+ },
+ {
+  "id": "make-ringtone",
+  "name": "Make Ringtone",
+  "subtitle": "Clip to a ringtone",
+  "category": "Audio",
+  "sfSymbol": "bell",
+  "lucide": "bell",
+  "accepts": [
+   "mp3",
+   "m4a"
+  ]
+ },
+ {
+  "id": "send-to-device",
+  "name": "Send to Device",
+  "subtitle": "Share over your network",
+  "category": "Files",
+  "sfSymbol": "antenna.radiowaves.left.and.right",
+  "lucide": "radio",
+  "accepts": [
+   "*"
+  ]
+ },
+ {
+  "id": "receive-files",
+  "name": "Receive Files",
+  "subtitle": "Accept from nearby devices",
+  "category": "Files",
+  "sfSymbol": "tray.and.arrow.down",
+  "lucide": "download",
+  "accepts": []
+ },
+ {
+  "id": "zip-files",
+  "name": "Zip Files",
+  "subtitle": "Compress into an archive",
+  "category": "Files",
+  "sfSymbol": "doc.zipper",
+  "lucide": "file-archive",
+  "accepts": [
+   "*"
+  ]
+ },
+ {
+  "id": "unzip",
+  "name": "Unzip",
+  "subtitle": "Extract any archive",
+  "category": "Files",
+  "sfSymbol": "shippingbox",
+  "lucide": "package-open",
+  "accepts": [
+   "zip",
+   "7z",
+   "rar",
+   "tar"
+  ]
+ },
+ {
+  "id": "find-duplicates",
+  "name": "Find Duplicates",
+  "subtitle": "Spot identical files",
+  "category": "Files",
+  "sfSymbol": "doc.on.doc",
+  "lucide": "copy",
+  "accepts": [
+   "*"
+  ]
+ },
+ {
+  "id": "file-search",
+  "name": "File Search",
+  "subtitle": "Find any file instantly",
+  "category": "Files",
+  "sfSymbol": "magnifyingglass",
+  "lucide": "search",
+  "accepts": []
+ },
+ {
+  "id": "hash-file",
+  "name": "Hash File",
+  "subtitle": "SHA-256, MD5 checksums",
+  "category": "Files",
+  "sfSymbol": "number.square",
+  "lucide": "fingerprint",
+  "accepts": [
+   "*"
+  ]
+ },
+ {
+  "id": "shred-file",
+  "name": "Shred File",
+  "subtitle": "Delete beyond recovery",
+  "category": "Files",
+  "sfSymbol": "trash.slash",
+  "lucide": "trash-2",
+  "accepts": [
+   "*"
+  ]
+ },
+ {
+  "id": "clipboard-history",
+  "name": "Clipboard History",
+  "subtitle": "Everything you copied",
+  "category": "Text",
+  "sfSymbol": "doc.on.clipboard",
+  "lucide": "clipboard-list",
+  "accepts": []
+ },
+ {
+  "id": "snippets",
+  "name": "Snippets",
+  "subtitle": "Text you type often",
+  "category": "Text",
+  "sfSymbol": "text.badge.plus",
+  "lucide": "text-quote",
+  "accepts": []
+ },
+ {
+  "id": "word-count",
+  "name": "Word Count",
+  "subtitle": "Words, characters, reading time",
+  "category": "Text",
+  "sfSymbol": "textformat.123",
+  "lucide": "whole-word",
+  "accepts": [
+   "txt",
+   "md",
+   "docx"
+  ]
+ },
+ {
+  "id": "change-case",
+  "name": "Change Case",
+  "subtitle": "UPPER, lower, Title",
+  "category": "Text",
+  "sfSymbol": "textformat",
+  "lucide": "case-sensitive",
+  "accepts": []
+ },
+ {
+  "id": "markdown-preview",
+  "name": "Markdown Preview",
+  "subtitle": "Render markdown",
+  "category": "Text",
+  "sfSymbol": "doc.plaintext",
+  "lucide": "file-code",
+  "accepts": [
+   "md"
+  ]
+ },
+ {
+  "id": "json-formatter",
+  "name": "JSON Formatter",
+  "subtitle": "Pretty print and validate",
+  "category": "Text",
+  "sfSymbol": "curlybraces",
+  "lucide": "braces",
+  "accepts": [
+   "json"
+  ]
+ },
+ {
+  "id": "base64",
+  "name": "Base64",
+  "subtitle": "Encode or decode",
+  "category": "Text",
+  "sfSymbol": "chevron.left.forwardslash.chevron.right",
+  "lucide": "binary",
+  "accepts": []
+ },
+ {
+  "id": "qr-code",
+  "name": "QR Code",
+  "subtitle": "Make or read QR codes",
+  "category": "Text",
+  "sfSymbol": "qrcode",
+  "lucide": "qr-code",
+  "accepts": [
+   "png",
+   "jpg"
+  ]
+ },
+ {
+  "id": "diff-text",
+  "name": "Diff Text",
+  "subtitle": "Compare two texts",
+  "category": "Text",
+  "sfSymbol": "arrow.left.arrow.right",
+  "lucide": "diff",
+  "accepts": [
+   "txt",
+   "md"
+  ]
+ },
+ {
+  "id": "lorem-ipsum",
+  "name": "Lorem Ipsum",
+  "subtitle": "Placeholder text",
+  "category": "Text",
+  "sfSymbol": "text.justify",
+  "lucide": "pilcrow",
+  "accepts": []
+ },
+ {
+  "id": "screenshot-area",
+  "name": "Screenshot Area",
+  "subtitle": "Capture part of the screen",
+  "category": "Capture",
+  "sfSymbol": "camera.viewfinder",
+  "lucide": "scan",
+  "accepts": []
+ },
+ {
+  "id": "screenshot-window",
+  "name": "Screenshot Window",
+  "subtitle": "Capture one window",
+  "category": "Capture",
+  "sfSymbol": "macwindow",
+  "lucide": "app-window",
+  "accepts": []
+ },
+ {
+  "id": "record-screen",
+  "name": "Record Screen",
+  "subtitle": "Video of your screen",
+  "category": "Capture",
+  "sfSymbol": "record.circle",
+  "lucide": "circle-dot",
+  "accepts": []
+ },
+ {
+  "id": "copy-text-from-screen",
+  "name": "Copy Text from Screen",
+  "subtitle": "Select any text on screen",
+  "category": "Capture",
+  "sfSymbol": "text.viewfinder",
+  "lucide": "scan-text",
+  "accepts": []
+ },
+ {
+  "id": "measure-pixels",
+  "name": "Measure Pixels",
+  "subtitle": "Distances on screen",
+  "category": "Capture",
+  "sfSymbol": "ruler",
+  "lucide": "ruler",
+  "accepts": []
+ }
+]

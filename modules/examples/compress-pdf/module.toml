@@ -1,0 +1,44 @@
+# Compress PDF. Pattern B, tuned transform. Worked example 1 in docs/FLOWS.md.
+accepts = ["application/pdf"]
+outputs = ["application/pdf"]
+
+[module]
+id = "pdf.compress"
+name = "Compress PDF"
+version = "0.1.0"
+pattern = "B"
+summary = "Make this PDF small enough to email or upload."
+
+[options.target]
+type = "choice"
+values = ["smallest", "size", "quality"]
+default = "smallest"
+label = "Target"
+help = "Smallest that still looks good, under a size, or a quality level."
+
+[options.under_mb]
+type = "size"
+label = "Under"
+help = "Used when the target is a size, for example 20mb, 5mb or 1mb."
+
+[options.keep_text_selectable]
+type = "bool"
+default = true
+label = "Keep text selectable"
+
+[options.grayscale]
+type = "bool"
+default = false
+label = "Grayscale"
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

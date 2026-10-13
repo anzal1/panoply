@@ -1,0 +1,25 @@
+name: Bug report
+description: Something did not work
+labels: ["bug"]
+body:
+  - type: input
+    id: module
+    attributes:
+      label: Module
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: file
+    attributes:
+      label: Sample file or steps to reproduce
+      description: Only share files you are happy to make public. For security issues use the Security tab instead.
+  - type: input
+    id: platform
+    attributes:
+      label: Platform and version

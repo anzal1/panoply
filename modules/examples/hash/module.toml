@@ -1,0 +1,22 @@
+# Hash a file. Pattern I, inspect: read-only, writes nothing.
+accepts = ["*/*"]
+outputs = []
+
+[module]
+id = "files.hash"
+name = "Hash files"
+version = "0.1.0"
+pattern = "I"
+summary = "Show the SHA-256 checksum of each file."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = false
+cli = true
+mcp = true

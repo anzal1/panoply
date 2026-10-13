@@ -1,0 +1,12 @@
+[package]
+name = "panoply-ffi"
+description = "Placeholder for UniFFI bindings (Swift, Kotlin), arriving in Phase 2"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+
+[lints]
+workspace = true
