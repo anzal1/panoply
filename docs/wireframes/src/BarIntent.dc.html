@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Say what you want</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1D1D1F}
+a{color:#2D6CDF}a:hover{color:#1F55B8}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:rgba(0,0,0,.07);font-size:11px;color:rgba(29,29,31,.62);box-sizing:border-box}
+.tile{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex:none}
+.row{height:44px;display:flex;align-items:center;gap:12px;padding:0 12px;margin:0 8px;border-radius:10px}
+.sec{height:28px;display:flex;align-items:flex-end;padding:0 20px 6px;font-size:11px;font-weight:500;color:rgba(29,29,31,.45);box-sizing:border-box}
+.name{font-size:13.5px;font-weight:500;white-space:nowrap}
+.sub{font-size:12px;color:rgba(29,29,31,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.meta{margin-left:auto;font-size:11px;color:rgba(29,29,31,.45);flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;background:#FFFFFF;box-shadow:0 0 0 0.5px rgba(0,0,0,.14);font-size:12px;color:#1D1D1F;border:0;font-family:inherit}
+.pill b{font-weight:600}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #CBD1DA">
+  <div aria-hidden="true" style="position: absolute; left: 90px; top: 70px; width: 620px; height: 460px; border-radius: 14px; background: #E8EBF0; box-shadow: 0 10px 40px rgba(20,30,50,.12)"></div>
+  <div aria-hidden="true" style="position: absolute; left: 640px; top: 260px; width: 560px; height: 420px; border-radius: 14px; background: #F3F4F6; box-shadow: 0 10px 40px rgba(20,30,50,.12)"></div>
+
+  <div role="dialog" aria-label="Panoply command bar, natural language" style="position: absolute; left: 280px; top: 160px; width: 720px; height: 460px; border-radius: 20px; background: rgba(248,248,250,.8); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); box-shadow: 0 0 0 0.5px rgba(0,0,0,.14), 0 24px 70px rgba(15,20,40,.28); display: flex; flex-direction: column; overflow: hidden">
+    <div style="height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px 0 20px; box-sizing: border-box; flex: none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(29,29,31,.5)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4"></path></svg>
+      <label for="q3" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search tools</label>
+      <input id="q3" type="text" value="make this under 50 kb" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 20px; color: #1D1D1F; padding: 0">
+      <div style="display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 4px; border-radius: 8px; background: rgba(0,0,0,.06); flex: none">
+        <div aria-hidden="true" style="width: 24px; height: 24px; border-radius: 5px; background: #F4F1EA; box-shadow: inset 0 0 0 0.5px rgba(0,0,0,.15); display: flex; align-items: center; justify-content: center"><svg width="18" height="10" viewBox="0 0 36 20" fill="none" stroke="#1D1D1F" stroke-width="2" stroke-linecap="round"><path d="M2 14c4-10 7-10 8-4s3 7 6 0 5-6 7 1 6 4 11-3"></path></svg></div>
+        <span style="font-size: 12px; font-weight: 500">signature.jpg</span>
+        <span style="font-size: 11px; color: rgba(29,29,31,.5)">312 KB</span>
+      </div>
+    </div>
+    <div style="height: 0.5px; background: rgba(0,0,0,.09); flex: none"></div>
+
+    <div style="flex: 1; padding-top: 8px; overflow: hidden">
+      <div class="sec">Best match</div>
+      <div style="margin: 0 8px; padding: 12px; border-radius: 12px; background: rgba(0,0,0,.06); display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div class="tile" style="background: #D98A0029; color: #D98A00"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"></path></svg></div>
+          <span class="name">Resize to exact KB</span>
+          <span class="sub">Keeps it readable for form uploads</span>
+          <span class="meta"><span class="kbd">↵</span></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; padding-left: 40px; flex-wrap: wrap">
+          <button type="button" class="pill">Under <b>50 KB</b></button>
+          <button type="button" class="pill">Format <b>JPG</b></button>
+          <button type="button" class="pill">Size <b>600 × 240 px</b></button>
+          <button type="button" class="pill">Preset <b>None</b></button>
+          <span style="margin-left: auto; font-size: 12px; color: rgba(29,29,31,.62); display: flex; align-items: center; gap: 6px">312 KB <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg> <b style="color: #1F8A4C; font-weight: 600">about 47 KB</b></span>
+        </div>
+      </div>
+      <div class="sec">Also matches</div>
+      <sc-for list="{{ also }}" as="item" hint-placeholder-count="3">
+        <div class="row">
+          <div class="tile" style="background: {{ item.bg }}; color: {{ item.fg }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg></div>
+          <span class="name">{{ item.name }}</span>
+          <span class="sub">{{ item.sub }}</span>
+          <span class="meta">{{ item.meta }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="height: 0.5px; background: rgba(0,0,0,.09); flex: none"></div>
+    <div style="height: 40px; display: flex; align-items: center; padding: 0 20px; gap: 8px; box-sizing: border-box; flex: none">
+      <span style="font-size: 12px; color: rgba(29,29,31,.62)">Understood “under 50 kb” as a target size</span>
+      <span style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(29,29,31,.62)">Edit option <span class="kbd">⇥</span></span>
+      <span style="width: 0.5px; height: 14px; background: rgba(0,0,0,.12); margin: 0 6px"></span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(29,29,31,.62)">Run <span class="kbd">↵</span></span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const t = (c) => ({ bg: c + '29', fg: c });
+    return {
+      also: [
+        { name: 'Compress image', sub: 'Smallest file at the same look', meta: 'Image', d: 'M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7', ...t('#8E4EC6') },
+        { name: 'Signature cleaner', sub: 'Paper photo to clean transparent PNG', meta: 'ID and forms', d: 'M3 17c3-8 5-8 6-3s3 5 5 0 4-5 6 1M3 21h18', ...t('#D98A00') },
+        { name: 'Resize image', sub: 'Exact pixels or percent', meta: 'Image', d: 'M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7', ...t('#8E4EC6') }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

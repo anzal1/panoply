@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Command bar at rest</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1D1D1F}
+a{color:#2D6CDF}a:hover{color:#1F55B8}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:rgba(0,0,0,.07);font-size:11px;color:rgba(29,29,31,.62);box-sizing:border-box}
+.tile{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex:none}
+.row{height:44px;display:flex;align-items:center;gap:12px;padding:0 12px;margin:0 8px;border-radius:10px}
+.sel{background:rgba(0,0,0,.07)}
+.sec{height:28px;display:flex;align-items:flex-end;padding:0 20px 6px;font-size:11px;font-weight:500;color:rgba(29,29,31,.45);box-sizing:border-box}
+.name{font-size:13.5px;font-weight:500;white-space:nowrap}
+.sub{font-size:12px;color:rgba(29,29,31,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.meta{margin-left:auto;font-size:11px;color:rgba(29,29,31,.45);flex:none}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #CBD1DA">
+  <div aria-hidden="true" style="position: absolute; left: 90px; top: 70px; width: 620px; height: 460px; border-radius: 14px; background: #E8EBF0; box-shadow: 0 10px 40px rgba(20,30,50,.12)"></div>
+  <div aria-hidden="true" style="position: absolute; left: 640px; top: 260px; width: 560px; height: 420px; border-radius: 14px; background: #F3F4F6; box-shadow: 0 10px 40px rgba(20,30,50,.12)"></div>
+  <div aria-hidden="true" style="position: absolute; left: 700px; top: 300px; width: 300px; height: 14px; border-radius: 7px; background: #DDE1E7"></div>
+  <div aria-hidden="true" style="position: absolute; left: 700px; top: 330px; width: 440px; height: 10px; border-radius: 5px; background: #E5E8EC"></div>
+
+  <div role="dialog" aria-label="Panoply command bar" style="position: absolute; left: 280px; top: 160px; width: 720px; height: 460px; border-radius: 20px; background: rgba(248,248,250,.8); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); box-shadow: 0 0 0 0.5px rgba(0,0,0,.14), 0 24px 70px rgba(15,20,40,.28); display: flex; flex-direction: column; overflow: hidden">
+    <div style="height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 20px; box-sizing: border-box; flex: none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(29,29,31,.5)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4"></path></svg>
+      <label for="q" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search tools and files</label>
+      <input id="q" type="text" placeholder="Search 250+ tools and your files, or drop anything" style="flex: 1; border: 0; outline: none; background: transparent; font: inherit; font-size: 20px; color: #1D1D1F; padding: 0">
+    </div>
+    <div style="height: 0.5px; background: rgba(0,0,0,.09); flex: none"></div>
+
+    <div style="flex: 1; padding-top: 8px; overflow: hidden">
+      <div class="sec">Suggested</div>
+      <sc-for list="{{ suggested }}" as="item" hint-placeholder-count="4">
+        <div class="row {{ item.selCls }}">
+          <div class="tile" style="background: {{ item.bg }}; color: {{ item.fg }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg></div>
+          <span class="name">{{ item.name }}</span>
+          <span class="sub">{{ item.sub }}</span>
+          <sc-if value="{{ item.selected }}" hint-placeholder-val="{{ false }}"><span class="meta"><span class="kbd">↵</span></span></sc-if>
+          <sc-if value="{{ item.unselected }}" hint-placeholder-val="{{ true }}"><span class="meta">{{ item.meta }}</span></sc-if>
+        </div>
+      </sc-for>
+      <div class="sec">Recent</div>
+      <sc-for list="{{ recent }}" as="item" hint-placeholder-count="2">
+        <div class="row">
+          <div class="tile" style="background: {{ item.bg }}; color: {{ item.fg }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg></div>
+          <span class="name">{{ item.name }}</span>
+          <span class="sub">{{ item.sub }}</span>
+          <span class="meta">{{ item.meta }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="height: 0.5px; background: rgba(0,0,0,.09); flex: none"></div>
+    <div style="height: 40px; display: flex; align-items: center; padding: 0 20px; gap: 8px; box-sizing: border-box; flex: none">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="1" width="6.5" height="6.5" rx="1.8" fill="#2D6CDF"></rect><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.8" fill="#1D1D1F" opacity=".75"></rect><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.8" fill="#1D1D1F" opacity=".75"></rect><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.8" fill="#1D1D1F" opacity=".75"></rect></svg>
+      <span style="font-size: 12px; color: rgba(29,29,31,.62)">Panoply</span>
+      <span style="font-size: 11px; color: rgba(29,29,31,.42); margin-left: 6px">Everything runs on this Mac</span>
+      <span style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(29,29,31,.62)">Open <span class="kbd">↵</span></span>
+      <span style="width: 0.5px; height: 14px; background: rgba(0,0,0,.12); margin: 0 6px"></span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(29,29,31,.62)">Actions <span class="kbd">⌘</span><span class="kbd">K</span></span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const I = {
+      pdf: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4',
+      person: 'M12 12a3.5 3.5 0 1 0 0-7a3.5 3.5 0 1 0 0 7zM5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5',
+      image: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8.5 10a1.5 1.5 0 1 0 0-3a1.5 1.5 0 1 0 0 3zM20 15l-5-5L5 20',
+      send: 'M5 12a7 7 0 0 1 14 0M8.5 12a3.5 3.5 0 0 1 7 0M12 12v8',
+      kb: 'M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7',
+      search: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4'
+    };
+    const t = (c) => ({ bg: c + '29', fg: c });
+    const row = (o, i) => ({ ...o, selected: i === 0, unselected: i !== 0, selCls: i === 0 ? 'sel' : '' });
+    return {
+      suggested: [
+        { name: 'Compress PDF', sub: 'Shrink it, keep it sharp', meta: 'PDF', d: I.pdf, ...t('#E5484D') },
+        { name: 'Passport photo', sub: 'Any country, print-ready', meta: 'ID and forms', d: I.person, ...t('#D98A00') },
+        { name: 'HEIC to JPG', sub: 'iPhone photos anywhere', meta: 'Image', d: I.image, ...t('#8E4EC6') },
+        { name: 'Send to iPhone', sub: 'On your Wi-Fi, full speed', meta: 'Nearby', d: I.send, ...t('#2D6CDF') }
+      ].map(row),
+      recent: [
+        { name: 'Resize to exact KB', sub: 'signature.jpg to 48 KB', meta: '2 min ago', d: I.kb, ...t('#8E4EC6') },
+        { name: 'Find in screenshots', sub: '“order id”', meta: 'Yesterday', d: I.search, ...t('#12A594') }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

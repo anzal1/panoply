@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Share between devices</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1D1D1F}
+a{color:#2D6CDF}a:hover{color:#1F55B8}
+.card{border-radius:12px;background:#FFFFFF;box-shadow:0 0 0 0.5px rgba(0,0,0,.12),0 1px 2px rgba(0,0,0,.04)}
+.lbl{font-size:11px;font-weight:600;color:rgba(29,29,31,.5);margin:0 0 8px}
+.tg{display:flex;align-items:center;gap:10px;font-size:13px;min-height:40px}
+.sw{margin-left:auto;width:34px;height:20px;border-radius:10px;position:relative;flex:none;border:0;padding:0}
+.sw span{position:absolute;top:2px;width:16px;height:16px;border-radius:8px;background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.seg{display:flex;padding:2px;border-radius:8px;background:rgba(0,0,0,.06);gap:2px}
+.seg button{flex:1;height:26px;border:0;border-radius:6px;background:transparent;font:inherit;font-size:12px;color:rgba(29,29,31,.7)}
+.seg button.on{background:#FFFFFF;color:#1D1D1F;font-weight:500;box-shadow:0 0 0 0.5px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.08)}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #CBD1DA">
+  <div style="position: absolute; left: 60px; top: 40px; width: 1160px; height: 720px; border-radius: 14px; background: #F5F6F8; box-shadow: 0 0 0 0.5px rgba(0,0,0,.16), 0 24px 70px rgba(15,20,40,.25); overflow: hidden; display: flex; flex-direction: column">
+    <div style="height: 52px; display: flex; align-items: center; gap: 14px; padding: 0 16px; border-bottom: 0.5px solid rgba(0,0,0,.1); background: #F7F7F8; flex: none">
+      <div aria-hidden="true" style="display: flex; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 6px; background: #FF5F57"></span><span style="width: 12px; height: 12px; border-radius: 6px; background: #FEBC2E"></span><span style="width: 12px; height: 12px; border-radius: 6px; background: #28C840"></span></div>
+      <h1 style="margin: 0 0 0 8px; font-size: 13px; font-weight: 600">Nearby</h1>
+      <span style="font-size: 12px; color: rgba(29,29,31,.55)">Visible as MacBook Pro on HomeNet_5G</span>
+      <span style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(29,29,31,.55)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 11h12v10H6zM8 11V7a4 4 0 0 1 8 0v4"></path></svg>Direct and encrypted. No cloud.</span>
+    </div>
+
+    <div style="flex: 1; display: flex; gap: 24px; padding: 24px; min-height: 0">
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+          <sc-for list="{{ devices }}" as="item" hint-placeholder-count="4">
+            <div class="card" style="height: 118px; padding: 16px; box-sizing: border-box; display: flex; gap: 14px; align-items: center; opacity: {{ item.op }}">
+              <div style="width: 52px; height: 52px; border-radius: 14px; background: #EEF2FA; display: flex; align-items: center; justify-content: center; flex: none; color: #2D6CDF"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg></div>
+              <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+                <span style="font-size: 14px; font-weight: 600">{{ item.name }}</span>
+                <span style="font-size: 12px; color: rgba(29,29,31,.55)">{{ item.os }}</span>
+                <span style="font-size: 12px; color: {{ item.sc }}">{{ item.state }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <span style="font-size: 14px; font-weight: 600">Sending 3 files to iPhone</span>
+            <span style="font-size: 12px; color: rgba(29,29,31,.55)">Lease.pdf, Demo.mov, photos.zip</span>
+            <button type="button" style="margin-left: auto; border: 0; background: transparent; font: inherit; font-size: 12px; color: #2D6CDF">Cancel</button>
+          </div>
+          <div role="progressbar" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100" aria-label="Transfer progress" style="height: 6px; border-radius: 3px; background: rgba(0,0,0,.08); overflow: hidden"><div style="width: 64%; height: 6px; background: #2D6CDF; border-radius: 3px"></div></div>
+          <div style="display: flex; font-size: 12px; color: rgba(29,29,31,.55)"><span>264 of 412 MB</span><span style="margin-left: auto">A few seconds left</span></div>
+        </div>
+
+        <div style="border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); height: 84px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; color: rgba(29,29,31,.6); background: rgba(255,255,255,.5)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
+          Drop files on a device to send. Received files land in Downloads.
+        </div>
+      </div>
+
+      <aside aria-label="Sharing options" style="width: 300px; flex: none; display: flex; flex-direction: column; gap: 14px">
+        <div class="card" style="padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+          <span style="font-size: 13px; font-weight: 600">No Panoply on the other device?</span>
+          <svg width="132" height="132" viewBox="0 0 21 21" role="img" aria-label="QR code to receive files in a browser" shape-rendering="crispEdges">
+            <rect width="21" height="21" fill="#FFFFFF"></rect>
+            <sc-for list="{{ qr }}" as="c" hint-placeholder-count="120"><rect x="{{ c.x }}" y="{{ c.y }}" width="1" height="1" fill="#1D1D1F"></rect></sc-for>
+          </svg>
+          <span style="font-size: 12px; color: rgba(29,29,31,.6); line-height: 1.45">Scan with any phone camera. Files open in its browser over your Wi-Fi.</span>
+        </div>
+        <div class="card" style="padding: 6px 16px">
+          <div class="tg">Clipboard sync<button type="button" class="sw" role="switch" aria-checked="true" aria-label="Clipboard sync" style="background: #34C759"><span style="left: 16px"></span></button></div>
+          <div style="height: 0.5px; background: rgba(0,0,0,.08)"></div>
+          <div class="tg">Let my devices borrow this Mac<button type="button" class="sw" role="switch" aria-checked="true" aria-label="Let devices borrow this Mac" style="background: #34C759"><span style="left: 16px"></span></button></div>
+        </div>
+        <div>
+          <p class="lbl">Receive from</p>
+          <div class="seg" role="group" aria-label="Receive from">
+            <button type="button" class="on">My devices</button>
+            <button type="button">Everyone</button>
+            <button type="button">Off</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const phone = 'M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18h2';
+    const desktop = 'M3 4h18v12H3zM9 20h6M12 16v4';
+    const laptop = 'M5 5h14v10H5zM2 19h20';
+    const qr = [];
+    const finder = (ox, oy) => { for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) { const edge = x === 0 || y === 0 || x === 6 || y === 6; const core = x >= 2 && x <= 4 && y >= 2 && y <= 4; if (edge || core) qr.push({ x: ox + x, y: oy + y }); } };
+    finder(0, 0); finder(14, 0); finder(0, 14);
+    let s = 7;
+    for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) {
+      const inF = (x < 8 && y < 8) || (x > 12 && y < 8) || (x < 8 && y > 12);
+      if (inF) continue;
+      s = (s * 1103515245 + 12345) % 2147483648;
+      if ((s >> 16) % 2 === 0) qr.push({ x, y });
+    }
+    return {
+      qr,
+      devices: [
+        { name: 'iPhone', os: 'iOS 26', state: 'Receiving', sc: '#2D6CDF', d: phone, op: '1' },
+        { name: 'Pixel 9', os: 'Android 17', state: 'Ready', sc: '#1F8A4C', d: phone, op: '1' },
+        { name: 'Studio PC', os: 'Windows 11', state: 'Ready', sc: '#1F8A4C', d: desktop, op: '1' },
+        { name: 'ThinkPad', os: 'Fedora Linux', state: 'Asleep', sc: 'rgba(29,29,31,.5)', d: laptop, op: '0.6' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

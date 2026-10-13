@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>App window home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1D1D1F}
+a{color:#2D6CDF}a:hover{color:#1F55B8}
+.nav{display:flex;align-items:center;gap:9px;height:28px;padding:0 10px;border-radius:7px;font-size:13px;color:#1D1D1F;text-decoration:none}
+.nav.on{background:rgba(0,0,0,.08);font-weight:500}
+.navh{font-size:11px;font-weight:600;color:rgba(29,29,31,.42);padding:14px 10px 6px}
+.h{font-size:13px;font-weight:600;margin:0 0 10px}
+.tile{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex:none}
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:rgba(0,0,0,.07);font-size:11px;color:rgba(29,29,31,.62);box-sizing:border-box}
+</style>
+</helmet>
+<div style="width: 1280px; height: 800px; position: relative; overflow: hidden; background: #CBD1DA">
+  <div style="position: absolute; left: 60px; top: 40px; width: 1160px; height: 720px; border-radius: 14px; background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(0,0,0,.16), 0 24px 70px rgba(15,20,40,.25); overflow: hidden; display: flex">
+    <nav aria-label="Sections" style="width: 220px; background: rgba(240,241,244,.92); border-right: 0.5px solid rgba(0,0,0,.1); padding: 16px 10px; box-sizing: border-box; flex: none; display: flex; flex-direction: column">
+      <div aria-hidden="true" style="display: flex; gap: 8px; padding: 0 6px 18px"><span style="width: 12px; height: 12px; border-radius: 6px; background: #FF5F57"></span><span style="width: 12px; height: 12px; border-radius: 6px; background: #FEBC2E"></span><span style="width: 12px; height: 12px; border-radius: 6px; background: #28C840"></span></div>
+      <sc-for list="{{ top }}" as="item" hint-placeholder-count="3">
+        <a href="#" class="nav {{ item.cls }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg>{{ item.name }}</a>
+      </sc-for>
+      <div class="navh">Tools</div>
+      <sc-for list="{{ tools }}" as="item" hint-placeholder-count="10">
+        <a href="#" class="nav"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="{{ item.c }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg>{{ item.name }}<span style="margin-left: auto; font-size: 11px; color: rgba(29,29,31,.4)">{{ item.n }}</span></a>
+      </sc-for>
+      <div class="navh">Panoply</div>
+      <a href="#" class="nav"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12a7 7 0 0 1 14 0M8.5 12a3.5 3.5 0 0 1 7 0M12 12v8"></path></svg>Nearby</a>
+      <a href="#" class="nav"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"></path></svg>Modules</a>
+    </nav>
+
+    <main style="flex: 1; min-width: 0; padding: 22px 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <label for="hs" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Search</label>
+        <div style="flex: 1; height: 34px; border-radius: 9px; background: rgba(0,0,0,.05); display: flex; align-items: center; gap: 8px; padding: 0 12px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(29,29,31,.5)" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4"></path></svg>
+          <input id="hs" type="text" placeholder="Search tools and files" style="flex: 1; border: 0; outline: none; background: transparent; font: inherit; font-size: 13px">
+          <span class="kbd">⌥</span><span class="kbd">Space</span>
+        </div>
+      </div>
+
+      <div style="height: 140px; border-radius: 14px; background: #F5F6F8; box-shadow: inset 0 0 0 1px rgba(0,0,0,.07); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2D6CDF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"></path></svg>
+        <span style="font-size: 15px; font-weight: 600">Drop anything here</span>
+        <span style="font-size: 12px; color: rgba(29,29,31,.55)">PDFs, photos, videos, documents, folders. It stays on this Mac.</span>
+      </div>
+
+      <div style="display: flex; gap: 24px">
+        <section style="flex: 1; min-width: 0">
+          <h2 class="h">Quick actions</h2>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+            <sc-for list="{{ quick }}" as="item" hint-placeholder-count="6">
+              <button type="button" style="height: 60px; border: 0; border-radius: 11px; background: #FFFFFF; box-shadow: 0 0 0 0.5px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.04); display: flex; align-items: center; gap: 10px; padding: 0 12px; font: inherit; text-align: left">
+                <span class="tile" style="background: {{ item.bg }}; color: {{ item.fg }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg></span>
+                <span style="font-size: 13px; font-weight: 500">{{ item.name }}</span>
+              </button>
+            </sc-for>
+          </div>
+        </section>
+        <section style="width: 260px; flex: none">
+          <h2 class="h">Nearby</h2>
+          <div style="border-radius: 11px; box-shadow: 0 0 0 0.5px rgba(0,0,0,.12); overflow: hidden">
+            <sc-for list="{{ devices }}" as="item" hint-placeholder-count="3">
+              <div style="height: 43px; display: flex; align-items: center; gap: 10px; padding: 0 12px; border-bottom: 0.5px solid rgba(0,0,0,.07)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(29,29,31,.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg>
+                <span style="font-size: 13px">{{ item.name }}</span>
+                <span style="margin-left: auto; font-size: 11px; color: rgba(29,29,31,.45)">{{ item.state }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+
+      <section>
+        <h2 class="h">Recent</h2>
+        <sc-for list="{{ recent }}" as="item" hint-placeholder-count="3">
+          <div style="height: 44px; display: flex; align-items: center; gap: 12px; border-bottom: 0.5px solid rgba(0,0,0,.07)">
+            <span class="tile" style="background: {{ item.bg }}; color: {{ item.fg }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg></span>
+            <span style="font-size: 13px; font-weight: 500; width: 220px">{{ item.name }}</span>
+            <span style="font-size: 12px; color: rgba(29,29,31,.6)">{{ item.result }}</span>
+            <span style="margin-left: auto; font-size: 11px; color: rgba(29,29,31,.45)">{{ item.when }}</span>
+            <a href="#" style="font-size: 12px; text-decoration: none">Show in Finder</a>
+          </div>
+        </sc-for>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const I = {
+      home: 'M4 11l8-7 8 7M6 10v10h12V10',
+      search: 'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14zM20 20l-4-4',
+      clock: 'M12 21a9 9 0 1 0 0-18a9 9 0 1 0 0 18zM12 7v5l3 2',
+      pdf: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h4',
+      person: 'M12 12a3.5 3.5 0 1 0 0-7a3.5 3.5 0 1 0 0 7zM5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5',
+      image: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8.5 10a1.5 1.5 0 1 0 0-3a1.5 1.5 0 1 0 0 3zM20 15l-5-5L5 20',
+      video: 'M4 6h11a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zM16 10l5-3v10l-5-3',
+      audio: 'M3 12h2M7 8v8M11 5v14M15 9v6M19 11v2',
+      doc: 'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5',
+      folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+      cam: 'M4 8h3l2-3h6l2 3h3v11H4zM12 17a3.5 3.5 0 1 0 0-7a3.5 3.5 0 1 0 0 7z',
+      text: 'M5 6h14M5 12h14M5 18h9',
+      calc: 'M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM8 7h8M8 12h2M14 12h2M8 16h2M14 16h2',
+      code: 'M8 8l-4 4 4 4M16 8l4 4-4 4M13 6l-2 12',
+      shield: 'M12 3l7 3v5c0 5-3 8-7 10c-4-2-7-5-7-10V6z',
+      kb: 'M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7',
+      merge: 'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5',
+      scissors: 'M6 9a3 3 0 1 0 0-6a3 3 0 1 0 0 6zM6 21a3 3 0 1 0 0-6a3 3 0 1 0 0 6zM8.1 8.1L20 20M8.1 15.9L20 4',
+      wand: 'M15 4V2M15 10V8M11 6h-2M21 6h-2M17.5 8.5l1.5 1.5M17.5 3.5L19 2M3 21l11-11',
+      phone: 'M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM11 18h2',
+      desktop: 'M3 4h18v12H3zM9 20h6M12 16v4',
+      laptop: 'M5 5h14v10H5zM2 19h20'
+    };
+    const t = (c) => ({ bg: c + '29', fg: c });
+    return {
+      top: [
+        { name: 'Home', d: I.home, cls: 'on' },
+        { name: 'Find', d: I.search, cls: '' },
+        { name: 'History', d: I.clock, cls: '' }
+      ],
+      tools: [
+        { name: 'PDF', d: I.pdf, c: '#E5484D', n: '52' },
+        { name: 'ID and forms', d: I.person, c: '#D98A00', n: '8' },
+        { name: 'Images', d: I.image, c: '#8E4EC6', n: '29' },
+        { name: 'Video', d: I.video, c: '#F76B15', n: '26' },
+        { name: 'Audio', d: I.audio, c: '#D6409F', n: '16' },
+        { name: 'Documents', d: I.doc, c: '#2D6CDF', n: '11' },
+        { name: 'Files', d: I.folder, c: '#2D6CDF', n: '21' },
+        { name: 'Capture', d: I.cam, c: '#12A594', n: '8' },
+        { name: 'Text', d: I.text, c: '#30A46C', n: '10' },
+        { name: 'Calculators', d: I.calc, c: '#6E56CF', n: '11' },
+        { name: 'Developer', d: I.code, c: '#5F6B7A', n: '15' },
+        { name: 'Privacy', d: I.shield, c: '#5F6B7A', n: '5' }
+      ],
+      quick: [
+        { name: 'Compress PDF', d: I.kb, ...t('#E5484D') },
+        { name: 'Merge PDFs', d: I.merge, ...t('#E5484D') },
+        { name: 'Passport photo', d: I.person, ...t('#D98A00') },
+        { name: 'Remove background', d: I.wand, ...t('#8E4EC6') },
+        { name: 'Trim video', d: I.scissors, ...t('#F76B15') },
+        { name: 'Transcribe audio', d: I.audio, ...t('#D6409F') }
+      ],
+      devices: [
+        { name: 'iPhone', d: I.phone, state: 'Ready' },
+        { name: 'Pixel 9', d: I.phone, state: 'Ready' },
+        { name: 'Studio PC', d: I.desktop, state: 'Asleep' }
+      ],
+      recent: [
+        { name: 'Compressed Lease.pdf', result: '4.2 MB to 880 KB', when: '10:42', d: I.kb, ...t('#E5484D') },
+        { name: 'Passport photo', result: 'Print sheet, 8 photos', when: '10:31', d: I.person, ...t('#D98A00') },
+        { name: 'Trimmed Demo.mov', result: '2:14 to 0:48', when: 'Yesterday', d: I.scissors, ...t('#F76B15') }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Panoply on the phone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#1D1D1F}
+a{color:#2D6CDF}a:hover{color:#1F55B8}
+.phone{width:390px;height:844px;border-radius:56px;background:#111214;padding:10px;box-sizing:border-box;box-shadow:0 30px 80px rgba(15,20,40,.3)}
+.screen{width:100%;height:100%;border-radius:46px;overflow:hidden;position:relative}
+.tile{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none}
+</style>
+</helmet>
+<div style="width: 1000px; height: 960px; background: #CBD1DA; display: flex; align-items: center; justify-content: center; gap: 60px">
+
+  <div class="phone">
+    <div class="screen" style="background: #1C1C1E">
+      <div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 0; height: 420px; background: #B9A48E"></div>
+      <div aria-hidden="true" style="position: absolute; left: 130px; top: 110px; width: 110px; height: 140px; border-radius: 55px; background: #CFC2B3"></div>
+      <div aria-hidden="true" style="position: absolute; left: 80px; top: 270px; width: 210px; height: 180px; border-radius: 105px 105px 0 0; background: #5B6472"></div>
+      <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(0,0,0,.35)"></div>
+
+      <div role="dialog" aria-label="Share with Panoply" style="position: absolute; left: 0; right: 0; bottom: 0; height: 560px; border-radius: 30px 30px 0 0; background: #F2F2F7; display: flex; flex-direction: column; padding: 8px 16px 24px; box-sizing: border-box; gap: 14px">
+        <div aria-hidden="true" style="width: 36px; height: 5px; border-radius: 3px; background: rgba(0,0,0,.18); align-self: center"></div>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div aria-hidden="true" style="width: 44px; height: 44px; border-radius: 8px; background: #B9A48E"></div>
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 15px; font-weight: 600">IMG_2041.HEIC</span>
+            <span style="font-size: 13px; color: rgba(29,29,31,.55)">Photo · 3.1 MB</span>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="1" width="6.5" height="6.5" rx="1.8" fill="#2D6CDF"></rect><rect x="8.5" y="1" width="6.5" height="6.5" rx="1.8" fill="#1D1D1F" opacity=".75"></rect><rect x="1" y="8.5" width="6.5" height="6.5" rx="1.8" fill="#1D1D1F" opacity=".75"></rect><rect x="8.5" y="8.5" width="6.5" height="6.5" rx="1.8" fill="#1D1D1F" opacity=".75"></rect></svg>
+          <span style="font-size: 13px; font-weight: 600; color: rgba(29,29,31,.6)">Panoply</span>
+        </div>
+        <div style="border-radius: 14px; background: #FFFFFF; overflow: hidden">
+          <sc-for list="{{ acts }}" as="item" hint-placeholder-count="6">
+            <div style="height: 54px; display: flex; align-items: center; gap: 12px; padding: 0 14px; border-bottom: 0.5px solid rgba(0,0,0,.08)">
+              <div class="tile" style="background: {{ item.bg }}; color: {{ item.fg }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ item.d }}"></path></svg></div>
+              <div style="display: flex; flex-direction: column; gap: 1px; min-width: 0">
+                <span style="font-size: 15px">{{ item.name }}</span>
+                <span style="font-size: 12px; color: rgba(29,29,31,.5)">{{ item.sub }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phone">
+    <div class="screen" style="background: #0E0F11">
+      <div aria-hidden="true" style="position: absolute; inset: 0; background: #3A3F47"></div>
+      <div aria-hidden="true" style="position: absolute; left: 110px; top: 210px; width: 150px; height: 196px; border-radius: 75px; background: #8C7F72"></div>
+      <div aria-hidden="true" style="position: absolute; left: 50px; top: 430px; width: 270px; height: 260px; border-radius: 135px 135px 0 0; background: #262A31"></div>
+      <div aria-hidden="true" style="position: absolute; left: 97px; top: 178px; width: 176px; height: 236px; border-radius: 88px; border: 2.5px solid #FFFFFF; box-sizing: border-box"></div>
+
+      <div style="position: absolute; left: 0; right: 0; top: 62px; display: flex; justify-content: center">
+        <button type="button" style="height: 32px; border: 0; border-radius: 16px; padding: 0 14px; background: rgba(0,0,0,.55); color: #FFFFFF; font: inherit; font-size: 13px; font-weight: 500; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px)">India · Passport · 35 × 45 mm</button>
+      </div>
+      <div style="position: absolute; left: 0; right: 0; top: 440px; display: flex; justify-content: center">
+        <span style="height: 30px; border-radius: 15px; padding: 0 14px; background: rgba(255,255,255,.92); color: #1D1D1F; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center">Move a little closer</span>
+      </div>
+      <div style="position: absolute; left: 0; right: 0; bottom: 170px; display: flex; justify-content: center; gap: 18px; font-size: 12px; color: rgba(255,255,255,.85)">
+        <span style="display: flex; align-items: center; gap: 5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5BD38A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"></path></svg>Light</span>
+        <span style="display: flex; align-items: center; gap: 5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5BD38A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l4 4 10-10"></path></svg>Straight</span>
+        <span style="display: flex; align-items: center; gap: 5px"><span style="width: 8px; height: 8px; border-radius: 4px; background: #FFC53D"></span>Distance</span>
+      </div>
+      <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 150px; background: #121316; display: flex; align-items: center; justify-content: space-between; padding: 0 44px; box-sizing: border-box">
+        <div aria-hidden="true" style="width: 44px; height: 44px; border-radius: 8px; background: #8C7F72; box-shadow: 0 0 0 1.5px rgba(255,255,255,.6)"></div>
+        <button type="button" aria-label="Take photo" style="width: 74px; height: 74px; border-radius: 37px; border: 4px solid #FFFFFF; background: transparent; padding: 4px; box-sizing: border-box"><span style="display: block; width: 100%; height: 100%; border-radius: 50%; background: #FFFFFF"></span></button>
+        <button type="button" aria-label="Flip camera" style="width: 44px; height: 44px; border-radius: 22px; border: 0; background: rgba(255,255,255,.18); color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"></path></svg></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1000,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const t = (c) => ({ bg: c + '24', fg: c });
+    return {
+      acts: [
+        { name: 'Passport photo', sub: 'Face found, ready to crop', d: 'M12 12a3.5 3.5 0 1 0 0-7a3.5 3.5 0 1 0 0 7zM5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5', ...t('#D98A00') },
+        { name: 'Resize to exact KB', sub: 'For form uploads', d: 'M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7', ...t('#D98A00') },
+        { name: 'Remove background', sub: 'On this phone', d: 'M15 4V2M15 10V8M11 6h-2M21 6h-2M17.5 8.5l1.5 1.5M17.5 3.5L19 2M3 21l11-11', ...t('#8E4EC6') },
+        { name: 'HEIC to JPG', sub: 'Opens anywhere', d: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM20 15l-5-5L5 20', ...t('#8E4EC6') },
+        { name: 'Send to MacBook Pro', sub: 'Nearby on Wi-Fi', d: 'M5 12a7 7 0 0 1 14 0M8.5 12a3.5 3.5 0 0 1 7 0M12 12v8', ...t('#2D6CDF') },
+        { name: 'Run on MacBook Pro', sub: 'Heavy job, result comes back here', d: 'M5 5h14v10H5zM2 19h20', ...t('#2D6CDF') }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

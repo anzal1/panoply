@@ -1,0 +1,19 @@
+{"v":3,"createdOnFiles":{"v":1,"at":"2026-10-13T12:00:00Z"},"title":"Panoply wireframes","launch":{"view":"canvas"},"pages":[],
+"boards":{
+"Main.dc.html":{"x":0,"y":0,"w":1280,"h":800,"title":"1 · Command bar, at rest"},
+"BarDrop.dc.html":{"x":1360,"y":0,"w":1280,"h":800,"title":"2 · A file dropped on the bar"},
+"BarIntent.dc.html":{"x":2720,"y":0,"w":1280,"h":800,"title":"3 · Say what you want"},
+"Tool.dc.html":{"x":0,"y":1200,"w":1280,"h":800,"title":"4 · A tool: passport photo"},
+"Home.dc.html":{"x":1360,"y":1200,"w":1280,"h":800,"title":"5 · App window, home"},
+"Find.dc.html":{"x":2720,"y":1200,"w":1280,"h":800,"title":"6 · Find anything"},
+"Nearby.dc.html":{"x":0,"y":2400,"w":1280,"h":800,"title":"7 · Share between devices"},
+"Modules.dc.html":{"x":1360,"y":2400,"w":1280,"h":800,"title":"8 · Modules, by the people"},
+"Phone.dc.html":{"x":2720,"y":2400,"w":1000,"h":960,"title":"9 · Phone"}
+},
+"order":["Main.dc.html","BarDrop.dc.html","BarIntent.dc.html","Tool.dc.html","Home.dc.html","Find.dc.html","Nearby.dc.html","Modules.dc.html","Phone.dc.html"],
+"notes":{
+"t1":{"x":0,"y":-300,"text":"The bar: one shortcut, every tool","kind":"title1","maxW":4000},
+"t2":{"x":0,"y":900,"text":"The app: tools, home and search","kind":"title1","maxW":4000},
+"t3":{"x":0,"y":2100,"text":"Devices, modules and the phone","kind":"title1","maxW":3720}
+},
+"designSystems":[]}
