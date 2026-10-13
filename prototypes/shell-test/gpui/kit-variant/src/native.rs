@@ -242,3 +242,23 @@ pub fn blur_view_count(w: Obj) -> usize {
         c
     }
 }
+
+/// Move the window frame origin (AppKit screen coordinates, bottom-left based). Never orders the window front.
+pub fn set_origin(w: Obj, x: f64, y: f64) {
+    unsafe {
+        let _: () = msg_send![w, setFrameOrigin: Pt { x, y }];
+    }
+}
+
+/// The GPUI-owned NSView (the one that implements NSTextInputClient).
+pub fn ns_view(window: &Window) -> Option<Obj> {
+    let h = HasWindowHandle::window_handle(window).ok()?;
+    match h.as_raw() {
+        RawWindowHandle::AppKit(a) => Some(a.ns_view.as_ptr() as Obj),
+        _ => None,
+    }
+}
+
+pub fn content_view(w: Obj) -> Obj {
+    unsafe { msg_send![w, contentView] }
+}

@@ -171,12 +171,11 @@ Gauntlet, an open-source Rust launcher with the same pitch, stalled at about
 - **Native UI per platform, one shared core.** Decided 2026-10-13 after the
   shell kill test (`prototypes/shell-test/`). Performance and low memory beat
   "one UI codebase".
-  - macOS and iOS: SwiftUI (shared code across both).
-  - Android: Jetpack Compose.
-  - Windows and Linux: a Rust-native GPU UI (GPUI, which Zed ships on all three
-    desktops, or Slint) or Tauri, decided by the same kill test run on those
-    platforms. Linux WebKitGTK and Windows WebView2 memory are the risks.
-  - The Rust core reaches every UI through UniFFI bindings (Swift, Kotlin).
+  - macOS, Windows and Linux: one GPUI desktop app (Zed's Rust UI framework),
+    calling the core directly. Amended after GPUI matched SwiftUI on memory
+    and startup and the user could not tell them apart (ADR 0001 amendment).
+  - iOS: SwiftUI. Android: Jetpack Compose. Both reach the core through
+    UniFFI bindings.
   - This stays sustainable because modules never ship UI. They declare inputs,
     options and outputs, and each platform renders that small component set
     natively. Modules are written once, the renderer is written three times.

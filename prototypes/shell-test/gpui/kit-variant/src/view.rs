@@ -102,12 +102,12 @@ pub struct Bar {
     metrics: Arc<Mutex<Vec<f64>>>,
 
     // Mirror of the kit input's value; the kit's `InputState` owns the real text, caret, selection, IME and undo.
-    query: String,
+    pub query: String,
     input: Entity<InputState>,
     _input_sub: Subscription,
     file: Option<DroppedFile>,
     list: ItemList,
-    selected: usize,
+    pub selected: usize,
     glide: bool,
 
     pill: SpringState,
@@ -118,7 +118,7 @@ pub struct Bar {
     was_moving: bool,
 
     flash_at: Option<Instant>,
-    footer_msg: Option<String>,
+    pub footer_msg: Option<String>,
     msg_token: u64,
     actions_pressed: bool,
     drag_ext: Option<String>,
@@ -128,6 +128,8 @@ pub struct Bar {
     vis: f64,
     anim: Option<VisAnim>,
     pub suppress_autohide: bool,
+    /// selftest-input: field-only zoomed render (1.0 = normal bar).
+    pub zoom: f32,
 
     launch_pending: bool,
     pending_show: Option<f64>,
@@ -142,8 +144,14 @@ impl Bar {
             native::setup_panel(w, RADIUS as f64);
             native::set_alpha(w, 0.0);
             native::set_ignores_mouse(w, true);
-            native::position(w, WIDTH as f64, HEIGHT as f64, 0.22);
-            native::order_front_regardless(w);
+            // selftest-input: the panel is never ordered front. It stays at a far off-screen origin for its whole life.
+            #[cfg(feature = "selftest-input")]
+            native::set_origin(w, -20000.0, 400.0);
+            #[cfg(not(feature = "selftest-input"))]
+            {
+                native::position(w, WIDTH as f64, HEIGHT as f64, 0.22);
+                native::order_front_regardless(w);
+            }
         }
         let placeholder = model.placeholder.clone();
         let input = cx.new(|cx| InputState::new(window, cx).placeholder(placeholder));
@@ -202,12 +210,48 @@ impl Bar {
             vis: 0.0,
             anim: None,
             suppress_autohide: false,
-            launch_pending: true,
+            zoom: 1.0,
+            launch_pending: !cfg!(feature = "selftest-input"),
             pending_show: None,
             pending_mark: None,
         };
         bar.snap_to_selection();
         bar
+    }
+
+    // ---- selftest accessors ----
+
+    #[cfg(feature = "selftest-input")]
+    pub fn input_entity(&self) -> Entity<InputState> {
+        self.input.clone()
+    }
+    #[cfg(feature = "selftest-input")]
+    pub fn row_count(&self) -> usize {
+        self.list.rows.len()
+    }
+    #[cfg(feature = "selftest-input")]
+    pub fn rows_for(&self, q: &str) -> usize {
+        self.model.build(q, self.file.as_ref().map(|f| f.ext.as_str())).rows.len()
+    }
+    #[cfg(feature = "selftest-input")]
+    pub fn has_file(&self) -> bool {
+        self.file.is_some()
+    }
+    #[cfg(feature = "selftest-input")]
+    pub fn first_row_name(&self) -> Option<String> {
+        self.list.rows.first().map(|r| self.model.tools[r.tool].name.clone())
+    }
+    /// Test reset: empty field and fresh editing history, no show path involved.
+    #[cfg(feature = "selftest-input")]
+    pub fn selftest_reset(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.reset(window, cx);
+        let focus = self.input.read(cx).focus_handle(cx).clone();
+        window.focus(&focus, cx);
+        cx.notify();
+    }
+    #[cfg(feature = "selftest-input")]
+    pub fn selftest_set_file(&mut self, f: Option<DroppedFile>, cx: &mut Context<Self>) {
+        self.set_file(f, cx);
     }
 
     // ---- state ----
@@ -656,12 +700,25 @@ impl Render for Bar {
             .aria_value(self.query.clone())
             .flex_1()
             .min_w_0()
-            .h(px(24.))
+            .h(px(24. * self.zoom))
             .overflow_hidden()
-            .text_size(px(20.))
-            .line_height(px(24.))
+            .text_size(px(20. * self.zoom))
+            .line_height(px(24. * self.zoom))
             .text_color(t.ink)
             .child(KitInput::new(&self.input));
+        if self.zoom > 1.0 {
+            // selftest-input: the field alone on an opaque card, text sized so a 2x backing store shows 3x pixels.
+            let z = self.zoom;
+            return div()
+                .size_full()
+                .flex()
+                .flex_row()
+                .items_center()
+                .pl(px(20. * z))
+                .bg(if dark { col(0.1, 0.1, 0.11, 1.0) } else { col(1.0, 1.0, 1.0, 1.0) })
+                .child(field)
+                .into_any_element();
+        }
 
         let chip = self.file.as_ref().map(|f| {
             div()
@@ -973,6 +1030,16 @@ impl Render for Bar {
                     .gap(px(16.))
                     .child(
                         div()
+                            .id("footer-open")
+                            .role(Role::Button)
+                            .aria_label("Open selected tool")
+                            .aria_keyshortcuts("Return")
+                            .on_a11y_action(AccessibleAction::Click, {
+                                let this = cx.entity().downgrade();
+                                move |_, _, cx| {
+                                    this.update(cx, |bar, cx| bar.run(cx)).ok();
+                                }
+                            })
                             .flex()
                             .items_center()
                             .gap(px(8.))
@@ -981,6 +1048,16 @@ impl Render for Bar {
                     )
                     .child(
                         div()
+                            .id("footer-actions")
+                            .role(Role::Button)
+                            .aria_label("Actions")
+                            .aria_keyshortcuts("Meta+K")
+                            .on_a11y_action(AccessibleAction::Click, {
+                                let this = cx.entity().downgrade();
+                                move |_, _, cx| {
+                                    this.update(cx, |bar, cx| bar.press_actions(cx)).ok();
+                                }
+                            })
                             .flex()
                             .items_center()
                             .gap(px(8.))
@@ -1032,5 +1109,6 @@ impl Render for Bar {
             .when(dragging, |d| {
                 d.child(div().absolute().inset_0().rounded(px(RADIUS)).border(px(2.)).border_color(col(ar, ag, ab, 0.4)))
             })
+            .into_any_element()
     }
 }

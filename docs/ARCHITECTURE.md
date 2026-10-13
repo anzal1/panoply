@@ -13,14 +13,14 @@ blazing fast, bang on utility, lowest possible memory, butter smooth.
 ```mermaid
 flowchart TB
   subgraph Surfaces
-    MAC["Mac and iPhone app<br/>SwiftUI"]
+    DESK["Desktop app (macOS, Windows, Linux)<br/>GPUI, calls the core directly"]
+    IOS["iPhone app<br/>SwiftUI"]
     AND["Android app<br/>Jetpack Compose"]
-    WIN["Windows and Linux app<br/>renderer chosen by kill test"]
     EXT["Finder, Explorer and share-sheet extensions"]
     CLI["panoply CLI"]
     MCP["MCP server for AI agents"]
   end
-  FFI["panoply-ffi<br/>UniFFI bindings (Swift, Kotlin)"]
+  FFI["panoply-ffi<br/>UniFFI bindings for mobile (Swift, Kotlin)"]
   subgraph Core["Rust core"]
     JOB["Job engine<br/>sniff, defaults, estimate, run, history"]
     HOST["Module host<br/>manifests, sandbox, registry"]
@@ -37,7 +37,8 @@ flowchart TB
     ML["ONNX Runtime for fallback models"]
     OS["OS engines: Vision, Speech, ML Kit,<br/>Windows AI, Translation"]
   end
-  MAC & AND & WIN & EXT --> FFI --> Core
+  IOS & AND & EXT --> FFI --> Core
+  DESK --> Core
   CLI & MCP --> Core
   JOB --> HOST --> LADDER
   JOB --> ROUTE
@@ -165,8 +166,9 @@ opinion.
   memory per job (under 300 MB for documents and images, flat for media).
   A module that misses one does not ship. Numbers are in
   [FLOWS.md](FLOWS.md#budgets-every-module-must-meet).
-- **Measured baseline.** The SwiftUI shell idled at 30 MB with a 182 ms cold
-  start in the shell kill test (`prototypes/shell-test`).
+- **Measured baseline.** In the shell kill test (`prototypes/shell-test`) the
+  GPUI bar idled at 33 MB with a 152 to 190 ms cold start, next to SwiftUI at
+  30 MB and 182 ms.
 
 ## 8. Sharing between devices
 
@@ -201,9 +203,9 @@ opinion.
 
 | Platform | UI | Status |
 |---|---|---|
-| macOS | SwiftUI, Liquid Glass | Phase 2 |
+| macOS | GPUI (one desktop app), native Swift only for Finder and share extensions | Phase 2 |
 | Android | Jetpack Compose | after Mac launch |
-| Windows | GPUI, Slint or Tauri, by kill test | after Android |
-| iOS | SwiftUI shared with macOS | after Windows |
-| Linux | same as Windows | last |
+| Windows | the same GPUI desktop app | after Android |
+| iOS | SwiftUI | after Windows |
+| Linux | the same GPUI desktop app | with Windows |
 | CLI and MCP | Rust, all desktops | first public drop (Phase 1) |

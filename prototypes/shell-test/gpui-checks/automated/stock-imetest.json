@@ -1,0 +1,3705 @@
+{
+  "test": "imetest",
+  "kit": {
+    "gpui-pre": "0.3.9",
+    "gpui-base": "0.7.3",
+    "accesskit_macos": "0.26.3"
+  },
+  "driver": "NSTextInputClient selectors on GPUI's NSView + Window::dispatch_keystroke; no OS input method, no pasteboard, no window shown",
+  "window": {
+    "visible": false,
+    "key": false,
+    "frame_origin": [
+      -20000.0,
+      400.0
+    ],
+    "frame_size": [
+      720.0,
+      460.0
+    ],
+    "alpha": 0.0
+  },
+  "summary": {
+    "passed": 3,
+    "total": 11
+  },
+  "cases": [
+    {
+      "case": "hindi_kshetra",
+      "note": "kshetra -> क्षेत्र, Hindi - Transliteration style: marked text grows, Return commits with insertText",
+      "pass": false,
+      "expected": "क्षेत्र",
+      "got": "क्षेत्र",
+      "expected_utf16_len": 7,
+      "conjunct_aware_clusters": [
+        "क्षे",
+        "त्र"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "क्षे",
+        "त्र"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,1) got (0,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"क\" got \"क\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 1 within 0..1"
+        },
+        {
+          "check": "marked_range_reported[1]",
+          "pass": true,
+          "detail": "want (0,2) got (0,2) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[1]",
+          "pass": true,
+          "detail": "want \"कस\" got \"कस\""
+        },
+        {
+          "check": "caret_inside_marked[1]",
+          "pass": true,
+          "detail": "caret 2 within 0..2"
+        },
+        {
+          "check": "marked_range_reported[2]",
+          "pass": true,
+          "detail": "want (0,3) got (0,3) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[2]",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\" got \"क\\u{94d}ष\""
+        },
+        {
+          "check": "caret_inside_marked[2]",
+          "pass": true,
+          "detail": "caret 3 within 0..3"
+        },
+        {
+          "check": "marked_range_reported[3]",
+          "pass": true,
+          "detail": "want (0,4) got (0,4) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[3]",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\\u{947}\" got \"क\\u{94d}ष\\u{947}\""
+        },
+        {
+          "check": "caret_inside_marked[3]",
+          "pass": true,
+          "detail": "caret 4 within 0..4"
+        },
+        {
+          "check": "marked_range_reported[4]",
+          "pass": true,
+          "detail": "want (0,5) got (0,5) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[4]",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\\u{947}त\" got \"क\\u{94d}ष\\u{947}त\""
+        },
+        {
+          "check": "caret_inside_marked[4]",
+          "pass": true,
+          "detail": "caret 5 within 0..5"
+        },
+        {
+          "check": "marked_range_reported[5]",
+          "pass": true,
+          "detail": "want (0,7) got (0,7) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[5]",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\\u{947}त\\u{94d}र\" got \"क\\u{94d}ष\\u{947}त\\u{94d}र\""
+        },
+        {
+          "check": "caret_inside_marked[5]",
+          "pass": true,
+          "detail": "caret 7 within 0..7"
+        },
+        {
+          "check": "commit_value[6]",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\\u{947}त\\u{94d}र\" got \"क\\u{94d}ष\\u{947}त\\u{94d}र\""
+        },
+        {
+          "check": "marked_cleared_after_insert[6]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              16.31999969482422,
+              24.0
+            ],
+            "last": [
+              -19950.0,
+              820.0,
+              25.8800048828125,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\\u{947}त\\u{94d}र\" got \"क\\u{94d}ष\\u{947}त\\u{94d}र\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "क्षेत्र",
+            "rows_now": 0,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "क्षेत्र"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              7,
+              4,
+              0
+            ],
+            "stops_inside_a_cluster": [
+              6,
+              5,
+              3,
+              2,
+              1
+            ],
+            "plain_grapheme_stops": [
+              7,
+              4,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "expected_stops": [
+              0,
+              4,
+              7
+            ],
+            "stops_inside_a_cluster": [
+              1,
+              2,
+              3,
+              5,
+              6
+            ]
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": false,
+          "detail": {
+            "selected_range": [
+              6,
+              1
+            ],
+            "selected_text": "र",
+            "ns_substring": "र",
+            "want_cluster": "त्र"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": false,
+          "detail": {
+            "after_backspace": "क्षेत्",
+            "want": "क्षे",
+            "plain_grapheme_prefix": "क्षे",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "क्षेत्र"
+          }
+        }
+      ],
+      "failed": [
+        "caret_left_by_cluster",
+        "caret_right_by_cluster",
+        "shift_left_selects_last_cluster",
+        "backspace_removes_one_whole_cluster"
+      ],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "क",
+          "marked": [
+            0,
+            1
+          ],
+          "selected": [
+            1,
+            0
+          ],
+          "value": "क",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "setMarkedText",
+          "text": "कस",
+          "marked": [
+            0,
+            2
+          ],
+          "selected": [
+            2,
+            0
+          ],
+          "value": "कस",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 2,
+          "op": "setMarkedText",
+          "text": "क्ष",
+          "marked": [
+            0,
+            3
+          ],
+          "selected": [
+            3,
+            0
+          ],
+          "value": "क्ष",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 3,
+          "op": "setMarkedText",
+          "text": "क्षे",
+          "marked": [
+            0,
+            4
+          ],
+          "selected": [
+            4,
+            0
+          ],
+          "value": "क्षे",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 4,
+          "op": "setMarkedText",
+          "text": "क्षेत",
+          "marked": [
+            0,
+            5
+          ],
+          "selected": [
+            5,
+            0
+          ],
+          "value": "क्षेत",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 5,
+          "op": "setMarkedText",
+          "text": "क्षेत्र",
+          "marked": [
+            0,
+            7
+          ],
+          "selected": [
+            7,
+            0
+          ],
+          "value": "क्षेत्र",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 6,
+          "op": "insertText",
+          "text": "क्षेत्र",
+          "composing": true,
+          "marked_after": null,
+          "value": "क्षेत्र"
+        }
+      ]
+    },
+    {
+      "case": "hindi_shree",
+      "note": "shree -> श्री",
+      "pass": false,
+      "expected": "श्री",
+      "got": "श्री",
+      "expected_utf16_len": 4,
+      "conjunct_aware_clusters": [
+        "श्री"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "श्री"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,1) got (0,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"श\" got \"श\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 1 within 0..1"
+        },
+        {
+          "check": "marked_range_reported[1]",
+          "pass": true,
+          "detail": "want (0,2) got (0,2) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[1]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}\" got \"श\\u{94d}\""
+        },
+        {
+          "check": "caret_inside_marked[1]",
+          "pass": true,
+          "detail": "caret 2 within 0..2"
+        },
+        {
+          "check": "marked_range_reported[2]",
+          "pass": true,
+          "detail": "want (0,3) got (0,3) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[2]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}र\" got \"श\\u{94d}र\""
+        },
+        {
+          "check": "caret_inside_marked[2]",
+          "pass": true,
+          "detail": "caret 3 within 0..3"
+        },
+        {
+          "check": "marked_range_reported[3]",
+          "pass": true,
+          "detail": "want (0,4) got (0,4) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[3]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}री\" got \"श\\u{94d}री\""
+        },
+        {
+          "check": "caret_inside_marked[3]",
+          "pass": true,
+          "detail": "caret 4 within 0..4"
+        },
+        {
+          "check": "commit_value[4]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}री\" got \"श\\u{94d}री\""
+        },
+        {
+          "check": "marked_cleared_after_insert[4]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              13.700000762939453,
+              24.0
+            ],
+            "last": [
+              -19950.0,
+              820.0,
+              19.100006103515625,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"श\\u{94d}री\" got \"श\\u{94d}री\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "श्री",
+            "rows_now": 0,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "श्री"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              4,
+              3,
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              4,
+              0
+            ],
+            "stops_inside_a_cluster": [
+              3,
+              2,
+              1
+            ],
+            "plain_grapheme_stops": [
+              4,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "expected_stops": [
+              0,
+              4
+            ],
+            "stops_inside_a_cluster": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": false,
+          "detail": {
+            "selected_range": [
+              3,
+              1
+            ],
+            "selected_text": "ी",
+            "ns_substring": "ी",
+            "want_cluster": "श्री"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": false,
+          "detail": {
+            "after_backspace": "श्र",
+            "want": "",
+            "plain_grapheme_prefix": "",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "श्री"
+          }
+        }
+      ],
+      "failed": [
+        "caret_left_by_cluster",
+        "caret_right_by_cluster",
+        "shift_left_selects_last_cluster",
+        "backspace_removes_one_whole_cluster"
+      ],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "श",
+          "marked": [
+            0,
+            1
+          ],
+          "selected": [
+            1,
+            0
+          ],
+          "value": "श",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "setMarkedText",
+          "text": "श्",
+          "marked": [
+            0,
+            2
+          ],
+          "selected": [
+            2,
+            0
+          ],
+          "value": "श्",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 2,
+          "op": "setMarkedText",
+          "text": "श्र",
+          "marked": [
+            0,
+            3
+          ],
+          "selected": [
+            3,
+            0
+          ],
+          "value": "श्र",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 3,
+          "op": "setMarkedText",
+          "text": "श्री",
+          "marked": [
+            0,
+            4
+          ],
+          "selected": [
+            4,
+            0
+          ],
+          "value": "श्री",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 4,
+          "op": "insertText",
+          "text": "श्री",
+          "composing": true,
+          "marked_after": null,
+          "value": "श्री"
+        }
+      ]
+    },
+    {
+      "case": "hindi_shraddha",
+      "note": "shraddha -> श्रद्धा",
+      "pass": false,
+      "expected": "श्रद्धा",
+      "got": "श्रद्धा",
+      "expected_utf16_len": 7,
+      "conjunct_aware_clusters": [
+        "श्र",
+        "द्धा"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "श्र",
+        "द्धा"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,1) got (0,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"श\" got \"श\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 1 within 0..1"
+        },
+        {
+          "check": "marked_range_reported[1]",
+          "pass": true,
+          "detail": "want (0,3) got (0,3) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[1]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}र\" got \"श\\u{94d}र\""
+        },
+        {
+          "check": "caret_inside_marked[1]",
+          "pass": true,
+          "detail": "caret 3 within 0..3"
+        },
+        {
+          "check": "marked_range_reported[2]",
+          "pass": true,
+          "detail": "want (0,4) got (0,4) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[2]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}रद\" got \"श\\u{94d}रद\""
+        },
+        {
+          "check": "caret_inside_marked[2]",
+          "pass": true,
+          "detail": "caret 4 within 0..4"
+        },
+        {
+          "check": "marked_range_reported[3]",
+          "pass": true,
+          "detail": "want (0,5) got (0,5) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[3]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}रद\\u{94d}\" got \"श\\u{94d}रद\\u{94d}\""
+        },
+        {
+          "check": "caret_inside_marked[3]",
+          "pass": true,
+          "detail": "caret 5 within 0..5"
+        },
+        {
+          "check": "marked_range_reported[4]",
+          "pass": true,
+          "detail": "want (0,6) got (0,6) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[4]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}रद\\u{94d}ध\" got \"श\\u{94d}रद\\u{94d}ध\""
+        },
+        {
+          "check": "caret_inside_marked[4]",
+          "pass": true,
+          "detail": "caret 6 within 0..6"
+        },
+        {
+          "check": "marked_range_reported[5]",
+          "pass": true,
+          "detail": "want (0,7) got (0,7) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[5]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}रद\\u{94d}धा\" got \"श\\u{94d}रद\\u{94d}धा\""
+        },
+        {
+          "check": "caret_inside_marked[5]",
+          "pass": true,
+          "detail": "caret 7 within 0..7"
+        },
+        {
+          "check": "commit_value[6]",
+          "pass": true,
+          "detail": "want \"श\\u{94d}रद\\u{94d}धा\" got \"श\\u{94d}रद\\u{94d}धा\""
+        },
+        {
+          "check": "marked_cleared_after_insert[6]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              13.700000762939453,
+              24.0
+            ],
+            "last": [
+              -19950.0,
+              820.0,
+              33.26000213623047,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"श\\u{94d}रद\\u{94d}धा\" got \"श\\u{94d}रद\\u{94d}धा\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "श्रद्धा",
+            "rows_now": 0,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "श्रद्धा"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              7,
+              3,
+              0
+            ],
+            "stops_inside_a_cluster": [
+              6,
+              5,
+              4,
+              2,
+              1
+            ],
+            "plain_grapheme_stops": [
+              7,
+              3,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "expected_stops": [
+              0,
+              3,
+              7
+            ],
+            "stops_inside_a_cluster": [
+              1,
+              2,
+              4,
+              5,
+              6
+            ]
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": false,
+          "detail": {
+            "selected_range": [
+              6,
+              1
+            ],
+            "selected_text": "ा",
+            "ns_substring": "ा",
+            "want_cluster": "द्धा"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": false,
+          "detail": {
+            "after_backspace": "श्रद्ध",
+            "want": "श्र",
+            "plain_grapheme_prefix": "श्र",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "श्रद्धा"
+          }
+        }
+      ],
+      "failed": [
+        "caret_left_by_cluster",
+        "caret_right_by_cluster",
+        "shift_left_selects_last_cluster",
+        "backspace_removes_one_whole_cluster"
+      ],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "श",
+          "marked": [
+            0,
+            1
+          ],
+          "selected": [
+            1,
+            0
+          ],
+          "value": "श",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "setMarkedText",
+          "text": "श्र",
+          "marked": [
+            0,
+            3
+          ],
+          "selected": [
+            3,
+            0
+          ],
+          "value": "श्र",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 2,
+          "op": "setMarkedText",
+          "text": "श्रद",
+          "marked": [
+            0,
+            4
+          ],
+          "selected": [
+            4,
+            0
+          ],
+          "value": "श्रद",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 3,
+          "op": "setMarkedText",
+          "text": "श्रद्",
+          "marked": [
+            0,
+            5
+          ],
+          "selected": [
+            5,
+            0
+          ],
+          "value": "श्रद्",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 4,
+          "op": "setMarkedText",
+          "text": "श्रद्ध",
+          "marked": [
+            0,
+            6
+          ],
+          "selected": [
+            6,
+            0
+          ],
+          "value": "श्रद्ध",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 5,
+          "op": "setMarkedText",
+          "text": "श्रद्धा",
+          "marked": [
+            0,
+            7
+          ],
+          "selected": [
+            7,
+            0
+          ],
+          "value": "श्रद्धा",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 6,
+          "op": "insertText",
+          "text": "श्रद्धा",
+          "composing": true,
+          "marked_after": null,
+          "value": "श्रद्धा"
+        }
+      ]
+    },
+    {
+      "case": "hindi_namaste_duniya",
+      "note": "two words; Space commits word 1 (insertText), a plain space is typed, word 2 composed and committed; one undo removes only the last word",
+      "pass": false,
+      "expected": "नमस्ते दुनिया",
+      "got": "नमस्ते दुनिया",
+      "expected_utf16_len": 13,
+      "conjunct_aware_clusters": [
+        "न",
+        "म",
+        "स्ते",
+        " ",
+        "दु",
+        "नि",
+        "या"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "न",
+        "म",
+        "स्ते",
+        " ",
+        "दु",
+        "नि",
+        "या"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,1) got (0,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"न\" got \"न\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 1 within 0..1"
+        },
+        {
+          "check": "marked_range_reported[1]",
+          "pass": true,
+          "detail": "want (0,2) got (0,2) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[1]",
+          "pass": true,
+          "detail": "want \"नम\" got \"नम\""
+        },
+        {
+          "check": "caret_inside_marked[1]",
+          "pass": true,
+          "detail": "caret 2 within 0..2"
+        },
+        {
+          "check": "marked_range_reported[2]",
+          "pass": true,
+          "detail": "want (0,3) got (0,3) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[2]",
+          "pass": true,
+          "detail": "want \"नमस\" got \"नमस\""
+        },
+        {
+          "check": "caret_inside_marked[2]",
+          "pass": true,
+          "detail": "caret 3 within 0..3"
+        },
+        {
+          "check": "marked_range_reported[3]",
+          "pass": true,
+          "detail": "want (0,4) got (0,4) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[3]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}\" got \"नमस\\u{94d}\""
+        },
+        {
+          "check": "caret_inside_marked[3]",
+          "pass": true,
+          "detail": "caret 4 within 0..4"
+        },
+        {
+          "check": "marked_range_reported[4]",
+          "pass": true,
+          "detail": "want (0,5) got (0,5) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[4]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\" got \"नमस\\u{94d}त\""
+        },
+        {
+          "check": "caret_inside_marked[4]",
+          "pass": true,
+          "detail": "caret 5 within 0..5"
+        },
+        {
+          "check": "marked_range_reported[5]",
+          "pass": true,
+          "detail": "want (0,6) got (0,6) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[5]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947}\" got \"नमस\\u{94d}त\\u{947}\""
+        },
+        {
+          "check": "caret_inside_marked[5]",
+          "pass": true,
+          "detail": "caret 6 within 0..6"
+        },
+        {
+          "check": "commit_value[6]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947}\" got \"नमस\\u{94d}त\\u{947}\""
+        },
+        {
+          "check": "marked_cleared_after_insert[6]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "commit_value[7]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947} \" got \"नमस\\u{94d}त\\u{947} \""
+        },
+        {
+          "check": "marked_cleared_after_insert[7]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "marked_range_reported[8]",
+          "pass": true,
+          "detail": "want (7,1) got (7,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[8]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947} द\" got \"नमस\\u{94d}त\\u{947} द\""
+        },
+        {
+          "check": "caret_inside_marked[8]",
+          "pass": true,
+          "detail": "caret 8 within 7..8"
+        },
+        {
+          "check": "marked_range_reported[9]",
+          "pass": true,
+          "detail": "want (7,2) got (7,2) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[9]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947} द\\u{941}\" got \"नमस\\u{94d}त\\u{947} द\\u{941}\""
+        },
+        {
+          "check": "caret_inside_marked[9]",
+          "pass": true,
+          "detail": "caret 9 within 7..9"
+        },
+        {
+          "check": "marked_range_reported[10]",
+          "pass": true,
+          "detail": "want (7,3) got (7,3) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[10]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947} द\\u{941}न\" got \"नमस\\u{94d}त\\u{947} द\\u{941}न\""
+        },
+        {
+          "check": "caret_inside_marked[10]",
+          "pass": true,
+          "detail": "caret 10 within 7..10"
+        },
+        {
+          "check": "marked_range_reported[11]",
+          "pass": true,
+          "detail": "want (7,4) got (7,4) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[11]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947} द\\u{941}नि\" got \"नमस\\u{94d}त\\u{947} द\\u{941}नि\""
+        },
+        {
+          "check": "caret_inside_marked[11]",
+          "pass": true,
+          "detail": "caret 11 within 7..11"
+        },
+        {
+          "check": "marked_range_reported[12]",
+          "pass": true,
+          "detail": "want (7,5) got (7,5) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[12]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947} द\\u{941}निय\" got \"नमस\\u{94d}त\\u{947} द\\u{941}निय\""
+        },
+        {
+          "check": "caret_inside_marked[12]",
+          "pass": true,
+          "detail": "caret 12 within 7..12"
+        },
+        {
+          "check": "marked_range_reported[13]",
+          "pass": true,
+          "detail": "want (7,6) got (7,6) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[13]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947} द\\u{941}निया\" got \"नमस\\u{94d}त\\u{947} द\\u{941}निया\""
+        },
+        {
+          "check": "caret_inside_marked[13]",
+          "pass": true,
+          "detail": "caret 13 within 7..13"
+        },
+        {
+          "check": "commit_value[14]",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947} द\\u{941}निया\" got \"नमस\\u{94d}त\\u{947} द\\u{941}निया\""
+        },
+        {
+          "check": "marked_cleared_after_insert[14]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              10.959999084472656,
+              24.0
+            ],
+            "last": [
+              -19903.904251098633,
+              820.0,
+              43.97999572753906,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"नमस\\u{94d}त\\u{947} द\\u{941}निया\" got \"नमस\\u{94d}त\\u{947} द\\u{941}निया\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "नमस्ते दुनिया",
+            "rows_now": 0,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "नमस्ते ",
+            "accepted": [
+              "नमस्ते ",
+              "नमस्ते"
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "नमस्ते दुनिया"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              13,
+              12,
+              11,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              13,
+              11,
+              9,
+              7,
+              6,
+              2,
+              1,
+              0
+            ],
+            "stops_inside_a_cluster": [
+              12,
+              10,
+              8,
+              5,
+              4,
+              3
+            ],
+            "plain_grapheme_stops": [
+              13,
+              11,
+              9,
+              7,
+              6,
+              2,
+              1,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13
+            ],
+            "expected_stops": [
+              0,
+              1,
+              2,
+              6,
+              7,
+              9,
+              11,
+              13
+            ],
+            "stops_inside_a_cluster": [
+              3,
+              4,
+              5,
+              8,
+              10,
+              12
+            ]
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": false,
+          "detail": {
+            "selected_range": [
+              12,
+              1
+            ],
+            "selected_text": "ा",
+            "ns_substring": "ा",
+            "want_cluster": "या"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": false,
+          "detail": {
+            "after_backspace": "नमस्ते दुनिय",
+            "want": "नमस्ते दुनि",
+            "plain_grapheme_prefix": "नमस्ते दुनि",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "नमस्ते दुनिया"
+          }
+        }
+      ],
+      "failed": [
+        "caret_left_by_cluster",
+        "caret_right_by_cluster",
+        "shift_left_selects_last_cluster",
+        "backspace_removes_one_whole_cluster"
+      ],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "न",
+          "marked": [
+            0,
+            1
+          ],
+          "selected": [
+            1,
+            0
+          ],
+          "value": "न",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "setMarkedText",
+          "text": "नम",
+          "marked": [
+            0,
+            2
+          ],
+          "selected": [
+            2,
+            0
+          ],
+          "value": "नम",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 2,
+          "op": "setMarkedText",
+          "text": "नमस",
+          "marked": [
+            0,
+            3
+          ],
+          "selected": [
+            3,
+            0
+          ],
+          "value": "नमस",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 3,
+          "op": "setMarkedText",
+          "text": "नमस्",
+          "marked": [
+            0,
+            4
+          ],
+          "selected": [
+            4,
+            0
+          ],
+          "value": "नमस्",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 4,
+          "op": "setMarkedText",
+          "text": "नमस्त",
+          "marked": [
+            0,
+            5
+          ],
+          "selected": [
+            5,
+            0
+          ],
+          "value": "नमस्त",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 5,
+          "op": "setMarkedText",
+          "text": "नमस्ते",
+          "marked": [
+            0,
+            6
+          ],
+          "selected": [
+            6,
+            0
+          ],
+          "value": "नमस्ते",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 6,
+          "op": "insertText",
+          "text": "नमस्ते",
+          "composing": true,
+          "marked_after": null,
+          "value": "नमस्ते"
+        },
+        {
+          "step": 7,
+          "op": "insertText",
+          "text": " ",
+          "composing": false,
+          "marked_after": null,
+          "value": "नमस्ते "
+        },
+        {
+          "step": 8,
+          "op": "setMarkedText",
+          "text": "द",
+          "marked": [
+            7,
+            1
+          ],
+          "selected": [
+            8,
+            0
+          ],
+          "value": "नमस्ते द",
+          "ui_query": "नमस्ते ",
+          "ui_rows": 0
+        },
+        {
+          "step": 9,
+          "op": "setMarkedText",
+          "text": "दु",
+          "marked": [
+            7,
+            2
+          ],
+          "selected": [
+            9,
+            0
+          ],
+          "value": "नमस्ते दु",
+          "ui_query": "नमस्ते ",
+          "ui_rows": 0
+        },
+        {
+          "step": 10,
+          "op": "setMarkedText",
+          "text": "दुन",
+          "marked": [
+            7,
+            3
+          ],
+          "selected": [
+            10,
+            0
+          ],
+          "value": "नमस्ते दुन",
+          "ui_query": "नमस्ते ",
+          "ui_rows": 0
+        },
+        {
+          "step": 11,
+          "op": "setMarkedText",
+          "text": "दुनि",
+          "marked": [
+            7,
+            4
+          ],
+          "selected": [
+            11,
+            0
+          ],
+          "value": "नमस्ते दुनि",
+          "ui_query": "नमस्ते ",
+          "ui_rows": 0
+        },
+        {
+          "step": 12,
+          "op": "setMarkedText",
+          "text": "दुनिय",
+          "marked": [
+            7,
+            5
+          ],
+          "selected": [
+            12,
+            0
+          ],
+          "value": "नमस्ते दुनिय",
+          "ui_query": "नमस्ते ",
+          "ui_rows": 0
+        },
+        {
+          "step": 13,
+          "op": "setMarkedText",
+          "text": "दुनिया",
+          "marked": [
+            7,
+            6
+          ],
+          "selected": [
+            13,
+            0
+          ],
+          "value": "नमस्ते दुनिया",
+          "ui_query": "नमस्ते ",
+          "ui_rows": 0
+        },
+        {
+          "step": 14,
+          "op": "insertText",
+          "text": "दुनिया",
+          "composing": true,
+          "marked_after": null,
+          "value": "नमस्ते दुनिया"
+        }
+      ]
+    },
+    {
+      "case": "bengali_kshama",
+      "note": "ক্ষমা (ksha + ma + aa-kar), conjunct ক্ষ",
+      "pass": false,
+      "expected": "ক্ষমা",
+      "got": "ক্ষমা",
+      "expected_utf16_len": 5,
+      "conjunct_aware_clusters": [
+        "ক্ষ",
+        "মা"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "ক্ষ",
+        "মা"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,1) got (0,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"ক\" got \"ক\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 1 within 0..1"
+        },
+        {
+          "check": "marked_range_reported[1]",
+          "pass": true,
+          "detail": "want (0,2) got (0,2) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[1]",
+          "pass": true,
+          "detail": "want \"ক\\u{9cd}\" got \"ক\\u{9cd}\""
+        },
+        {
+          "check": "caret_inside_marked[1]",
+          "pass": true,
+          "detail": "caret 2 within 0..2"
+        },
+        {
+          "check": "marked_range_reported[2]",
+          "pass": true,
+          "detail": "want (0,3) got (0,3) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[2]",
+          "pass": true,
+          "detail": "want \"ক\\u{9cd}ষ\" got \"ক\\u{9cd}ষ\""
+        },
+        {
+          "check": "caret_inside_marked[2]",
+          "pass": true,
+          "detail": "caret 3 within 0..3"
+        },
+        {
+          "check": "marked_range_reported[3]",
+          "pass": true,
+          "detail": "want (0,4) got (0,4) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[3]",
+          "pass": true,
+          "detail": "want \"ক\\u{9cd}ষম\" got \"ক\\u{9cd}ষম\""
+        },
+        {
+          "check": "caret_inside_marked[3]",
+          "pass": true,
+          "detail": "caret 4 within 0..4"
+        },
+        {
+          "check": "marked_range_reported[4]",
+          "pass": true,
+          "detail": "want (0,5) got (0,5) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[4]",
+          "pass": true,
+          "detail": "want \"ক\\u{9cd}ষম\\u{9be}\" got \"ক\\u{9cd}ষম\\u{9be}\""
+        },
+        {
+          "check": "caret_inside_marked[4]",
+          "pass": true,
+          "detail": "caret 5 within 0..5"
+        },
+        {
+          "check": "commit_value[5]",
+          "pass": true,
+          "detail": "want \"ক\\u{9cd}ষম\\u{9be}\" got \"ক\\u{9cd}ষম\\u{9be}\""
+        },
+        {
+          "check": "marked_cleared_after_insert[5]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              15.099998474121094,
+              24.0
+            ],
+            "last": [
+              -19950.0,
+              820.0,
+              34.600006103515625,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"ক\\u{9cd}ষম\\u{9be}\" got \"ক\\u{9cd}ষম\\u{9be}\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "ক্ষমা",
+            "rows_now": 0,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "ক্ষমা"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              5,
+              4,
+              3,
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              5,
+              3,
+              0
+            ],
+            "stops_inside_a_cluster": [
+              4,
+              2,
+              1
+            ],
+            "plain_grapheme_stops": [
+              5,
+              3,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "expected_stops": [
+              0,
+              3,
+              5
+            ],
+            "stops_inside_a_cluster": [
+              1,
+              2,
+              4
+            ]
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": false,
+          "detail": {
+            "selected_range": [
+              4,
+              1
+            ],
+            "selected_text": "া",
+            "ns_substring": "া",
+            "want_cluster": "মা"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": false,
+          "detail": {
+            "after_backspace": "ক্ষম",
+            "want": "ক্ষ",
+            "plain_grapheme_prefix": "ক্ষ",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "ক্ষমা"
+          }
+        }
+      ],
+      "failed": [
+        "caret_left_by_cluster",
+        "caret_right_by_cluster",
+        "shift_left_selects_last_cluster",
+        "backspace_removes_one_whole_cluster"
+      ],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "ক",
+          "marked": [
+            0,
+            1
+          ],
+          "selected": [
+            1,
+            0
+          ],
+          "value": "ক",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "setMarkedText",
+          "text": "ক্",
+          "marked": [
+            0,
+            2
+          ],
+          "selected": [
+            2,
+            0
+          ],
+          "value": "ক্",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 2,
+          "op": "setMarkedText",
+          "text": "ক্ষ",
+          "marked": [
+            0,
+            3
+          ],
+          "selected": [
+            3,
+            0
+          ],
+          "value": "ক্ষ",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 3,
+          "op": "setMarkedText",
+          "text": "ক্ষম",
+          "marked": [
+            0,
+            4
+          ],
+          "selected": [
+            4,
+            0
+          ],
+          "value": "ক্ষম",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 4,
+          "op": "setMarkedText",
+          "text": "ক্ষমা",
+          "marked": [
+            0,
+            5
+          ],
+          "selected": [
+            5,
+            0
+          ],
+          "value": "ক্ষমা",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 5,
+          "op": "insertText",
+          "text": "ক্ষমা",
+          "composing": true,
+          "marked_after": null,
+          "value": "ক্ষমা"
+        }
+      ]
+    },
+    {
+      "case": "bengali_shree",
+      "note": "শ্রী",
+      "pass": false,
+      "expected": "শ্রী",
+      "got": "শ্রী",
+      "expected_utf16_len": 4,
+      "conjunct_aware_clusters": [
+        "শ্রী"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "শ্রী"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,1) got (0,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"শ\" got \"শ\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 1 within 0..1"
+        },
+        {
+          "check": "marked_range_reported[1]",
+          "pass": true,
+          "detail": "want (0,2) got (0,2) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[1]",
+          "pass": true,
+          "detail": "want \"শ\\u{9cd}\" got \"শ\\u{9cd}\""
+        },
+        {
+          "check": "caret_inside_marked[1]",
+          "pass": true,
+          "detail": "caret 2 within 0..2"
+        },
+        {
+          "check": "marked_range_reported[2]",
+          "pass": true,
+          "detail": "want (0,3) got (0,3) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[2]",
+          "pass": true,
+          "detail": "want \"শ\\u{9cd}র\" got \"শ\\u{9cd}র\""
+        },
+        {
+          "check": "caret_inside_marked[2]",
+          "pass": true,
+          "detail": "caret 3 within 0..3"
+        },
+        {
+          "check": "marked_range_reported[3]",
+          "pass": true,
+          "detail": "want (0,4) got (0,4) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[3]",
+          "pass": true,
+          "detail": "want \"শ\\u{9cd}রী\" got \"শ\\u{9cd}রী\""
+        },
+        {
+          "check": "caret_inside_marked[3]",
+          "pass": true,
+          "detail": "caret 4 within 0..4"
+        },
+        {
+          "check": "commit_value[4]",
+          "pass": true,
+          "detail": "want \"শ\\u{9cd}রী\" got \"শ\\u{9cd}রী\""
+        },
+        {
+          "check": "marked_cleared_after_insert[4]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              13.34000015258789,
+              24.0
+            ],
+            "last": [
+              -19950.0,
+              820.0,
+              21.94000244140625,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"শ\\u{9cd}রী\" got \"শ\\u{9cd}রী\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "শ্রী",
+            "rows_now": 0,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "শ্রী"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              4,
+              3,
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              4,
+              0
+            ],
+            "stops_inside_a_cluster": [
+              3,
+              2,
+              1
+            ],
+            "plain_grapheme_stops": [
+              4,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "expected_stops": [
+              0,
+              4
+            ],
+            "stops_inside_a_cluster": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": false,
+          "detail": {
+            "selected_range": [
+              3,
+              1
+            ],
+            "selected_text": "ী",
+            "ns_substring": "ী",
+            "want_cluster": "শ্রী"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": false,
+          "detail": {
+            "after_backspace": "শ্র",
+            "want": "",
+            "plain_grapheme_prefix": "",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "শ্রী"
+          }
+        }
+      ],
+      "failed": [
+        "caret_left_by_cluster",
+        "caret_right_by_cluster",
+        "shift_left_selects_last_cluster",
+        "backspace_removes_one_whole_cluster"
+      ],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "শ",
+          "marked": [
+            0,
+            1
+          ],
+          "selected": [
+            1,
+            0
+          ],
+          "value": "শ",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "setMarkedText",
+          "text": "শ্",
+          "marked": [
+            0,
+            2
+          ],
+          "selected": [
+            2,
+            0
+          ],
+          "value": "শ্",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 2,
+          "op": "setMarkedText",
+          "text": "শ্র",
+          "marked": [
+            0,
+            3
+          ],
+          "selected": [
+            3,
+            0
+          ],
+          "value": "শ্র",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 3,
+          "op": "setMarkedText",
+          "text": "শ্রী",
+          "marked": [
+            0,
+            4
+          ],
+          "selected": [
+            4,
+            0
+          ],
+          "value": "শ্রী",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 4,
+          "op": "insertText",
+          "text": "শ্রী",
+          "composing": true,
+          "marked_after": null,
+          "value": "শ্রী"
+        }
+      ]
+    },
+    {
+      "case": "deadkey_acute_e",
+      "note": "Option+E marks the spacing acute, E replaces it with é (precomposed U+00E9)",
+      "pass": true,
+      "expected": "é",
+      "got": "é",
+      "expected_utf16_len": 1,
+      "conjunct_aware_clusters": [
+        "é"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "é"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,1) got (0,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"´\" got \"´\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 1 within 0..1"
+        },
+        {
+          "check": "commit_value[1]",
+          "pass": true,
+          "detail": "want \"é\" got \"é\""
+        },
+        {
+          "check": "marked_cleared_after_insert[1]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              9.55078125,
+              24.0
+            ],
+            "last": [
+              -19950.0,
+              820.0,
+              9.55078125,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"é\" got \"é\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "é",
+            "rows_now": 0,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "é"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": true,
+          "detail": {
+            "stops_utf16": [
+              1,
+              0
+            ],
+            "expected_stops": [
+              1,
+              0
+            ],
+            "stops_inside_a_cluster": [],
+            "plain_grapheme_stops": [
+              1,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": true,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1
+            ],
+            "expected_stops": [
+              0,
+              1
+            ],
+            "stops_inside_a_cluster": []
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": true,
+          "detail": {
+            "selected_range": [
+              0,
+              1
+            ],
+            "selected_text": "é",
+            "ns_substring": "é",
+            "want_cluster": "é"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": true,
+          "detail": {
+            "after_backspace": "",
+            "want": "",
+            "plain_grapheme_prefix": "",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "é"
+          }
+        }
+      ],
+      "failed": [],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "´",
+          "marked": [
+            0,
+            1
+          ],
+          "selected": [
+            1,
+            0
+          ],
+          "value": "´",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "insertText",
+          "text": "é",
+          "composing": true,
+          "marked_after": null,
+          "value": "é"
+        }
+      ]
+    },
+    {
+      "case": "pinyin_nihao",
+      "note": "nihao -> 你好, marked pinyin with a syllable break, candidate commit with insertText",
+      "pass": true,
+      "expected": "你好",
+      "got": "你好",
+      "expected_utf16_len": 2,
+      "conjunct_aware_clusters": [
+        "你",
+        "好"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "你",
+        "好"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,1) got (0,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"n\" got \"n\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 1 within 0..1"
+        },
+        {
+          "check": "marked_range_reported[1]",
+          "pass": true,
+          "detail": "want (0,2) got (0,2) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[1]",
+          "pass": true,
+          "detail": "want \"ni\" got \"ni\""
+        },
+        {
+          "check": "caret_inside_marked[1]",
+          "pass": true,
+          "detail": "caret 2 within 0..2"
+        },
+        {
+          "check": "marked_range_reported[2]",
+          "pass": true,
+          "detail": "want (0,4) got (0,4) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[2]",
+          "pass": true,
+          "detail": "want \"ni h\" got \"ni h\""
+        },
+        {
+          "check": "caret_inside_marked[2]",
+          "pass": true,
+          "detail": "caret 4 within 0..4"
+        },
+        {
+          "check": "marked_range_reported[3]",
+          "pass": true,
+          "detail": "want (0,5) got (0,5) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[3]",
+          "pass": true,
+          "detail": "want \"ni ha\" got \"ni ha\""
+        },
+        {
+          "check": "caret_inside_marked[3]",
+          "pass": true,
+          "detail": "caret 5 within 0..5"
+        },
+        {
+          "check": "marked_range_reported[4]",
+          "pass": true,
+          "detail": "want (0,6) got (0,6) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[4]",
+          "pass": true,
+          "detail": "want \"ni hao\" got \"ni hao\""
+        },
+        {
+          "check": "caret_inside_marked[4]",
+          "pass": true,
+          "detail": "caret 6 within 0..6"
+        },
+        {
+          "check": "commit_value[5]",
+          "pass": true,
+          "detail": "want \"你好\" got \"你好\""
+        },
+        {
+          "check": "marked_cleared_after_insert[5]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              10.952987670898438,
+              24.0
+            ],
+            "last": [
+              -19950.0,
+              820.0,
+              52.586181640625,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"你好\" got \"你好\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "你好",
+            "rows_now": 0,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "你好"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": true,
+          "detail": {
+            "stops_utf16": [
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              2,
+              1,
+              0
+            ],
+            "stops_inside_a_cluster": [],
+            "plain_grapheme_stops": [
+              2,
+              1,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": true,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2
+            ],
+            "expected_stops": [
+              0,
+              1,
+              2
+            ],
+            "stops_inside_a_cluster": []
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": true,
+          "detail": {
+            "selected_range": [
+              1,
+              1
+            ],
+            "selected_text": "好",
+            "ns_substring": "好",
+            "want_cluster": "好"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": true,
+          "detail": {
+            "after_backspace": "你",
+            "want": "你",
+            "plain_grapheme_prefix": "你",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "你好"
+          }
+        }
+      ],
+      "failed": [],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "n",
+          "marked": [
+            0,
+            1
+          ],
+          "selected": [
+            1,
+            0
+          ],
+          "value": "n",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "setMarkedText",
+          "text": "ni",
+          "marked": [
+            0,
+            2
+          ],
+          "selected": [
+            2,
+            0
+          ],
+          "value": "ni",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 2,
+          "op": "setMarkedText",
+          "text": "ni h",
+          "marked": [
+            0,
+            4
+          ],
+          "selected": [
+            4,
+            0
+          ],
+          "value": "ni h",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 3,
+          "op": "setMarkedText",
+          "text": "ni ha",
+          "marked": [
+            0,
+            5
+          ],
+          "selected": [
+            5,
+            0
+          ],
+          "value": "ni ha",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 4,
+          "op": "setMarkedText",
+          "text": "ni hao",
+          "marked": [
+            0,
+            6
+          ],
+          "selected": [
+            6,
+            0
+          ],
+          "value": "ni hao",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 5,
+          "op": "insertText",
+          "text": "你好",
+          "composing": true,
+          "marked_after": null,
+          "value": "你好"
+        }
+      ]
+    },
+    {
+      "case": "paste_conjuncts",
+      "note": "paste of क्षत्रिय श्रीमान. The system pasteboard is not touched; the text enters through insertText with no marked range, which is the call the kit's Paste ends in",
+      "pass": false,
+      "expected": "क्षत्रिय श्रीमान",
+      "got": "क्षत्रिय श्रीमान",
+      "expected_utf16_len": 16,
+      "conjunct_aware_clusters": [
+        "क्ष",
+        "त्रि",
+        "य",
+        " ",
+        "श्री",
+        "मा",
+        "न"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "क्ष",
+        "त्रि",
+        "य",
+        " ",
+        "श्री",
+        "मा",
+        "न"
+      ],
+      "checks": [
+        {
+          "check": "commit_value[0]",
+          "pass": true,
+          "detail": "want \"क\\u{94d}षत\\u{94d}रिय श\\u{94d}रीमान\" got \"क\\u{94d}षत\\u{94d}रिय श\\u{94d}रीमान\""
+        },
+        {
+          "check": "marked_cleared_after_insert[0]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"क\\u{94d}षत\\u{94d}रिय श\\u{94d}रीमान\" got \"क\\u{94d}षत\\u{94d}रिय श\\u{94d}रीमान\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "क्षत्रिय श्रीमान",
+            "rows_now": 0,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "क्षत्रिय श्रीमान"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              16,
+              15,
+              14,
+              13,
+              12,
+              11,
+              10,
+              9,
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              16,
+              15,
+              13,
+              9,
+              8,
+              7,
+              3,
+              0
+            ],
+            "stops_inside_a_cluster": [
+              14,
+              12,
+              11,
+              10,
+              6,
+              5,
+              4,
+              2,
+              1
+            ],
+            "plain_grapheme_stops": [
+              16,
+              15,
+              13,
+              9,
+              8,
+              7,
+              3,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16
+            ],
+            "expected_stops": [
+              0,
+              3,
+              7,
+              8,
+              9,
+              13,
+              15,
+              16
+            ],
+            "stops_inside_a_cluster": [
+              1,
+              2,
+              4,
+              5,
+              6,
+              10,
+              11,
+              12,
+              14
+            ]
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": true,
+          "detail": {
+            "selected_range": [
+              15,
+              1
+            ],
+            "selected_text": "न",
+            "ns_substring": "न",
+            "want_cluster": "न"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": true,
+          "detail": {
+            "after_backspace": "क्षत्रिय श्रीमा",
+            "want": "क्षत्रिय श्रीमा",
+            "plain_grapheme_prefix": "क्षत्रिय श्रीमा",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "क्षत्रिय श्रीमान"
+          }
+        }
+      ],
+      "failed": [
+        "caret_left_by_cluster",
+        "caret_right_by_cluster"
+      ],
+      "trace": [
+        {
+          "step": 0,
+          "op": "insertText",
+          "text": "क्षत्रिय श्रीमान",
+          "composing": false,
+          "marked_after": null,
+          "value": "क्षत्रिय श्रीमान"
+        }
+      ]
+    },
+    {
+      "case": "shrink_then_unmark",
+      "note": "composition shrinks (IME Backspace) then commits through unmarkText instead of insertText: क्षेत्र -> क्षेत्र -> क्षेत -> क्ष, unmark keeps क्ष",
+      "pass": false,
+      "expected": "क्ष",
+      "got": "क्ष",
+      "expected_utf16_len": 3,
+      "conjunct_aware_clusters": [
+        "क्ष"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "क्ष"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,7) got (0,7) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\\u{947}त\\u{94d}र\" got \"क\\u{94d}ष\\u{947}त\\u{94d}र\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 7 within 0..7"
+        },
+        {
+          "check": "marked_range_reported[1]",
+          "pass": true,
+          "detail": "want (0,5) got (0,5) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[1]",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\\u{947}त\" got \"क\\u{94d}ष\\u{947}त\""
+        },
+        {
+          "check": "caret_inside_marked[1]",
+          "pass": true,
+          "detail": "caret 5 within 0..5"
+        },
+        {
+          "check": "marked_range_reported[2]",
+          "pass": true,
+          "detail": "want (0,3) got (0,3) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[2]",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\" got \"क\\u{94d}ष\""
+        },
+        {
+          "check": "caret_inside_marked[2]",
+          "pass": true,
+          "detail": "caret 3 within 0..3"
+        },
+        {
+          "check": "unmark_keeps_text[3]",
+          "pass": true,
+          "detail": "before \"क\\u{94d}ष\" after \"क\\u{94d}ष\""
+        },
+        {
+          "check": "marked_cleared_after_unmark[3]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              25.8800048828125,
+              24.0
+            ],
+            "last": [
+              -19950.0,
+              820.0,
+              14.660003662109375,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"क\\u{94d}ष\" got \"क\\u{94d}ष\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": false,
+          "detail": {
+            "bar_query": "",
+            "rows_now": 75,
+            "rows_for_committed_text": 0
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "क्ष"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              3,
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              3,
+              0
+            ],
+            "stops_inside_a_cluster": [
+              2,
+              1
+            ],
+            "plain_grapheme_stops": [
+              3,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": false,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2,
+              3
+            ],
+            "expected_stops": [
+              0,
+              3
+            ],
+            "stops_inside_a_cluster": [
+              1,
+              2
+            ]
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": false,
+          "detail": {
+            "selected_range": [
+              2,
+              1
+            ],
+            "selected_text": "ष",
+            "ns_substring": "ष",
+            "want_cluster": "क्ष"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": false,
+          "detail": {
+            "after_backspace": "क्",
+            "want": "",
+            "plain_grapheme_prefix": "",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "क्ष"
+          }
+        }
+      ],
+      "failed": [
+        "list_filter_reran_after_commit",
+        "caret_left_by_cluster",
+        "caret_right_by_cluster",
+        "shift_left_selects_last_cluster",
+        "backspace_removes_one_whole_cluster"
+      ],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "क्षेत्र",
+          "marked": [
+            0,
+            7
+          ],
+          "selected": [
+            7,
+            0
+          ],
+          "value": "क्षेत्र",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "setMarkedText",
+          "text": "क्षेत",
+          "marked": [
+            0,
+            5
+          ],
+          "selected": [
+            5,
+            0
+          ],
+          "value": "क्षेत",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 2,
+          "op": "setMarkedText",
+          "text": "क्ष",
+          "marked": [
+            0,
+            3
+          ],
+          "selected": [
+            3,
+            0
+          ],
+          "value": "क्ष",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 3,
+          "op": "unmarkText",
+          "value": "क्ष"
+        }
+      ]
+    },
+    {
+      "case": "latin_filter_control",
+      "note": "control for list filtering: composing then committing an ASCII query must filter the tool list",
+      "pass": true,
+      "expected": "compress",
+      "got": "compress",
+      "expected_utf16_len": 8,
+      "conjunct_aware_clusters": [
+        "c",
+        "o",
+        "m",
+        "p",
+        "r",
+        "e",
+        "s",
+        "s"
+      ],
+      "plain_unicode_segmentation_clusters": [
+        "c",
+        "o",
+        "m",
+        "p",
+        "r",
+        "e",
+        "s",
+        "s"
+      ],
+      "checks": [
+        {
+          "check": "marked_range_reported[0]",
+          "pass": true,
+          "detail": "want (0,1) got (0,1) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[0]",
+          "pass": true,
+          "detail": "want \"c\" got \"c\""
+        },
+        {
+          "check": "caret_inside_marked[0]",
+          "pass": true,
+          "detail": "caret 1 within 0..1"
+        },
+        {
+          "check": "marked_range_reported[1]",
+          "pass": true,
+          "detail": "want (0,3) got (0,3) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[1]",
+          "pass": true,
+          "detail": "want \"com\" got \"com\""
+        },
+        {
+          "check": "caret_inside_marked[1]",
+          "pass": true,
+          "detail": "caret 3 within 0..3"
+        },
+        {
+          "check": "marked_range_reported[2]",
+          "pass": true,
+          "detail": "want (0,8) got (0,8) has_marked=true"
+        },
+        {
+          "check": "marked_text_in_buffer[2]",
+          "pass": true,
+          "detail": "want \"compress\" got \"compress\""
+        },
+        {
+          "check": "caret_inside_marked[2]",
+          "pass": true,
+          "detail": "caret 8 within 0..8"
+        },
+        {
+          "check": "commit_value[3]",
+          "pass": true,
+          "detail": "want \"compress\" got \"compress\""
+        },
+        {
+          "check": "marked_cleared_after_insert[3]",
+          "pass": true,
+          "detail": "has_marked=false markedRange=(9223372036854775807,0)"
+        },
+        {
+          "check": "candidate_rect_on_field",
+          "pass": true,
+          "detail": {
+            "first": [
+              -19950.0,
+              820.0,
+              10.465240478515625,
+              24.0
+            ],
+            "last": [
+              -19950.0,
+              820.0,
+              86.177734375,
+              24.0
+            ],
+            "window_frame": [
+              -20000.0,
+              400.0,
+              720.0,
+              460.0
+            ],
+            "note": "window is off screen on purpose, so this proves the rect follows the field inside the window frame, not that the OS candidate strip is placed well"
+          }
+        },
+        {
+          "check": "text_equals_expected",
+          "pass": true,
+          "detail": "want \"compress\" got \"compress\""
+        },
+        {
+          "check": "text_is_nfc",
+          "pass": true,
+          "detail": "nfc(got)==true"
+        },
+        {
+          "check": "list_filter_reran_after_commit",
+          "pass": true,
+          "detail": {
+            "bar_query": "compress",
+            "rows_now": 4,
+            "rows_for_committed_text": 4
+          }
+        },
+        {
+          "check": "latin_control_has_matches",
+          "pass": true,
+          "detail": {
+            "rows": 4
+          }
+        },
+        {
+          "check": "cmd_z_undoes_whole_word_in_one_step",
+          "pass": true,
+          "detail": {
+            "after_one_undo": "",
+            "accepted": [
+              ""
+            ]
+          }
+        },
+        {
+          "check": "cmd_shift_z_redo_restores",
+          "pass": true,
+          "detail": {
+            "after_redo": "compress"
+          }
+        },
+        {
+          "check": "caret_left_by_cluster",
+          "pass": true,
+          "detail": {
+            "stops_utf16": [
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0
+            ],
+            "expected_stops": [
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0
+            ],
+            "stops_inside_a_cluster": [],
+            "plain_grapheme_stops": [
+              8,
+              7,
+              6,
+              5,
+              4,
+              3,
+              2,
+              1,
+              0
+            ]
+          }
+        },
+        {
+          "check": "caret_right_by_cluster",
+          "pass": true,
+          "detail": {
+            "stops_utf16": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "expected_stops": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "stops_inside_a_cluster": []
+          }
+        },
+        {
+          "check": "shift_left_selects_last_cluster",
+          "pass": true,
+          "detail": {
+            "selected_range": [
+              7,
+              1
+            ],
+            "selected_text": "s",
+            "ns_substring": "s",
+            "want_cluster": "s"
+          }
+        },
+        {
+          "check": "backspace_removes_one_whole_cluster",
+          "pass": true,
+          "detail": {
+            "after_backspace": "compres",
+            "want": "compres",
+            "plain_grapheme_prefix": "compres",
+            "removed_chars": 1
+          }
+        },
+        {
+          "check": "cmd_z_restores_after_backspace",
+          "pass": true,
+          "detail": {
+            "after": "compress"
+          }
+        }
+      ],
+      "failed": [],
+      "trace": [
+        {
+          "step": 0,
+          "op": "setMarkedText",
+          "text": "c",
+          "marked": [
+            0,
+            1
+          ],
+          "selected": [
+            1,
+            0
+          ],
+          "value": "c",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 1,
+          "op": "setMarkedText",
+          "text": "com",
+          "marked": [
+            0,
+            3
+          ],
+          "selected": [
+            3,
+            0
+          ],
+          "value": "com",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 2,
+          "op": "setMarkedText",
+          "text": "compress",
+          "marked": [
+            0,
+            8
+          ],
+          "selected": [
+            8,
+            0
+          ],
+          "value": "compress",
+          "ui_query": "",
+          "ui_rows": 75
+        },
+        {
+          "step": 3,
+          "op": "insertText",
+          "text": "compress",
+          "composing": true,
+          "marked_after": null,
+          "value": "compress"
+        }
+      ]
+    }
+  ]
+}

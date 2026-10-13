@@ -64,12 +64,14 @@ app launches, in the fastest-growing open-source category (agent file tools).
 **Gate:** every wave 1 module passes its budget and quality bar in CI on Mac,
 Windows and Linux (CLI).
 
-## Phase 2: The Mac app (weeks 5 to 10, overlapping)
+## Phase 2: The desktop app, Mac first (weeks 5 to 10, overlapping)
 
 **Build**
 
-- SwiftUI app grown from `prototypes/shell-test/swiftui` (measured: 182 ms cold start,
-  30 MB idle, Liquid Glass).
+- GPUI app grown from `prototypes/shell-test/gpui/kit-variant` (measured: 33 MB
+  idle, 152 to 190 ms cold start), with the GPUI Kit input plus our grapheme
+  patch (upstreamed). The same app becomes Windows and Linux later. Small
+  native Swift targets for Finder right-click and the share extension.
 - Command bar, app window (home, find, history), result cards, chains,
   presets.
 - Native renderer that draws any module's declared UI from the shared
@@ -119,10 +121,9 @@ and India, which are mostly Android and Windows.
 
 1. **Android** (Compose): share sheet, passport and exam photos, scanner,
    LocalSend sharing, Hindi and Bengali.
-2. **Windows** (renderer picked by rerunning the shell test: GPUI, Slint or
-   Tauri): Explorer right-click, the same modules.
-3. **iOS** (SwiftUI reused from Mac): share sheet, camera flows.
-4. **Linux**: same renderer as Windows.
+2. **Windows and Linux**: the same GPUI desktop app, plus Explorer right-click.
+   Confirm the budgets on Windows hardware first.
+3. **iOS** (SwiftUI): share sheet, camera flows.
 
 ## Running costs
 

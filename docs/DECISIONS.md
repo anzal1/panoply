@@ -137,6 +137,8 @@ Totals: 98 modules in 31 rows. Of these, 55 have a real exception (memory, previ
 
 - **Kill test 2 result: MCP is a bonus, not a pillar (2026-10-13).** Fresh Sonnet agents with only standard command-line tools passed 10 of 10 everyday file tasks on the first try (bar: 3 or more failures would make MCP a pillar). They needed 57 tool calls and about 4 minutes in total, wrote their own PDF recompressor, DOCX converter and OCR script on the fly, and only passed because they checked their own output after plausible defaults gave wrong results (GPS kept, JPEG too small, wrong keyframe trim, size cap overshoot). That was on a developer Mac with ffmpeg, poppler and Chrome installed. Consequence: Panoply is pitched to people first; CLI and MCP stay as a free extra that makes agents faster and more reliable, not a headline. Details: prototypes/agent-killtest/RESULT.md.
 
+- **GPUI for all desktops (2026-10-13).** The user could not tell the GPUI and SwiftUI command bars apart; GPUI matched native on memory (33 vs 30 MB) and startup. Headless checks pass for Hindi, Bengali, pinyin and dead-key input and for accessibility, with a 40-line grapheme-cluster patch to GPUI Kit's input that we carry and upstream. macOS, Windows and Linux share one GPUI app on the Rust core; SwiftUI only for iOS, Compose for Android. ADR 0001 amended.
+
 ## Open questions only the user can answer (historical)
 
 1. **Project license.** Do we allow any GPL or AGPL engine in the core? The files avoid imagequant, gifski, x264, x265, Potrace, Rubber Band, espeak-ng and dssim, and write our own quantizer and SSIM. A permissive-only rule keeps that work. Another choice could drop it.

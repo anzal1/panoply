@@ -1,0 +1,59 @@
+{
+  "test": "keystest",
+  "pass": true,
+  "window": {
+    "visible": false,
+    "key": false,
+    "frame_origin": [
+      -20000.0,
+      400.0
+    ],
+    "frame_size": [
+      720.0,
+      460.0
+    ],
+    "alpha": 0.0
+  },
+  "checks": [
+    {
+      "check": "typed_ascii_filters_list",
+      "pass": true,
+      "detail": {
+        "query": "pdf",
+        "rows": 20
+      }
+    },
+    {
+      "check": "down_up_propagate_through_kit_input_to_bar",
+      "pass": true,
+      "detail": {
+        "start": 0,
+        "after_down": 1,
+        "after_up": 0
+      }
+    },
+    {
+      "check": "ctrl_n_ctrl_p_propagate",
+      "pass": true,
+      "detail": {
+        "after_ctrl_n": 1,
+        "after_ctrl_p": 0
+      }
+    },
+    {
+      "check": "enter_runs_selected_tool",
+      "pass": true,
+      "detail": {
+        "footer_msg": "Opened PDF to Word"
+      }
+    },
+    {
+      "check": "escape_clears_query_first",
+      "pass": true,
+      "detail": {
+        "bar_query": "",
+        "input_value": ""
+      }
+    }
+  ]
+}

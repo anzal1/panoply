@@ -1,0 +1,478 @@
+{
+  "test": "shapetest",
+  "window": {
+    "visible": false,
+    "key": false,
+    "frame_origin": [
+      -20000.0,
+      400.0
+    ],
+    "frame_size": [
+      720.0,
+      460.0
+    ],
+    "alpha": 0.0
+  },
+  "shaping": {
+    "text": "क्षेत्र श्री श्रद्धा নমস্কার ক্ষমা",
+    "font_family_requested": ".SystemUIFont",
+    "font_size_px": 20,
+    "scale_factor": 2.0,
+    "runs": [
+      {
+        "font_id": "FontId(28)",
+        "family": null,
+        "glyph_count": 3
+      },
+      {
+        "font_id": "FontId(6)",
+        "family": ".SystemUIFont",
+        "glyph_count": 1
+      },
+      {
+        "font_id": "FontId(28)",
+        "family": null,
+        "glyph_count": 2
+      },
+      {
+        "font_id": "FontId(6)",
+        "family": ".SystemUIFont",
+        "glyph_count": 1
+      },
+      {
+        "font_id": "FontId(28)",
+        "family": null,
+        "glyph_count": 3
+      },
+      {
+        "font_id": "FontId(6)",
+        "family": ".SystemUIFont",
+        "glyph_count": 1
+      },
+      {
+        "font_id": "FontId(29)",
+        "family": null,
+        "glyph_count": 5
+      },
+      {
+        "font_id": "FontId(6)",
+        "family": ".SystemUIFont",
+        "glyph_count": 1
+      },
+      {
+        "font_id": "FontId(29)",
+        "family": null,
+        "glyph_count": 3
+      }
+    ],
+    "total_glyphs": 20,
+    "scalars": 34,
+    "glyphs": [
+      {
+        "id": 125,
+        "byte_index": 0,
+        "x": 0.0
+      },
+      {
+        "id": 472,
+        "byte_index": 9,
+        "x": 14.359999656677246
+      },
+      {
+        "id": 206,
+        "byte_index": 12,
+        "x": 14.65999984741211
+      },
+      {
+        "id": 3,
+        "byte_index": 21,
+        "x": 25.8799991607666
+      },
+      {
+        "id": 218,
+        "byte_index": 22,
+        "x": 30.700000762939453
+      },
+      {
+        "id": 400,
+        "byte_index": 31,
+        "x": 44.7599983215332
+      },
+      {
+        "id": 3,
+        "byte_index": 34,
+        "x": 49.79999923706055
+      },
+      {
+        "id": 218,
+        "byte_index": 35,
+        "x": 54.61000061035156
+      },
+      {
+        "id": 158,
+        "byte_index": 44,
+        "x": 68.66999816894531
+      },
+      {
+        "id": 230,
+        "byte_index": 53,
+        "x": 82.83000183105469
+      },
+      {
+        "id": 3,
+        "byte_index": 56,
+        "x": 87.87000274658203
+      },
+      {
+        "id": 41,
+        "byte_index": 57,
+        "x": 92.69000244140625
+      },
+      {
+        "id": 46,
+        "byte_index": 60,
+        "x": 103.97000122070312
+      },
+      {
+        "id": 121,
+        "byte_index": 63,
+        "x": 115.37000274658203
+      },
+      {
+        "id": 138,
+        "byte_index": 72,
+        "x": 130.41000366210938
+      },
+      {
+        "id": 48,
+        "byte_index": 75,
+        "x": 135.92999267578125
+      },
+      {
+        "id": 3,
+        "byte_index": 78,
+        "x": 147.19000244140625
+      },
+      {
+        "id": 64,
+        "byte_index": 79,
+        "x": 152.0
+      },
+      {
+        "id": 46,
+        "byte_index": 88,
+        "x": 169.67999267578125
+      },
+      {
+        "id": 138,
+        "byte_index": 91,
+        "x": 181.0800018310547
+      }
+    ],
+    "visible_halant_glyph_ids": {
+      "devanagari_U+094D": [
+        923
+      ],
+      "bengali_U+09CD": [
+        137
+      ],
+      "devanagari_ka": [
+        38
+      ]
+    },
+    "words": [
+      {
+        "word": "क्षेत्र",
+        "scalars": 7,
+        "glyph_count": 3,
+        "shaper_clusters": [
+          {
+            "text": "क्ष",
+            "byte_start": 0,
+            "glyph_ids": [
+              125
+            ]
+          },
+          {
+            "text": "े",
+            "byte_start": 9,
+            "glyph_ids": [
+              472
+            ]
+          },
+          {
+            "text": "त्र",
+            "byte_start": 12,
+            "glyph_ids": [
+              206
+            ]
+          }
+        ]
+      },
+      {
+        "word": "श्री",
+        "scalars": 4,
+        "glyph_count": 2,
+        "shaper_clusters": [
+          {
+            "text": "श्र",
+            "byte_start": 22,
+            "glyph_ids": [
+              218
+            ]
+          },
+          {
+            "text": "ी",
+            "byte_start": 31,
+            "glyph_ids": [
+              400
+            ]
+          }
+        ]
+      },
+      {
+        "word": "श्रद्धा",
+        "scalars": 7,
+        "glyph_count": 3,
+        "shaper_clusters": [
+          {
+            "text": "श्र",
+            "byte_start": 35,
+            "glyph_ids": [
+              218
+            ]
+          },
+          {
+            "text": "द्ध",
+            "byte_start": 44,
+            "glyph_ids": [
+              158
+            ]
+          },
+          {
+            "text": "ा",
+            "byte_start": 53,
+            "glyph_ids": [
+              230
+            ]
+          }
+        ]
+      },
+      {
+        "word": "নমস্কার",
+        "scalars": 7,
+        "glyph_count": 5,
+        "shaper_clusters": [
+          {
+            "text": "ন",
+            "byte_start": 57,
+            "glyph_ids": [
+              41
+            ]
+          },
+          {
+            "text": "ম",
+            "byte_start": 60,
+            "glyph_ids": [
+              46
+            ]
+          },
+          {
+            "text": "স্ক",
+            "byte_start": 63,
+            "glyph_ids": [
+              121
+            ]
+          },
+          {
+            "text": "া",
+            "byte_start": 72,
+            "glyph_ids": [
+              138
+            ]
+          },
+          {
+            "text": "র",
+            "byte_start": 75,
+            "glyph_ids": [
+              48
+            ]
+          }
+        ]
+      },
+      {
+        "word": "ক্ষমা",
+        "scalars": 5,
+        "glyph_count": 3,
+        "shaper_clusters": [
+          {
+            "text": "ক্ষ",
+            "byte_start": 79,
+            "glyph_ids": [
+              64
+            ]
+          },
+          {
+            "text": "ম",
+            "byte_start": 88,
+            "glyph_ids": [
+              46
+            ]
+          },
+          {
+            "text": "া",
+            "byte_start": 91,
+            "glyph_ids": [
+              138
+            ]
+          }
+        ]
+      }
+    ],
+    "conjuncts": [
+      {
+        "conjunct": "क्ष",
+        "byte_range": [
+          0,
+          9
+        ],
+        "scalars": 3,
+        "glyph_ids": [
+          125
+        ],
+        "glyph_count": 1,
+        "glyph_start_indices": [
+          0
+        ],
+        "forms_single_glyph": true,
+        "fewer_glyphs_than_scalars": true,
+        "glyph_starts_inside_conjunct": [],
+        "lone_virama_glyph_present": false
+      },
+      {
+        "conjunct": "त्र",
+        "byte_range": [
+          12,
+          21
+        ],
+        "scalars": 3,
+        "glyph_ids": [
+          206
+        ],
+        "glyph_count": 1,
+        "glyph_start_indices": [
+          12
+        ],
+        "forms_single_glyph": true,
+        "fewer_glyphs_than_scalars": true,
+        "glyph_starts_inside_conjunct": [],
+        "lone_virama_glyph_present": false
+      },
+      {
+        "conjunct": "श्र",
+        "byte_range": [
+          22,
+          31
+        ],
+        "scalars": 3,
+        "glyph_ids": [
+          218
+        ],
+        "glyph_count": 1,
+        "glyph_start_indices": [
+          22
+        ],
+        "forms_single_glyph": true,
+        "fewer_glyphs_than_scalars": true,
+        "glyph_starts_inside_conjunct": [],
+        "lone_virama_glyph_present": false
+      },
+      {
+        "conjunct": "श्र",
+        "byte_range": [
+          35,
+          44
+        ],
+        "scalars": 3,
+        "glyph_ids": [
+          218
+        ],
+        "glyph_count": 1,
+        "glyph_start_indices": [
+          35
+        ],
+        "forms_single_glyph": true,
+        "fewer_glyphs_than_scalars": true,
+        "glyph_starts_inside_conjunct": [],
+        "lone_virama_glyph_present": false
+      },
+      {
+        "conjunct": "द्ध",
+        "byte_range": [
+          44,
+          53
+        ],
+        "scalars": 3,
+        "glyph_ids": [
+          158
+        ],
+        "glyph_count": 1,
+        "glyph_start_indices": [
+          44
+        ],
+        "forms_single_glyph": true,
+        "fewer_glyphs_than_scalars": true,
+        "glyph_starts_inside_conjunct": [],
+        "lone_virama_glyph_present": false
+      },
+      {
+        "conjunct": "স্ক",
+        "byte_range": [
+          63,
+          72
+        ],
+        "scalars": 3,
+        "glyph_ids": [
+          121
+        ],
+        "glyph_count": 1,
+        "glyph_start_indices": [
+          63
+        ],
+        "forms_single_glyph": true,
+        "fewer_glyphs_than_scalars": true,
+        "glyph_starts_inside_conjunct": [],
+        "lone_virama_glyph_present": false
+      },
+      {
+        "conjunct": "ক্ষ",
+        "byte_range": [
+          79,
+          88
+        ],
+        "scalars": 3,
+        "glyph_ids": [
+          64
+        ],
+        "glyph_count": 1,
+        "glyph_start_indices": [
+          79
+        ],
+        "forms_single_glyph": true,
+        "fewer_glyphs_than_scalars": true,
+        "glyph_starts_inside_conjunct": [],
+        "lone_virama_glyph_present": false
+      }
+    ],
+    "width_px": 186.60301208496094
+  },
+  "png": {
+    "ok": true,
+    "path": "/Users/anzalhussainabidi/personal/panoply/prototypes/shell-test/gpui-checks/hindi-field.png",
+    "w": 760,
+    "h": 150,
+    "backing_scale": 2.0,
+    "text_size_logical_px": 30.0,
+    "device_px_per_em": 60.0
+  }
+}

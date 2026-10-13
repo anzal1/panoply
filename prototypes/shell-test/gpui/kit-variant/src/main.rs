@@ -2,6 +2,8 @@ mod fuzzy;
 mod icons_gen;
 mod model;
 mod native;
+#[cfg(feature = "selftest-input")]
+mod selftest;
 mod view;
 
 use futures::channel::{mpsc, oneshot};
@@ -37,6 +39,8 @@ enum Msg {
     SelfTest(std::sync::mpsc::Sender<String>),
     State(std::sync::mpsc::Sender<String>),
     Snapshot { query: String, sel: usize, file: Option<String>, path: String, reply: std::sync::mpsc::Sender<String> },
+    #[cfg(feature = "selftest-input")]
+    Selftest(&'static str, std::sync::mpsc::Sender<String>),
 }
 
 fn spec_folder() -> PathBuf {
@@ -101,6 +105,22 @@ fn start_server(tx: mpsc::UnboundedSender<Msg>, metrics: Arc<Mutex<Vec<f64>>>) {
                         let _ = tx.unbounded_send(Msg::Snapshot { query: msg_q, sel, file, path: out, reply: rtx });
                         let body = rrx.recv_timeout(Duration::from_secs(20)).unwrap_or_else(|_| "{\"error\":\"timeout\"}".into());
                         let _ = req.respond(tiny_http::Response::from_string(body));
+                    });
+                }
+                #[cfg(feature = "selftest-input")]
+                "/imetest" | "/a11ydump" | "/shapetest" | "/keystest" => {
+                    let kind: &'static str = match path.as_str() {
+                        "/imetest" => "ime",
+                        "/a11ydump" => "a11y",
+                        "/keystest" => "keys",
+                        _ => "shape",
+                    };
+                    let tx = tx.clone();
+                    std::thread::spawn(move || {
+                        let (rtx, rrx) = std::sync::mpsc::channel();
+                        let _ = tx.unbounded_send(Msg::Selftest(kind, rtx));
+                        let body = rrx.recv_timeout(Duration::from_secs(180)).unwrap_or_else(|_| "{\"error\":\"timeout\"}".into());
+                        let _ = req.respond(tiny_http::Response::from_string(body).with_header(json()));
                     });
                 }
                 "/selftest" | "/state" => {
@@ -203,7 +223,7 @@ fn main() {
 
         let opts = WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(Bounds {
-                origin: point(px(200.), px(200.)),
+                origin: point(px(if cfg!(feature = "selftest-input") { -20000. } else { 200. }), px(200.)),
                 size: size(px(WIDTH), px(HEIGHT)),
             })),
             titlebar: None,
@@ -226,7 +246,8 @@ fn main() {
         start_server(tx.clone(), metrics.clone());
 
         // Global hotkey: Control+Option+4 (Carbon RegisterEventHotKey, no permissions needed).
-        match GlobalHotKeyManager::new() {
+        // The selftest-input build never registers it, so it cannot show the bar or fight a running Arsenal.
+        match if cfg!(feature = "selftest-input") { Err(global_hotkey::Error::OsError(std::io::Error::other("selftest-input: hotkey disabled"))) } else { GlobalHotKeyManager::new() } {
             Ok(mgr) => {
                 let hk = HotKey::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::Digit4);
                 if let Err(e) = mgr.register(hk) {
@@ -273,6 +294,11 @@ fn main() {
                             Ok(Err(e)) => format!("{{\"error\":\"{e}\"}}"),
                             Err(e) => format!("{{\"error\":\"{e}\"}}"),
                         };
+                        let _ = reply.send(s);
+                    }
+                    #[cfg(feature = "selftest-input")]
+                    Msg::Selftest(kind, reply) => {
+                        let s = selftest::run(kind, handle, cx).await;
                         let _ = reply.send(s);
                     }
                     Msg::SelfTest(reply) => {

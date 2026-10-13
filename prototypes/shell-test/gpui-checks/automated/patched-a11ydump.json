@@ -1,0 +1,1010 @@
+{
+  "test": "a11ydump",
+  "window": {
+    "visible": false,
+    "key": false,
+    "frame_origin": [
+      -20000.0,
+      400.0
+    ],
+    "frame_size": [
+      720.0,
+      460.0
+    ],
+    "alpha": 0.0
+  },
+  "how": "AccessKit woken by querying the content view's accessibilityChildren (what VoiceOver does), GPUI built its TreeUpdate via Window::draw, then read back from GPUI (debug_a11y_tree_json) and from AppKit (NSAccessibility selectors on the adapter's nodes)",
+  "checks": [
+    {
+      "check": "a11y_adapter_activated_without_screen_reader",
+      "pass": true,
+      "detail": {
+        "is_a11y_active": true,
+        "enabled": true,
+        "initial_children_returned": 1
+      }
+    },
+    {
+      "check": "search_field_has_role_and_label",
+      "pass": true,
+      "detail": [
+        {
+          "id": "a",
+          "role": "SearchInput",
+          "label": "Search tools",
+          "description": null,
+          "value": "pdf",
+          "placeholder": "Search 75 tools or drop a file",
+          "selected": null,
+          "position_in_set": null,
+          "size_of_set": null,
+          "keyboard_shortcut": null,
+          "on_action": [
+            "Focus"
+          ],
+          "children": null
+        }
+      ]
+    },
+    {
+      "check": "search_field_exposes_value_gpui",
+      "pass": true,
+      "detail": {
+        "typed_ascii": "pdf",
+        "typed_devanagari": "क्षेत्र"
+      }
+    },
+    {
+      "check": "search_field_exposes_value_appkit",
+      "pass": true,
+      "detail": {
+        "role": "AXTextField",
+        "label": "Search tools",
+        "value": "pdf",
+        "placeholder": "Search 75 tools or drop a file"
+      }
+    },
+    {
+      "check": "result_list_role_and_label",
+      "pass": true,
+      "detail": [
+        {
+          "id": "k",
+          "role": "ListBox",
+          "label": "Tools",
+          "description": null,
+          "value": null,
+          "placeholder": null,
+          "selected": null,
+          "position_in_set": null,
+          "size_of_set": null,
+          "keyboard_shortcut": null,
+          "on_action": null,
+          "children": [
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "rows_have_role_label_and_selected_state",
+      "pass": true,
+      "detail": {
+        "row_count": 8,
+        "selected_flags": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    {
+      "check": "selected_state_follows_arrow_key",
+      "pass": true,
+      "detail": {
+        "before": [
+          {
+            "label": "PDF to Word",
+            "selected": true,
+            "pos": 1
+          },
+          {
+            "label": "PDF to Images",
+            "selected": false,
+            "pos": 2
+          },
+          {
+            "label": "OCR PDF",
+            "selected": false,
+            "pos": 3
+          }
+        ],
+        "after_down": [
+          {
+            "label": "PDF to Word",
+            "selected": false,
+            "pos": 1
+          },
+          {
+            "label": "PDF to Images",
+            "selected": true,
+            "pos": 2
+          },
+          {
+            "label": "OCR PDF",
+            "selected": false,
+            "pos": 3
+          }
+        ]
+      }
+    },
+    {
+      "check": "footer_buttons_have_role_and_label",
+      "pass": true,
+      "detail": [
+        {
+          "label": "Remove dropped file",
+          "actions": [
+            "Click"
+          ],
+          "shortcut": null
+        },
+        {
+          "label": "Open selected tool",
+          "actions": [
+            "Click"
+          ],
+          "shortcut": "Return"
+        },
+        {
+          "label": "Actions",
+          "actions": [
+            "Click"
+          ],
+          "shortcut": "Meta+K"
+        }
+      ]
+    },
+    {
+      "check": "remove_file_button_has_role_and_label",
+      "pass": true,
+      "detail": [
+        {
+          "label": "Remove dropped file",
+          "actions": [
+            "Click"
+          ],
+          "shortcut": null
+        },
+        {
+          "label": "Open selected tool",
+          "actions": [
+            "Click"
+          ],
+          "shortcut": "Return"
+        },
+        {
+          "label": "Actions",
+          "actions": [
+            "Click"
+          ],
+          "shortcut": "Meta+K"
+        }
+      ]
+    },
+    {
+      "check": "every_interactive_node_has_label",
+      "pass": true,
+      "detail": []
+    },
+    {
+      "check": "appkit_buttons_present_and_pressable",
+      "pass": true,
+      "detail": [
+        {
+          "label": "Remove dropped file",
+          "press_allowed": true
+        },
+        {
+          "label": "Open selected tool",
+          "press_allowed": true
+        },
+        {
+          "label": "Actions",
+          "press_allowed": true
+        }
+      ]
+    },
+    {
+      "check": "appkit_field_selected_text_range_tracks_caret",
+      "pass": false,
+      "detail": {
+        "accessibilitySelectedTextRange": [
+          0,
+          0
+        ],
+        "accessibilityNumberOfCharacters": 0,
+        "caret_should_be": [
+          3,
+          0
+        ],
+        "why": "the adapter supports it only when the field publishes TextRun children and a text selection (a11y_synthetic_children); the bare kit Input does not, so a screen reader gets the value but no caret or per-character echo"
+      }
+    },
+    {
+      "check": "press_open_button_runs_selected_tool",
+      "pass": true,
+      "detail": {
+        "found": true,
+        "performPress_returned": true,
+        "footer_msg_after": "Opened PDF to Word"
+      }
+    },
+    {
+      "check": "press_remove_file_button_removes_file",
+      "pass": true,
+      "detail": {
+        "found": true,
+        "performPress_returned": true,
+        "file_before": true,
+        "file_after": false
+      }
+    }
+  ],
+  "pass_required": true,
+  "pass_all": false,
+  "gpui_state_a": {
+    "state": "ascii_query_pdf_with_file_chip",
+    "gpui_tree_frame": {
+      "rendered_at": "2026-10-13T23:40:53.637+05:30",
+      "frame_number": 5,
+      "window_title": null,
+      "node_count": 14,
+      "tab_stop_count": 1,
+      "viewport_size": {
+        "width": 720.0,
+        "height": 460.0
+      },
+      "scale_factor": 2.0
+    },
+    "gpui_focus": "a",
+    "root": "n",
+    "nodes": [
+      {
+        "id": "a",
+        "role": "SearchInput",
+        "label": "Search tools",
+        "description": null,
+        "value": "pdf",
+        "placeholder": "Search 75 tools or drop a file",
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Focus"
+        ],
+        "children": null
+      },
+      {
+        "id": "b",
+        "role": "Button",
+        "label": "Remove dropped file",
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "c",
+        "role": "ListBoxOption",
+        "label": "PDF to Word",
+        "description": "Editable DOCX from PDF",
+        "value": null,
+        "placeholder": null,
+        "selected": true,
+        "position_in_set": 1,
+        "size_of_set": 18,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "d",
+        "role": "ListBoxOption",
+        "label": "PDF to Images",
+        "description": "Export pages as PNG or JPG",
+        "value": null,
+        "placeholder": null,
+        "selected": false,
+        "position_in_set": 2,
+        "size_of_set": 18,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "e",
+        "role": "ListBoxOption",
+        "label": "OCR PDF",
+        "description": "Make scanned text searchable",
+        "value": null,
+        "placeholder": null,
+        "selected": false,
+        "position_in_set": 3,
+        "size_of_set": 18,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "f",
+        "role": "ListBoxOption",
+        "label": "Sign PDF",
+        "description": "Add your signature",
+        "value": null,
+        "placeholder": null,
+        "selected": false,
+        "position_in_set": 4,
+        "size_of_set": 18,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "g",
+        "role": "ListBoxOption",
+        "label": "Split PDF",
+        "description": "Pull pages into separate files",
+        "value": null,
+        "placeholder": null,
+        "selected": false,
+        "position_in_set": 5,
+        "size_of_set": 18,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "h",
+        "role": "ListBoxOption",
+        "label": "Edit PDF Text",
+        "description": "Change words in place",
+        "value": null,
+        "placeholder": null,
+        "selected": false,
+        "position_in_set": 6,
+        "size_of_set": 18,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "i",
+        "role": "ListBoxOption",
+        "label": "Fill PDF Form",
+        "description": "Type into form fields",
+        "value": null,
+        "placeholder": null,
+        "selected": false,
+        "position_in_set": 7,
+        "size_of_set": 18,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "j",
+        "role": "ListBoxOption",
+        "label": "Merge PDFs",
+        "description": "Combine files into one",
+        "value": null,
+        "placeholder": null,
+        "selected": false,
+        "position_in_set": 8,
+        "size_of_set": 18,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "k",
+        "role": "ListBox",
+        "label": "Tools",
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": null,
+        "on_action": null,
+        "children": [
+          "c",
+          "d",
+          "e",
+          "f",
+          "g",
+          "h",
+          "i",
+          "j"
+        ]
+      },
+      {
+        "id": "l",
+        "role": "Button",
+        "label": "Open selected tool",
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": "Return",
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "m",
+        "role": "Button",
+        "label": "Actions",
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": "Meta+K",
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "n",
+        "role": "Window",
+        "label": null,
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": null,
+        "on_action": null,
+        "children": [
+          "a",
+          "b",
+          "k",
+          "l",
+          "m"
+        ]
+      }
+    ]
+  },
+  "gpui_state_b_rows_selection": [
+    {
+      "label": "PDF to Word",
+      "selected": false,
+      "pos": 1
+    },
+    {
+      "label": "PDF to Images",
+      "selected": true,
+      "pos": 2
+    },
+    {
+      "label": "OCR PDF",
+      "selected": false,
+      "pos": 3
+    },
+    {
+      "label": "Sign PDF",
+      "selected": false,
+      "pos": 4
+    },
+    {
+      "label": "Split PDF",
+      "selected": false,
+      "pos": 5
+    },
+    {
+      "label": "Edit PDF Text",
+      "selected": false,
+      "pos": 6
+    },
+    {
+      "label": "Fill PDF Form",
+      "selected": false,
+      "pos": 7
+    },
+    {
+      "label": "Merge PDFs",
+      "selected": false,
+      "pos": 8
+    }
+  ],
+  "gpui_state_c_devanagari": {
+    "state": "devanagari_query",
+    "gpui_tree_frame": {
+      "rendered_at": "2026-10-13T23:40:53.673+05:30",
+      "frame_number": 12,
+      "window_title": null,
+      "node_count": 6,
+      "tab_stop_count": 1,
+      "viewport_size": {
+        "width": 720.0,
+        "height": 460.0
+      },
+      "scale_factor": 2.0
+    },
+    "gpui_focus": "a",
+    "root": "f",
+    "nodes": [
+      {
+        "id": "a",
+        "role": "SearchInput",
+        "label": "Search tools",
+        "description": null,
+        "value": "क्षेत्र",
+        "placeholder": "Search 75 tools or drop a file",
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Focus"
+        ],
+        "children": null
+      },
+      {
+        "id": "b",
+        "role": "Button",
+        "label": "Remove dropped file",
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": null,
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "c",
+        "role": "ListBox",
+        "label": "Tools",
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": null,
+        "on_action": null,
+        "children": null
+      },
+      {
+        "id": "d",
+        "role": "Button",
+        "label": "Open selected tool",
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": "Return",
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "e",
+        "role": "Button",
+        "label": "Actions",
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": "Meta+K",
+        "on_action": [
+          "Click"
+        ],
+        "children": null
+      },
+      {
+        "id": "f",
+        "role": "Window",
+        "label": null,
+        "description": null,
+        "value": null,
+        "placeholder": null,
+        "selected": null,
+        "position_in_set": null,
+        "size_of_set": null,
+        "keyboard_shortcut": null,
+        "on_action": null,
+        "children": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "e"
+        ]
+      }
+    ]
+  },
+  "appkit": {
+    "content_view_children": [
+      {
+        "role": "AXGroup",
+        "subrole": "AXUnknown",
+        "label": null,
+        "help": null,
+        "value": null,
+        "placeholder": null,
+        "selected": false,
+        "selected_text_range": [
+          0,
+          0
+        ],
+        "number_of_characters": 0,
+        "press_allowed": false,
+        "focusable": false,
+        "frame": [
+          -20000.0,
+          400.0,
+          720.0,
+          460.0
+        ],
+        "children": [
+          {
+            "role": "AXTextField",
+            "subrole": "AXSearchField",
+            "label": "Search tools",
+            "help": null,
+            "value": "pdf",
+            "placeholder": "Search 75 tools or drop a file",
+            "selected": false,
+            "selected_text_range": [
+              0,
+              0
+            ],
+            "number_of_characters": 0,
+            "press_allowed": false,
+            "focusable": true,
+            "frame": [
+              -19950.0,
+              820.0,
+              549.0,
+              24.0
+            ],
+            "children": []
+          },
+          {
+            "role": "AXButton",
+            "subrole": "AXUnknown",
+            "label": "Remove dropped file",
+            "help": null,
+            "value": null,
+            "placeholder": null,
+            "selected": false,
+            "selected_text_range": [
+              0,
+              0
+            ],
+            "number_of_characters": 0,
+            "press_allowed": true,
+            "focusable": false,
+            "frame": [
+              -19315.0,
+              825.0,
+              14.0,
+              14.0
+            ],
+            "children": []
+          },
+          {
+            "role": "AXList",
+            "subrole": "AXUnknown",
+            "label": "Tools",
+            "help": null,
+            "value": null,
+            "placeholder": null,
+            "selected": false,
+            "selected_text_range": [
+              0,
+              0
+            ],
+            "number_of_characters": 0,
+            "press_allowed": false,
+            "focusable": false,
+            "frame": [
+              -20000.0,
+              440.0,
+              720.0,
+              364.0
+            ],
+            "children": [
+              {
+                "role": "AXStaticText",
+                "subrole": "AXUnknown",
+                "label": "PDF to Word",
+                "help": "Editable DOCX from PDF",
+                "value": null,
+                "placeholder": null,
+                "selected": true,
+                "selected_text_range": [
+                  0,
+                  0
+                ],
+                "number_of_characters": 0,
+                "press_allowed": true,
+                "focusable": false,
+                "frame": [
+                  -20000.0,
+                  724.0,
+                  720.0,
+                  44.0
+                ],
+                "children": []
+              },
+              {
+                "role": "AXStaticText",
+                "subrole": "AXUnknown",
+                "label": "PDF to Images",
+                "help": "Export pages as PNG or JPG",
+                "value": null,
+                "placeholder": null,
+                "selected": false,
+                "selected_text_range": [
+                  0,
+                  0
+                ],
+                "number_of_characters": 0,
+                "press_allowed": true,
+                "focusable": false,
+                "frame": [
+                  -20000.0,
+                  680.0,
+                  720.0,
+                  44.0
+                ],
+                "children": []
+              },
+              {
+                "role": "AXStaticText",
+                "subrole": "AXUnknown",
+                "label": "OCR PDF",
+                "help": "Make scanned text searchable",
+                "value": null,
+                "placeholder": null,
+                "selected": false,
+                "selected_text_range": [
+                  0,
+                  0
+                ],
+                "number_of_characters": 0,
+                "press_allowed": true,
+                "focusable": false,
+                "frame": [
+                  -20000.0,
+                  636.0,
+                  720.0,
+                  44.0
+                ],
+                "children": []
+              },
+              {
+                "role": "AXStaticText",
+                "subrole": "AXUnknown",
+                "label": "Sign PDF",
+                "help": "Add your signature",
+                "value": null,
+                "placeholder": null,
+                "selected": false,
+                "selected_text_range": [
+                  0,
+                  0
+                ],
+                "number_of_characters": 0,
+                "press_allowed": true,
+                "focusable": false,
+                "frame": [
+                  -20000.0,
+                  592.0,
+                  720.0,
+                  44.0
+                ],
+                "children": []
+              },
+              {
+                "role": "AXStaticText",
+                "subrole": "AXUnknown",
+                "label": "Split PDF",
+                "help": "Pull pages into separate files",
+                "value": null,
+                "placeholder": null,
+                "selected": false,
+                "selected_text_range": [
+                  0,
+                  0
+                ],
+                "number_of_characters": 0,
+                "press_allowed": true,
+                "focusable": false,
+                "frame": [
+                  -20000.0,
+                  548.0,
+                  720.0,
+                  44.0
+                ],
+                "children": []
+              },
+              {
+                "role": "AXStaticText",
+                "subrole": "AXUnknown",
+                "label": "Edit PDF Text",
+                "help": "Change words in place",
+                "value": null,
+                "placeholder": null,
+                "selected": false,
+                "selected_text_range": [
+                  0,
+                  0
+                ],
+                "number_of_characters": 0,
+                "press_allowed": true,
+                "focusable": false,
+                "frame": [
+                  -20000.0,
+                  504.0,
+                  720.0,
+                  44.0
+                ],
+                "children": []
+              },
+              {
+                "role": "AXStaticText",
+                "subrole": "AXUnknown",
+                "label": "Fill PDF Form",
+                "help": "Type into form fields",
+                "value": null,
+                "placeholder": null,
+                "selected": false,
+                "selected_text_range": [
+                  0,
+                  0
+                ],
+                "number_of_characters": 0,
+                "press_allowed": true,
+                "focusable": false,
+                "frame": [
+                  -20000.0,
+                  460.0,
+                  720.0,
+                  44.0
+                ],
+                "children": []
+              },
+              {
+                "role": "AXStaticText",
+                "subrole": "AXUnknown",
+                "label": "Merge PDFs",
+                "help": "Combine files into one",
+                "value": null,
+                "placeholder": null,
+                "selected": false,
+                "selected_text_range": [
+                  0,
+                  0
+                ],
+                "number_of_characters": 0,
+                "press_allowed": true,
+                "focusable": false,
+                "frame": [
+                  -20000.0,
+                  416.0,
+                  720.0,
+                  44.0
+                ],
+                "children": []
+              }
+            ]
+          },
+          {
+            "role": "AXButton",
+            "subrole": "AXUnknown",
+            "label": "Open selected tool",
+            "help": null,
+            "value": null,
+            "placeholder": null,
+            "selected": false,
+            "selected_text_range": [
+              0,
+              0
+            ],
+            "number_of_characters": 0,
+            "press_allowed": true,
+            "focusable": false,
+            "frame": [
+              -19464.0,
+              411.0,
+              57.0,
+              18.0
+            ],
+            "children": []
+          },
+          {
+            "role": "AXButton",
+            "subrole": "AXUnknown",
+            "label": "Actions",
+            "help": null,
+            "value": null,
+            "placeholder": null,
+            "selected": false,
+            "selected_text_range": [
+              0,
+              0
+            ],
+            "number_of_characters": 0,
+            "press_allowed": true,
+            "focusable": false,
+            "frame": [
+              -19391.0,
+              411.0,
+              91.0,
+              18.0
+            ],
+            "children": []
+          }
+        ]
+      }
+    ],
+    "focused_element": null
+  }
+}

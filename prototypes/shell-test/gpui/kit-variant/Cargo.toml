@@ -9,7 +9,15 @@ publish = false
 # (published 2026-10-12), not the git commit used by ../, so this is a separate crate with its own target dir.
 [workspace]
 
+[features]
+# Dev only: /snapshot (offscreen render of the live frame).
+snapshot = ["gpui/test-support", "gpui_platform/test-support"]
+# Dev only: never-shown test window plus /imetest, /a11ydump, /shapetest on the control port. No hotkey, no show path.
+selftest-input = ["snapshot", "dep:unicode-segmentation", "dep:unicode-normalization"]
+
 [dependencies]
+unicode-segmentation = { version = "1.13", optional = true }
+unicode-normalization = { version = "0.1.25", optional = true }
 gpui = { package = "gpui-pre", version = "=0.3.9" }
 gpui_platform = { package = "gpui-pre-platform", version = "=0.3.9", features = ["font-kit", "runtime_shaders"] }
 gpui-base = "=0.7.3"
@@ -29,3 +37,13 @@ lto = "thin"
 codegen-units = 4
 strip = true
 panic = "abort"
+
+# Used only for the selftest-input binary: quick to build, keeps the same code paths as release.
+[profile.selftest]
+inherits = "release"
+opt-level = 1
+lto = false
+codegen-units = 16
+strip = false
+panic = "unwind"
+incremental = true
