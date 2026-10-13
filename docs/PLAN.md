@@ -64,14 +64,18 @@ app launches, in the fastest-growing open-source category (agent file tools).
 **Gate:** every wave 1 module passes its budget and quality bar in CI on Mac,
 Windows and Linux (CLI).
 
-## Phase 2: The desktop app, Mac first (weeks 5 to 10, overlapping)
+## Phase 2: The desktop app for macOS, Windows and Linux (weeks 5 to 10, overlapping)
 
 **Build**
 
 - GPUI app grown from `prototypes/shell-test/gpui/kit-variant` (measured: 33 MB
   idle, 152 to 190 ms cold start), with the GPUI Kit input plus our grapheme
-  patch (upstreamed). The same app becomes Windows and Linux later. Small
-  native Swift targets for Finder right-click and the share extension.
+  patch (upstreamed). One app for all three desktops from day one. Platform
+  entry points: Finder right-click and share extension (small Swift targets)
+  on macOS, Explorer context menu and Send To on Windows, file manager actions
+  (Nautilus, Dolphin) and a .desktop handler on Linux.
+- Every module and the app are tested on all three OSes before launch: Linux
+  in Docker locally, Windows and Linux on free CI runners.
 - Command bar, app window (home, find, history), result cards, chains,
   presets.
 - Native renderer that draws any module's declared UI from the shared
@@ -101,11 +105,15 @@ under 300 ms, idle under 100 MB, 120 fps).
 **Gate:** each top-30 module beats its named competitor on its quality bar,
 measured and published.
 
-## Phase 4: Mac launch (around week 12)
+## Phase 4: Desktop launch on macOS, Windows and Linux (around week 12)
 
-- Mac app plus CLI and MCP on all desktops, GitHub releases, Homebrew cask.
-- Needs before launch: Apple Developer account ($99 a year) to sign and
-  notarize, otherwise macOS warns users away. Everything else stays free.
+- Desktop app plus CLI and MCP on macOS, Windows and Linux. Channels: GitHub
+  releases, Homebrew cask, winget and Scoop, Flatpak (Flathub) and AppImage.
+- Signing: Apple Developer account ($99 a year) to notarize on macOS,
+  otherwise macOS warns users away. Windows SmartScreen warns on unsigned
+  apps until reputation builds; winget and Scoop installs avoid most of it,
+  and free signing for open source (SignPath Foundation) can be applied for.
+  Linux needs no signing. Everything else stays free.
 - Launch format, from the X research:
   - one gesture demo (drop a file on the bar, Shift-drag to convert)
   - "apps you can delete once Panoply is on your Mac", with measured numbers
@@ -116,16 +124,16 @@ measured and published.
 
 ## Phase 5: Every other platform (after launch)
 
-Ordered by where the users are. iLovePDF's biggest audiences are Bangladesh
-and India, which are mostly Android and Windows.
+The three desktops launch together (Phase 4). Then mobile, ordered by where
+the users are: iLovePDF's biggest audiences are Bangladesh and India, mostly
+Android.
 
 1. **Android** (Compose): share sheet, passport and exam photos, scanner,
    LocalSend sharing, Hindi and Bengali.
-2. **Windows and Linux**: the same GPUI desktop app, plus Explorer right-click.
-   Confirm the budgets on Windows hardware first.
-3. **iOS** (SwiftUI): share sheet, camera flows.
+2. **iOS** (SwiftUI): share sheet, camera flows.
 
 ## Running costs
 
-Zero apart from the Apple Developer account at launch. No servers, no hosted
+Zero apart from the Apple Developer account at launch. CI must be free:
+public repository runners or a free self-hosted runner, never paid minutes. No servers, no hosted
 models, models downloaded per module from GitHub releases.

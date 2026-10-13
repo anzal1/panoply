@@ -139,6 +139,8 @@ Totals: 98 modules in 31 rows. Of these, 55 have a real exception (memory, previ
 
 - **GPUI for all desktops (2026-10-13).** The user could not tell the GPUI and SwiftUI command bars apart; GPUI matched native on memory (33 vs 30 MB) and startup. Headless checks pass for Hindi, Bengali, pinyin and dead-key input and for accessibility, with a 40-line grapheme-cluster patch to GPUI Kit's input that we carry and upstream. macOS, Windows and Linux share one GPUI app on the Rust core; SwiftUI only for iOS, Compose for Android. ADR 0001 amended.
 
+- **Desktops launch together; free CI only (2026-10-14).** macOS, Windows and Linux ship together as one GPUI app (ADR 0009 amended), then Android, then iOS. CI must cost nothing. Comparing our PDF compression against iLovePDF with public test PDFs is approved. Solo for now, no collaborators to invite. The human Hindi and VoiceOver checks are deferred.
+
 ## Open questions only the user can answer (historical)
 
 1. **Project license.** Do we allow any GPL or AGPL engine in the core? The files avoid imagequant, gifski, x264, x265, Potrace, Rubber Band, espeak-ng and dssim, and write our own quantizer and SSIM. A permissive-only rule keeps that work. Another choice could drop it.
