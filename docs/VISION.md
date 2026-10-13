@@ -61,8 +61,10 @@ One app, five pillars.
    over your own network. No cloud, no account.
 4. **Built by the people.** Every tool is a module. Adding one is a small folder
    and a pull request. Install only what you use.
-5. **Agent ready.** Every module is also a command-line tool and an MCP tool, so
-   people's AI agents can use the whole toolbox locally.
+5. **Agent ready (a bonus).** Every module is also a command-line tool and an
+   MCP tool. Kill test 2 showed capable agents can already do everyday file
+   tasks with raw tools, so this makes them faster and more reliable rather
+   than enabling them.
 
 ## Platforms
 

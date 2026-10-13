@@ -1,0 +1,10 @@
+01-compress-pdf              PASS: 381043 bytes, 4 pages, text selectable, 4 images kept
+02-merge-pdfs                PASS: 9 pages in order contract, id_proof, invoice
+03-heic-to-jpg-no-gps        PASS: 5 JPGs, correct sizes, no GPS
+04-exam-photo                PASS: 200x230 JPEG, 27716 bytes
+05-trim-video                PASS: duration 7.00s, starts at 5.00s, ends at 11.97s, clean decode
+06-compress-video            PASS: 6613396 bytes, 1280x720, 12.0s, 4409 kbps
+07-extract-mp3               PASS: mp3, 128000 bps, 15.00s, tones intact
+08-docx-to-pdf               PASS: 2 pages, all text, table row intact, bold present
+09-passport-photo            PASS: 600x600 JPEG, white background, subject intact and centered
+10-find-order-screenshot     PASS: answered 'Screenshot 2026-09-18 at 17.10.54.png'

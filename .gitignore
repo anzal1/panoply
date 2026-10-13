@@ -35,3 +35,8 @@ models-cache/
 *.onnx
 *.gguf
 *.tflite
+
+# Kill test fixtures and agent outputs (regenerate with the scripts in prototypes/agent-killtest)
+prototypes/agent-killtest/tasks/*/fixtures/
+prototypes/agent-killtest/tasks/*/work/
+prototypes/agent-killtest/results/run-*-work/
