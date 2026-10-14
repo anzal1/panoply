@@ -9,10 +9,11 @@
 [profile.default]
 fail-fast = false
 
-# Tests that measure how quiet or how fast a process is. Alone, on a machine that is not busy.
+# Tests that measure how quiet or how fast a process is, or that scan the local network against a short
+# deadline (panoply-share::discovery). Alone, on a machine that is not busy.
 [profile.ci]
 fail-fast = false
-default-filter = "not (package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-vision::idle))"
+default-filter = "not (package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-vision::idle) | binary_id(panoply-share::discovery))"
 # Print only what matters in the log: failures, slow tests and a summary.
 status-level = "fail"
 final-status-level = "slow"
@@ -26,7 +27,7 @@ path = "junit.xml"
 [profile.ci-core]
 inherits = "ci"
 default-filter = """
-not (package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-vision::idle))
+not (package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-vision::idle) | binary_id(panoply-share::discovery))
 & not (
     (binary_id(panoply-image::modules) & test(/^(quality_target_and_format_shootout|under_a_size_lands_within_two_percent_below)$/))
   | (binary_id(panoply-pdf::compress) & test(/^(smallest_over_the_corpus_opens_everywhere_and_keeps_the_look|jpeg_2000_and_jbig2_scans_shrink_and_keep_the_look)$/))
@@ -42,7 +43,7 @@ not (package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-v
 
 [profile.ci-idle]
 inherits = "ci"
-default-filter = "package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-vision::idle)"
+default-filter = "package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-vision::idle) | binary_id(panoply-share::discovery)"
 test-threads = 1
 [profile.ci-idle.junit]
 path = "junit-idle.xml"
