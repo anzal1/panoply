@@ -453,6 +453,12 @@ pub(crate) fn run(args: Vec<String>) {
         register_actions(cx);
 
         cx.set_global(BarSlot::default());
+        #[cfg(target_os = "linux")]
+        cx.on_app_quit(|_| {
+            crate::platform::stop_watchers();
+            async {}
+        })
+        .detach();
         // The command bar is created now, hidden, so showing it later is instant. Not on Linux: X11
         // would put it on screen from the first frame, so there it is created by the first hotkey.
         #[cfg(not(target_os = "linux"))]

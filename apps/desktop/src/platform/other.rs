@@ -110,24 +110,56 @@ fn follow(w: Watch) {
             return;
         }
     }
-    let Ok(mut child) = Command::new("gsettings")
-        .args(["monitor", w.schema, w.key])
+    use std::os::unix::process::CommandExt;
+    let mut cmd = Command::new("gsettings");
+    cmd.args(["monitor", w.schema, w.key])
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
-        .stderr(Stdio::null())
-        .spawn()
-    else {
+        .stderr(Stdio::null());
+    // SAFETY: the closure runs between fork and exec and only calls prctl, which is async-signal-safe.
+    // The kernel then sends SIGTERM to the child when this process dies, however it dies.
+    unsafe {
+        cmd.pre_exec(|| {
+            if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM) != 0 {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+    let Ok(mut child) = cmd.spawn() else {
         return;
     };
-    if let Some(out) = child.stdout.take() {
-        // Each change arrives as one line, `key: value`.
-        for line in BufReader::new(out).lines().map_while(Result::ok) {
-            if let Some((_, v)) = line.rsplit_once(": ") {
-                store(v);
-            }
+    let Some(out) = child.stdout.take() else {
+        let _ = child.kill();
+        let _ = child.wait();
+        return;
+    };
+    // Kept where `stop_watchers` can reach it: this thread is blocked reading while the app runs.
+    if let Ok(mut list) = MONITORS.lock() {
+        list.push(child);
+    }
+    // Each change arrives as one line, `key: value`.
+    for line in BufReader::new(out).lines().map_while(Result::ok) {
+        if let Some((_, v)) = line.rsplit_once(": ") {
+            store(v);
         }
     }
-    let _ = child.wait();
+}
+
+/// The long-lived `gsettings monitor` children.
+#[cfg(target_os = "linux")]
+static MONITORS: std::sync::Mutex<Vec<std::process::Child>> = std::sync::Mutex::new(Vec::new());
+
+/// Kill and reap the `gsettings monitor` children. Called when the app quits; a crash is covered by
+/// the parent-death signal set when they are spawned.
+#[cfg(target_os = "linux")]
+pub(crate) fn stop_watchers() {
+    if let Ok(mut list) = MONITORS.lock() {
+        for mut child in list.drain(..) {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+    }
 }
 
 /// Give keyboard focus to the command bar. On X11 the bar is an override-redirect pop-up, which the

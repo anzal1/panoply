@@ -24,6 +24,21 @@ runs=()
 pid_of() { pgrep -x panoply-desktop | head -1; }
 # The command bar is a 720x460 pop-up the window manager does not manage, so it shows up in the window tree.
 bar_mapped() { xwininfo -root -tree 2>/dev/null | grep -c ' 720x460+' || true; }
+# Press the hotkey and wait until the bar is mapped; prints the milliseconds that took (5000 on timeout).
+# The bar is built on every show on Linux, so this is what that costs. "Mapped" is the window existing on
+# screen, which is a little before its first painted frame.
+hotkey_to_bar_ms() {
+  local t0 t1
+  t0=$(date +%s%N)
+  xdotool key --clearmodifiers ctrl+alt+space
+  while [ "$(bar_mapped)" = 0 ]; do
+    t1=$(date +%s%N)
+    [ $(( (t1 - t0) / 1000000 )) -ge 5000 ] && { echo 5000; return; }
+    sleep 0.01
+  done
+  t1=$(date +%s%N)
+  echo $(( (t1 - t0) / 1000000 ))
+}
 window_id() { xdotool search --onlyvisible --name '^Panoply$' 2>/dev/null | head -1; }
 
 for scenario in default; do
@@ -65,7 +80,7 @@ for scenario in default; do
 
   # The command bar, through the global hotkey: it must show, then hide on Escape, then show and hide
   # again with the hotkey itself.
-  xdotool key --clearmodifiers ctrl+alt+space
+  bar_first_show_ms=$(hotkey_to_bar_ms)
   sleep 2
   import -window root "$OUT/linux-bar-screen.png"
   bar_after_hotkey=$(bar_mapped)
@@ -76,7 +91,7 @@ for scenario in default; do
   sleep 1
   import -window root "$OUT/linux-bar-after-escape.png"
   bar_after_escape=$(bar_mapped)
-  xdotool key --clearmodifiers ctrl+alt+space
+  bar_second_show_ms=$(hotkey_to_bar_ms)
   sleep 2
   bar_second_show=$(bar_mapped)
   xdotool key --clearmodifiers ctrl+alt+space
@@ -101,13 +116,13 @@ for scenario in default; do
   [ "${bar_second_show:-0}" != 0 ] || failed+=("command bar did not show on the second hotkey")
   [ "${bar_after_toggle:-0}" = 0 ] || failed+=("command bar still on screen after the hotkey toggled it off")
   if $exited && [ "$code" != 0 ]; then failed+=("exit code $code after close"); fi
-  runs+=("$(python3 -I - "$scenario" "$alive" "$wid" "$title" "$geom" "$frame" "$motif" "$mem_mb" "$alive_after_hotkey" "$exited" "$code" "$t_window" "$bar_at_start" "$bar_after_hotkey" "$bar_after_escape" "$bar_second_show" "$bar_after_toggle" <<'PY'
+  runs+=("$(python3 -I - "$scenario" "$alive" "$wid" "$title" "$geom" "$frame" "$motif" "$mem_mb" "$alive_after_hotkey" "$exited" "$code" "$t_window" "$bar_at_start" "$bar_after_hotkey" "$bar_after_escape" "$bar_second_show" "$bar_after_toggle" "$bar_first_show_ms" "$bar_second_show_ms" <<'PY'
 import json, sys
-k = ["scenario","alive","window_id","title","geometry","frame_extents","motif_hints","memory_mb","alive_after_hotkey","exited_after_close","exit_code","seconds_to_window","bar_at_start","bar_after_hotkey","bar_after_escape","bar_second_show","bar_after_toggle"]
+k = ["scenario","alive","window_id","title","geometry","frame_extents","motif_hints","memory_mb","alive_after_hotkey","exited_after_close","exit_code","seconds_to_window","bar_at_start","bar_after_hotkey","bar_after_escape","bar_second_show","bar_after_toggle","bar_first_show_ms","bar_second_show_ms"]
 d = dict(zip(k, sys.argv[1:]))
 for b in ("alive","alive_after_hotkey","exited_after_close"): d[b] = d[b] == "true"
 d["memory_mb"] = int(d["memory_mb"]); d["seconds_to_window"] = float(d["seconds_to_window"])
-for b in ("bar_at_start","bar_after_hotkey","bar_after_escape","bar_second_show","bar_after_toggle"): d[b] = int(d[b])
+for b in ("bar_at_start","bar_after_hotkey","bar_after_escape","bar_second_show","bar_after_toggle","bar_first_show_ms","bar_second_show_ms"): d[b] = int(d[b])
 print(json.dumps(d))
 PY
 )")
