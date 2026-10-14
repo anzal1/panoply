@@ -4,7 +4,7 @@ name: CI
 
 on:
   push:
-    branches: [main, "polish/**"]
+    branches: [main]
   pull_request:
   # Weekly, so a new advisory against dependencies nobody touched still shows up, and so the
   # slow caches never go cold. A scheduled run always runs every job.
@@ -98,7 +98,7 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
           shared-key: clippy-${{ matrix.os }}
-          save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/polish/') }}
+          save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo clippy --workspace --exclude gpui-base --all-targets -- -D warnings
 
   # Every test, on every OS, except the slowest corpus and model tests, which run on Linux only (the
@@ -141,7 +141,7 @@ jobs:
           shared-key: test-${{ matrix.os }}
           # A failing test must not throw away a 15 minute build.
           cache-on-failure: true
-          save-if: ${{ matrix.shard == 1 && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/polish/')) }}
+          save-if: ${{ matrix.shard == 1 && (github.ref == 'refs/heads/main') }}
       - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
         with:
           tool: nextest
