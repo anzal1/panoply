@@ -108,14 +108,19 @@ jobs:
   test:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    name: test (${{ matrix.os }})
+    name: test (${{ matrix.os }}${{ matrix.shards && format(', part {0} of {1}', matrix.shard, matrix.shards) || '' }})
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest, profile: ci }
-          - { os: windows-latest, profile: ci-core }
-          - { os: macos-latest, profile: ci-core }
+          # Linux runs the heavy tests too, so its tests are split over three runners. Each builds the
+          # tests from the same cache and runs a third of them (nextest --partition); part 1 also runs
+          # the timing tests alone and the doc tests, and saves the caches.
+          - { os: ubuntu-latest, profile: ci, shard: 1, shards: 3 }
+          - { os: ubuntu-latest, profile: ci, shard: 2, shards: 3 }
+          - { os: ubuntu-latest, profile: ci, shard: 3, shards: 3 }
+          - { os: windows-latest, profile: ci-core, shard: 1 }
+          - { os: macos-latest, profile: ci-core, shard: 1 }
     runs-on: ${{ matrix.os }}
     env:
       NEXTEST_ARGS: --workspace --exclude gpui-base --cargo-profile ci --profile ${{ matrix.profile }} --lib --bins --tests
@@ -136,7 +141,7 @@ jobs:
           shared-key: test-${{ matrix.os }}
           # A failing test must not throw away a 15 minute build.
           cache-on-failure: true
-          save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/polish/') }}
+          save-if: ${{ matrix.shard == 1 && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/polish/')) }}
       - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
         with:
           tool: nextest
@@ -188,28 +193,36 @@ jobs:
 
       - name: Build the tests
         run: cargo nextest run ${{ env.NEXTEST_ARGS }} --no-run
-      # On a cold engines cache, download everything once and serially, before the tests start. Tests
-      # that find the download already done never print the "Downloading ..." line some of them
-      # look for, and a dozen test processes never fetch the same file at the same moment.
+      # Download the engines and models once, one after another, before the tests start (a cold
+      # cache is the only time anything is fetched). Tests that find the download already done never
+      # print the "Downloading ..." line some of them look for, and a dozen test processes never
+      # fetch or unpack the same file at the same moment (on Windows that is "Access is denied").
+      # The OCR tests keep their own copy of ONNX Runtime; PANOPLY_ORT_LIB points them at this one.
+      # ffmpeg is left out on purpose: the media tests skip without it, as they always have.
       - name: Download the engines and models once
-        if: steps.engines.outputs.cache-hit != 'true'
         shell: bash
         run: |
           panoply="${CARGO_TARGET_DIR:-target}/ci/panoply"
-          "$panoply" models list
-          "$panoply" models fetch
-          du -sh "$PANOPLY_ENGINES_DIR"
+          "$panoply" models fetch pdfium onnxruntime isnet migan esrgan ppocr-det ppocr-rec-en \
+            ppocr-rec-latin ppocr-rec-devanagari tessdata-ben tessdata-eng tessdata-hin yunet 2>&1 | tee fetch.log
+          # The line "onnxruntime: ready at <path>" has the path in the form the tests need it.
+          ort="$(sed -n 's/^onnxruntime: ready at //p' fetch.log | head -1)"
+          test -n "$ort"
+          echo "PANOPLY_ORT_LIB=$ort" >> "$GITHUB_ENV"
+          rm fetch.log
       - name: Run the tests
-        run: cargo nextest run ${{ env.NEXTEST_ARGS }}
+        run: cargo nextest run ${{ env.NEXTEST_ARGS }} ${{ matrix.shards && format('--partition count:{0}/{1}', matrix.shard, matrix.shards) || '' }}
       # The timing tests (idle CPU and memory budgets) get the machine to themselves.
       - name: Run the timing tests alone
+        if: matrix.shard == 1
         run: cargo nextest run --workspace --exclude gpui-base --cargo-profile ci --profile ci-idle --lib --bins --tests
       - name: Doc tests
+        if: matrix.shard == 1
         run: cargo test --workspace --exclude gpui-base --profile ci --doc
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: junit-${{ matrix.os }}
+          name: junit-${{ matrix.os }}-${{ matrix.shard }}
           path: target/nextest/*/junit*.xml
           if-no-files-found: ignore
           retention-days: 3
