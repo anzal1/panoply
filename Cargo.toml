@@ -45,6 +45,7 @@ panoply-image = { path = "crates/panoply-image" }
 panoply-manifest = { path = "crates/panoply-manifest" }
 panoply-convert = { path = "crates/panoply-convert" }
 panoply-host = { path = "crates/panoply-host" }
+panoply-share = { path = "crates/panoply-share" }
 panoply-mcp = { path = "crates/panoply-mcp" }
 panoply-wasm = { path = "crates/panoply-wasm" }
 

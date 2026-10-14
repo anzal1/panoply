@@ -66,6 +66,11 @@ enum Command {
         #[command(subcommand)]
         tool: PdfTool,
     },
+    /// Share files with other devices: list, send, receive, qr
+    Share {
+        #[command(subcommand)]
+        tool: panoply_share::cli::ShareCommand,
+    },
     /// Print the version
     Version,
 }
@@ -225,6 +230,7 @@ fn main() -> ExitCode {
             out,
         } => run_module(&module, files, &opts, out.as_deref()),
         Command::Pdf { tool } => pdf(tool),
+        Command::Share { tool } => panoply_share::cli::run(tool),
         Command::Version => {
             println!("panoply {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
