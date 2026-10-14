@@ -5202,7 +5202,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-smoke"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "panoply-bench",
  "panoply-core",
