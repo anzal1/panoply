@@ -579,7 +579,9 @@ pub(crate) fn brand_mark(size: f32, plate: Hsla, t: Theme) -> impl IntoElement {
         .size(px(size))
         .child(layer("fan-left", left))
         .when(size >= 20.0, |d| d.child(layer("fan-right", right)))
-        .when(size < 40.0, |d| d.child(layer("fan-seam", plate.opacity(0.5))))
+        .when(size < 40.0, |d| {
+            d.child(layer("fan-seam", plate.opacity(0.5)))
+        })
         .child(layer("fan-front", blue))
 }
 
