@@ -25,19 +25,57 @@ fn lan_config(alias: &str, mport: u16) -> NodeConfig {
     c
 }
 
-/// True when this machine can send to the multicast group on that LAN. Hosted CI VMs (the
-/// macOS runners) answer "No route to host" for any multicast send, which no code can fix, so
-/// the multicast tests say so and stand down there. The HTTP scan test needs no multicast.
+/// True when a multicast datagram sent to the LocalSend group on this LAN address actually comes
+/// back to a listener on this host. Hosted CI VMs (the macOS runners) drop multicast or refuse
+/// to send it, which no code can fix, so the multicast tests say so and stand down there. Where
+/// multicast works the tests stay strict. The HTTP scan test needs no multicast.
 fn multicast_works(ip: Ipv4Addr) -> bool {
-    use socket2::{Domain, Protocol, Socket, Type};
-    let Ok(sock) = Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::UDP)) else {
+    let group = Ipv4Addr::new(224, 0, 0, 167);
+    let port = free_udp_port();
+    let Ok(listener) = std::net::UdpSocket::bind(("0.0.0.0", port)) else {
         return false;
     };
-    let target = std::net::SocketAddr::from((Ipv4Addr::new(224, 0, 0, 167), free_udp_port()));
-    sock.bind(&std::net::SocketAddr::from((ip, 0)).into())
-        .is_ok()
-        && sock.set_multicast_if_v4(&ip).is_ok()
-        && sock.send_to(b"probe", &target.into()).is_ok()
+    if listener.join_multicast_v4(&group, &ip).is_err()
+        || listener
+            .set_read_timeout(Some(Duration::from_secs(1)))
+            .is_err()
+    {
+        return false;
+    }
+    // The same sender setup the node uses: bound to the LAN address, that interface for
+    // multicast, loopback on.
+    let sender = {
+        use socket2::{Domain, Protocol, Socket, Type};
+        let Ok(sock) = Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::UDP)) else {
+            return false;
+        };
+        if sock
+            .bind(&std::net::SocketAddr::from((ip, 0)).into())
+            .is_err()
+            || sock.set_multicast_if_v4(&ip).is_err()
+            || sock.set_multicast_loop_v4(true).is_err()
+        {
+            return false;
+        }
+        std::net::UdpSocket::from(sock)
+    };
+    let probe = b"panoply multicast probe";
+    // Datagrams can be dropped, so send a few and wait up to about a second for any of them.
+    let deadline = Instant::now() + Duration::from_secs(1);
+    let mut buf = [0u8; 64];
+    while Instant::now() < deadline {
+        if sender.send_to(probe, (group, port)).is_ok() {
+            listener
+                .set_read_timeout(Some(Duration::from_millis(250)))
+                .ok();
+            if matches!(listener.recv_from(&mut buf), Ok((n, _)) if &buf[..n] == probe) {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+    false
 }
 
 async fn until(what: &str, mut f: impl FnMut() -> bool) {
@@ -57,7 +95,7 @@ async fn two_nodes_find_each_other_by_multicast_without_polling() {
         return eprintln!("SKIPPED: no private LAN interface");
     };
     if !multicast_works(ip) {
-        return eprintln!("SKIPPED: this machine cannot send multicast on {ip}");
+        return eprintln!("SKIPPED: multicast not available");
     }
     let mport = free_udp_port();
     let a = Node::start(lan_config("Alpha", mport)).await.unwrap();
@@ -130,7 +168,7 @@ async fn an_independent_peer_announcing_on_the_group_is_found_and_answered() {
         return eprintln!("SKIPPED: no private LAN interface");
     };
     if !multicast_works(ip) {
-        return eprintln!("SKIPPED: this machine cannot send multicast on {ip}");
+        return eprintln!("SKIPPED: multicast not available");
     }
     let Some(py) = tls13_python() else {
         return eprintln!("SKIPPED: no python3 with TLS 1.3");

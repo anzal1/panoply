@@ -1,0 +1,19 @@
+id = "apple-podcasts"
+name = "Apple Podcasts"
+target_lufs = -16.0            # given as LKFS on the page
+target_lufs_mono = 0.0         # Apple does not state a separate mono target
+tolerance_lu = 1.0
+true_peak_dbtp = -1.0          # stated as -1 dB FS true peak
+measure = "integrated"
+status = "verified"
+source_url = "https://podcasters.apple.com/support/893-audio-requirements"
+source_quote = "overall loudness remains around -16 dB LKFS, with a +/- 1 dB tolerance"
+source_date = "undated"        # page shows only a 2026 copyright footer
+last_verified = "2026-10-14"
+notes = "Apple Podcasts for Creators audio requirements. Values are recommendations for preconditioning audio and are measured per ITU-R BS.1770-5. The page gives one figure for all files and does not mention mono, so the common -19 LUFS mono convention is not Apple guidance (see podcast-general). The true peak limit is quoted as -1 dB FS."
+
+[[extra_sources]]
+field = "true_peak_dbtp"
+url = "https://podcasters.apple.com/support/893-audio-requirements"
+quote = "the true-peak value doesn’t exceed -1 dB FS"
+date = "undated"

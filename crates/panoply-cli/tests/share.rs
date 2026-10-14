@@ -198,14 +198,24 @@ fn qr_prints_a_link_and_a_code_and_serves_the_file_once() {
     let _stderr = lines_of(qr.stderr.take().unwrap());
     let mut guard = Guard(qr);
     let url = expect(&stdout, "http://127.0.0.1:");
-    // The QR code follows: at least 20 rows of block characters.
+    // The QR code follows. Its size depends on the token: the encoder packs digit runs tighter,
+    // so a 55 character link is a 29 module code (version 3) or a 33 module one (version 4),
+    // never smaller. With the quiet zone and two module rows to a text row that is 19 or 21
+    // rows of block characters, so 19 is the floor. Read until those rows have arrived rather
+    // than until the output goes quiet, because a loaded machine can pause the child or this
+    // reader for longer than any fixed quiet period.
     let mut rows = 0;
-    while let Ok(l) = stdout.recv_timeout(Duration::from_millis(500)) {
+    let deadline = std::time::Instant::now() + Duration::from_secs(20);
+    while rows < 19 {
+        let left = deadline.saturating_duration_since(std::time::Instant::now());
+        let Ok(l) = stdout.recv_timeout(left) else {
+            break;
+        };
         if l.contains('█') || l.contains('▀') || l.contains('▄') {
             rows += 1;
         }
     }
-    assert!(rows >= 20, "{rows} QR rows");
+    assert!(rows >= 19, "{rows} QR rows");
 
     let rest = url.strip_prefix("http://").unwrap();
     let (host, path) = rest.split_once('/').unwrap();

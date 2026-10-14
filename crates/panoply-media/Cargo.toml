@@ -1,0 +1,20 @@
+[package]
+name = "panoply-media"
+description = "The Panoply video and audio engine: stream copy first, OS hardware encoders, an LGPL ffmpeg helper process, and the wave 1 media operations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+panoply-core.workspace = true
+panoply-manifest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+sha2.workspace = true
+
+[lints]
+workspace = true

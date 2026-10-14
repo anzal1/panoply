@@ -1,0 +1,25 @@
+id = "bd-passport"
+country = "BD"
+country_name = "Bangladesh"
+aliases = ["BGD", "Bangladesh"]
+document = "passport"
+name = "Bangladesh e-passport photo"
+authority = "Department of Immigration and Passports (DIP), Bangladesh"
+width_mm = 35
+height_mm = 45
+dpi = 300
+head_min_pct = 70
+head_max_pct = 80
+background = "#ffffff"
+size_preset = "bd-passport-photo"
+glasses = "not_allowed"
+status = "stale"
+source_url = "https://www.passportphotosnap.com/bd-passport-photo"
+source_quote = "Exact 35x45mm (1.4x1.8 in) dimensions with a white background at 300 DPI."
+source_date = ""
+last_verified = "2026-10-14"
+notes = "No official page states an adult photo size, head range or file limit: epassport.gov.bd blocked access and the biometric photo is taken live at enrolment. The size and white background come from a third party; head 70 to 80 percent is the ICAO default, not a Bangladesh figure. Missions ask for lab printed photos for children under 6 only (3R or 4R, 2 copies, not older than 3 months) and differ on background: London and Canberra say white, Chennai, Ottawa and Abuja say grey. Avoid white clothing. Confirm on the portal upload screen."
+
+[[conflicts]]
+source_url = "https://photogov.net/knowledge/requirements/bangladesh-passport-photo/"
+source_quote = "A plain grey background is officially required for e-Passports."

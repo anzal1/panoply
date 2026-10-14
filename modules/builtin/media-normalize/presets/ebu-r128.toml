@@ -1,0 +1,25 @@
+id = "ebu-r128"
+name = "EBU R 128"
+target_lufs = -23.0
+target_lufs_mono = 0.0         # source gives no separate mono target
+tolerance_lu = 1.0             # +/- 1.0 LU where the target is not practically achievable (e.g. live); +/- 0.2 LU for QC measurement error
+true_peak_dbtp = -1.0
+measure = "integrated"         # programme loudness, BS.1770 with relative gate
+status = "verified"
+source_url = "https://tech.ebu.ch/docs/r/r128.pdf"
+source_quote = "normalised to a Target Level of −23.0 LUFS"
+source_date = "2023-11"        # R 128-2023 (version 5.0), November 2023
+last_verified = "2026-10-14"
+notes = "Programme Loudness over the whole programme, level-gated per ITU-R BS.1770 and EBU Tech 3341, not dialogue-gated. Tolerance in the 2023 text is plus or minus 1.0 LU when the target is not practically achievable and plus or minus 0.2 LU for QC measurement error; the older plus or minus 0.5 LU figure was version 3 (2014) and is superseded. The true peak ceiling applies to linear audio in production and distribution systems may require lower values (see EBU Tech 3344). LUFS and LKFS are the same unit. No separate mono target is given."
+
+[[extra_sources]]
+field = "true_peak_dbtp"
+url = "https://tech.ebu.ch/docs/r/r128.pdf"
+quote = "shall not exceed −1 dBTP (dB True Peak) during production"
+date = "2023-11"
+
+[[extra_sources]]
+field = "tolerance_lu"
+url = "https://tech.ebu.ch/docs/r/r128.pdf"
+quote = "a tolerance of ±1.0 LU is permitted"
+date = "2023-11"

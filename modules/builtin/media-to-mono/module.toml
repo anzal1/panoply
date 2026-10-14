@@ -1,0 +1,32 @@
+# Stereo to mono, and channels. Pattern A. Spec: docs/specs/video-and-audio.md, section 5.15.
+# The default looks before it mixes: a silent side, channels that are out of phase, or the
+# ordinary case. Swaps and splits of lossless sound are exact, sample for sample.
+accepts = ["video/*", "audio/*", "*.mkv", "*.ts", "*.mts", "*.m2ts", "*.m4a", "*.opus", "*.webm", "*.avi", "*.mov"]
+outputs = ["video/*", "audio/*"]
+
+[module]
+id = "media.to_mono"
+name = "Stereo to mono"
+version = "0.1.0"
+pattern = "A"
+summary = "Make it mono, swap the sides, split into two files or merge two mono files."
+
+[options.action]
+type = "choice"
+values = ["auto", "downmix", "left", "right", "swap", "split", "merge", "mono_to_stereo"]
+default = "auto"
+label = "Action"
+help = "Auto looks at the channels first and says what it found (a silent side, channels out of phase, or an ordinary mix). Merge takes exactly two mono files, left first."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the video engine (an LGPL ffmpeg build, about 140 MB) once, the first time a video or audio job runs. Nothing else leaves your device."
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

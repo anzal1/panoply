@@ -254,9 +254,19 @@ mod tests {
         let c = Catalog::with_dirs(&[]);
         let png = fake("a.png", PNG_HEAD);
         let pdf = fake("b.pdf", b"%PDF-1.7\n");
-        let m = tools_for_files(&c, &[png, pdf], &[]);
+        let text = fake("c.txt", b"plain words\n");
+
+        // A picture and a text file: only the catch-all takes both.
+        let m = tools_for_files(&c, &[png.clone(), text], &[]);
         let ids: Vec<&str> = m.iter().map(|m| c.tool(m.tool).id.as_str()).collect();
         assert_eq!(ids, vec!["files.hash"]);
+
+        // A picture and a PDF: the catch-all, and OCR, which reads both kinds. No tool that
+        // takes only pictures or only PDFs may show up for the pair.
+        let m = tools_for_files(&c, &[png, pdf], &[]);
+        let mut ids: Vec<&str> = m.iter().map(|m| c.tool(m.tool).id.as_str()).collect();
+        ids.sort_unstable();
+        assert_eq!(ids, vec!["files.hash", "pdf.ocr"]);
     }
 
     #[test]

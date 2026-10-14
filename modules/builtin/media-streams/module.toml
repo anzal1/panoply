@@ -1,0 +1,52 @@
+# Streams. Pattern C (a list of tracks). Spec: docs/specs/video-and-audio.md, section 4.17.
+# Everything is a stream copy: every kept stream is bit-identical. With no option it shows the
+# table of streams.
+accepts = ["video/*", "audio/*", "*.mkv", "*.ts", "*.mts", "*.m2ts", "*.webm", "*.avi", "*.mov"]
+outputs = ["video/*", "audio/*", "text/*"]
+
+[module]
+id = "media.streams"
+name = "Streams"
+version = "0.1.0"
+pattern = "C"
+summary = "Take out, drop or relabel the audio, subtitle and video tracks of a file."
+
+[options.drop]
+type = "text"
+label = "Drop streams"
+help = "Stream numbers to leave out of the new file, for example 5 or 2,5. The table of streams shows the numbers."
+
+[options.extract]
+type = "text"
+label = "Extract streams"
+help = "Stream numbers to write out as files of their own, into a folder named after the source."
+
+[options.default]
+type = "text"
+label = "Set default"
+help = "A stream number to mark as the default of its kind (audio, subtitles); the others of that kind stop being default."
+
+[options.language]
+type = "text"
+label = "Set language"
+help = "Language codes by stream number, for example 1=eng,2=fra."
+
+[options.container]
+type = "choice"
+values = ["same", "mkv"]
+default = "same"
+label = "Container"
+help = "Same keeps the file's own container. MKV holds every kind of stream."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the video engine (an LGPL ffmpeg build, about 140 MB) once, the first time a video or audio job runs. Nothing else leaves your device."
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

@@ -5787,6 +5787,7 @@ dependencies = [
  "panoply-manifest",
  "panoply-mcp",
  "panoply-share",
+ "panoply-vision",
  "panoply-wasm",
  "serde_json",
 ]
@@ -5843,6 +5844,7 @@ name = "panoply-host"
 version = "0.0.1"
 dependencies = [
  "panoply-core",
+ "panoply-id",
  "panoply-image",
  "panoply-manifest",
  "panoply-media",
@@ -5937,16 +5939,13 @@ dependencies = [
 name = "panoply-ocr"
 version = "0.0.1"
 dependencies = [
- "miniz_oxide 0.8.9",
  "ort",
  "panoply-core",
  "panoply-image",
- "panoply-manifest",
  "panoply-pdf",
  "panoply-platform-macos",
  "pdfium-render",
  "png 0.18.1",
- "serde",
  "serde_json",
  "sha2 0.11.1",
  "thiserror 2.0.21",

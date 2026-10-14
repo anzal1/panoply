@@ -1,0 +1,38 @@
+# Repair video. Pattern A. Spec: docs/specs/video-and-audio.md, section 4.18.
+# Diagnoses first and says what it found. Own code (panoply-media mp4::repair) rebuilds a missing
+# or cut-off MP4 index; the helper re-reads anything else. No file is called repaired unless it
+# plays start to end in a decode test.
+accepts = ["video/*", "audio/*", "*.mkv", "*.ts", "*.mts", "*.m2ts", "*.m4a", "*.webm", "*.avi", "*.mov", "*.mp4"]
+outputs = ["video/*", "audio/*"]
+
+[module]
+id = "media.repair"
+name = "Repair video"
+version = "0.1.0"
+pattern = "A"
+summary = "This video will not play: find out why and fix it."
+
+[options.reference]
+type = "file"
+label = "Reference file"
+help = "A working video from the same camera or app. When the index is missing it supplies the video settings and the frame rate; choose it as a second file too."
+
+[options.method]
+type = "choice"
+values = ["auto", "remux", "rebuild"]
+default = "auto"
+label = "Method"
+help = "Auto picks from the diagnosis. Remux re-reads every stream and writes a fresh file. Rebuild forces a rebuild of the index from the media data."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the video engine (an LGPL ffmpeg build, about 140 MB) once, the first time a video or audio job runs. Nothing else leaves your device."
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

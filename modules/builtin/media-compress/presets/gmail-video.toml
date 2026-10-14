@@ -1,0 +1,42 @@
+# Gmail: attachment limit when SENDING from a personal account. Receiving limits follow as tiers.
+id = "gmail-video"
+service = "Gmail"
+kind = "video"
+limit_bytes = 25000000
+limit_unit_claimed = "MB"
+basis = "unknown"            # help page says "25 MB" without defining it. 25 MiB would be 26214400. Decimal used as the safe value.
+container = "mp4"
+video_codec = "h264"
+audio_codec = "aac"
+max_height = 0
+max_duration_s = 0
+status = "verified"
+source_url = "https://support.google.com/mail/answer/6584?hl=en"
+source_quote = '"For personal Gmail accounts, the limit is 25 MB."'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "Sending limit for personal Gmail, total attachment size per message. Google Workspace admins set their own sending and receiving limits. Above the limit Gmail swaps the attachment for a Google Drive link. The page does not say whether the 25 MB counts MIME encoding (about 37 percent overhead per Google's Workspace limits page). A safer raw target if encoding counts is about 18000000, but that is inference, not a published number."
+
+[[tiers]]
+tier = "Receiving, Google Workspace Enterprise Standard"
+limit_bytes = 50000000
+limit_unit_claimed = "MB"
+basis = "unknown"
+status = "verified"
+source_url = "https://support.google.com/a/answer/1366776?hl=en"
+source_quote = '"receive emails of up to 50 MB (Enterprise Standard)"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "Receiving size limit for whole messages, stated as measured after encoding. No official figure was found for receiving on a personal Gmail account, so the receiving limit for personal accounts is unverified."
+
+[[tiers]]
+tier = "Receiving, Google Workspace Enterprise Plus"
+limit_bytes = 70000000
+limit_unit_claimed = "MB"
+basis = "unknown"
+status = "verified"
+source_url = "https://support.google.com/a/answer/1366776?hl=en"
+source_quote = '"or 70 MB (Enterprise Plus)"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "Same Workspace limits page, whole message after encoding."
