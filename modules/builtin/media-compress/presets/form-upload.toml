@@ -1,0 +1,126 @@
+# Form uploads: there is no single limit. Every form builder sets its own cap per form.
+# [[sizes]] entries with origin = "generic" are user-choosable caps, NOT any service's published limit.
+# They use decimal MB (1 MB = 1000000 bytes) so a file that fits is also under the binary MiB figure.
+# Entries with origin = "official" carry a source and a status.
+id = "form-upload"
+service = "Form uploads"
+kind = "video"
+container = "mp4"
+video_codec = "h264"
+audio_codec = "aac"
+max_height = 0
+max_duration_s = 0
+last_verified = "2026-10-14"
+notes = "Pick the cap the form asks for. If the form owner chose a cap in MiB the decimal values here are slightly smaller, so they are safe."
+
+[[sizes]]
+origin = "generic"
+label = "1 MB"
+limit_bytes = 1000000
+limit_unit_claimed = "MB"
+basis = "decimal"
+notes = "Generic user-choosable cap, not a published limit of any service."
+
+[[sizes]]
+origin = "generic"
+label = "2 MB"
+limit_bytes = 2000000
+limit_unit_claimed = "MB"
+basis = "decimal"
+notes = "Generic user-choosable cap, not a published limit of any service."
+
+[[sizes]]
+origin = "generic"
+label = "5 MB"
+limit_bytes = 5000000
+limit_unit_claimed = "MB"
+basis = "decimal"
+notes = "Generic user-choosable cap, not a published limit of any service."
+
+[[sizes]]
+origin = "generic"
+label = "10 MB"
+limit_bytes = 10000000
+limit_unit_claimed = "MB"
+basis = "decimal"
+notes = "Generic user-choosable cap, not a published limit of any service."
+
+[[sizes]]
+origin = "generic"
+label = "20 MB"
+limit_bytes = 20000000
+limit_unit_claimed = "MB"
+basis = "decimal"
+notes = "Generic user-choosable cap, not a published limit of any service."
+
+[[sizes]]
+origin = "generic"
+label = "25 MB"
+limit_bytes = 25000000
+limit_unit_claimed = "MB"
+basis = "decimal"
+notes = "Generic user-choosable cap, not a published limit of any service."
+
+[[sizes]]
+origin = "generic"
+label = "100 MB"
+limit_bytes = 100000000
+limit_unit_claimed = "MB"
+basis = "decimal"
+notes = "Generic user-choosable cap, not a published limit of any service."
+
+[[sizes]]
+origin = "official"
+label = "Microsoft Forms, single file size limit option 10 MB"
+service = "Microsoft Forms"
+limit_bytes = 10000000
+limit_unit_claimed = "MB"
+basis = "unknown"
+status = "verified"
+source_url = "https://support.microsoft.com/en-us/forms/add-questions-that-allow-for-file-uploads-in-microsoft-forms"
+source_quote = '"maximum file size (10MB, 100MB, or 1GB)"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "The form author picks one of three per-question options. File upload only works for forms limited to people in the author's organization. Basis not defined by Microsoft; decimal used as the safe value."
+
+[[sizes]]
+origin = "official"
+label = "Microsoft Forms, single file size limit option 100 MB"
+service = "Microsoft Forms"
+limit_bytes = 100000000
+limit_unit_claimed = "MB"
+basis = "unknown"
+status = "verified"
+source_url = "https://support.microsoft.com/en-us/forms/add-questions-that-allow-for-file-uploads-in-microsoft-forms"
+source_quote = '"maximum file size (10MB, 100MB, or 1GB)"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "Second of the three per-question options the author can choose."
+
+[[sizes]]
+origin = "official"
+label = "Microsoft Forms, single file size limit option 1 GB"
+service = "Microsoft Forms"
+limit_bytes = 1000000000
+limit_unit_claimed = "GB"
+basis = "unknown"
+status = "verified"
+source_url = "https://support.microsoft.com/en-us/forms/add-questions-that-allow-for-file-uploads-in-microsoft-forms"
+source_quote = '"maximum file size (10MB, 100MB, or 1GB)"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "Largest of the three per-question options the author can choose."
+
+[[sizes]]
+origin = "official"
+label = "Google Forms, maximum file size per upload question"
+service = "Google Forms"
+limit_bytes = 0
+limit_unit_claimed = ""
+basis = "unknown"
+status = "unverified"
+source_url = "https://support.google.com/docs/answer/7322334?hl=en"
+source_quote = '"Choose the maximum file size responders can upload"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "The official help page says the author chooses a maximum file size but lists no values, so no official figure was found. Third-party guides (not official, not used) describe a dropdown from 1 MB up to 10 GB with a form-wide 1 GB total that can be changed. Responders must sign in to a Google Account."

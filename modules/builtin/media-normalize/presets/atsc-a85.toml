@@ -1,0 +1,19 @@
+id = "atsc-a85"
+name = "ATSC A/85"
+target_lufs = -24.0            # LKFS, same unit as LUFS
+target_lufs_mono = 0.0         # source gives no separate mono target
+tolerance_lu = 2.0             # approximately +/- 2 dB anticipated from measurement variation
+true_peak_dbtp = -2.0
+measure = "dialogue-gated"     # long-form: dialogue-gated BS.1770-1 over the whole programme
+status = "verified"
+source_url = "https://www.atsc.org/wp-content/uploads/2026/07/A85-2026-07.pdf"
+source_quote = "the Target Loudness should be –24 LKFS"
+source_date = "2026-07-08"     # A/85:2026-07 approved 8 July 2026
+last_verified = "2026-10-14"
+notes = "US TV (Annex M, Table M.1). Long-form content is measured as average dialogue loudness using BS.1770-1 (no relative gate) with a dialogue-gating algorithm over the entire programme; full-programme-mix measurement is only for content with no dialogue at all, so a plain integrated BS.1770-4 reading is not the same measurement. Maximum true peak is -2 dBTP with about plus or minus 0.5 dB meter tolerance allowed. The -24 LKFS value is the target for delivery without metadata and absent other agreement; streaming services may pick a single target between -23 and -27 LKFS. No separate mono target is given."
+
+[[extra_sources]]
+field = "true_peak_dbtp"
+url = "https://www.atsc.org/wp-content/uploads/2026/07/A85-2026-07.pdf"
+quote = "Table M.1 row Maximum True Peak (dBTP): –2"
+date = "2026-07-08"

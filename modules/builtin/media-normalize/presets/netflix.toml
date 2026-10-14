@@ -1,0 +1,19 @@
+id = "netflix"
+name = "Netflix"
+target_lufs = -27.0            # LKFS, dialogue loudness
+target_lufs_mono = 0.0
+tolerance_lu = 2.0
+true_peak_dbtp = -2.0
+measure = "dialogue-gated"
+status = "verified"
+source_url = "https://partnerhelp.netflixstudios.com/hc/en-us/articles/360001794307-Netflix-Sound-Mix-Specifications-Best-Practices-v1-6"
+source_quote = "Set average loudness at -27 LKFS with a tolerance of ±2 LU, dialog-gated"
+source_date = "2024-10-29"     # latest change log entry (OC-1-6) on the v1.6 page; read via a 2025-10-02 web.archive.org copy
+last_verified = "2026-10-14"
+notes = "Netflix Sound Mix Specifications and Best Practices v1.6, near-field prerequisites and original-language mix. Measured with ITU-R BS.1770-1 dialogue gating over the full programme, so it is a dialogue-anchored target and not a whole-programme integrated one. Peaks must not exceed -2 dB True Peak, and the page recommends true-peak limiters at -2.3 dBFS or lower. Theatrical mixes have no LKFS requirement. The Netflix page now redirects to a JavaScript Knowledge Hub that could not be fetched, so the text was read from the web.archive.org copy dated 2025-10-02 of the same URL. No separate mono target is given."
+
+[[extra_sources]]
+field = "true_peak_dbtp"
+url = "https://partnerhelp.netflixstudios.com/hc/en-us/articles/360001794307-Netflix-Sound-Mix-Specifications-Best-Practices-v1-6"
+quote = "Peaks must not exceed -2dB True Peak."
+date = "2024-10-29"

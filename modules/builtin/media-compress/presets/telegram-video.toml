@@ -1,0 +1,30 @@
+# Telegram: per-file cap for sending files and video. Free account base, Premium as a tier.
+id = "telegram-video"
+service = "Telegram"
+kind = "video"
+limit_bytes = 2000000000
+limit_unit_claimed = "GB"
+basis = "unknown"            # FAQ says "2 GB". 2 GiB would be 2147483648. Decimal used as the safe value.
+container = "mp4"
+video_codec = "h264"
+audio_codec = "aac"
+max_height = 0
+max_duration_s = 0
+status = "verified"
+source_url = "https://telegram.org/faq?setln=en"
+source_quote = '"up to 2 GB in size each (or 4 GB with Premium)"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "Free account, per file. Sent as a file of any type; Telegram may re-encode video sent as media. Cloud chats only; no separate video-specific limit was found."
+
+[[tiers]]
+tier = "Premium"
+limit_bytes = 4000000000
+limit_unit_claimed = "GB"
+basis = "unknown"
+status = "verified"
+source_url = "https://telegram.org/faq?setln=en"
+source_quote = '"up to 2 GB in size each (or 4 GB with Premium)"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "Telegram Premium subscribers."

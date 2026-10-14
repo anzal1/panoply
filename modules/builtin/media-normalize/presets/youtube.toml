@@ -1,0 +1,13 @@
+id = "youtube"
+name = "YouTube"
+target_lufs = -14.0
+target_lufs_mono = 0.0
+tolerance_lu = 0.0
+true_peak_dbtp = 0.0           # 0.0 means no ceiling sourced, not a 0 dBTP ceiling
+measure = "integrated"
+status = "unverified"
+source_url = "https://en.wikipedia.org/wiki/Audio_normalization"
+source_quote = "YouTube's preferred loudness level is −14 LUFS."
+source_date = "2026-09-21"     # Wikipedia last-edited stamp; this is a secondary source
+last_verified = "2026-10-14"
+notes = "No official YouTube or Google page states a numeric reference level. The YouTube Help page on stable volume and audio enhancements (https://support.google.com/youtube/answer/16619284) is purely qualitative, and the -14 LUFS figure comes from third-party guides and Wikipedia, which cites no YouTube document. Widely reported behaviour is that louder uploads are turned down and quieter ones are not raised, but that is not confirmed by an official page. No true peak ceiling was found. Treat as unverified and do not present it as an official YouTube spec."

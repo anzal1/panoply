@@ -1,0 +1,18 @@
+# Slack: file upload limit. The official help page gives one figure with no free versus paid split.
+id = "slack-video"
+service = "Slack"
+kind = "video"
+limit_bytes = 1000000000
+limit_unit_claimed = "GB"
+basis = "unknown"            # page says "1GB". 1 GiB would be 1073741824. Decimal used as the safe value.
+container = "mp4"
+video_codec = "h264"
+audio_codec = "aac"
+max_height = 0
+max_duration_s = 0
+status = "verified"
+source_url = "https://slack.com/help/articles/201330736-Add-files-to-Slack"
+source_quote = '"You can add files up to 1GB in size."'
+source_date = "undated"      # page shows only the 2026 Salesforce copyright footer
+last_verified = "2026-10-14"
+notes = "Per file, stated without any plan distinction, so free and paid are treated as the same cap. Uploads may be restricted in Slack Connect conversations. Plan storage quotas are a separate matter and were not checked. For a quick share a smaller file previews inline better, but no smaller preview limit is published for video."
