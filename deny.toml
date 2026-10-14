@@ -46,9 +46,30 @@ unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 
 [advisories]
+# Every entry is an "unmaintained" notice, not a vulnerability. The rule: an advisory may be ignored
+# only with the dependency path, why it cannot be upgraded, what the exposure is, and when to look
+# again. Run `cargo deny check advisories` after every `cargo update`.
 ignore = [
     # paste is a build-time proc macro that its author stopped maintaining. No vulnerability is
     # reported and it is not linked. It arrives through rav1e (ravif, AVIF encoding in
     # panoply-image). Revisit when rav1e moves to pastey or drops it.
     { id = "RUSTSEC-2024-0436", reason = "unmaintained build-time macro, no vulnerability; comes in through rav1e" },
+
+    # rustybuzz (text shaping) and ttf-parser (font parsing) come in through GPUI: gpui-pre 0.3.9
+    # depends on usvg 0.46, which depends on rustybuzz 0.20 and ttf-parser 0.25, and gpui-pre's
+    # Linux text system (cosmic-text, fontdb) depends on ttf-parser too. gpui-pre 0.3.9 is the
+    # newest release on crates.io (checked 2026-10-14) and the desktop app pins it with `=0.3.9`
+    # because GPUI Kit does. usvg's maintained versions (0.47 and later) are a different semver
+    # line, so a lock file update cannot reach them. The advisories name harfrust and skrifa as
+    # the replacements; both need a GPUI release that has moved. Exposure: neither crate has a
+    # reported vulnerability. They parse the bundled icon SVGs and the fonts installed on the
+    # user's own machine, never a file a stranger sends. Revisit when GPUI publishes a release
+    # past 0.3.9, and every beta.
+    { id = "RUSTSEC-2026-0206", reason = "rustybuzz is unmaintained, no vulnerability; pinned by gpui-pre 0.3.9 through usvg 0.46, no newer GPUI exists yet" },
+    { id = "RUSTSEC-2026-0192", reason = "ttf-parser is unmaintained, no vulnerability; pinned by gpui-pre 0.3.9 through usvg 0.46 and cosmic-text, no newer GPUI exists yet" },
 ]
+
+# Fixed instead of ignored, kept here so nobody re-adds them by accident:
+#   RUSTSEC-2024-0384 instant: removed from the vendored gpui-base (std::time is the same type).
+#   RUSTSEC-2025-0134 rustls-pemfile: it was a dev-dependency of the vendored gpui-base; the
+#     vendored manifest no longer has dev-dependencies (apps/desktop/patches/gpui-base/PANOPLY-CHANGES.md).
