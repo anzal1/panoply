@@ -371,7 +371,7 @@ fn a_tilted_head_is_straightened_and_says_so() {
     assert_eq!(faces.len(), 1);
     assert!(
         faces[0].roll_deg().abs() < 2.0,
-        "still tilted {:.1} degrees",
+        "still tilted {:.1} degrees; the first pass said: {tilt_line}",
         faces[0].roll_deg()
     );
     // Without the fix the photo is reported as it is: 11 degrees is past a 5 degree rule.

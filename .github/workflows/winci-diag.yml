@@ -1,0 +1,39 @@
+name: winci-diag
+on:
+  push:
+    branches: [fix/windows-ci]
+    paths: [".github/workflows/winci-diag.yml"]
+jobs:
+  diag:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      PANOPLY_YES: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Corpus
+        shell: bash
+        run: |
+          python -m pip install --quiet pillow
+          python -I tests/corpus/fetch.py --kind pdf,image
+      - name: CPU
+        shell: bash
+        run: wmic cpu get name || powershell -c "(Get-CimInstance Win32_Processor).Name"
+      - name: tilt test repeated
+        shell: bash
+        run: |
+          cargo test -p panoply-id --test faces --no-run
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            echo "=== run $i"
+            cargo test -p panoply-id --test faces a_tilted -- --nocapture 2>&1 | grep -E "still tilted|test result|first pass" || true
+          done
+          echo "=== whole file in parallel x3"
+          for i in 1 2 3; do cargo test -p panoply-id --test faces 2>&1 | grep -E "still tilted|test result|FAILED" || true; done
