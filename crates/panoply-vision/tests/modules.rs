@@ -58,23 +58,77 @@ fn cutout_of_a_portrait_has_a_solid_subject_and_a_clear_background() {
     );
 }
 
+/// A photo with one clear subject and a plain surround, in a form this system can open: the pen
+/// HEIC on macOS, a JPEG of a dog elsewhere (HEIC needs the helper there, which has its own test
+/// below). `bg` is a point that is background, `subject` one that is the subject.
+struct SubjectPhoto {
+    path: std::path::PathBuf,
+    size: (usize, usize),
+    bg: (usize, usize),
+    subject: (usize, usize),
+}
+
+fn subject_photo() -> Option<SubjectPhoto> {
+    if cfg!(target_os = "macos") {
+        let path = corpus("heic/xiaomi.heic")?;
+        Some(SubjectPhoto {
+            path,
+            size: (2592, 1944),
+            bg: (2592 - 3, 3),
+            subject: (2592 * 53 / 100, 1944 * 52 / 100),
+        })
+    } else {
+        let path = corpus("libavif/dog-extended-xmp.jpg")?;
+        Some(SubjectPhoto {
+            path,
+            size: (3024, 4032),
+            bg: (30, 4032 / 2),
+            subject: (3024 / 2, 4032 * 55 / 100),
+        })
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+#[test]
+fn off_macos_a_heic_gets_the_plain_helper_message() {
+    let Some(src) = corpus("heic/xiaomi.heic") else {
+        return;
+    };
+    let d = Scratch::new("cutout-heic");
+    let input = d.copy_in(&src);
+    let e = run_many("image.remove_background", &[input], json!({}))
+        .err()
+        .expect("a HEIC cannot be opened without the helper");
+    assert!(
+        e.contains("HEIC needs the HEIC helper on this system"),
+        "{e}"
+    );
+    assert!(e.contains("Export the photo as JPEG"), "{e}");
+    assert_eq!(
+        d.files().len(),
+        1,
+        "nothing may be left behind: {:?}",
+        d.files()
+    );
+}
+
 #[test]
 fn the_model_engine_also_cuts_out_a_subject_when_asked() {
     if !have(&ISNET) {
         return;
     }
-    let Some(src) = corpus("heic/xiaomi.heic") else {
+    let Some(photo) = subject_photo() else {
         return;
     };
     let d = Scratch::new("cutout-model");
-    let input = d.copy_in(&src);
+    let input = d.copy_in(&photo.path);
     let (out, ran) = run_ok(
         "image.remove_background",
         &input,
         json!({"engine": "model"}),
     );
     let pic = decode(&out);
-    assert_eq!((pic.w, pic.h), (2592, 1944));
+    assert_eq!((pic.w, pic.h), photo.size);
     assert!(ran.notes_text().contains("IS-Net"), "{}", ran.notes_text());
     let a = pic.alpha.as_ref().unwrap();
     let solid = a.iter().filter(|&&v| v == 255).count();
@@ -83,17 +137,17 @@ fn the_model_engine_also_cuts_out_a_subject_when_asked() {
         solid > a.len() / 20 && clear > a.len() / 5,
         "solid {solid} clear {clear}"
     );
-    // The pen tip is near the lower middle of the picture.
-    assert!(pic.a(pic.w * 53 / 100, pic.h * 52 / 100) > 200);
+    // The subject (the pen tip, or the dog's face) is solid.
+    assert!(pic.a(photo.subject.0, photo.subject.1) > 200);
 }
 
 #[test]
 fn solid_color_and_blur_results_are_opaque_and_keep_the_subject() {
-    let Some(src) = corpus("heic/xiaomi.heic") else {
+    let Some(photo) = subject_photo() else {
         return;
     };
     let d = Scratch::new("cutout-bg");
-    let input = d.copy_in(&src);
+    let input = d.copy_in(&photo.path);
     let (white, _) = run_ok(
         "image.remove_background",
         &input,
@@ -104,8 +158,8 @@ fn solid_color_and_blur_results_are_opaque_and_keep_the_subject() {
         pic.alpha.is_none(),
         "a solid color result has no transparency"
     );
-    // Top right corner is paper: replaced by exactly the chosen color.
-    assert_eq!(pic.px(pic.w - 3, 3), [255, 255, 255]);
+    // The surround (paper, or the paving) is replaced by exactly the chosen color.
+    assert_eq!(pic.px(photo.bg.0, photo.bg.1), [255, 255, 255]);
     let (blur, _) = run_ok(
         "image.remove_background",
         &input,
@@ -114,7 +168,7 @@ fn solid_color_and_blur_results_are_opaque_and_keep_the_subject() {
     let b = decode(&blur);
     assert!(b.alpha.is_none());
     assert_ne!(
-        b.px(b.w - 3, 3),
+        b.px(photo.bg.0, photo.bg.1),
         [255, 255, 255],
         "the blur result must show the picture"
     );

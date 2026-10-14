@@ -11,6 +11,7 @@ use panoply_id::passport::{self, Status};
 use panoply_id::rules;
 use panoply_image::types::{Image, Samples};
 use serde_json::json;
+use std::path::{Path, PathBuf};
 
 fn rgb(img: &Image) -> &[u8] {
     match &img.samples {
@@ -438,27 +439,60 @@ fn a_dark_photo_is_brought_back() {
     );
 }
 
-#[test]
-fn a_blurred_photo_fails_sharpness_and_a_sharp_one_passes() {
-    if !engines_available() {
-        return;
+/// The face engines to run a sharpness check on here: Apple Vision and YuNet on macOS (YuNet is
+/// forced through the engine option), the one fallback engine elsewhere. Each entry is the value
+/// of the `engine` option. A YuNet that cannot be fetched is skipped, as everywhere else.
+fn engine_options() -> Vec<&'static str> {
+    if !cfg!(target_os = "macos") {
+        return if engines_available() {
+            vec!["auto"]
+        } else {
+            vec![]
+        };
     }
-    let scratch = Scratch::new("blur");
-    let Some(p) = portrait("hoshide") else { return };
-    let (_, sharp_notes) = run(
+    let yunet = panoply_id::runtime::ensure_onnxruntime().is_ok()
+        && panoply_id::runtime::ensure_model().is_ok();
+    if !yunet && std::env::var_os("PANOPLY_REQUIRE_ENGINES").is_some() {
+        panic!("YuNet could not be fetched and PANOPLY_REQUIRE_ENGINES is set");
+    }
+    if yunet {
+        vec!["vision", "yunet"]
+    } else {
+        eprintln!("skipping the YuNet half: the YuNet engine could not be fetched here");
+        vec!["vision"]
+    }
+}
+
+/// The score on the Sharpness line of a passport run on `input` with `engine`, and the line.
+fn sharpness_of(input: &Path, engine: &str, scratch: &Path) -> (f64, String) {
+    let (_, notes) = run(
         Op::PassportPhoto,
-        std::slice::from_ref(&p),
-        json!({"country": "US"}),
-        scratch.path(),
+        &[input.to_path_buf()],
+        json!({"country": "US", "engine": engine}),
+        scratch,
     )
     .unwrap();
-    let sharp = sharp_notes
+    let line = notes
         .iter()
         .find(|n| n.contains("Sharpness"))
+        .unwrap()
+        .clone();
+    let n: f64 = line
+        .split("scores ")
+        .nth(1)
+        .unwrap()
+        .split(' ')
+        .next()
+        .unwrap()
+        .parse()
         .unwrap();
-    assert!(sharp.contains("pass: Sharpness"), "{sharp}");
-    // A heavy blur: box filter of radius 14 px on the 2400 x 3000 original.
-    let img = read(&p);
+    (n, line)
+}
+
+/// A heavy blur of a portrait: box filter of radius 14 px on the 2400 x 3000 original, saved as
+/// a JPEG in `dir`.
+fn blurred_copy(p: &Path, dir: &Path) -> PathBuf {
+    let img = read(p);
     let (w, h) = (img.width as usize, img.height as usize);
     let mut data: Vec<f32> = rgb(&img).iter().map(|&v| f32::from(v)).collect();
     let r = 14usize;
@@ -485,22 +519,31 @@ fn a_blurred_photo_fails_sharpness_and_a_sharp_one_passes() {
     }
     let mut blurred = img.clone();
     blurred.samples = Samples::U8(data.iter().map(|&v| v as u8).collect());
-    let path = scratch.path().join("blurred.jpg");
+    let path = dir.join("blurred.jpg");
     std::fs::write(
         &path,
         panoply_id::imageio::jpeg_bytes(&blurred, 92.0, false, 300).unwrap(),
     )
     .unwrap();
-    let (_, notes) = run(
-        Op::PassportPhoto,
-        &[path],
-        json!({"country": "US"}),
-        scratch.path(),
-    )
-    .unwrap();
-    let line = notes.iter().find(|n| n.contains("Sharpness")).unwrap();
-    eprintln!("blurred copy: {line}");
-    assert!(line.contains("fail: Sharpness"), "{line}");
+    path
+}
+
+#[test]
+fn a_blurred_photo_fails_sharpness_and_a_sharp_one_passes() {
+    let engines = engine_options();
+    if engines.is_empty() {
+        return;
+    }
+    let scratch = Scratch::new("blur");
+    let Some(p) = portrait("hoshide") else { return };
+    let blurred = blurred_copy(&p, scratch.path());
+    for engine in engines {
+        let (_, sharp) = sharpness_of(&p, engine, scratch.path());
+        assert!(sharp.contains("pass: Sharpness"), "{engine}: {sharp}");
+        let (_, line) = sharpness_of(&blurred, engine, scratch.path());
+        eprintln!("{engine}: blurred copy: {line}");
+        assert!(line.contains("fail: Sharpness"), "{engine}: {line}");
+    }
 }
 
 #[test]
@@ -836,40 +879,29 @@ fn status_words_are_stable() {
 #[test]
 fn sharpness_numbers_separate_real_portraits_from_a_blur() {
     // The thresholds in the module are set from these numbers; print them so a change to the
-    // check shows up here.
-    if !engines_available() {
+    // check shows up here. Every engine has to put every sharp portrait above the pass mark and
+    // the blurred copy below the warn mark: the number is read on a region built from the eyes
+    // and mouth, so it must not depend on which engine found the face.
+    let engines = engine_options();
+    if engines.is_empty() {
         return;
     }
     let scratch = Scratch::new("sharp-numbers");
-    let mut seen = Vec::new();
-    for name in PORTRAITS {
-        let Some(p) = portrait(name) else { return };
-        let (_, notes) = run(
-            Op::PassportPhoto,
-            &[p],
-            json!({"country": "US"}),
-            scratch.path(),
-        )
-        .unwrap();
-        let line = notes
-            .iter()
-            .find(|n| n.contains("Sharpness"))
-            .unwrap()
-            .clone();
-        let n: f64 = line
-            .split("scores ")
-            .nth(1)
-            .unwrap()
-            .split(' ')
-            .next()
-            .unwrap()
-            .parse()
-            .unwrap();
-        eprintln!("{name}: sharpness {n}");
-        seen.push(n);
-        assert!(n >= passport::SHARP_PASS, "{name}: {line}");
+    for engine in engines {
+        let mut seen = Vec::new();
+        for name in PORTRAITS {
+            let Some(p) = portrait(name) else { return };
+            let (n, line) = sharpness_of(&p, engine, scratch.path());
+            eprintln!("{engine}: {name}: sharpness {n}");
+            seen.push(n);
+            assert!(n >= passport::SHARP_PASS, "{engine}: {name}: {line}");
+        }
+        assert_eq!(seen.len(), 7);
+        let Some(p) = portrait("hoshide") else { return };
+        let (n, line) = sharpness_of(&blurred_copy(&p, scratch.path()), engine, scratch.path());
+        eprintln!("{engine}: blurred hoshide: sharpness {n}");
+        assert!(n < passport::SHARP_WARN, "{engine}: {line}");
     }
-    assert_eq!(seen.len(), 7);
 }
 
 #[test]
