@@ -1,6 +1,6 @@
 # UI audit
 
-Panoply's desktop UI against Apple's Human Interface Guidelines (macOS), Microsoft Fluent 2 (Windows) and the GNOME HIG (Linux), for what applies to a GPUI app. **65 findings: 51 fixed, 14 open.** Open items are listed at the end with the reason each was left.
+Panoply's desktop UI against Apple's Human Interface Guidelines (macOS), Microsoft Fluent 2 (Windows) and the GNOME HIG (Linux), for what applies to a GPUI app. **65 findings: 52 fixed, 13 open.** Open items are listed at the end with the reason each was left.
 
 The renders in [review/before](review/before) and [review/after](review/after) come from `panoply-desktop --selfcheck-review` (macOS, offscreen, 2x, nothing is shown on screen). Colour, hit-size and window-state rules are unit tests in `apps/desktop/src/ui/theme.rs` and `window_state.rs`; the keyboard reach check is part of `--selfcheck`.
 
@@ -73,7 +73,7 @@ The renders in [review/before](review/before) and [review/after](review/after) c
 | 54 | Icon | The app icon was a flat gradient on a plain rounded square with one drawing for 16 to 1024 px. | macOS 26 icon grid, Fluent 2 app icons, GNOME icon template | Redrawn as the fan (three equal tool cards fanned 20 degrees either side from one pivot, the front one blue, the two behind it mid graphite): continuous-corner squircle, quiet plate, cards lifted on contact shadows, hand-tuned 16 to 64 px drawings (two cards at 16 px), a Fluent tile for Windows, a GNOME tile and SVG for Linux; `docs/design/icon-sheet.png`. | Fixed |
 | 55 | Icon | The Windows icon is not embedded in the .exe, so Explorer and the taskbar show the generic icon without a shortcut. | Fluent 2 app icons | Needs a resource compiler (a build script and a new dependency). | Open |
 | 56 | Icon | macOS 26 also offers dark and tinted icon variants (an .icon bundle from Icon Composer). | macOS 26 icon design | A dark variant is drawn (`panoply-macos-dark.svg`, `icon-dark-variant.png`) but not packaged as an .icon bundle. | Open |
-| 57 | Safety | On Windows, Undo deletes the new file for good because the recycle bin is not wired. | HIG and Fluent 2 (reversible actions) | Not a design change; noted in `packaging/README.md`. | Open |
+| 57 | Safety | On Windows, Undo deleted the new file for good because the recycle bin was not wired. | HIG and Fluent 2 (reversible actions) | One `move_to_trash` in `panoply-core` for every platform: `NSFileManager` on macOS, the freedesktop trash on Linux, the shell's `IFileOperation` (Recycle Bin) on Windows. A drive with no trash is refused with a plain sentence and the file is kept. | Fixed |
 | 58 | Window (Linux) | The v0.1.1-beta AppImage opened no window at all on Linux: the process ran at 18 MB, never touched X11 or Wayland, and showed nothing. `gpui-pre-platform` leaves both display backends off unless the app asks for them, and `apps/desktop/Cargo.toml` did not. | Release smoke | `x11` and `wayland` features for `gpui_platform` on Linux (branch `fix/linux-display-backends`). With it the window opens in about a second. | Fixed on branch |
 | 59 | Window (Linux) | On X11 the command bar is on screen from the first frame (its `show: false` is not honoured) and it never hides: the hotkey twice and Escape leave it covering the app window. Windows and macOS start with it hidden. Seen under openbox with and without a compositor. | Fluent 2 and GNOME HIG (a launcher appears on request) | Not fixed: the bar is a pop-up window and GPUI offers only minimize to hide it, which a window manager ignores for pop-ups. Needs an unmap call or a normal-window bar on X11. | Open |
 | 60 | Window (Windows, Linux) | The command bar always opens at 200, 200 on the primary display. On macOS it is centred in the upper third of the active display; `Panel::position` is empty off macOS. | Fluent 2 (launcher placement) | Needs a window-move call from GPUI or a platform helper. | Open |
@@ -93,7 +93,6 @@ The renders in [review/before](review/before) and [review/after](review/after) c
 - **51. Right-to-left layout is not mirrored.** Not addressed.
 - **55. The Windows icon is not embedded in the .exe, so Explorer and the taskbar show the generic icon without a shortcut.** Needs a resource compiler (a build script and a new dependency).
 - **56. macOS 26 also offers dark and tinted icon variants (an .icon bundle from Icon Composer).** A dark variant is drawn (`panoply-macos-dark.svg`, `icon-dark-variant.png`) but not packaged as an .icon bundle.
-- **57. On Windows, Undo deletes the new file for good because the recycle bin is not wired.** Not a design change; noted in `packaging/README.md`.
 - **59. The command bar is on screen at launch on Linux (X11) and never hides.**
 - **60. The command bar does not move to the active display's upper third off macOS.**
 - **61. The Windows process stays alive with no window and no tray icon after the app window closes.**

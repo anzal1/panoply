@@ -1,9 +1,6 @@
 //! AppKit helpers. GPUI owns the NSPanel; everything here only adjusts it (shape, level, alpha,
 //! layer transform, position) through plain Objective-C messages, as in the shell kill test.
 
-use std::ffi::CString;
-use std::path::Path;
-
 use gpui::Window;
 use objc2::encode::{Encode, Encoding};
 use objc2::runtime::{AnyObject, Bool};
@@ -302,30 +299,5 @@ pub(crate) fn accent_rgb() -> (f32, f32, f32) {
         let g: f64 = msg_send![conv, greenComponent];
         let b: f64 = msg_send![conv, blueComponent];
         (r as f32, g as f32, b as f32)
-    }
-}
-
-/// Move a file to the Trash (so Undo is itself undoable from Finder).
-pub(crate) fn os_trash(path: &Path) -> std::io::Result<()> {
-    let s = path
-        .to_str()
-        .and_then(|s| CString::new(s).ok())
-        .ok_or_else(|| std::io::Error::other("path is not valid text"))?;
-    unsafe {
-        let ns: Obj = msg_send![class!(NSString), stringWithUTF8String: s.as_ptr()];
-        let url: Obj = msg_send![class!(NSURL), fileURLWithPath: ns];
-        let fm: Obj = msg_send![class!(NSFileManager), defaultManager];
-        let mut err: Obj = std::ptr::null_mut();
-        let ok: Bool = msg_send![
-            fm,
-            trashItemAtURL: url,
-            resultingItemURL: std::ptr::null_mut::<Obj>(),
-            error: &mut err as *mut Obj
-        ];
-        if ok.as_bool() {
-            Ok(())
-        } else {
-            Err(std::io::Error::other("the Trash would not take the file"))
-        }
     }
 }

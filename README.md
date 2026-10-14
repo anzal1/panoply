@@ -44,7 +44,7 @@
 - **One app, not a dozen.** The paid apps and upload sites you use one task at a time become one shortcut.
 - **Your files stay on your device.** No account, no upload, no limits, no watermarks.
 - **Say what you want.** Drop a file, type "make this under 50 kb", press Return.
-- **Nothing is overwritten.** Every result is a new file next to the original, and Undo removes it.
+- **Nothing is overwritten.** Every result is a new file next to the original, and Undo moves it to the Trash, never a permanent delete.
 
 ## What is in it
 

@@ -632,12 +632,14 @@ impl ToolPanel {
         }
     }
 
-    /// Command+Z on a result card: the new files go to the Trash.
+    /// Command+Z on a result card: the new files go to the Trash (the Recycle Bin on Windows). A file
+    /// the system will not take stays where it is and the card says so.
     pub(crate) fn undo(&mut self, cx: &mut Context<Self>) {
         let Phase::Done { done, undone, .. } = &self.phase else {
             return;
         };
-        if undone.is_some() || done.outputs.is_empty() {
+        // Undo again is allowed after a refusal: what was moved is skipped, the rest is retried.
+        if undone.as_ref().is_some_and(|u| u.is_complete()) || done.outputs.is_empty() {
             return;
         }
         let outputs = done.outputs.clone();
@@ -1513,7 +1515,7 @@ impl ToolPanel {
             ),
             Phase::Done { done, undone, .. } => {
                 let has_out = !done.outputs.is_empty();
-                let undone_now = undone.is_some();
+                let undone_now = undone.as_ref().is_some_and(|u| u.is_complete());
                 (
                     format!("Return opens it. {}Z undoes. Esc closes.", cmd()),
                     div()
@@ -1813,6 +1815,7 @@ impl ToolPanel {
         };
         let inputs = report.request.inputs.len();
         let headline = done.headline(inputs);
+        let fully_undone = undone.as_ref().is_some_and(|u| u.is_complete());
         let tile = |label: &str, value: String, accent: bool| {
             card(t)
                 .flex_1()
@@ -1851,27 +1854,23 @@ impl ToolPanel {
                     .flex_row()
                     .items_center()
                     .gap(px(10.))
-                    .child(icon(
-                        if undone.is_some() {
-                            "undo-2"
-                        } else {
-                            "circle-check"
-                        },
-                        20.,
-                        if undone.is_some() { t.ink2 } else { t.good },
-                    ))
+                    .child(match undone {
+                        Some(u) if u.is_complete() => icon("undo-2", 20., t.ink2),
+                        Some(_) => icon("triangle-alert", 20., t.warn),
+                        None => icon("circle-check", 20., t.good),
+                    })
                     .child(
                         div()
                             .ramp(ty::TITLE)
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(t.ink)
                             .child(match undone {
-                                Some(_) => "Undone".to_string(),
+                                Some(u) => u.title().to_string(),
                                 None => headline.clone(),
                             }),
                     ),
             )
-            .when_some(done.after_bytes.filter(|_| undone.is_none()), |d, after| {
+            .when_some(done.after_bytes.filter(|_| !fully_undone), |d, after| {
                 d.child(
                     div()
                         .flex()
@@ -1889,15 +1888,11 @@ impl ToolPanel {
             })
             .when_some(undone.clone(), |d, u| {
                 d.child(
-                    div()
-                        .ramp(ty::BODY)
-                        .text_color(t.ink2)
-                        .child(if u.failed.is_empty() {
-                            "The new files went to the Trash. Your originals were never touched."
-                                .to_string()
-                        } else {
-                            format!("Could not remove: {}", u.failed.join(", "))
-                        }),
+                    div().flex().flex_col().gap(px(sp::XS)).children(
+                        u.lines()
+                            .into_iter()
+                            .map(|l| div().ramp(ty::BODY).text_color(t.ink2).child(l)),
+                    ),
                 )
             })
             .children(
@@ -1907,7 +1902,7 @@ impl ToolPanel {
                     .take(6)
                     .map(|n| div().ramp(ty::BODY).text_color(t.ink2).child(n.clone())),
             )
-            .when(!outputs.is_empty() && undone.is_none(), |d| {
+            .when(!outputs.is_empty() && !fully_undone, |d| {
                 d.child(
                     div()
                         .flex()

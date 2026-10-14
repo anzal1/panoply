@@ -4998,9 +4998,12 @@ name = "panoply-core"
 version = "0.1.1"
 dependencies = [
  "infer",
+ "libc",
+ "objc2-foundation 0.3.2",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
+ "windows 0.62.2",
 ]
 
 [[package]]

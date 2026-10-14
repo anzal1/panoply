@@ -299,26 +299,75 @@ fn failure(e: &ModuleError) -> Failure {
 /// What undo did.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct UndoReport {
-    /// Files removed.
+    /// Files moved to the Trash (the Recycle Bin on Windows).
     pub removed: usize,
-    /// Files that could not be removed, with the reason.
+    /// Files the system would not take, each as a sentence in plain words. These files were not
+    /// touched: undo never deletes for good.
     pub failed: Vec<String>,
 }
 
+impl UndoReport {
+    /// True when nothing was left behind, so there is nothing more to undo.
+    pub fn is_complete(&self) -> bool {
+        self.failed.is_empty()
+    }
+
+    /// The card title: what undo achieved.
+    pub fn title(&self) -> &'static str {
+        match (self.removed, self.failed.is_empty()) {
+            (_, true) => "Undone",
+            (0, false) => "Could not undo",
+            (_, false) => "Partly undone",
+        }
+    }
+
+    /// What to tell the person, one sentence per line, in plain words.
+    pub fn lines(&self) -> Vec<String> {
+        let trash = panoply_core::trash::TRASH_NAME;
+        if self.failed.is_empty() {
+            return vec![format!(
+                "The new files went to the {trash}. Your originals were never touched."
+            )];
+        }
+        let mut lines = Vec::new();
+        if self.removed > 0 {
+            lines.push(format!(
+                "{} moved to the {trash}.",
+                if self.removed == 1 {
+                    "1 file".to_string()
+                } else {
+                    format!("{} files", self.removed)
+                }
+            ));
+        }
+        lines.push(format!(
+            "Nothing was deleted. These could not be moved to the {trash}:"
+        ));
+        lines.extend(self.failed.iter().cloned());
+        lines
+    }
+}
+
 /// Undo a result: the files the job wrote go to the Trash through `trash`. The originals were
-/// never touched, so that is the whole undo.
+/// never touched, so that is the whole undo. A file the Trash will not take stays where it is and
+/// is reported; it is never deleted instead.
 pub fn undo_outputs(
     outputs: &[PathBuf],
-    trash: impl Fn(&Path) -> std::io::Result<()>,
+    trash: impl Fn(&Path) -> Result<(), panoply_core::TrashError>,
 ) -> UndoReport {
     let mut report = UndoReport::default();
     for p in outputs {
-        if !p.exists() {
-            continue;
-        }
         match trash(p) {
             Ok(()) => report.removed += 1,
-            Err(e) => report.failed.push(format!("{}: {e}", p.display())),
+            // Already gone (moved or deleted by the person): nothing to undo.
+            Err(panoply_core::TrashError::NotFound) => {}
+            Err(e) => {
+                let name = p
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| p.display().to_string());
+                report.failed.push(format!("{name}: {e}"));
+            }
         }
     }
     report
@@ -498,18 +547,55 @@ mod tests {
 
     #[test]
     fn undo_trashes_what_the_job_wrote() {
+        use panoply_core::TrashError;
         let d = temp("undo");
+        let bin = d.join("bin");
+        std::fs::create_dir_all(&bin).unwrap();
         let out = d.join("x (compressed).pdf");
         std::fs::write(&out, b"x").unwrap();
         let gone = d.join("never-existed");
-        let r = undo_outputs(&[out.clone(), gone], |p| std::fs::remove_file(p));
+        // The stand-in trash moves the file into a folder, as the real one moves it into the Trash.
+        let into_bin = |p: &Path| match p.exists() {
+            true => std::fs::rename(p, bin.join(p.file_name().unwrap()))
+                .map_err(|e| TrashError::Failed { why: e.to_string() }),
+            false => Err(TrashError::NotFound),
+        };
+        let r = undo_outputs(&[out.clone(), gone], into_bin);
         assert_eq!(r.removed, 1);
         assert!(r.failed.is_empty());
         assert!(!out.exists());
-        let bad = d.join("again");
-        std::fs::write(&bad, b"x").unwrap();
-        let r = undo_outputs(&[bad], |_| Err(std::io::Error::other("busy")));
+        assert!(bin.join("x (compressed).pdf").exists());
+        assert_eq!(r.title(), "Undone");
+        let _ = std::fs::remove_dir_all(d);
+    }
+
+    #[test]
+    fn undo_keeps_a_file_the_trash_will_not_take_and_says_so() {
+        use panoply_core::TrashError;
+        let d = temp("undo-refused");
+        let keep = d.join("keep.png");
+        std::fs::write(&keep, b"x").unwrap();
+        let r = undo_outputs(std::slice::from_ref(&keep), |_| Err(TrashError::NoTrash));
+        assert_eq!(r.removed, 0);
         assert_eq!(r.failed.len(), 1);
+        assert!(
+            r.failed[0].starts_with("keep.png: this drive has no "),
+            "{:?}",
+            r.failed
+        );
+        assert!(r.failed[0].contains("left where it is"));
+        assert!(keep.exists(), "a refused file must stay");
+        assert!(!r.is_complete());
+        assert_eq!(r.title(), "Could not undo");
+        let lines = r.lines();
+        assert!(lines[0].starts_with("Nothing was deleted."), "{lines:?}");
+        assert_eq!(lines.len(), 2);
+        let partly = UndoReport {
+            removed: 2,
+            failed: r.failed.clone(),
+        };
+        assert_eq!(partly.title(), "Partly undone");
+        assert!(partly.lines()[0].starts_with("2 files moved to the "));
         let _ = std::fs::remove_dir_all(d);
     }
 }
