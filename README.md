@@ -50,35 +50,35 @@
 
 <table>
   <tr>
-    <td width="170" valign="top"><b>PDF</b><br><sub>6 tools</sub></td>
+    <td width="120" valign="top"><b>PDF</b><br><sub>6 tools</sub></td>
     <td valign="top">Merge, split, organize pages, compress to a quality or a size, images to PDF, PDF to images.<br><b>A 300 MB PDF compresses to 137 MB in 5 seconds, using 11 MB of memory.</b></td>
   </tr>
   <tr>
-    <td width="170" valign="top"><b>Images</b><br><sub>9 tools</sub></td>
+    <td width="120" valign="top"><b>Images</b><br><sub>9 tools</sub></td>
     <td valign="top">Convert, compress, resize, strip metadata. Remove a background, erase an object, remove a watermark from your own pictures, upscale 4x.<br><b>Compress holds picture similarity at 0.97 and made 13 test photos 44.8% smaller.</b></td>
   </tr>
   <tr>
-    <td width="170" valign="top"><b>ID and forms</b><br><sub>3 tools, 15 exam presets</sub></td>
+    <td width="120" valign="top"><b>ID and forms</b><br><sub>3 tools, 15 exam presets</sub></td>
     <td valign="top">Passport and visa photos, print sheets, a signature cleaner, and resize to an exact size in KB for a form or an exam portal.<br><b>840 test cases across the presets, none outside the published size window.</b></td>
   </tr>
   <tr>
-    <td width="170" valign="top"><b>Video and audio</b><br><sub>10 tools</sub></td>
+    <td width="120" valign="top"><b>Video and audio</b><br><sub>10 tools</sub></td>
     <td valign="top">Convert, trim, compress to a size or an upload limit, extract audio, normalize loudness, stereo to mono, HDR to SDR, repair, inspect, edit streams.<br><b>A 4.6 GB, 73 minute video trims at keyframes in 0.96 seconds, using 73 MB of memory.</b></td>
   </tr>
   <tr>
-    <td width="170" valign="top"><b>Text from images</b><br><sub>2 tools</sub></td>
+    <td width="120" valign="top"><b>Text from images</b><br><sub>2 tools</sub></td>
     <td valign="top">Copy the text out of a picture, or turn a scanned PDF into a searchable one. Apple Vision on macOS, on-device models for English, Latin and Devanagari scripts elsewhere.<br><b>English reads at under 0.2% character error. Hindi reads at about 2%.</b></td>
   </tr>
   <tr>
-    <td width="170" valign="top"><b>Share</b></td>
+    <td width="120" valign="top"><b>Share</b></td>
     <td valign="top">Send and receive files with LocalSend apps on your own network, or make a QR link for a device with no app. From the command line today.<br><b>Only addresses on your own network are accepted.</b></td>
   </tr>
   <tr>
-    <td width="170" valign="top"><b>Command bar</b></td>
+    <td width="120" valign="top"><b>Command bar</b></td>
     <td valign="top">Opens from a hotkey anywhere: <kbd>Option</kbd> <kbd>Space</kbd> on macOS, <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Space</kbd> on Windows and Linux. Searches every tool, takes dropped files and understands plain requests.<br><b>31 tools, one keystroke away.</b></td>
   </tr>
   <tr>
-    <td width="170" valign="top"><b>For developers and agents</b></td>
+    <td width="120" valign="top"><b>For developers and agents</b></td>
     <td valign="top">Every tool is also a command: <code>panoply run image.compress photo.jpg</code>. A community tool is a manifest plus a WebAssembly file that runs in a sandbox with no network.<br><b>498 jobs over real files through the app's own path, 0 failures.</b></td>
   </tr>
 </table>
