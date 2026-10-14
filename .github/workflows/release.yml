@@ -1,0 +1,341 @@
+name: Release
+
+# Push a tag like v0.1.0-beta.1 to build every artifact on macOS, Windows and Linux and collect them
+# in a DRAFT GitHub release (nothing is public until you click Publish). Free: public-repo runners only.
+# Releases are unsigned on purpose (no Apple Developer account, no Windows certificate): nothing signs
+# or notarizes, and the release notes tell users the first-open step.
+# Manual runs (Actions > Release > Run workflow) build everything and keep the files as workflow
+# artifacts but never create a release. Packaging details: packaging/README.md.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  # ------------------------------------------------------------------------------------------------
+  # Decide the version and whether the desktop app is part of this build.
+  # ------------------------------------------------------------------------------------------------
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.p.outputs.version }}
+      tag: ${{ steps.p.outputs.tag }}
+      release: ${{ steps.p.outputs.release }}
+      prerelease: ${{ steps.p.outputs.prerelease }}
+      msi_version: ${{ steps.p.outputs.msi_version }}
+      desktop: ${{ steps.p.outputs.desktop }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: p
+        shell: bash
+        env:
+          SKIP_DESKTOP: ${{ vars.PANOPLY_SKIP_DESKTOP }}
+        run: |
+          set -euo pipefail
+          cargo_version="$(sed -n '/^\[workspace.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            tag="$GITHUB_REF_NAME"; version="${tag#v}"; release=true
+          else
+            tag=""; version="${cargo_version}-dev.${GITHUB_RUN_NUMBER}"; release=false
+          fi
+          base="${version%%-*}"
+          # A real release must match the workspace version; test tags (v0.0.0-test1) are exempt.
+          if [ "$release" = true ] && [[ "$version" != *-test* ]] && [ "$base" != "$cargo_version" ]; then
+            echo "::error::Tag $tag does not match the workspace version $cargo_version in Cargo.toml. Bump it first."
+            exit 1
+          fi
+          pre="${version#"$base"}"; pre="${pre#-}"
+          n="$(printf '%s' "$pre" | grep -o '[0-9]*$' || true)"
+          msi_version="$base.${n:-0}"
+          case "$version" in *-*) prerelease=true ;; *) prerelease=false ;; esac
+
+          # The desktop app is built when it is a member of the workspace. Set the repository
+          # variable PANOPLY_SKIP_DESKTOP=1 to ship the command line tool alone. Without the
+          # desktop crate the packaging steps still run, on the CLI as a stand-in (files named
+          # selftest-*, never released).
+          desktop=stub
+          if [ "$SKIP_DESKTOP" != 1 ] && cargo metadata --no-deps --format-version 1 \
+            | python3 -I -c 'import json,sys; sys.exit(0 if any(p["name"]=="panoply-desktop" for p in json.load(sys.stdin)["packages"]) else 1)'; then
+            desktop=real
+          fi
+          {
+            echo "version=$version"; echo "tag=$tag"; echo "release=$release"
+            echo "prerelease=$prerelease"; echo "msi_version=$msi_version"; echo "desktop=$desktop"
+          } >> "$GITHUB_OUTPUT"
+          echo "Release $version (tag '${tag:-none}'), msi $msi_version, desktop: $desktop" | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # ------------------------------------------------------------------------------------------------
+  # Compile the release binaries, one leg per platform. macOS builds both architectures on the arm
+  # runner (the x64 one cross-compiled); each gets its own .app, .zip and .dmg.
+  # ------------------------------------------------------------------------------------------------
+  build:
+    needs: plan
+    name: build ${{ matrix.id }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { id: macos-arm64, os: macos-latest, target: aarch64-apple-darwin }
+          - { id: macos-x64, os: macos-latest, target: x86_64-apple-darwin }
+          - { id: windows-x64, os: windows-latest, target: x86_64-pc-windows-msvc }
+          - { id: windows-arm64, os: windows-11-arm, target: aarch64-pc-windows-msvc }
+          # ubuntu-22.04 on purpose: the oldest glibc we can still use, so the binaries run on
+          # older distributions too. Native arm64 runners are free for public repositories.
+          - { id: linux-x64, os: ubuntu-22.04, target: x86_64-unknown-linux-gnu }
+          - { id: linux-arm64, os: ubuntu-22.04-arm, target: aarch64-unknown-linux-gnu }
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "14.0"
+      # Windows: link the C runtime statically so a clean Windows install needs no VC++ redistributable.
+      RUSTFLAGS: ${{ startsWith(matrix.id, 'windows') && '-C target-feature=+crt-static' || '' }}
+      DESKTOP: ${{ needs.plan.outputs.desktop }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          shared-key: release-${{ matrix.id }}
+          cache-on-failure: true
+
+      - name: System packages (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config cmake clang libclang-dev nasm \
+            libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev libx11-dev libx11-xcb-dev libxcb1-dev \
+            libxcb-xkb-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libfontconfig-dev \
+            libfreetype-dev libssl-dev libasound2-dev libvulkan-dev libdbus-1-dev libgtk-3-dev
+      - name: nasm (macOS, for the x86_64 SIMD code in mozjpeg)
+        if: runner.os == 'macOS'
+        run: command -v nasm >/dev/null || brew install nasm
+      - name: nasm (Windows x64)
+        if: matrix.id == 'windows-x64'
+        shell: pwsh
+        run: if (-not (Get-Command nasm -ErrorAction SilentlyContinue)) { choco install nasm -y --no-progress }
+
+      - name: Build
+        shell: bash
+        run: |
+          set -euo pipefail
+          pkgs="-p panoply-cli"
+          [ "$DESKTOP" = real ] && pkgs="$pkgs -p panoply-desktop"
+          cargo build --release --locked --target "${{ matrix.target }}" $pkgs
+
+      - name: Collect the executables
+        shell: bash
+        run: |
+          set -euo pipefail
+          ext=""; [ "$RUNNER_OS" = Windows ] && ext=".exe"
+          rel="target/${{ matrix.target }}/release"
+          mkdir -p stage
+          cp "$rel/panoply$ext" stage/
+          [ "$DESKTOP" = real ] && cp "$rel/panoply-desktop$ext" stage/
+          ls -l stage
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: bin-${{ matrix.id }}
+          path: stage/*
+          if-no-files-found: error
+          retention-days: 7
+
+  # ------------------------------------------------------------------------------------------------
+  # macOS: Panoply.app in a .zip and a .dmg for each architecture. Unsigned on purpose (no Apple
+  # Developer account): the app is ad-hoc signed, which Apple Silicon needs, and not notarized.
+  # ------------------------------------------------------------------------------------------------
+  package-macos:
+    needs: [plan, build]
+    name: package macos-${{ matrix.arch }}
+    runs-on: macos-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x64]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with: { name: "bin-macos-${{ matrix.arch }}", path: stage }
+      - name: Package
+        run: |
+          packaging/scripts/macos-package.sh --version "${{ needs.plan.outputs.version }}" \
+            --arch ${{ matrix.arch }} --stage stage --out dist --desktop "${{ needs.plan.outputs.desktop }}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pkg-macos-${{ matrix.arch }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  # ------------------------------------------------------------------------------------------------
+  # Windows: zips and an MSI (with an optional Explorer right-click entry), installed and removed
+  # on the runner as a smoke test.
+  # ------------------------------------------------------------------------------------------------
+  package-windows:
+    needs: [plan, build]
+    name: package windows-${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64, os: windows-latest }
+          - { arch: arm64, os: windows-11-arm }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with: { name: "bin-windows-${{ matrix.arch }}", path: stage }
+      # WiX Toolset v4 (build-time only), pinned. See packaging/README.md for its license.
+      - name: Install WiX
+        shell: pwsh
+        run: |
+          dotnet tool install --global wix --version 4.0.5
+          wix extension add -g WixToolset.UI.wixext/4.0.5
+          wix --version
+      - name: Package
+        shell: pwsh
+        run: >
+          packaging/windows/package.ps1
+          -Version "${{ needs.plan.outputs.version }}"
+          -MsiVersion "${{ needs.plan.outputs.msi_version }}"
+          -Arch ${{ matrix.arch }} -Stage stage -Out dist
+          -Desktop ${{ needs.plan.outputs.desktop }} -SmokeTest
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pkg-windows-${{ matrix.arch }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  # ------------------------------------------------------------------------------------------------
+  # Linux: tar.gz and AppImage per architecture. No signing needed.
+  # ------------------------------------------------------------------------------------------------
+  package-linux:
+    needs: [plan, build]
+    name: package linux-${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64, os: ubuntu-22.04 }
+          - { arch: arm64, os: ubuntu-22.04-arm }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with: { name: "bin-linux-${{ matrix.arch }}", path: stage }
+      - name: Package
+        run: |
+          packaging/scripts/linux-package.sh --version "${{ needs.plan.outputs.version }}" \
+            --arch ${{ matrix.arch }} --stage stage --out dist --desktop "${{ needs.plan.outputs.desktop }}"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pkg-linux-${{ matrix.arch }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  # ------------------------------------------------------------------------------------------------
+  # Tags only: checksums, filled package manager manifests, build provenance, a draft release.
+  # ------------------------------------------------------------------------------------------------
+  publish:
+    needs: [plan, package-macos, package-windows, package-linux]
+    if: needs.plan.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      VERSION: ${{ needs.plan.outputs.version }}
+      TAG: ${{ needs.plan.outputs.tag }}
+      PRERELEASE: ${{ needs.plan.outputs.prerelease }}
+      DESKTOP: ${{ needs.plan.outputs.desktop }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: pkg-*
+          merge-multiple: true
+          path: staging
+      - name: Collect release files, checksums and manifests
+        run: |
+          set -euo pipefail
+          mkdir release
+          # selftest-* files come from stand-in builds while the desktop crate is absent; never released.
+          find staging -maxdepth 1 -type f ! -name 'selftest-*' -exec cp {} release/ \;
+          if [ "$DESKTOP" = real ]; then
+            python3 -I packaging/scripts/verify_release.py --version "$VERSION" --dir release
+          fi
+          (cd release && sha256sum -- * > ../SHA256SUMS)
+          notarized="$(sed -n 's/^NOTARIZED=//p' staging/state/macos-arm64.env 2>/dev/null | head -1 || true)"
+          python3 -I packaging/scripts/render_manifests.py --version "$VERSION" --repo "$GITHUB_REPOSITORY" \
+            --sums SHA256SUMS --out manifests --commit "$GITHUB_SHA" \
+            --macos-notarized "${notarized:-0}" --state staging/state
+          python3 -I packaging/scripts/mkarchive.py "release/panoply-package-manifests-$VERSION.zip" \
+            "panoply-package-manifests-$VERSION" manifests=manifests
+          (cd release && sha256sum -- * > SHA256SUMS)
+          cat release/SHA256SUMS
+          {
+            echo "### Release files"; echo '```'; ls -lh release; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-files
+          path: |
+            release/
+            manifests/
+          retention-days: 14
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: release/*
+      - name: Draft the GitHub release
+        run: |
+          set -euo pipefail
+          cat > notes.md <<NOTES
+          Draft of $TAG. Review, then publish.
+
+          **Install**
+          - macOS: the \`.dmg\` or \`.zip\` (\`arm64\` for Apple Silicon, \`x64\` for Intel), or
+            \`brew install --cask anzal1/panoply/panoply\` once the tap is live
+          - Windows: the \`.msi\` or \`.zip\`, or \`scoop bucket add panoply https://github.com/anzal1/scoop-panoply\`
+            then \`scoop install panoply\` once the bucket is live
+          - Linux: the \`.AppImage\` or the \`.tar.gz\` (run \`install.sh\` inside)
+          - Command line only: the \`panoply-cli-*\` archives
+
+          **Verify a download:** \`sha256sum -c SHA256SUMS --ignore-missing\`, or
+          \`gh attestation verify <file> --repo $GITHUB_REPOSITORY\` to check it was built by this repository's workflow.
+
+          **This beta is unsigned on purpose** (no Apple Developer account, no Windows certificate yet), so
+          macOS and Windows warn on first launch:
+          - macOS: open System Settings > Privacy & Security and choose Open Anyway, or run
+            \`xattr -dr com.apple.quarantine /Applications/Panoply.app\` once.
+          - Windows: on the SmartScreen page choose More info, then Run anyway. winget and Scoop installs avoid most of this.
+          NOTES
+          existing="$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
+            --jq ".[] | select(.tag_name == \"$TAG\") | [.id, .draft] | @tsv")"
+          if [ -n "$existing" ]; then
+            id="${existing%%$'\t'*}"; draft="${existing##*$'\t'}"
+            if [ "$draft" != true ]; then echo "::error::Release $TAG is already published; not touching it."; exit 1; fi
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$id"   # re-run: replace the old draft
+          fi
+          args=(--draft --verify-tag --title "Panoply $TAG" --notes-file notes.md)
+          [ "$PRERELEASE" = true ] && args+=(--prerelease)
+          gh release create "$TAG" release/* "${args[@]}"

@@ -57,7 +57,7 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
 - Build with MSVC: `cargo build --release -p panoply-desktop`. GPUI uses DirectX through its Windows
   platform crate. No extra system packages are needed.
 - Installer: MSIX or an Inno Setup `.exe`, plus winget and Scoop manifests. SmartScreen warns on unsigned
-  binaries until reputation builds; SignPath Foundation signs open source for free.
+  binaries until reputation builds; the beta ships unsigned on purpose.
 - Explorer context menu and Send To: a registry entry `HKCU\Software\Classes\*\shell\Panoply\command`
   with `"panoply-desktop.exe" "%1"`, and a shortcut in `shell:sendto`.
 - Trash is not wired: `Undo` removes the new file instead of sending it to the Recycle Bin (needs

@@ -4,7 +4,7 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
-## v0.1.0-beta.1 (2026-10-14)
+## v0.1.0-beta (2026-10-14)
 
 The first public beta. 30 tools, one desktop app for macOS, Windows and Linux, and the same tools as a
 command line. Builds are not code signed. See [KNOWN-LIMITATIONS.md](docs/KNOWN-LIMITATIONS.md) for the

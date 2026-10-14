@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Panoply Windows installer (WiX Toolset v4). Built by packaging/windows/package.ps1, which passes:
+    Version      MSI product version, four numeric parts (0.1.0.1)
+    ProductCode  GUID, fixed per version and architecture
+    BinDir       folder with panoply.exe and panoply-desktop.exe
+    AssetDir     folder with panoply.ico, LICENSE-MIT, LICENSE-APACHE and THIRD-PARTY-NOTICES.md
+    LicenseRtf   the license text shown in the setup dialog
+  Features: Panoply (required), the panoply command on PATH, and the Explorer right-click entry.
+  Installs per machine under Program Files. The Explorer entry lives in HKLM\Software\Classes, so on
+  Windows 11 it shows under "Show more options" (the classic menu).
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="Panoply" Manufacturer="Panoply contributors" Version="$(Version)"
+           ProductCode="$(ProductCode)" UpgradeCode="56520F04-9601-4D76-8791-E0FF3A922321"
+           Scope="perMachine" Compressed="yes">
+    <SummaryInformation Description="Every file tool in one fast app. Everything runs on this computer." />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Panoply is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Icon Id="panoply.ico" SourceFile="$(AssetDir)\panoply.ico" />
+    <Property Id="ARPPRODUCTICON" Value="panoply.ico" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/anzal1/panoply" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/anzal1/panoply/issues" />
+
+    <WixVariable Id="WixUILicenseRtf" Value="$(LicenseRtf)" />
+    <ui:WixUI Id="WixUI_FeatureTree" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Panoply" />
+    </StandardDirectory>
+
+    <!-- Files -->
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Component Id="DesktopExe">
+        <File Id="DesktopExeFile" Source="$(BinDir)\panoply-desktop.exe" KeyPath="yes">
+          <!-- Start menu shortcut -->
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Panoply"
+                    Description="Every file tool in one fast app" Icon="panoply.ico" Advertise="no" />
+        </File>
+      </Component>
+      <Component Id="CliExe">
+        <File Id="CliExeFile" Source="$(BinDir)\panoply.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="IconFile">
+        <File Id="IconFileFile" Source="$(AssetDir)\panoply.ico" KeyPath="yes" />
+      </Component>
+      <!-- One file per component: auto-generated GUIDs (WIX0367) need a single file in each. -->
+      <Component Id="LicenseMit">
+        <File Id="LicenseMitFile" Source="$(AssetDir)\LICENSE-MIT" KeyPath="yes" />
+      </Component>
+      <Component Id="LicenseApache">
+        <File Id="LicenseApacheFile" Source="$(AssetDir)\LICENSE-APACHE" KeyPath="yes" />
+      </Component>
+      <Component Id="ThirdPartyNotices">
+        <File Id="ThirdPartyNoticesFile" Source="$(AssetDir)\THIRD-PARTY-NOTICES.md" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- The panoply command on PATH -->
+    <ComponentGroup Id="PathFiles" Directory="INSTALLFOLDER">
+      <Component Id="PathEntry" Guid="BB3159FA-7DB5-4C58-8861-78A0F44E7E1F">
+        <CreateFolder />
+        <Environment Id="PanoplyPath" Name="PATH" Value="[INSTALLFOLDER]" Part="last" Action="set"
+                     System="yes" Permanent="no" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- Explorer right-click: "Open with Panoply" on files and folders. The command line takes the
+         clicked path, as the desktop app accepts files and folders as arguments. -->
+    <ComponentGroup Id="ExplorerFiles" Directory="INSTALLFOLDER">
+      <Component Id="ExplorerMenuReg">
+        <RegistryKey Root="HKLM" Key="Software\Classes\*\shell\Panoply">
+          <RegistryValue Type="string" Value="Open with Panoply" KeyPath="yes" />
+          <RegistryValue Name="Icon" Type="string" Value="&quot;[INSTALLFOLDER]panoply-desktop.exe&quot;" />
+          <RegistryKey Key="command">
+            <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]panoply-desktop.exe&quot; &quot;%1&quot;" />
+          </RegistryKey>
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="Software\Classes\Directory\shell\Panoply">
+          <RegistryValue Type="string" Value="Open with Panoply" />
+          <RegistryValue Name="Icon" Type="string" Value="&quot;[INSTALLFOLDER]panoply-desktop.exe&quot;" />
+          <RegistryKey Key="command">
+            <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]panoply-desktop.exe&quot; &quot;%1&quot;" />
+          </RegistryKey>
+        </RegistryKey>
+      </Component>
+    </ComponentGroup>
+
+    <Feature Id="Main" Title="Panoply" Description="The app and the panoply command." Level="1"
+             AllowAbsent="no" ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentGroupRef Id="AppFiles" />
+    </Feature>
+    <Feature Id="PathFeature" Title="Add panoply to PATH"
+             Description="Lets you run the panoply command from any terminal." Level="1">
+      <ComponentGroupRef Id="PathFiles" />
+    </Feature>
+    <Feature Id="ExplorerMenu" Title="Explorer right-click menu"
+             Description="Adds Open with Panoply to the right-click menu of files and folders." Level="1">
+      <ComponentGroupRef Id="ExplorerFiles" />
+    </Feature>
+  </Package>
+</Wix>
