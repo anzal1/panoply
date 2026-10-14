@@ -11,6 +11,13 @@ on:
   schedule:
     - cron: "17 5 * * 1"
   workflow_dispatch:
+    inputs:
+      variant:
+        description: experiment tags
+        default: ""
+      matrix:
+        description: test matrix json
+        default: ""
 
 # A superseded pull request or branch run is cancelled. A push to main is never cancelled by a
 # later push (each gets its own group), so the last green run on main always finishes.
@@ -108,24 +115,76 @@ jobs:
   test:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    name: test (${{ matrix.os }}${{ matrix.shards && format(', part {0} of {1}', matrix.shard, matrix.shards) || '' }})
+    name: test (${{ matrix.os }}${{ matrix.shards && format(', part {0} of {1}', matrix.shard, matrix.shards) || '' }}) ${{ inputs.variant }}
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          # Linux runs the heavy tests too, so its tests are split over three runners. Each builds the
-          # tests from the same cache and runs a third of them (nextest --partition); part 1 also runs
-          # the timing tests alone and the doc tests, and saves the caches.
-          - { os: ubuntu-latest, profile: ci, shard: 1, shards: 3 }
-          - { os: ubuntu-latest, profile: ci, shard: 2, shards: 3 }
-          - { os: ubuntu-latest, profile: ci, shard: 3, shards: 3 }
-          - { os: windows-latest, profile: ci-core, shard: 1 }
-          - { os: macos-latest, profile: ci-core, shard: 1 }
+      matrix: ${{ fromJSON(inputs.matrix || '{"include":[{"os":"ubuntu-latest","profile":"ci","shard":1,"shards":3},{"os":"ubuntu-latest","profile":"ci","shard":2,"shards":3},{"os":"ubuntu-latest","profile":"ci","shard":3,"shards":3},{"os":"windows-latest","profile":"ci-core","shard":1},{"os":"macos-latest","profile":"ci-core","shard":1}]}') }}
     runs-on: ${{ matrix.os }}
     env:
       NEXTEST_ARGS: --workspace --exclude gpui-base --cargo-profile ci --profile ${{ matrix.profile }} --lib --bins --tests
     steps:
+      - name: Dev Drive at the workspace
+        if: runner.os == 'Windows' && contains(inputs.variant, 'ddw')
+        shell: pwsh
+        env:
+          MOUNT: ${{ github.workspace }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sw = [Diagnostics.Stopwatch]::StartNew()
+          $disk = New-VHD -Path C:\devdrive.vhdx -SizeBytes 40GB -Dynamic | Mount-VHD -Passthru | Initialize-Disk -PartitionStyle GPT -Passthru
+          $part = $disk | New-Partition -AssignDriveLetter -UseMaximumSize
+          try { $vol = $part | Format-Volume -DevDrive -Confirm:$false -Force } catch { Write-Host "DevDrive format failed: $_"; $vol = $part | Format-Volume -FileSystem ReFS -Confirm:$false -Force }
+          $letter = $vol.DriveLetter
+          Write-Host "volume $letter fs $($vol.FileSystem)"
+          fsutil devdrv trust /f "${letter}:"
+          fsutil devdrv enable /disallowAv
+          fsutil devdrv query "${letter}:"
+          New-Item -ItemType Directory -Force -Path $env:MOUNT | Out-Null
+          Add-PartitionAccessPath -DiskNumber $part.DiskNumber -PartitionNumber $part.PartitionNumber -AccessPath $env:MOUNT
+          "DEVDRIVE_LETTER=$letter" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "dev drive ready in $($sw.Elapsed.TotalSeconds) s"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Dev Drive at target
+        if: runner.os == 'Windows' && contains(inputs.variant, 'ddt')
+        shell: pwsh
+        env:
+          MOUNT: ${{ github.workspace }}\target
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sw = [Diagnostics.Stopwatch]::StartNew()
+          $disk = New-VHD -Path C:\devdrive.vhdx -SizeBytes 40GB -Dynamic | Mount-VHD -Passthru | Initialize-Disk -PartitionStyle GPT -Passthru
+          $part = $disk | New-Partition -AssignDriveLetter -UseMaximumSize
+          try { $vol = $part | Format-Volume -DevDrive -Confirm:$false -Force } catch { Write-Host "DevDrive format failed: $_"; $vol = $part | Format-Volume -FileSystem ReFS -Confirm:$false -Force }
+          $letter = $vol.DriveLetter
+          Write-Host "volume $letter fs $($vol.FileSystem)"
+          fsutil devdrv trust /f "${letter}:"
+          fsutil devdrv enable /disallowAv
+          fsutil devdrv query "${letter}:"
+          New-Item -ItemType Directory -Force -Path $env:MOUNT | Out-Null
+          Add-PartitionAccessPath -DiskNumber $part.DiskNumber -PartitionNumber $part.PartitionNumber -AccessPath $env:MOUNT
+          "DEVDRIVE_LETTER=$letter" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "dev drive ready in $($sw.Elapsed.TotalSeconds) s"
+      - name: Experiment settings
+        shell: bash
+        run: |
+          v="${{ inputs.variant }}"
+          if [[ "$v" == *lld* && "$RUNNER_OS" == Windows ]]; then
+            echo "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=rust-lld.exe" >> "$GITHUB_ENV"
+          fi
+          if [[ "$v" == *w2* ]]; then
+            awk '/^\[profile.ci\]/{ci=1} {if(ci) sub(/opt-level = 3/,"opt-level = 2"); print}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
+          fi
+          if [[ "$v" == *d1* ]]; then
+            awk '/^\[profile.ci.package."\*"\]/{star=1;print;next} star&&/opt-level/{print "opt-level = 1";star=0;next} {print}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
+          fi
+          if [[ "$v" == *cgu16* ]]; then
+            awk '{print} /^strip = "debuginfo"/{print "codegen-units = 16"}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
+          fi
+          git diff --stat Cargo.toml || true
+          if [[ "$v" == *sccache* ]]; then
+            echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
+            echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
+          fi
       - name: Folders for the test run
         shell: bash
         run: |
@@ -134,14 +193,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
           targets: wasm32-wasip2
+      - if: contains(inputs.variant, 'sccache')
+        uses: mozilla-actions/sccache-action@fc920bf0ec8de6ee65d409111f7ec508035751ba # v0.0.11
       - if: runner.os == 'Linux'
         uses: ./.github/actions/linux-libs
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
-          shared-key: test-${{ matrix.os }}
+          shared-key: test-${{ matrix.os }}${{ inputs.variant && format('-{0}', inputs.variant) || '' }}
           # A failing test must not throw away a 15 minute build.
           cache-on-failure: true
-          save-if: ${{ matrix.shard == 1 && (github.ref == 'refs/heads/main') }}
+          save-if: ${{ matrix.shard == 1 }}
       - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
         with:
           tool: nextest
@@ -192,7 +253,12 @@ jobs:
           done
 
       - name: Build the tests
-        run: cargo nextest run ${{ env.NEXTEST_ARGS }} --no-run
+        shell: bash
+        run: |
+          start=$(date +%s)
+          cargo nextest run ${{ env.NEXTEST_ARGS }} --no-run ${{ contains(inputs.variant, 'timings') && '--timings' || '' }}
+          echo "BUILD_SECONDS=$(( $(date +%s) - start ))"
+          if command -v sccache >/dev/null; then sccache --show-stats; fi
       # Download the engines and models once, one after another, before the tests start (a cold
       # cache is the only time anything is fetched). Tests that find the download already done never
       # print the "Downloading ..." line some of them look for, and a dozen test processes never
@@ -223,7 +289,9 @@ jobs:
         if: always()
         with:
           name: junit-${{ matrix.os }}-${{ matrix.shard }}
-          path: target/nextest/*/junit*.xml
+          path: |
+            target/nextest/*/junit*.xml
+            target/cargo-timings/cargo-timing.html
           if-no-files-found: ignore
           retention-days: 3
 
