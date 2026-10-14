@@ -184,8 +184,18 @@ fn open_app_window(cx: &mut App, files: Vec<PathBuf>) {
             )
         })
         .collect();
-    let saved =
-        crate::window_state::load("app").map(|s| crate::window_state::fit(s, APP_MIN, &displays));
+    let saved = Some(
+        crate::window_state::load("app")
+            .map(|s| crate::window_state::fit(s, APP_MIN, &displays))
+            .unwrap_or_else(|| {
+                crate::window_state::first_frame(
+                    (180.0, 90.0),
+                    (APP_WIDTH, APP_HEIGHT),
+                    APP_MIN,
+                    &displays,
+                )
+            }),
+    );
     match cx.open_window(app_window_options_at(false, saved), move |window, cx| {
         let app = cx.new(|cx| AppView::new(window, cx, hub));
         app.update(cx, |a, _| a.remember_bounds());

@@ -84,6 +84,38 @@ pub fn fit(saved: Saved, min: (f32, f32), displays: &[Display]) -> Saved {
     }
 }
 
+/// The frame for a first launch, when nothing is saved: the default size at the default spot,
+/// shrunk to leave room for a taskbar and some desktop on a small display (a 1024 by 768 screen,
+/// or a 1920 by 1080 one at 150% scaling, which is 1280 by 720 points), never below `min`.
+/// The whole window ends up on the display, so the caption buttons are reachable.
+pub fn first_frame(
+    origin: (f32, f32),
+    size: (f32, f32),
+    min: (f32, f32),
+    displays: &[Display],
+) -> Saved {
+    let Some(&d) = displays.first() else {
+        return Saved {
+            x: origin.0,
+            y: origin.1,
+            w: size.0,
+            h: size.1,
+            maximized: false,
+        };
+    };
+    let w = size.0.min(d.2 - 80.0).max(min.0);
+    let h = size.1.min(d.3 - 140.0).max(min.1);
+    let x = origin.0.min(d.0 + d.2 - w).max(d.0);
+    let y = origin.1.min(d.1 + d.3 - h - 48.0).max(d.1);
+    Saved {
+        x,
+        y,
+        w,
+        h,
+        maximized: false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,6 +131,24 @@ mod tests {
             h,
             maximized: false,
         }
+    }
+
+    #[test]
+    fn first_launch_keeps_the_default_on_a_roomy_display() {
+        let f = first_frame((180.0, 90.0), (1160.0, 720.0), (860.0, 560.0), &[D1]);
+        assert_eq!(f, s(180.0, 90.0, 1160.0, 720.0));
+    }
+
+    #[test]
+    fn first_launch_fits_a_small_display() {
+        let small: Display = (0.0, 0.0, 1024.0, 768.0);
+        let f = first_frame((180.0, 90.0), (1160.0, 720.0), (860.0, 560.0), &[small]);
+        assert!(f.x >= 0.0 && f.x + f.w <= 1024.0, "{f:?}");
+        assert!(f.y >= 0.0 && f.y + f.h + 48.0 <= 768.0, "{f:?}");
+        // 1280 by 720 points (1080p at 150%): it can not shrink below the minimum height.
+        let hd: Display = (0.0, 0.0, 1280.0, 720.0);
+        let g = first_frame((180.0, 90.0), (1160.0, 720.0), (860.0, 560.0), &[hd]);
+        assert!(g.h >= 560.0 && g.y + g.h <= 720.0, "{g:?}");
     }
 
     #[test]
