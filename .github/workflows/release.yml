@@ -217,7 +217,6 @@ jobs:
           dotnet tool install --global wix --version 4.0.5
           wix extension add -g WixToolset.UI.wixext/4.0.5
           wix --version
-          wix build -? | Select-Object -First 60
       - name: Package
         shell: pwsh
         run: >
