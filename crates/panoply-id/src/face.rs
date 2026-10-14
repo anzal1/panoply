@@ -11,8 +11,6 @@
 use panoply_image::error::{ImageError, Result};
 use panoply_image::ops::kb::resample_image;
 use panoply_image::types::Image;
-#[cfg(target_os = "macos")]
-use panoply_image::types::Samples;
 
 use crate::yunet;
 
@@ -242,6 +240,7 @@ fn run(img: &Image, pref: EnginePref) -> Result<(Vec<Face>, Engine)> {
     #[cfg(target_os = "macos")]
     {
         if pref != EnginePref::YuNet {
+            use panoply_image::types::Samples;
             use panoply_platform_macos::faces;
             if faces::available() {
                 let Samples::U8(px) = &img.samples else {

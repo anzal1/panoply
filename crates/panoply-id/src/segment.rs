@@ -162,7 +162,7 @@ fn px3(v: &[u8], i: usize) -> [f32; 3] {
 }
 
 /// Median colour of the border pixels the matte calls backdrop, and how much of the border
-/// sits near that colour.
+/// sits near that colour. Only the Apple Vision matte needs it; the colour cut measures its own.
 #[cfg(target_os = "macos")]
 fn border_stats(img: &Image, alpha: &Image) -> ([u8; 3], f64) {
     let (Samples::U8(v), Samples::U8(a)) = (&img.samples, &alpha.samples) else {

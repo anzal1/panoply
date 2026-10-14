@@ -51,6 +51,9 @@ test-support = [
 name = "gpui_base"
 path = "src/lib.rs"
 doctest = false
+# Vendored crate: its unit tests need dev-dependencies Panoply does not carry, so they are not
+# built as part of the Panoply workspace. Upstream runs them.
+test = false
 
 [dependencies.aho-corasick]
 version = "1.1.3"
