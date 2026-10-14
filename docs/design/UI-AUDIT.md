@@ -1,6 +1,6 @@
 # UI audit
 
-Panoply's desktop UI against Apple's Human Interface Guidelines (macOS), Microsoft Fluent 2 (Windows) and the GNOME HIG (Linux), for what applies to a GPUI app. **57 findings: 49 fixed, 8 open.** Open items are listed at the end with the reason each was left.
+Panoply's desktop UI against Apple's Human Interface Guidelines (macOS), Microsoft Fluent 2 (Windows) and the GNOME HIG (Linux), for what applies to a GPUI app. **65 findings: 51 fixed, 14 open.** Open items are listed at the end with the reason each was left.
 
 The renders in [review/before](review/before) and [review/after](review/after) come from `panoply-desktop --selfcheck-review` (macOS, offscreen, 2x, nothing is shown on screen). Colour, hit-size and window-state rules are unit tests in `apps/desktop/src/ui/theme.rs` and `window_state.rs`; the keyboard reach check is part of `--selfcheck`.
 
@@ -10,7 +10,8 @@ The renders in [review/before](review/before) and [review/after](review/after) c
 - **Grid and ramp.** A test checks that the spacing steps are multiples of 4 pt, the hit size is at least 28 pt and every line height is an even number at least 2 pt over its size.
 - **Renders.** Every state in light and dark at 2x, inspected at 3x for clipping, alignment and spacing. `review/after/frame-times.tsv` has the steady-state frame cost of each.
 - **Keyboard.** The headless run presses Tab sixteen times on Home and records the label of what takes focus.
-- **Not measured.** The native traffic lights, the Windows and Linux frames and the Windows and GNOME accessibility settings are not in an offscreen macOS render. That code compiles in CI on all three systems and has not been run on a Windows or Linux desktop.
+- **Real desktops.** `.github/workflows/desktop-smoke.yml` installs the released .msi on a Windows Server 2025 runner (interactive desktop, 1920 by 1080, 96 dpi) and runs the released AppImage under Xvfb with openbox, with and without a compositor. It screenshots the app and the command bar (sent the global hotkey), reads the window list, memory and exit behaviour, and uploads the lot. The renders are in [review/real-desktop](review/real-desktop). Not covered: GNOME and its header bar (X11 under openbox gets the window manager's frame), Wayland, 125% and 150% scaling, the Windows and GNOME accessibility settings, and a GPU.
+- **Not measured.** The native traffic lights and the Windows and GNOME accessibility settings are not in an offscreen macOS render.
 
 ## Findings
 
@@ -55,8 +56,8 @@ The renders in [review/before](review/before) and [review/after](review/after) c
 | 37 | Keyboard | Icon-only buttons had no tooltip. | HIG help tags, Fluent 2 tooltips | Tooltips with the shortcut where there is one (Settings, Undo, Then, Back, Remove, steppers). Buttons with text rely on their label and the footer hint. | Fixed |
 | 38 | Menus | The macOS menu bar had one item, Quit. | HIG menus | App (About, Settings, Services, Hide, Hide Others, Show All, Quit), File, Edit (Undo, Redo, Cut, Copy, Paste, Select All), View, Window, Help. | Fixed |
 | 39 | Menus | Windows and Linux have no menu bar in this GPUI app. | Fluent 2 menu bars, GNOME primary menu | Every command has a shortcut and the full list is on the Settings page. There is no in-window menu or hamburger button yet. | Open |
-| 40 | Window | On Windows the window had no title bar, no caption buttons and no way to drag it (the client area covered the caption). | Fluent 2 title bar (32 px, 46 px caption buttons, Mica surface) | A drawn 32 pt title bar on a solid Mica-like surface with the Fluent caption buttons (minimise, maximise or restore, close in red on hover). Compiled by CI; not run on a Windows desktop. | Fixed |
-| 41 | Window | On GNOME under Wayland (no server-side decorations) the window had no frame. | GNOME HIG header bar | A 46 pt header bar with window buttons and 6 pt resize edges when the compositor asks for client decorations; the system frame is used elsewhere. Compiled by CI; not run on a Linux desktop. | Fixed |
+| 40 | Window | On Windows the window had no title bar, no caption buttons and no way to drag it (the client area covered the caption). | Fluent 2 title bar (32 px, 46 px caption buttons, Mica surface) | A drawn 32 pt title bar on a solid Mica-like surface with the Fluent caption buttons (minimise, maximise or restore, close in red on hover). Run on a Windows runner: the 32 pt bar, the three caption buttons and the title are right in light and dark (`review/real-desktop/windows-*-titlebar.png`). | Fixed |
+| 41 | Window | On GNOME under Wayland (no server-side decorations) the window had no frame. | GNOME HIG header bar | A 46 pt header bar with window buttons and 6 pt resize edges when the compositor asks for client decorations; the system frame is used elsewhere. Not seen: the header bar only appears under Wayland; X11 uses the window manager's frame (see 58 to 59). | Fixed |
 | 42 | Window | Size and position were not remembered. | HIG windows | Saved to the data folder, restored, refitted when a display is gone (six unit tests). | Fixed |
 | 43 | Window | Traffic lights at (18, 18) did not sit in the centre of a 52 pt toolbar zone. | HIG window controls | Placed at (20, 20): 20 pt in, centred on the 52 pt zone that the sidebar and the page both reserve. Derived from the layout, not measured, because the native buttons are not in an offscreen render. | Fixed |
 | 44 | Window | The minimum window size is 860 by 560. | HIG windows | Kept; the sidebar scrolls so the smallest window still reaches Settings. | Fixed |
@@ -73,6 +74,15 @@ The renders in [review/before](review/before) and [review/after](review/after) c
 | 55 | Icon | The Windows icon is not embedded in the .exe, so Explorer and the taskbar show the generic icon without a shortcut. | Fluent 2 app icons | Needs a resource compiler (a build script and a new dependency). | Open |
 | 56 | Icon | macOS 26 also offers dark and tinted icon variants (an .icon bundle from Icon Composer). | macOS 26 icon design | A dark variant is drawn (`panoply-macos-dark.svg`, `icon-dark-variant.png`) but not packaged as an .icon bundle. | Open |
 | 57 | Safety | On Windows, Undo deletes the new file for good because the recycle bin is not wired. | HIG and Fluent 2 (reversible actions) | Not a design change; noted in `packaging/README.md`. | Open |
+| 58 | Window (Linux) | The v0.1.1-beta AppImage opened no window at all on Linux: the process ran at 18 MB, never touched X11 or Wayland, and showed nothing. `gpui-pre-platform` leaves both display backends off unless the app asks for them, and `apps/desktop/Cargo.toml` did not. | Release smoke | `x11` and `wayland` features for `gpui_platform` on Linux (branch `fix/linux-display-backends`). With it the window opens in about a second. | Fixed on branch |
+| 59 | Window (Linux) | On X11 the command bar is on screen from the first frame (its `show: false` is not honoured) and it never hides: the hotkey twice and Escape leave it covering the app window. Windows and macOS start with it hidden. Seen under openbox with and without a compositor. | Fluent 2 and GNOME HIG (a launcher appears on request) | Not fixed: the bar is a pop-up window and GPUI offers only minimize to hide it, which a window manager ignores for pop-ups. Needs an unmap call or a normal-window bar on X11. | Open |
+| 60 | Window (Windows, Linux) | The command bar always opens at 200, 200 on the primary display. On macOS it is centred in the upper third of the active display; `Panel::position` is empty off macOS. | Fluent 2 (launcher placement) | Needs a window-move call from GPUI or a platform helper. | Open |
+| 61 | Window (Windows) | Closing the app window leaves `panoply-desktop.exe` running with no window, no taskbar button and no tray icon (the hidden command bar keeps it alive); only the hotkey brings it back. The process was still alive 15 s after the close. | Fluent 2 (an app that stays running shows where) | A product decision: quit when the last app window closes, or add a tray icon. | Open |
+| 62 | Window (Windows) | The command bar's four corners show solid black outside the rounded card, in light and dark (`real-desktop/windows-light-bar.png`). The runner has no GPU, so the acrylic backdrop may be missing; on hardware the corners may be blurred squares instead. The card itself is opaque grey, not the blurred glass of the macOS render. | Fluent 2 materials | Needs a look on a real Windows 11 machine before changing anything. | Open, verify on hardware |
+| 63 | Window (Windows, small displays) | On a 1024 by 768 screen the first-launch window (1160 by 720 at 180, 90) ran off the right and bottom edge. Only a remembered frame was fitted to the display, not the default one. A 1080p screen at 150% (1280 by 720 points) had the same problem. | HIG and Fluent 2 (a window opens fully on screen) | `window_state::first_frame` fits the default frame to the display, with tests (branch `fix/desktop-first-window-fit`). | Fixed on branch |
+| 64 | Access (Linux) | A background thread runs `gsettings` twice every 4 s for the whole life of the app, and prints "No such schema" when the schemas are absent (any non-GNOME desktop). | Idle CPU budget (0%) | Read once and listen for changes through the settings portal, or stop polling when the first call fails. | Open |
+| 65 | Memory (Linux) | The Linux process holds 180 to 200 MB after the window opens (software rendering on the runner), against 42 MB working set on Windows. The macOS idle budget is under 100 MB. | Performance budgets | Compare on a machine with a GPU before acting. | Open, verify on hardware |
+
 
 ## Open items
 
@@ -84,6 +94,18 @@ The renders in [review/before](review/before) and [review/after](review/after) c
 - **55. The Windows icon is not embedded in the .exe, so Explorer and the taskbar show the generic icon without a shortcut.** Needs a resource compiler (a build script and a new dependency).
 - **56. macOS 26 also offers dark and tinted icon variants (an .icon bundle from Icon Composer).** A dark variant is drawn (`panoply-macos-dark.svg`, `icon-dark-variant.png`) but not packaged as an .icon bundle.
 - **57. On Windows, Undo deletes the new file for good because the recycle bin is not wired.** Not a design change; noted in `packaging/README.md`.
+- **59. The command bar is on screen at launch on Linux (X11) and never hides.**
+- **60. The command bar does not move to the active display's upper third off macOS.**
+- **61. The Windows process stays alive with no window and no tray icon after the app window closes.**
+- **62. The command bar's corners are black on a GPU-less Windows runner.** Check on hardware.
+- **64. The app polls gsettings every 4 s on Linux.**
+- **65. Linux memory is 180 to 200 MB with software rendering.** Check on hardware.
+
+## Real desktop review (v0.1.1-beta and later)
+
+Windows (Server 2025 runner, 1920 by 1080, light and dark): the drawn title bar is right (logo, "Panoply", minimise, maximise, close, 32 pt, matching the surface), text is crisp ClearType with Segoe-style UI font and no missing glyphs, icons and tiles match the macOS renders, nothing in the window is clipped, and dark mode follows the system setting from a cold start. The command bar opens on the hotkey (Ctrl+Alt+Space) and its content matches the macOS render. 42 MB working set, 12 threads. Faults: 61, 62, 63, 60.
+
+Linux (Ubuntu 24.04, Xvfb 1920 by 1080, openbox, lavapipe): v0.1.1-beta showed nothing (58). With the backends on, the window opens in about a second at 1160 by 720, draws the page correctly with the system sans font (no missing glyphs), the sidebar, cards, icons and keycaps match macOS. Faults: 59, 60, 64, 65. Dark mode on Linux was not exercised (no settings portal on the runner).
 
 ## Performance budgets
 

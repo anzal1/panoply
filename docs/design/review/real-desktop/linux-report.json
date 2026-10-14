@@ -1,0 +1,36 @@
+{
+  "os": "Ubuntu 24.04.5 LTS",
+  "screen": "1920x1080",
+  "appimage": "Panoply-0.1.1-dev.20-linux-x64.AppImage",
+  "runs": [
+    {
+      "scenario": "default",
+      "alive": true,
+      "window_id": "4194314",
+      "title": "Panoply",
+      "geometry": "Window 4194314   Position: 381,210 (screen: 0)   Geometry: 1160x720 ",
+      "frame_extents": "_NET_FRAME_EXTENTS(CARDINAL) = 1, 1, 22, 5",
+      "motif_hints": "_MOTIF_WM_HINTS(_MOTIF_WM_HINTS) = 0x2, 0x0, 0x1, 0x0, 0x0",
+      "memory_mb": 203,
+      "alive_after_hotkey": true,
+      "exited_after_close": false,
+      "exit_code": "",
+      "seconds_to_window": 1.5
+    },
+    {
+      "scenario": "compositor",
+      "alive": true,
+      "window_id": "6291466",
+      "title": "Panoply",
+      "geometry": "Window 6291466   Position: 381,210 (screen: 0)   Geometry: 1160x720 ",
+      "frame_extents": "_NET_FRAME_EXTENTS(CARDINAL) = 1, 1, 22, 5",
+      "motif_hints": "_MOTIF_WM_HINTS(_MOTIF_WM_HINTS) = 0x2, 0x0, 0x1, 0x0, 0x0",
+      "memory_mb": 188,
+      "alive_after_hotkey": true,
+      "exited_after_close": false,
+      "exit_code": "",
+      "seconds_to_window": 0.5
+    }
+  ],
+  "failed": []
+}

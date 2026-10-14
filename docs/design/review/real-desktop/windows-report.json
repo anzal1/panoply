@@ -1,0 +1,361 @@
+﻿{
+    "display_modes":  [
+                          "1024x768",
+                          "1152x864",
+                          "1280x1024",
+                          "1280x720",
+                          "1280x800",
+                          "1366x768",
+                          "1440x900",
+                          "1600x1200",
+                          "1600x900",
+                          "1680x1050",
+                          "1920x1080",
+                          "640x480",
+                          "800x600"
+                      ],
+    "resolution_change_result":  0,
+    "os":  "Microsoft Windows Server 2025 Datacenter",
+    "screen":  {
+                   "height":  1080,
+                   "width":  1920
+               },
+    "msi":  "Panoply-0.1.1-dev.20-windows-x64.msi",
+    "exe_sha256":  "B26D3570F2BB1B59405D4BB9020DE34C36F29B3E07FDDDC123829566FBE3CAFF",
+    "zip_exe_matches_msi_exe":  true,
+    "runs":  [
+                 {
+                     "theme":  "light",
+                     "alive":  true,
+                     "window_found":  true,
+                     "windows":  [
+                                     {
+                                         "hwnd":  197096,
+                                         "title":  "",
+                                         "class":  "Zed::Window",
+                                         "visible":  false,
+                                         "x":  78,
+                                         "y":  78,
+                                         "w":  1440,
+                                         "h":  753,
+                                         "has_system_caption":  true,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  197140,
+                                         "title":  "",
+                                         "class":  "global_hotkey_app",
+                                         "visible":  false,
+                                         "x":  130,
+                                         "y":  130,
+                                         "w":  1440,
+                                         "h":  753,
+                                         "has_system_caption":  true,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  197100,
+                                         "title":  "Panoply",
+                                         "class":  "Zed::Window",
+                                         "visible":  true,
+                                         "x":  172,
+                                         "y":  86,
+                                         "w":  1176,
+                                         "h":  728,
+                                         "has_system_caption":  true,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  197098,
+                                         "title":  "",
+                                         "class":  "Zed::PlatformWindow",
+                                         "visible":  false,
+                                         "x":  0,
+                                         "y":  0,
+                                         "w":  16,
+                                         "h":  16,
+                                         "has_system_caption":  true,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  66072,
+                                         "title":  "MSCTFIME UI",
+                                         "class":  "MSCTFIME UI",
+                                         "visible":  false,
+                                         "x":  0,
+                                         "y":  0,
+                                         "w":  0,
+                                         "h":  0,
+                                         "has_system_caption":  false,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  197108,
+                                         "title":  "Default IME",
+                                         "class":  "IME",
+                                         "visible":  false,
+                                         "x":  0,
+                                         "y":  0,
+                                         "w":  0,
+                                         "h":  0,
+                                         "has_system_caption":  false,
+                                         "dpi":  96
+                                     }
+                                 ],
+                     "title":  "Panoply",
+                     "window_rect":  "172,86 1176x728",
+                     "memory_mb":  42.6,
+                     "private_mb":  79.6,
+                     "threads":  12,
+                     "cpu_seconds":  0.41,
+                     "windows_after_hotkey":  [
+                                                  {
+                                                      "hwnd":  197096,
+                                                      "title":  "",
+                                                      "class":  "Zed::Window",
+                                                      "visible":  true,
+                                                      "x":  192,
+                                                      "y":  196,
+                                                      "w":  736,
+                                                      "h":  468,
+                                                      "has_system_caption":  true,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  197140,
+                                                      "title":  "",
+                                                      "class":  "global_hotkey_app",
+                                                      "visible":  false,
+                                                      "x":  130,
+                                                      "y":  130,
+                                                      "w":  1440,
+                                                      "h":  753,
+                                                      "has_system_caption":  true,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  197100,
+                                                      "title":  "Panoply",
+                                                      "class":  "Zed::Window",
+                                                      "visible":  true,
+                                                      "x":  172,
+                                                      "y":  86,
+                                                      "w":  1176,
+                                                      "h":  728,
+                                                      "has_system_caption":  true,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  197098,
+                                                      "title":  "",
+                                                      "class":  "Zed::PlatformWindow",
+                                                      "visible":  false,
+                                                      "x":  0,
+                                                      "y":  0,
+                                                      "w":  16,
+                                                      "h":  16,
+                                                      "has_system_caption":  true,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  66072,
+                                                      "title":  "MSCTFIME UI",
+                                                      "class":  "MSCTFIME UI",
+                                                      "visible":  false,
+                                                      "x":  0,
+                                                      "y":  0,
+                                                      "w":  0,
+                                                      "h":  0,
+                                                      "has_system_caption":  false,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  197108,
+                                                      "title":  "Default IME",
+                                                      "class":  "IME",
+                                                      "visible":  false,
+                                                      "x":  0,
+                                                      "y":  0,
+                                                      "w":  0,
+                                                      "h":  0,
+                                                      "has_system_caption":  false,
+                                                      "dpi":  96
+                                                  }
+                                              ],
+                     "bar_visible":  true,
+                     "alive_after_hotkey":  true,
+                     "exited_after_close":  false,
+                     "exit_code":  null,
+                     "note":  "still running 15 s after the window was closed (the hidden command bar keeps the process alive)",
+                     "stderr":  null
+                 },
+                 {
+                     "theme":  "dark",
+                     "alive":  true,
+                     "window_found":  true,
+                     "windows":  [
+                                     {
+                                         "hwnd":  327820,
+                                         "title":  "",
+                                         "class":  "Zed::Window",
+                                         "visible":  false,
+                                         "x":  182,
+                                         "y":  182,
+                                         "w":  1440,
+                                         "h":  753,
+                                         "has_system_caption":  true,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  262676,
+                                         "title":  "",
+                                         "class":  "global_hotkey_app",
+                                         "visible":  false,
+                                         "x":  234,
+                                         "y":  234,
+                                         "w":  1440,
+                                         "h":  753,
+                                         "has_system_caption":  true,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  262632,
+                                         "title":  "Panoply",
+                                         "class":  "Zed::Window",
+                                         "visible":  true,
+                                         "x":  172,
+                                         "y":  86,
+                                         "w":  1176,
+                                         "h":  728,
+                                         "has_system_caption":  true,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  590296,
+                                         "title":  "",
+                                         "class":  "Zed::PlatformWindow",
+                                         "visible":  false,
+                                         "x":  0,
+                                         "y":  0,
+                                         "w":  16,
+                                         "h":  16,
+                                         "has_system_caption":  true,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  197134,
+                                         "title":  "MSCTFIME UI",
+                                         "class":  "MSCTFIME UI",
+                                         "visible":  false,
+                                         "x":  0,
+                                         "y":  0,
+                                         "w":  0,
+                                         "h":  0,
+                                         "has_system_caption":  false,
+                                         "dpi":  96
+                                     },
+                                     {
+                                         "hwnd":  327782,
+                                         "title":  "Default IME",
+                                         "class":  "IME",
+                                         "visible":  false,
+                                         "x":  0,
+                                         "y":  0,
+                                         "w":  0,
+                                         "h":  0,
+                                         "has_system_caption":  false,
+                                         "dpi":  96
+                                     }
+                                 ],
+                     "title":  "Panoply",
+                     "window_rect":  "172,86 1176x728",
+                     "memory_mb":  41.8,
+                     "private_mb":  79.3,
+                     "threads":  11,
+                     "cpu_seconds":  0.38,
+                     "windows_after_hotkey":  [
+                                                  {
+                                                      "hwnd":  327820,
+                                                      "title":  "",
+                                                      "class":  "Zed::Window",
+                                                      "visible":  true,
+                                                      "x":  192,
+                                                      "y":  196,
+                                                      "w":  736,
+                                                      "h":  468,
+                                                      "has_system_caption":  true,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  262676,
+                                                      "title":  "",
+                                                      "class":  "global_hotkey_app",
+                                                      "visible":  false,
+                                                      "x":  234,
+                                                      "y":  234,
+                                                      "w":  1440,
+                                                      "h":  753,
+                                                      "has_system_caption":  true,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  262632,
+                                                      "title":  "Panoply",
+                                                      "class":  "Zed::Window",
+                                                      "visible":  true,
+                                                      "x":  172,
+                                                      "y":  86,
+                                                      "w":  1176,
+                                                      "h":  728,
+                                                      "has_system_caption":  true,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  590296,
+                                                      "title":  "",
+                                                      "class":  "Zed::PlatformWindow",
+                                                      "visible":  false,
+                                                      "x":  0,
+                                                      "y":  0,
+                                                      "w":  16,
+                                                      "h":  16,
+                                                      "has_system_caption":  true,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  197134,
+                                                      "title":  "MSCTFIME UI",
+                                                      "class":  "MSCTFIME UI",
+                                                      "visible":  false,
+                                                      "x":  0,
+                                                      "y":  0,
+                                                      "w":  0,
+                                                      "h":  0,
+                                                      "has_system_caption":  false,
+                                                      "dpi":  96
+                                                  },
+                                                  {
+                                                      "hwnd":  327782,
+                                                      "title":  "Default IME",
+                                                      "class":  "IME",
+                                                      "visible":  false,
+                                                      "x":  0,
+                                                      "y":  0,
+                                                      "w":  0,
+                                                      "h":  0,
+                                                      "has_system_caption":  false,
+                                                      "dpi":  96
+                                                  }
+                                              ],
+                     "bar_visible":  true,
+                     "alive_after_hotkey":  true,
+                     "exited_after_close":  false,
+                     "exit_code":  null,
+                     "note":  "still running 15 s after the window was closed (the hidden command bar keeps the process alive)",
+                     "stderr":  null
+                 }
+             ],
+    "failed":  [
+
+               ]
+}
