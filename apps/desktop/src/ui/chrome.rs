@@ -114,7 +114,7 @@ pub(crate) fn title_bar(window: &Window, t: Theme, title: &str) -> Option<AnyEle
                         .gap(px(sp::S))
                         .h_full()
                         .pl(px(sp::M))
-                        .child(brand_mark(12., t))
+                        .child(brand_mark(20., t.sidebar, t))
                         .child(
                             div()
                                 .ramp(super::theme::ty::SMALL)

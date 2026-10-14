@@ -1204,7 +1204,7 @@ impl Render for Bar {
                     .bg(t.hair),
             )
             .when(show_brand, |d| {
-                d.child(brand_mark(14., t))
+                d.child(brand_mark(24., t.window, t))
                     .child(div().flex_none().w(px(sp::S)))
                     .child(
                         div()

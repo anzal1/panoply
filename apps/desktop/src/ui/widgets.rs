@@ -554,26 +554,34 @@ pub(crate) fn caption(text: &str, t: Theme) -> Div {
         .child(text.to_string())
 }
 
-/// The Panoply mark: one accent square and three ink squares, the same four-square mark as the
-/// icon. `size` is the side of the whole mark.
-pub(crate) fn brand_mark(size: f32, t: Theme) -> impl IntoElement {
-    let gap = (size * 0.1).max(1.0);
-    let sq = (size - gap) / 2.0;
-    let r = sq * 0.27;
+/// The Panoply mark, the fan: two cards behind a blue one, fanned from one pivot. `size` is the
+/// side of the box it is drawn in; `plate` is the colour under it, used for the ring around the
+/// front card and the rivet. Under 20 pt there are two cards, the ring starts at 24 pt and the
+/// rivet at 32 pt, as in the icon's small drawings. The same five layers the icon is drawn from.
+pub(crate) fn brand_mark(size: f32, plate: Hsla, t: Theme) -> impl IntoElement {
     let blue = super::theme::rgb8((45, 108, 223), 1.0);
-    let ink = if t.dark {
-        super::theme::rgb8((226, 228, 235), 1.0)
+    let (left, right) = if t.dark {
+        (
+            super::theme::rgb8((230, 232, 238), 1.0),
+            super::theme::rgb8((174, 179, 191), 1.0),
+        )
     } else {
-        super::theme::rgb8((31, 34, 42), 1.0)
+        (
+            super::theme::rgb8((35, 38, 45), 1.0),
+            super::theme::rgb8((58, 62, 71), 1.0),
+        )
     };
-    let cell = move |c: Hsla| div().size(px(sq)).rounded(px(r)).bg(c);
+    let layer =
+        move |name: &str, c: Hsla| div().absolute().top_0().left_0().child(icon(name, size, c));
     div()
-        .flex()
+        .relative()
         .flex_none()
-        .flex_col()
-        .gap(px(gap))
-        .child(div().flex().gap(px(gap)).child(cell(blue)).child(cell(ink)))
-        .child(div().flex().gap(px(gap)).child(cell(ink)).child(cell(ink)))
+        .size(px(size))
+        .child(layer("fan-left", left))
+        .when(size >= 20.0, |d| d.child(layer("fan-right", right)))
+        .when(size >= 24.0, |d| d.child(layer("fan-stroke", plate)))
+        .child(layer("fan-front", blue))
+        .when(size >= 32.0, |d| d.child(layer("fan-rivet", plate)))
 }
 
 /// The icon for a file, from what its bytes say it is.
