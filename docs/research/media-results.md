@@ -357,4 +357,4 @@ cannot be rebuilt from a file with no index (AAC frames carry no length), so a r
 - **Smart cut** covers H.264 and HEVC in MP4 and MOV at IDR or BLA splice points; open groups of pictures, Dolby Vision, spatial video and other codecs snap to a keyframe.
 - **HDR mapping is static**; profile 5 Dolby Vision is refused (needs libplacebo with Vulkan).
 - **Repair of sound**: no index means no sound rebuild; zeroed bytes in the middle of an index-complete file are copied, not dropped.
-- `cargo deny check` over the whole workspace fails on advisories that come from the desktop app's GPUI dependencies (not from this crate); `cargo deny` run on `panoply-media` and `panoply-cli` passes all four checks.
+- `cargo deny check` over the whole workspace passes (2026-10-14): `instant` and `rustls-pemfile` were removed from the vendored `gpui-base`, and the two GPUI-pinned advisories are documented in `deny.toml`.

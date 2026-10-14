@@ -1,0 +1,61 @@
+# Changelog
+
+All notable changes to Panoply are written here. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
+marking releases that are still finding their edges.
+
+## v0.1.0-beta.1 (2026-10-14)
+
+The first public beta. 30 tools, one desktop app for macOS, Windows and Linux, and the same tools as a
+command line. Builds are not code signed. See [KNOWN-LIMITATIONS.md](docs/KNOWN-LIMITATIONS.md) for the
+first-open steps and for what is not here yet.
+
+### Added
+
+- **Desktop app.** One GPUI app on the Rust core. A command bar opens from a global hotkey (Option+Space on
+  macOS, Ctrl+Alt+Space on Windows and Linux). It searches the tools, takes dropped files and understands
+  plain requests such as "make this under 50 kb". The app window has categories, recent jobs and history.
+  Tool panels are drawn from each tool's manifest, run on a worker thread, show progress, cancel at once,
+  and end in a result card with before and after numbers, Show in folder, Open and Undo.
+- **PDF.** Merge, split, organize pages, compress to a quality or to a size, images to PDF, PDF to images,
+  OCR to a searchable PDF. Large files stream: a 300 MB file compresses in about 5 seconds and 11 MB of
+  memory.
+- **ID and forms.** Passport and visa photo, print sheet, signature cleaner, and resize to an exact size in KB
+  with 15 exam presets that each carry their source link and date.
+- **Images.** Convert, compress to a quality or a size, resize, strip metadata, and image to text.
+  Conversions keep orientation and color profiles. Nothing is overwritten.
+- **Image AI.** Remove background (Apple Vision on macOS, IS-Net elsewhere), erase an object (MI-GAN), remove
+  a watermark from your own pictures, upscale 4x (Real-ESRGAN). Models download once, on first use, and
+  unload after 60 seconds idle.
+- **OCR.** Apple Vision on macOS, PP-OCRv5 models for English, Latin and Devanagari scripts, Tesseract for
+  Bengali where it is installed.
+- **Video and audio.** Convert, trim, compress to a size or an upload limit, extract audio, normalize
+  loudness, stereo to mono, HDR to SDR, repair, inspect and edit streams. Stream copy is used whenever it can
+  be, so most trims and conversions do not re-encode.
+- **Sharing.** `panoply share` sends and receives files with LocalSend apps over your own network, and makes a
+  QR link for devices without an app.
+- **Command line.** `panoply` runs every tool: `panoply run image.compress photo.jpg`. `panoply modules`
+  lists them. `panoply route docx jpg` shows how one format reaches another through the conversion graph.
+- **Community modules.** A module is a manifest and a WebAssembly file that runs in a sandbox. Two examples
+  are in `modules/examples-wasm`.
+- **Third-party notices.** `THIRD-PARTY-NOTICES.md` lists every Rust dependency with its license text, the
+  vendored GPUI input code, and each engine and model that is downloaded at run time with its source and
+  license. It ships inside the app and the CLI archives, and CI fails when it is out of date.
+- **Downloads are pinned.** Every engine and model download names a release or commit and is checked against a
+  SHA-256 before it is used.
+
+### Changed
+
+- Dependency advisories: `instant` and `rustls-pemfile` are gone from the build, and the two advisories that
+  come from GPUI (`rustybuzz`, `ttf-parser`) are documented in `deny.toml` with the reason and the date to
+  look again. The advisory check now runs as its own CI job.
+
+### Known issues
+
+The full list is in [docs/KNOWN-LIMITATIONS.md](docs/KNOWN-LIMITATIONS.md). The short version:
+
+- The macOS and Windows builds are unsigned. You confirm the first start once.
+- HEIC and several camera formats open on macOS only for now.
+- Video tools need an `ffmpeg` on macOS. Windows and Linux fetch one on first use.
+- The MCP server is not shipped yet. The tool definitions exist, the transport does not.
+- Windows and Linux have had less hands-on testing than macOS.

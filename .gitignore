@@ -48,3 +48,7 @@ tests/corpus/**/.part-*
 
 # iLovePDF comparison outputs (downloaded and generated results)
 prototypes/ilovepdf-compare/results/
+
+# Build folders renamed so macOS Spotlight skips them (target is a symlink to target.noindex)
+*.noindex/
+**/target
