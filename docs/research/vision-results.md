@@ -266,6 +266,4 @@ cargo run -q -p panoply-vision --example wm_eval -- DIR      # DIR holds marked/
   RGB or RGBA; they should be merged.
 - The four modules ask for the network in their manifests. The host approves it from the manifest today
   (`panoply-host/src/registry.rs`), so a download happens without a prompt until the app has its consent UI.
-- `cargo deny check`: licenses, bans and sources pass. Advisories report four unmaintained crates
-  (`instant`, `rustybuzz`, `ttf-parser`, `rustls-pemfile`), none of them in `panoply-vision`'s tree (they
-  come in through the desktop app).
+- `cargo deny check` passes (2026-10-14). The four unmaintained-crate advisories that came in through the desktop app are fixed or documented in `deny.toml`.
