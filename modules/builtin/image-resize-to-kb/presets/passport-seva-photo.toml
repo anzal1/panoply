@@ -1,0 +1,32 @@
+id = "passport-seva-photo"
+authority = "Ministry of External Affairs, Passport Seva"
+form = "Indian passport online application, photo upload (ICAO compliant)"
+field = "photo"
+width_px = 630
+height_px = 810
+tolerance_px = 0
+min_bytes_claimed = 10
+max_bytes_claimed = 250
+unit_claimed = "KB"
+kb_basis = "unknown"
+format = "jpg"
+background = "white"
+color_mode = "rgb"
+baseline_only = true
+strip_metadata = false
+status = "conflict"
+verified_against = "official"
+source_url = "https://www.indembassybern.gov.in/page/notice-reg-icao-photo-requirements/"
+source_quote = "The maximum file size of the photograph must not exceed 250 KB."
+source_date = "2026-10-13"
+last_verified = "2026-10-13"
+notes = "Official evidence read: the Embassy of India Bern notice (upload mandatory from 1 December 2025) gives a maximum of 250 KB and says the pixel size should be 630x810; its page footer says last updated October 13, 2026, which equals the day we read it and may be an automatic footer. The Consulate General of India Vancouver guideline PDF and the Passport Seva portal's own PDF (mportal.passportindia.gov.in Guidelines for ICAO Compliant Photographs) both say colour, 630*810 pixels, white background, face 80-85 percent of the photograph, unaltered; neither states a file size. The 10 KB minimum appears only on third party pages (photogov.net, photopass.ai, passport-size-photo.com) and in no official text we read, so the top level takes that larger minimum as the stricter reading and the official max of 250 KB. The Passport Seva upload screen itself was not readable (passportindia.gov.in returned 404 or an empty page). We found no readable source for the 300 KB figure the harvest mentions. The Bern text recommends 630x810 and the other mission texts require it; third parties say the portal checks exactly 630x810. File size basis is not stated. Printed passport photos (35 x 45 mm) are a different rule."
+
+[[conflicts]]
+min_bytes_claimed = 10
+max_bytes_claimed = 250
+unit_claimed = "KB"
+width_px = 630
+height_px = 810
+source_url = "https://photogov.net/knowledge/requirements/indian-passport-photo-requirements/"
+source_quote = "with a file size between 10 and 250 KB"

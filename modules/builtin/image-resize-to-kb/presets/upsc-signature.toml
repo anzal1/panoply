@@ -1,0 +1,30 @@
+id = "upsc-signature"
+authority = "Union Public Service Commission"
+form = "UPSC online application (OTR and examination forms), three signatures in one image"
+field = "signature"
+width_px = 350
+height_px = 150
+tolerance_px = 0
+min_bytes_claimed = 20
+max_bytes_claimed = 100
+unit_claimed = "KB"
+kb_basis = "unknown"
+format = "jpg"
+background = "white"
+color_mode = "rgb"
+baseline_only = true
+strip_metadata = false
+status = "conflict"
+verified_against = "third-party"
+source_url = "https://bharatnotes.com/faq/application/upsc-photograph-signature-specs/"
+source_quote = "Signature: 350×150 px (rectangular), 20–100 KB, JPG/JPEG"
+source_date = ""
+last_verified = "2026-10-13"
+notes = "The official UPSC URL (upsconline.nic.in) returned 404 and upsc.gov.in returned 403 on 2026-10-13. We read a copy of the UPSC Instructions for uploading the photo and signature (UPSC letterhead, no date) hosted by Vajiram and Ravi. It requires three signatures, one below the other, on plain white paper in black ink, scanned as ONE jpg named signature, with file size 20 KB to 100 KB and image dimensions 350 - 500 pixels. It does not say whether the 350 to 500 range is the width, the height or both. The only source we read that gives a full width and height is a third party (350 x 150 px), so that is used at the top level; 350 is the low end of the UPSC range. If the portal rejects it, try a width of 500. The 20 to 100 KB window agrees across all sources, including a second coaching site. File size basis is not stated."
+
+[[conflicts]]
+min_bytes_claimed = 20
+max_bytes_claimed = 100
+unit_claimed = "KB"
+source_url = "https://vajiramias.sgp1.cdn.digitaloceanspaces.com/wp/upsc-exam/2026/02/UPSC-Photo-and-Signature-Guidelines-2026.pdf"
+source_quote = "Image dimensions: 350 - 500 pixels"

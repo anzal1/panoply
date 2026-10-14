@@ -1,0 +1,48 @@
+[package]
+name = "panoply-image"
+description = "The Panoply image pipeline: decode, color, resize, encode, SSIM, metadata, and the wave 1 image operations"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+panoply-core.workspace = true
+panoply-manifest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+
+# Codecs and pixel work. Every one is permissive (see deny.toml).
+png = "0.18"
+oxipng = { version = "10", default-features = false, features = ["zopfli"] }
+tiff = "0.11"
+image-webp = "0.2"
+webp = "0.3"
+gif = "0.14"
+moxcms = "0.9"
+fast_image_resize = { version = "6", features = ["bytemuck"] }
+bytemuck = "1"
+image = { version = "0.25", default-features = false, features = ["bmp", "ico"] }
+ravif = { version = "0.13", default-features = false, features = ["threading"] }
+rgb = { version = "0.8", features = ["bytemuck"] }
+imgref = "1"
+jxl-oxide = "0.12"
+
+# MozJPEG: on aarch64 the NEON code path needs no assembler, elsewhere the default (nasm) path.
+[target.'cfg(target_arch = "aarch64")'.dependencies]
+mozjpeg = { version = "0.10", default-features = false, features = ["with_simd"] }
+
+[target.'cfg(not(target_arch = "aarch64"))'.dependencies]
+mozjpeg = "0.10"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+panoply-platform-macos = { path = "../panoply-platform-macos" }
+
+[dev-dependencies]
+kamadak-exif = "0.6"
+
+[lints]
+workspace = true

@@ -1,0 +1,51 @@
+# Images to PDF. Pattern A. Spec: docs/specs/pdf.md, section 42 (Convert in), picture rows.
+# JPEGs are stored byte for byte, never recompressed.
+accepts = ["image/jpeg", "image/png"]
+outputs = ["application/pdf"]
+
+[module]
+id = "pdf.images_to_pdf"
+name = "Images to PDF"
+version = "0.1.0"
+pattern = "A"
+summary = "Make a PDF from these pictures, one per page."
+
+[options.merge]
+type = "bool"
+default = true
+label = "One PDF for all"
+help = "Off makes one PDF per picture."
+
+[options.order]
+type = "choice"
+values = ["natural", "given"]
+default = "natural"
+label = "Order"
+help = "Natural puts photo2 before photo10. Given keeps the order the files were chosen in."
+
+[options.page_size]
+type = "choice"
+values = ["auto", "a4", "letter", "image"]
+default = "auto"
+label = "Page size"
+help = "Auto is A4 or Letter by your region. Image makes each page as big as its picture."
+
+[options.margin]
+type = "number"
+default = 10
+min = 0
+max = 100
+label = "Margin (mm)"
+help = "Around the picture on paper pages."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

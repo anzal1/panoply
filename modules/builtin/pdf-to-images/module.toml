@@ -1,0 +1,60 @@
+# PDF to images. Pattern A. Spec: docs/specs/pdf.md, section 41 (Convert out), images row.
+# Drawn by pdfium in strips, so a poster at a high resolution never needs a huge bitmap.
+accepts = ["application/pdf"]
+outputs = ["image/png", "image/jpeg"]
+
+[module]
+id = "pdf.to_images"
+name = "PDF to images"
+version = "0.1.0"
+pattern = "A"
+summary = "Turn each page of this PDF into a PNG or JPG picture."
+
+[options.format]
+type = "choice"
+values = ["png", "jpg"]
+default = "png"
+label = "Format"
+
+[options.dpi]
+type = "number"
+default = 150
+min = 36
+max = 1200
+label = "Resolution (DPI)"
+help = "150 suits the screen, 300 suits print."
+
+[options.quality]
+type = "number"
+default = 90
+min = 1
+max = 100
+label = "JPG quality"
+help = "Used for JPG only."
+
+[options.pages]
+type = "text"
+label = "Pages"
+help = "Which pages, for example 1-3, 7, 9-. Leave empty for every page."
+
+[options.zip]
+type = "bool"
+default = false
+label = "Put the pictures in a ZIP"
+
+[options.password]
+type = "text"
+label = "Password"
+help = "Only to open a password-protected PDF. Nothing is saved."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

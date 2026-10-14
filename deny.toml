@@ -20,6 +20,14 @@ allow = [
     "CC0-1.0",
     "0BSD",
     "Unlicense",
+    # NCSA (University of Illinois) is BSD-like, attribution only. It comes in through
+    # libfuzzer-sys, which rav1e (the AVIF encoder behind panoply-image) lists for its fuzzing
+    # feature; it is not compiled into any Panoply binary.
+    "NCSA",
+    # IJG is the libjpeg license: BSD-like, attribution only. jpeg-encoder (the pure Rust JPEG
+    # encoder behind PDF image recompression) is "(MIT OR Apache-2.0) AND IJG". Shipping it
+    # means keeping the IJG credit line in the docs (see crates/panoply-pdf/README.md).
+    "IJG",
     # MPL-2.0 is file-level copyleft. Allowed only for separately shipped
     # helpers, and each use must be reviewed by hand.
     "MPL-2.0",
@@ -36,3 +44,11 @@ allow-wildcard-paths = true
 unknown-registry = "deny"
 unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+[advisories]
+ignore = [
+    # paste is a build-time proc macro that its author stopped maintaining. No vulnerability is
+    # reported and it is not linked. It arrives through rav1e (ravif, AVIF encoding in
+    # panoply-image). Revisit when rav1e moves to pastey or drops it.
+    { id = "RUSTSEC-2024-0436", reason = "unmaintained build-time macro, no vulnerability; comes in through rav1e" },
+]

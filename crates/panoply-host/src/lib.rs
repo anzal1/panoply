@@ -13,10 +13,13 @@ mod context;
 mod error;
 mod guard;
 mod module;
+pub mod options;
+pub mod outputs;
 mod registry;
 
 pub use context::RunContext;
 pub use error::ModuleError;
 pub use guard::CapabilityGuard;
 pub use module::Module;
+pub use outputs::Outputs;
 pub use registry::{JobOutcome, Registry};

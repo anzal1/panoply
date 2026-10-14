@@ -1,0 +1,29 @@
+id = "ssc-signature"
+authority = "Staff Selection Commission"
+form = "SSC examinations (CGL, CHSL, MTS, GD, Selection Post)"
+field = "signature"
+tolerance_px = 0
+physical_mm = [60, 20]
+dpi = 200
+min_bytes_claimed = 10
+max_bytes_claimed = 20
+unit_claimed = "KB"
+kb_basis = "unknown"
+format = "jpg"
+color_mode = "rgb"
+baseline_only = true
+strip_metadata = true
+status = "conflict"
+verified_against = "official"
+source_url = "https://ssc.gov.in/api/attachment/uploads/masterData/NoticeBoards/Notice_of_adv_CHSL_2026.pdf"
+source_quote = "Image dimension of the signature should be about 6.0 cm (width) x 2.0 cm (height)."
+source_date = "2026-09-07"
+last_verified = "2026-10-13"
+notes = "Read the official SSC CHSL 2026 notice (88 pages, to be uploaded 07-09-2026), paragraph 9.6, and the official CGL 2026 notice (21-05-2026, paragraph 9.6), and the Selection Post Phase XIV notice (13-04-2026). The file size of 10 to 20 KB in JPEG/JPG is identical everywhere. The physical size disagrees inside the same notices: the main text and the instruction summary say about 6.0 cm x 2.0 cm, while the step by step application page instructions (CHSL 2026 and CGL 2026) say about 4.0 cm x 2.0 cm. The conflicts table has no field for centimetres, so that second reading is only in its source_quote. We chose 60 x 20 mm because it is the operative paragraph and appears three times; both readings say 'about', so a signature cropped to 3:1 or 2:1 is likely accepted. No pixel size is published. The dpi of 200 was chosen by us. Candidates who opt for Aadhaar based authentication in the One Time Registration are not rejected for a non-conforming signature. A thumb impression is also allowed for PwD(VH) candidates."
+
+[[conflicts]]
+min_bytes_claimed = 10
+max_bytes_claimed = 20
+unit_claimed = "KB"
+source_url = "https://ssc.gov.in/api/attachment/uploads/masterData/NoticeBoards/Notice_of_adv_CHSL_2026.pdf"
+source_quote = "should be about 4.0 cm (width) x 2.0 cm (height)."

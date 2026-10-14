@@ -1,0 +1,29 @@
+# Strip metadata. Pattern I (inspect with fixes). Spec: docs/specs/id-and-image.md 3.17.
+accepts = ["image/*"]
+outputs = ["image/jpeg", "image/png", "image/webp", "image/tiff", "image/heic", "image/avif"]
+
+[module]
+id = "image.strip_metadata"
+name = "Strip metadata"
+version = "0.1.0"
+pattern = "I"
+summary = "Remove location, camera details or everything hidden in a photo, without touching its pixels."
+
+[options.remove]
+type = "choice"
+values = ["gps", "private", "everything"]
+default = "private"
+label = "Remove"
+help = "Location only; location, serial numbers, owner, thumbnails and maker notes; or everything except orientation and color profile."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

@@ -1,0 +1,48 @@
+# Merge PDF. Pattern A, instant transform. Spec: docs/specs/pdf.md, section 1.
+# Built into panoply-host (crates/panoply-host/src/builtin/pdf/merge.rs) on the panoply-pdf engine.
+accepts = ["application/pdf"]
+outputs = ["application/pdf"]
+
+[module]
+id = "pdf.merge"
+name = "Merge PDF"
+version = "0.1.0"
+pattern = "A"
+summary = "Put these PDFs in one file."
+
+[options.order]
+type = "choice"
+values = ["natural", "given"]
+default = "natural"
+label = "Order"
+help = "Natural puts file2 before file10. Given keeps the order the files were chosen in."
+
+[options.bookmarks]
+type = "bool"
+default = true
+label = "Bookmark each file"
+help = "One bookmark per source file, with that file's own bookmarks under it."
+
+[options.interleave]
+type = "bool"
+default = false
+label = "Interleave two files"
+help = "Front scans and back scans: page 1 of the first file, page 1 of the second, page 2 of the first, and so on."
+
+[options.reverse_second]
+type = "bool"
+default = false
+label = "Reverse the second file"
+help = "For back sides scanned in reverse order. Used with interleave."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

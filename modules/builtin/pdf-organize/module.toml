@@ -1,0 +1,50 @@
+# Organize pages (reorder, delete, rotate, reverse, extract). Spec: docs/specs/pdf.md, section 4.
+# Pattern C in the app (a page grid); the same operations exist as options for the CLI and MCP.
+accepts = ["application/pdf"]
+outputs = ["application/pdf"]
+
+[module]
+id = "pdf.organize"
+name = "Organize PDF pages"
+version = "0.1.0"
+pattern = "C"
+summary = "Reorder, delete, rotate or pull out pages."
+
+[options.keep]
+type = "text"
+label = "Pages to keep"
+help = "Ranges in the order you want them, for example 5, 1-3, 9-. Leave empty to keep every page. Also first, last, odd, even."
+
+[options.delete]
+type = "text"
+label = "Pages to delete"
+help = "Ranges to remove from the pages being kept, by their original numbers."
+
+[options.rotate]
+type = "choice"
+values = ["0", "90", "180", "270"]
+default = "0"
+label = "Rotate"
+help = "Degrees clockwise, added to each page's own rotation."
+
+[options.rotate_pages]
+type = "text"
+label = "Pages to rotate"
+help = "Which pages the rotation applies to, by original number. Empty means every kept page."
+
+[options.reverse]
+type = "bool"
+default = false
+label = "Reverse the order"
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = false
+cli = true
+mcp = true

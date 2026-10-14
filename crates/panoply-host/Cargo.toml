@@ -10,9 +10,14 @@ publish.workspace = true
 [dependencies]
 panoply-core.workspace = true
 panoply-manifest.workspace = true
+panoply-pdf.workspace = true
+panoply-image.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 sha2.workspace = true
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+png.workspace = true

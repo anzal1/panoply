@@ -1,0 +1,97 @@
+# Resize to exact KB, with exam and portal presets. Pattern B.
+# Spec: docs/specs/id-and-image.md 2.3 and 2.4. Presets: presets/*.toml, each with its source link.
+accepts = ["image/*"]
+outputs = ["image/jpeg", "image/png", "image/webp"]
+
+[module]
+id = "image.resize_to_kb"
+name = "Resize to exact KB"
+version = "0.1.0"
+pattern = "B"
+summary = "Make this photo an exact pixel size and a file size inside a window, for a form or portal."
+
+[options.preset]
+type = "text"
+label = "Exam or portal preset"
+help = "A preset id such as ssc-signature or passport-seva-photo. Sets pixels, the size window, format and background. Anything else you give overrides it."
+
+[options.width]
+type = "number"
+min = 1
+max = 10000
+label = "Width (px)"
+help = "Both width and height, or neither. Neither keeps the picture's shape and lets the size search shrink it if it must."
+
+[options.height]
+type = "number"
+min = 1
+max = 10000
+label = "Height (px)"
+
+[options.min_kb]
+type = "number"
+min = 0
+label = "Smallest size (KB)"
+
+[options.max_kb]
+type = "number"
+min = 0
+label = "Largest size (KB)"
+
+[options.kb_basis]
+type = "choice"
+values = ["both", "1000", "1024"]
+label = "What counts as 1 KB"
+help = "Some portals count 1 KB as 1000 bytes, some as 1024. Both targets a size that is inside the window under either reading, and is used when neither the preset nor you say which."
+
+[options.fit]
+type = "choice"
+values = ["auto", "crop", "pad", "stretch"]
+label = "Fit"
+help = "Auto crops, and pads with the background when the shape differs by more than 15 percent."
+
+[options.anchor]
+type = "choice"
+values = ["center", "top"]
+default = "center"
+label = "Crop position"
+help = "Top keeps the upper part of the picture, which suits portraits. Face detection arrives with the face tools."
+
+[options.format]
+type = "choice"
+values = ["jpg", "webp", "png"]
+label = "Format"
+
+[options.background]
+type = "text"
+label = "Background"
+help = "For padding and for transparent pictures. White unless the preset says otherwise."
+
+[options.baseline]
+type = "bool"
+label = "Baseline JPEG only"
+help = "Some portals reject progressive JPEG. On by default for presets, off (progressive, a little smaller) otherwise."
+
+[options.pad_to_min]
+type = "bool"
+default = true
+label = "Pad to reach the minimum"
+help = "Last resort when a portal enforces a minimum size: add a comment segment. The result card says so."
+
+[options.animation]
+type = "choice"
+values = ["ask", "first"]
+default = "ask"
+label = "Animated files"
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

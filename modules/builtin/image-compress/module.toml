@@ -1,0 +1,84 @@
+# Compress (image). Pattern B. Spec: docs/specs/id-and-image.md 3.2 and 3.3 (format shootout).
+accepts = ["image/*"]
+outputs = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/tiff", "image/gif"]
+
+[module]
+id = "image.compress"
+name = "Compress image"
+version = "0.1.0"
+pattern = "B"
+summary = "Make this image smaller without it looking worse, or fit it under a size."
+
+[options.target]
+type = "choice"
+values = ["smallest", "under_size", "quality"]
+default = "smallest"
+label = "Target"
+help = "Smallest that looks the same (default), under a size, or a fixed quality."
+
+[options.ssim]
+type = "number"
+min = 0.9
+max = 0.9999
+default = 0.97
+label = "Similarity to keep"
+help = "For the smallest target: the file must score at least this on SSIM, in brightness and in color. 0.97 is very hard to tell from the original."
+
+[options.quality]
+type = "number"
+min = 1
+max = 100
+default = 80
+label = "Quality"
+help = "For the quality target."
+
+[options.max_size]
+type = "size"
+label = "Stay under"
+help = "For the under size target, for example 200kb or 1.5mb. Counted as 1 KB = 1000 bytes, which is inside the limit under either reading."
+
+[options.format]
+type = "choice"
+values = ["keep", "smallest", "jpg", "png", "webp", "avif", "heic", "tiff", "gif"]
+default = "keep"
+label = "Format"
+help = "Keep the format, force one, or try every format and keep the smallest (the format shootout)."
+
+[options.strip_metadata]
+type = "bool"
+default = true
+label = "Strip metadata"
+help = "Drop EXIF, XMP and thumbnails. The result card names GPS location whenever it is removed or kept."
+
+[options.color_profile]
+type = "choice"
+values = ["keep", "srgb"]
+default = "keep"
+label = "Color profile"
+help = "Keep a wide gamut profile, or convert to sRGB for the web."
+
+[options.lossy_png]
+type = "choice"
+values = ["auto", "on", "off"]
+default = "auto"
+label = "Reduce PNG colors"
+help = "Auto reduces colors only for flat art, never for photographs."
+
+[options.animation]
+type = "choice"
+values = ["ask", "first"]
+default = "ask"
+label = "Animated files"
+help = "Animated GIF, WebP and AVIF: stop and ask, or use the first frame."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

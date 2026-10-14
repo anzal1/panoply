@@ -68,6 +68,21 @@ impl CapabilityGuard {
         }
     }
 
+    /// Where results for `input` go: the chosen output folder, or the folder the input is in.
+    /// A result is only ever placed next to a file the user chose, never anywhere else.
+    pub fn output_dir_for(&self, input: &Path) -> Result<PathBuf, ModuleError> {
+        if let Some(d) = &self.out_dir {
+            return Ok(d.clone());
+        }
+        if !self.can_read(input) {
+            return Err(ModuleError::NotAllowed(input.to_path_buf()));
+        }
+        let real = input.canonicalize().map_err(|e| io_err(input, e))?;
+        real.parent()
+            .map(Path::to_path_buf)
+            .ok_or_else(|| ModuleError::NotAllowed(input.to_path_buf()))
+    }
+
     /// Open a chosen input for reading.
     pub fn open_read(&self, path: &Path) -> Result<File, ModuleError> {
         if !self.can_read(path) {

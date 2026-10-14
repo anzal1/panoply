@@ -1,0 +1,27 @@
+[package]
+name = "panoply-platform-macos"
+description = "The only crate in the workspace allowed to use unsafe: ImageIO (HEIC, HEIF, AVIF and more) behind a safe API"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-core-foundation = { version = "0.3", default-features = false, features = ["std", "CFBase", "CFData", "CFDictionary", "CFNumber", "CFString", "CFArray"] }
+objc2-core-graphics = { version = "0.3", default-features = false, features = ["std", "CGImage", "CGColorSpace", "CGContext", "CGBitmapContext", "CGDataProvider", "CGGeometry", "CGAffineTransform", "CGColor"] }
+# The Objective-C runtime, only for camera RAW through CoreImage (src/raw.rs). CoreImage itself is
+# opened with dlopen at the first RAW, so other jobs never load it.
+objc2 = { version = "0.6", default-features = false, features = ["std"] }
+objc2-image-io = { version = "0.3", default-features = false, features = ["std", "objc2-core-graphics", "CGImageSource", "CGImageDestination", "CGImageProperties", "CGImageMetadata", "ImageIOBase"] }
+
+# Not the workspace lints: this crate is the one place `unsafe` is allowed, and every unsafe
+# block in it carries a SAFETY comment. See the crate docs.
+[lints.rust]
+unsafe_code = "allow"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+# Pixel loops over RGBA quads read better with chunks_exact than with as_chunks.
+chunks_exact_to_as_chunks = "allow"

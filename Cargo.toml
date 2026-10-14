@@ -28,7 +28,20 @@ sha2 = "0.11"
 wasmtime = { version = "49", default-features = false, features = ["runtime", "cranelift", "winch", "component-model", "std"] }
 wasmtime-wasi = { version = "49", default-features = false, features = ["p2"] }
 
+# PDF engine (ADR 0002: every dependency permissive). pdfium is loaded at run time from a
+# checksum-pinned download, never linked or committed. lopdf only repairs damaged files.
+pdfium-render = { version = "0.9", default-features = false, features = ["pdfium_7881", "thread_safe"] }
+lopdf = { version = "0.45", default-features = false }
+miniz_oxide = "0.8"
+zune-jpeg = "0.5"
+zune-core = "0.5"
+jpeg-encoder = "0.7"
+png = "0.18"
+weezl = "0.1"
+
 panoply-core = { path = "crates/panoply-core" }
+panoply-pdf = { path = "crates/panoply-pdf" }
+panoply-image = { path = "crates/panoply-image" }
 panoply-manifest = { path = "crates/panoply-manifest" }
 panoply-convert = { path = "crates/panoply-convert" }
 panoply-host = { path = "crates/panoply-host" }
@@ -46,7 +59,9 @@ all = { level = "warn", priority = -1 }
 opt-level = 3
 lto = "fat"
 codegen-units = 1
-panic = "abort"
+# Unwind, not abort: MozJPEG (panoply-image) reports a corrupt JPEG by unwinding, and with
+# panic = "abort" one bad file would kill the whole process instead of showing a plain error.
+panic = "unwind"
 strip = true
 
 [profile.dev]
@@ -56,3 +71,13 @@ debug = "line-tables-only"
 # are optimized even in dev builds, so tests and the kill test measure real module speed.
 [profile.dev.package."*"]
 opt-level = 2
+
+# The PDF engine does real per-byte work (parsing, recoding, SSIM), so it is optimized in dev
+# builds too. Tests on the 300 MB corpus file would otherwise take minutes.
+[profile.dev.package.panoply-pdf]
+opt-level = 3
+
+# The image engine does per-pixel work (resampling, SSIM, quantizing) and its tests run on
+# multi-megapixel files, so it is optimized in dev builds too.
+[profile.dev.package.panoply-image]
+opt-level = 3

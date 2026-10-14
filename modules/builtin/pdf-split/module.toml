@@ -1,0 +1,48 @@
+# Split PDF. Pattern A with a short mode switch. Spec: docs/specs/pdf.md, section 2.
+accepts = ["application/pdf"]
+outputs = ["application/pdf"]
+
+[module]
+id = "pdf.split"
+name = "Split PDF"
+version = "0.1.0"
+pattern = "A"
+summary = "Cut this PDF into parts by page ranges or every N pages."
+
+[options.mode]
+type = "choice"
+values = ["every_n", "ranges"]
+default = "every_n"
+label = "Mode"
+help = "Every N pages (1 means one file per page), or the page ranges you type."
+
+[options.every]
+type = "number"
+default = 1
+min = 1
+max = 100000
+label = "Pages per file"
+help = "Used when the mode is every_n."
+
+[options.ranges]
+type = "text"
+label = "Ranges"
+help = "Each range becomes a file, for example 1-3, 7, 9-. Also first, last, odd, even and reversed ranges like 5-1."
+
+[options.name_pattern]
+type = "text"
+default = "{name} {n}"
+label = "File names"
+help = "{name} is the PDF's name, {n} the part number, {pages} the pages in the part."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = false
+cli = true
+mcp = true

@@ -1,0 +1,43 @@
+id = "bd-passport-photo"
+authority = "Department of Immigration and Passports, Bangladesh"
+form = "Bangladesh e-passport photo (online form and mission applications)"
+field = "photo"
+width_px = 413
+height_px = 531
+tolerance_px = 0
+physical_mm = [35, 45]
+dpi = 300
+min_bytes_claimed = 0
+max_bytes_claimed = 150
+unit_claimed = "KB"
+kb_basis = "unknown"
+format = "jpg"
+background = "white"
+color_mode = "rgb"
+baseline_only = true
+strip_metadata = false
+status = "conflict"
+verified_against = "third-party"
+source_url = "https://www.passportphotosnap.com/bd-passport-photo"
+source_quote = "Min 413x531px"
+source_date = ""
+last_verified = "2026-10-13"
+notes = "No official page was readable: epassport.gov.bd pages return only a title, dip.gov.bd and chennai.mofa.gov.bd fail certificate verification. All numbers come from third parties and they disagree. PassportPhotoSnap (undated, cites a Bangladesh mission page) says exact 35x45mm at 300 DPI, min 413x531px, plain white background; this is used at the top level as the reading most pages agree on. Cutout.pro (9 Mar 2026) says the e-passport online photo is 25 x 30 mm (about 591x709 px at 600 DPI), printed photos 45 x 55 mm, and the portal usually caps around 150 to 300 KB. Passport-photo.online (last update 1/14/2025) says 45 x 55 mm, 1063x1299 px at 600 DPI. PhotoGov (9 Jul 2026) says a plain grey background is officially required for e-passports and gives no pixels or KB. The max of 150 KB takes the low end of the Cutout.pro range as the stricter reading; 300 KB is the other end and the figure two third parties give for visa photos, and no source gives a min. The harvest figure of 40 x 50 mm (472 x 591 px) was not found on any page we read. Only a maximum is stated, so min is 0. Confirm on the portal upload screen."
+
+[[conflicts]]
+min_bytes_claimed = 0
+max_bytes_claimed = 300
+unit_claimed = "KB"
+width_px = 591
+height_px = 709
+source_url = "https://www.cutout.pro/learn/?p=2642"
+source_quote = "Some portals expect around 591×709 pixels at 600 DPI."
+
+[[conflicts]]
+min_bytes_claimed = 0
+max_bytes_claimed = 0
+unit_claimed = "KB"
+width_px = 1063
+height_px = 1299
+source_url = "https://passport-photo.online/bangladesh-passport-photo"
+source_quote = "For digital images, the resolution must be 1063x1299 pixels at 600 DPI."

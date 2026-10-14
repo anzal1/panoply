@@ -32,6 +32,7 @@ __pycache__/
 
 # Downloaded models and engines (fetched on first use, never committed)
 models-cache/
+engines-cache/
 *.onnx
 *.gguf
 *.tflite
@@ -44,3 +45,6 @@ prototypes/agent-killtest/results/run-*-work/
 # Test corpus: files are fetched or generated on demand, only the manifests are committed
 tests/corpus/cache/
 tests/corpus/**/.part-*
+
+# iLovePDF comparison outputs (downloaded and generated results)
+prototypes/ilovepdf-compare/results/

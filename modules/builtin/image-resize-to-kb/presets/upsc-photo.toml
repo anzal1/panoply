@@ -1,0 +1,37 @@
+id = "upsc-photo"
+authority = "Union Public Service Commission"
+form = "UPSC online application (OTR and examination forms)"
+field = "photo"
+tolerance_px = 0
+min_bytes_claimed = 20
+max_bytes_claimed = 100
+unit_claimed = "KB"
+kb_basis = "unknown"
+format = "jpg"
+background = "white"
+color_mode = "rgb"
+baseline_only = true
+strip_metadata = false
+status = "conflict"
+verified_against = "third-party"
+source_url = "https://pwonlyias.com/upsc-photo-and-signature-instructions/"
+source_quote = "Both files must be in .JPG format, sized between 20 KB and 100 KB, to meet the 2026 guidelines."
+source_date = ""
+last_verified = "2026-10-13"
+notes = "The official page upsconline.nic.in/ngrp/assets/PDF/instruction-photo-signature-upload-upsc.pdf returned HTTP 404 on 2026-10-13, upsc.gov.in returned 403, so no UPSC host was readable. We did read a copy of the UPSC document titled Instructions for uploading the photo and signature (UPSC letterhead, no date) hosted by Vajiram and Ravi; it says 20KB to 200KB for the photo. Because three readable sources disagree (200, 300 and 100 KB) the top level uses the smallest maximum, as the preset rules require: 100 KB. That figure is from a coaching site and looks like a generalisation of the signature rule, so the UPSC document reading of 20 to 200 KB is the better evidence and is listed first in conflicts. Any size from 20 to 100 KB satisfies every reading. The UPSC document gives no pixel size for the photo; one third party gives 350 x 350 px, left out of the top level because no UPSC text we read supports it. The UPSC document requires a colour JPG named photo, plain white background, face covering at least 75 percent of the area, and a separate live photograph that is matched against the upload. File size basis is not stated."
+
+[[conflicts]]
+min_bytes_claimed = 20
+max_bytes_claimed = 200
+unit_claimed = "KB"
+source_url = "https://vajiramias.sgp1.cdn.digitaloceanspaces.com/wp/upsc-exam/2026/02/UPSC-Photo-and-Signature-Guidelines-2026.pdf"
+source_quote = "Upload a photo named photo in jpg format with a file size between 20KB and 200KB."
+
+[[conflicts]]
+min_bytes_claimed = 20
+max_bytes_claimed = 300
+unit_claimed = "KB"
+width_px = 350
+height_px = 350
+source_url = "https://bharatnotes.com/faq/application/upsc-photograph-signature-specs/"
+source_quote = "Photograph: 350×350 px, 20–300 KB, JPG/JPEG, white background, face filling 75% of frame."

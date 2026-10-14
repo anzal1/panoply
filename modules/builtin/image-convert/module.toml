@@ -1,0 +1,68 @@
+# Convert (image). Pattern A. Spec: docs/specs/id-and-image.md 3.1.
+accepts = ["image/*"]
+outputs = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/tiff", "image/bmp", "image/gif"]
+
+[module]
+id = "image.convert"
+name = "Convert image"
+version = "0.1.0"
+pattern = "A"
+summary = "Turn this image into another format and keep its colors, orientation and details."
+
+[options.to]
+type = "choice"
+values = ["jpg", "png", "webp", "avif", "heic", "tiff", "bmp", "gif"]
+default = "jpg"
+label = "Convert to"
+help = "The format of the new file. HEIC and the best AVIF use the operating system encoder."
+
+[options.quality]
+type = "number"
+min = 1
+max = 100
+label = "Quality"
+help = "For JPG, WebP, AVIF and HEIC. Left empty, each format uses its own default (JPG 85, WebP 80, AVIF 60, HEIC 80)."
+
+[options.lossless]
+type = "bool"
+default = false
+label = "Lossless WebP"
+help = "Only for WebP. Bigger files, no quality loss."
+
+[options.flatten_color]
+type = "text"
+default = "#ffffff"
+label = "Background for transparency"
+help = "Used when the new format has no transparency, such as JPG."
+
+[options.keep_metadata]
+type = "bool"
+default = true
+label = "Keep metadata"
+help = "Keep camera details, date and GPS location where the new format can carry them. The result card lists what was kept. Turn off for files you share."
+
+[options.color_profile]
+type = "choice"
+values = ["keep", "srgb"]
+default = "keep"
+label = "Color profile"
+help = "Keep a wide gamut profile such as Display P3, or convert to sRGB for the web."
+
+[options.animation]
+type = "choice"
+values = ["ask", "first"]
+default = "ask"
+label = "Animated files"
+help = "Animated GIF, WebP and AVIF: stop and ask, or use the first frame."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

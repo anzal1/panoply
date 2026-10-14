@@ -1,0 +1,76 @@
+# Compress PDF. Pattern B, tuned transform. Worked example 1 in docs/FLOWS.md, spec in
+# docs/specs/pdf.md section 10. Images are recoded with an SSIM floor of 0.97, never inflated.
+accepts = ["application/pdf"]
+outputs = ["application/pdf"]
+
+[module]
+id = "pdf.compress"
+name = "Compress PDF"
+version = "0.1.0"
+pattern = "B"
+summary = "Make this PDF small enough to email or upload."
+
+[options.target]
+type = "choice"
+values = ["smallest", "quality"]
+default = "smallest"
+label = "Target"
+help = "Smallest that still looks good, or a fixed quality level. Set under_mb to aim for a size instead."
+
+[options.under_mb]
+type = "number"
+min = 0.01
+max = 100000
+label = "Under (MB)"
+help = "Make the file no bigger than this many megabytes, at the best quality that fits. Takes the place of the target."
+
+[options.quality]
+type = "number"
+default = 75
+min = 1
+max = 100
+label = "Quality"
+help = "JPEG quality for images when the target is quality."
+
+[options.grayscale]
+type = "bool"
+default = false
+label = "Grayscale"
+help = "Turn colour pictures gray."
+
+[options.max_dpi]
+type = "number"
+default = 0
+min = 0
+max = 1200
+label = "Highest picture resolution (DPI)"
+help = "0 chooses by the target: 150 for the smallest file, more for higher quality."
+
+[options.strip_metadata]
+type = "bool"
+default = false
+label = "Remove metadata"
+help = "Document information and XMP."
+
+[options.strip_attachments]
+type = "bool"
+default = false
+label = "Remove embedded files"
+
+[options.strip_forms]
+type = "bool"
+default = false
+label = "Remove form data"
+help = "Removes the form and everything typed into it, including the visible field values."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

@@ -1,0 +1,33 @@
+id = "bd-nid-photo"
+authority = "Bangladesh Election Commission, National Identity Registration Wing"
+form = "Bangladesh National ID card photo"
+field = "photo"
+width_px = 354
+height_px = 425
+tolerance_px = 0
+physical_mm = [30, 36]
+dpi = 300
+min_bytes_claimed = 0
+max_bytes_claimed = 0
+unit_claimed = "KB"
+kb_basis = "unknown"
+format = "jpg"
+color_mode = "rgb"
+baseline_only = true
+strip_metadata = false
+status = "conflict"
+verified_against = "third-party"
+source_url = "https://visapicpro.com/country/bangladesh/nid-photo.html"
+source_quote = "30x36 mm, which converts to about 354x425 pixels at 300 DPI."
+source_date = "2026-07-20"
+last_verified = "2026-10-13"
+notes = "No official NID specification was found. nidw.gov.bd and services.nidw.gov.bd were not read, the Bangladesh High Commission London page only says to attach a recent passport size photo with glue, and the Ottawa mission page failed certificate verification. NO FILE SIZE LIMIT was found in any readable source: min_bytes_claimed and max_bytes_claimed are both 0 here and mean 'no published limit', not a real window. The 30 x 36 mm reading is from VisaPicPro (Last reviewed July 20, 2026) and describes a common studio size, not an official rule. A second third party, myphotomaker.net (undated), says 35 x 45 mm, 413 x 531 px at 300 DPI. The harvest figure of 30 x 30 mm (354 x 354 px) is not supported by any page we read; an NID card photo is normally taken at enrolment, so an upload limit may not exist. Treat as a rough size guide only."
+
+[[conflicts]]
+min_bytes_claimed = 0
+max_bytes_claimed = 0
+unit_claimed = "KB"
+width_px = 413
+height_px = 531
+source_url = "https://myphotomaker.net/photo/id-card/bd-id-card/"
+source_quote = "must be 35 × 45 mm (413 × 531 pixels) at 300 DPI"
