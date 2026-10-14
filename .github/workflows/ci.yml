@@ -190,7 +190,7 @@ jobs:
             echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
           fi
           # w1 and w2 only change workspace crates, which rust-cache never stores, so they share a cache key.
-          ck="${v//-w1/}"; ck="${ck//-w2/}"
+          ck="${v//-w1/}"; ck="${ck//-w2/}"; ck="${ck//-r2/}"; ck="${ck//-r3/}"
           echo "ckey=$ck" >> "$GITHUB_OUTPUT"
       - name: Folders for the test run
         shell: bash
