@@ -20,8 +20,8 @@ use super::Hub;
 use super::theme::{Theme, is_dark, radius, sp, ty};
 use super::widgets::{
     ButtonKind, Ramp, button, button_ex, caption, card, category_tile, cmd, editor_style,
-    file_category, file_icon, focus_ring, icon, icon_button, keycap, note, notice, progress_bar,
-    rule, scroll_thumb, segmented, switch, tip,
+    file_category, file_icon, fits_segmented, focus_ring, icon, icon_button, keycap, note, notice,
+    popup_button, popup_menu, progress_bar, rule, scroll_thumb, segmented, switch, tip,
 };
 use crate::catalog::Tool;
 use crate::form::{Control, Field, Form, display, number};
@@ -79,6 +79,8 @@ pub(crate) struct ToolPanel {
     focus: FocusHandle,
     field_focus: BTreeMap<String, FocusHandle>,
     more_open: bool,
+    /// The pop-up menu that is open: the option's key and the highlighted row.
+    pub(crate) menu: Option<(String, usize)>,
     scroll_left: ScrollHandle,
     scroll_options: ScrollHandle,
     scroll_result: ScrollHandle,
@@ -202,6 +204,7 @@ impl ToolPanel {
             focus,
             field_focus,
             more_open: false,
+            menu: None,
             scroll_left: ScrollHandle::new(),
             scroll_options: ScrollHandle::new(),
             scroll_result: ScrollHandle::new(),
@@ -692,6 +695,28 @@ impl ToolPanel {
     fn on_key(&mut self, ev: &KeyDownEvent, window: &mut Window, cx: &mut Context<Self>) {
         let k = ev.keystroke.key.as_str();
         let m = ev.keystroke.modifiers;
+        // An open pop-up menu takes the arrow keys, Return, Space and Escape.
+        if let Some((key, at)) = self.menu.clone() {
+            let Some(field) = self.form.field(&key).cloned() else {
+                self.menu = None;
+                return;
+            };
+            let (shown, _) = self.shown_for(&field);
+            match k {
+                "up" => self.menu = Some((key, at.saturating_sub(1))),
+                "down" => self.menu = Some((key, (at + 1).min(shown.len().saturating_sub(1)))),
+                "enter" | "space" => {
+                    if let Some(v) = shown.get(at).cloned() {
+                        self.pick_choice(&key, v, cx);
+                    }
+                    self.menu = None;
+                }
+                "escape" | "tab" => self.menu = None,
+                _ => {}
+            }
+            cx.notify();
+            return;
+        }
         if k == "tab" {
             if m.shift {
                 window.focus_prev(cx);
@@ -740,54 +765,145 @@ const OPTIONS_W: f32 = 344.0;
 const MARGIN: f32 = sp::XL;
 
 impl ToolPanel {
+    /// The values a choice shows, with "Auto" in front when it has no default, and the current one.
+    fn shown_for(&self, f: &Field) -> (Vec<String>, Option<String>) {
+        let Control::Choice(values) = &f.control else {
+            return (Vec::new(), None);
+        };
+        let sel = self
+            .form
+            .value(&f.key)
+            .and_then(|v| v.as_str().map(str::to_string));
+        let mut shown = values.clone();
+        if f.default.is_none() {
+            // A choice with no default starts on "Auto": the module picks for each file.
+            shown.insert(0, AUTO.to_string());
+            let sel = sel.or_else(|| Some(AUTO.to_string()));
+            return (shown, sel);
+        }
+        (shown, sel)
+    }
+
+    /// Open the pop-up menu of an option, for the review renders.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn preview_menu(&mut self, key: &str, cx: &mut Context<Self>) {
+        self.open_menu(key, cx);
+    }
+
+    /// Open a pop-up menu, with the current value highlighted.
+    fn open_menu(&mut self, key: &str, cx: &mut Context<Self>) {
+        let Some(f) = self.form.field(key).cloned() else {
+            return;
+        };
+        let (shown, sel) = self.shown_for(&f);
+        let at = sel
+            .and_then(|s| shown.iter().position(|v| *v == s))
+            .unwrap_or(0);
+        self.menu = Some((key.to_string(), at));
+        cx.notify();
+    }
+
     fn field_view(&mut self, f: &Field, t: Theme, cx: &mut Context<Self>) -> AnyElement {
         let key = f.key.clone();
         let this = cx.entity().downgrade();
         let control: AnyElement = match &f.control {
-            Control::Choice(values) => {
-                let sel = self
-                    .form
-                    .value(&key)
-                    .and_then(|v| v.as_str().map(str::to_string));
+            Control::Choice(_) => {
                 let focus = self
                     .field_focus
                     .get(&key)
                     .cloned()
                     .unwrap_or_else(|| cx.focus_handle());
-                let k2 = key.clone();
-                let this2 = this.clone();
-                let k3 = key.clone();
-                // A choice with no default starts on "Auto": the module picks for each file.
-                let with_auto = f.default.is_none();
-                let mut shown: Vec<String> = values.clone();
-                if with_auto {
-                    shown.insert(0, AUTO.to_string());
-                }
-                let sel = if with_auto && sel.is_none() {
-                    Some(AUTO.to_string())
+                let (shown, sel) = self.shown_for(f);
+                if !fits_segmented(&shown) {
+                    // More than four values, or long ones: a pop-up button and its menu.
+                    let current = sel
+                        .as_deref()
+                        .map(super::widgets::segment_label)
+                        .unwrap_or_default();
+                    let open_at = self
+                        .menu
+                        .as_ref()
+                        .filter(|(k, _)| *k == key)
+                        .map(|(_, h)| *h);
+                    let (k_open, k_key, k_pick) = (key.clone(), key.clone(), key.clone());
+                    let (t_open, t_pick, t_close) = (this.clone(), this.clone(), this.clone());
+                    let button = popup_button(
+                        format!("choice-{key}"),
+                        &f.label,
+                        &current,
+                        open_at.is_some(),
+                        &focus,
+                        t,
+                        move |_, cx| {
+                            let k = k_open.clone();
+                            t_open.update(cx, |p, cx| p.open_menu(&k, cx)).ok();
+                        },
+                    )
+                    .on_key_down(cx.listener(
+                        move |p, ev: &KeyDownEvent, _, cx| {
+                            if matches!(ev.keystroke.key.as_str(), "space" | "down" | "up") {
+                                p.open_menu(&k_key, cx);
+                            }
+                        },
+                    ));
+                    let menu = open_at.map(|hl| {
+                        popup_menu(
+                            format!("choice-{key}"),
+                            &shown,
+                            sel.as_deref(),
+                            hl,
+                            OPTIONS_W - 2.0 * MARGIN,
+                            t,
+                            move |v, _, cx| {
+                                let k = k_pick.clone();
+                                t_pick
+                                    .update(cx, |p, cx| {
+                                        p.pick_choice(&k, v, cx);
+                                        p.menu = None;
+                                    })
+                                    .ok();
+                            },
+                            move |_, cx| {
+                                t_close
+                                    .update(cx, |p, cx| {
+                                        p.menu = None;
+                                        cx.notify();
+                                    })
+                                    .ok();
+                            },
+                        )
+                    });
+                    div()
+                        .relative()
+                        .w_full()
+                        .child(button)
+                        .children(menu)
+                        .into_any_element()
                 } else {
-                    sel
-                };
-                segmented(
-                    format!("choice-{key}"),
-                    &f.label,
-                    &shown,
-                    sel.as_deref(),
-                    &focus,
-                    t,
-                    move |v, _, cx| {
-                        let k = k2.clone();
-                        this2.update(cx, |p, cx| p.pick_choice(&k, v, cx)).ok();
-                    },
-                )
-                .on_key_down(cx.listener(move |p, ev: &KeyDownEvent, _, cx| {
-                    match ev.keystroke.key.as_str() {
-                        "left" => p.step_choice(&k3, -1, cx),
-                        "right" => p.step_choice(&k3, 1, cx),
-                        _ => {}
-                    }
-                }))
-                .into_any_element()
+                    let k2 = key.clone();
+                    let this2 = this.clone();
+                    let k3 = key.clone();
+                    segmented(
+                        format!("choice-{key}"),
+                        &f.label,
+                        &shown,
+                        sel.as_deref(),
+                        &focus,
+                        t,
+                        move |v, _, cx| {
+                            let k = k2.clone();
+                            this2.update(cx, |p, cx| p.pick_choice(&k, v, cx)).ok();
+                        },
+                    )
+                    .on_key_down(cx.listener(move |p, ev: &KeyDownEvent, _, cx| {
+                        match ev.keystroke.key.as_str() {
+                            "left" => p.step_choice(&k3, -1, cx),
+                            "right" => p.step_choice(&k3, 1, cx),
+                            _ => {}
+                        }
+                    }))
+                    .into_any_element()
+                }
             }
             Control::Toggle => {
                 let on = self

@@ -6,8 +6,14 @@ use gpui::{AssetSource, SharedString};
 
 use crate::icons_gen::ICONS;
 
-/// Hand-drawn glyphs: the Windows caption buttons (10 by 10, 1 px strokes, as Fluent draws them).
+/// Glyphs outside the generated Lucide set: the pop-up chevrons, and the Windows caption buttons
+/// (10 by 10, 1 px strokes, as Fluent draws them).
 const EXTRA: &[(&str, &str)] = &[
+    // Lucide (ISC), drawn the way the generated set draws its icons.
+    (
+        "chevrons-up-down",
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>"#,
+    ),
     (
         "win-min",
         r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1"><path d="M0 5.5h10"/></svg>"#,

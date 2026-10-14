@@ -1006,6 +1006,26 @@ pub(crate) fn run_review(out: PathBuf) {
                     &mut log,
                     &mut times,
                 );
+                // The Format pop-up menu, open.
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                if let Some(p) = panel {
+                    d.win(bar, |_, cx| {
+                        p.update(cx, |p, cx| p.preview_menu("format", cx))
+                    });
+                }
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-options-menu",
+                    &file("bar-options-menu"),
+                    &mut log,
+                    &mut times,
+                );
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                if let Some(p) = panel {
+                    d.win(bar, |_, cx| p.update(cx, |p, _| p.menu = None));
+                }
                 let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
                 if let Some(p) = panel {
                     d.win(bar, |window, cx| p.update(cx, |p, cx| p.run(window, cx)));

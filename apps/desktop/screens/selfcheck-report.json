@@ -2,24 +2,24 @@
   "build": "release",
   "note": "Windows were never shown. A frame here is Window::draw (layout and paint on the UI thread); nothing is presented, so GPU time is not included.",
   "startup": {
-    "catalog_load_ms": 0.633291,
-    "process_to_scenarios_ms": 18980.519458,
-    "first_frame_bar_ms": 0.307583,
-    "first_frame_app_ms": 0.7027920000000001,
+    "catalog_load_ms": 0.648,
+    "process_to_scenarios_ms": 18910.324291999998,
+    "first_frame_bar_ms": 0.297,
+    "first_frame_app_ms": 0.681917,
     "tools": 31,
     "community_modules": 0
   },
   "flow": {
-    "bar_panel_open_then_first_frame_ms": 5.956834000000001,
-    "bar_panel_first_frame_ms": 5.834333,
-    "app_panel_open_then_first_frame_ms": 3.2272920000000003,
-    "run_wall_ms": 433.569458,
+    "bar_panel_open_then_first_frame_ms": 2.951208,
+    "bar_panel_first_frame_ms": 2.865167,
+    "app_panel_open_then_first_frame_ms": 3.1770829999999997,
+    "run_wall_ms": 430.414625,
     "frames_drawn_while_running": 16,
     "saw_running_state": true,
     "result_headline": "67 KB to 43 KB, 35% smaller",
     "input_bytes": 66887,
     "outputs": [
-      "/private/var/folders/1p/2sjkczk95p1g0v6z8gqr1njc0000gp/T/panoply-selfcheck-50160/signature (compressed).png"
+      "/private/var/folders/1p/2sjkczk95p1g0v6z8gqr1njc0000gp/T/panoply-selfcheck-58340/signature (compressed).png"
     ],
     "undo_trashed_outputs": true,
     "then_chain": {
@@ -32,7 +32,7 @@
     "text_after_backspace": "क्षे",
     "instant_transform_png_to_jpg": {
       "headline": "67 KB to 17 KB, 75% smaller",
-      "return_to_result_ms": 29.188042
+      "return_to_result_ms": 29.846792
     },
     "failure": {
       "message": "This PDF is damaged and could not be repaired (startxref is missing; failed parsing cross reference table). Open it in a viewer and print it to a new PDF, then try again.",
@@ -56,317 +56,301 @@
       {
         "tool": "files.hash",
         "options": 0,
-        "open_and_first_frame_ms": 0.9812079999999999,
-        "frame_ms": 0.963458
+        "open_and_first_frame_ms": 1.0848330000000002,
+        "frame_ms": 1.064084
       },
       {
         "tool": "id.passport_photo",
         "options": 16,
-        "open_and_first_frame_ms": 2.6357500000000003,
-        "frame_ms": 2.5565409999999997
+        "open_and_first_frame_ms": 2.823833,
+        "frame_ms": 2.7429580000000002
       },
       {
         "tool": "id.print_sheet",
         "options": 11,
-        "open_and_first_frame_ms": 3.182709,
-        "frame_ms": 3.0371669999999997
+        "open_and_first_frame_ms": 3.832917,
+        "frame_ms": 3.720958
       },
       {
         "tool": "id.signature_cleaner",
         "options": 8,
-        "open_and_first_frame_ms": 3.35925,
-        "frame_ms": 3.255292
+        "open_and_first_frame_ms": 3.387583,
+        "frame_ms": 3.274292
       },
       {
         "tool": "image.compress",
         "options": 9,
-        "open_and_first_frame_ms": 3.63875,
-        "frame_ms": 3.523583
+        "open_and_first_frame_ms": 3.706,
+        "frame_ms": 3.576833
       },
       {
         "tool": "image.convert",
         "options": 7,
-        "open_and_first_frame_ms": 4.413625,
-        "frame_ms": 4.228125
+        "open_and_first_frame_ms": 3.085333,
+        "frame_ms": 3.003917
       },
       {
         "tool": "image.erase",
         "options": 8,
-        "open_and_first_frame_ms": 3.679167,
-        "frame_ms": 3.559
+        "open_and_first_frame_ms": 3.435208,
+        "frame_ms": 3.3167079999999998
       },
       {
         "tool": "image.remove_background",
         "options": 9,
-        "open_and_first_frame_ms": 4.0952910000000005,
-        "frame_ms": 3.984459
+        "open_and_first_frame_ms": 3.352459,
+        "frame_ms": 3.242167
       },
       {
         "tool": "image.remove_watermark",
         "options": 10,
-        "open_and_first_frame_ms": 3.4881249999999997,
-        "frame_ms": 3.351584
+        "open_and_first_frame_ms": 3.691792,
+        "frame_ms": 3.565583
       },
       {
         "tool": "image.resize",
         "options": 13,
-        "open_and_first_frame_ms": 2.956209,
-        "frame_ms": 2.831083
+        "open_and_first_frame_ms": 3.948916,
+        "frame_ms": 3.752083
       },
       {
         "tool": "image.resize_to_kb",
         "options": 13,
-        "open_and_first_frame_ms": 3.2568330000000003,
-        "frame_ms": 3.126333
+        "open_and_first_frame_ms": 2.746334,
+        "frame_ms": 2.636167
       },
       {
         "tool": "image.strip_metadata",
         "options": 1,
-        "open_and_first_frame_ms": 1.396333,
-        "frame_ms": 1.374333
+        "open_and_first_frame_ms": 2.065334,
+        "frame_ms": 2.0309999999999997
       },
       {
         "tool": "image.to_text",
         "options": 5,
-        "open_and_first_frame_ms": 3.5774169999999996,
-        "frame_ms": 3.4967919999999997
+        "open_and_first_frame_ms": 3.386042,
+        "frame_ms": 3.307791
       },
       {
         "tool": "image.upscale",
         "options": 5,
-        "open_and_first_frame_ms": 3.4238329999999997,
-        "frame_ms": 3.3385
+        "open_and_first_frame_ms": 3.270333,
+        "frame_ms": 3.154667
       },
       {
         "tool": "media.compress",
         "options": 7,
-        "open_and_first_frame_ms": 4.697917,
-        "frame_ms": 4.576542
+        "open_and_first_frame_ms": 3.319083,
+        "frame_ms": 3.2135000000000002
       },
       {
         "tool": "media.convert",
         "options": 2,
-        "open_and_first_frame_ms": 4.409833,
-        "frame_ms": 4.330375
+        "open_and_first_frame_ms": 1.2245419999999998,
+        "frame_ms": 1.193417
       },
       {
         "tool": "media.extract_audio",
         "options": 3,
-        "open_and_first_frame_ms": 3.616666,
-        "frame_ms": 3.528375
+        "open_and_first_frame_ms": 1.733708,
+        "frame_ms": 1.6752500000000001
       },
       {
         "tool": "media.hdr_to_sdr",
         "options": 4,
-        "open_and_first_frame_ms": 3.716417,
-        "frame_ms": 3.612
+        "open_and_first_frame_ms": 3.2344589999999998,
+        "frame_ms": 3.160458
       },
       {
         "tool": "media.info",
         "options": 2,
-        "open_and_first_frame_ms": 3.178,
-        "frame_ms": 3.091667
+        "open_and_first_frame_ms": 2.688041,
+        "frame_ms": 2.63125
       },
       {
         "tool": "media.normalize",
         "options": 5,
-        "open_and_first_frame_ms": 4.311375,
-        "frame_ms": 4.2019589999999996
+        "open_and_first_frame_ms": 4.212542,
+        "frame_ms": 4.0857920000000005
       },
       {
         "tool": "media.repair",
         "options": 2,
-        "open_and_first_frame_ms": 3.425792,
-        "frame_ms": 3.352083
+        "open_and_first_frame_ms": 3.120958,
+        "frame_ms": 3.0357079999999996
       },
       {
         "tool": "media.streams",
         "options": 5,
-        "open_and_first_frame_ms": 3.203708,
-        "frame_ms": 3.121042
+        "open_and_first_frame_ms": 3.219084,
+        "frame_ms": 3.101416
       },
       {
         "tool": "media.to_mono",
         "options": 1,
-        "open_and_first_frame_ms": 3.23775,
-        "frame_ms": 3.174125
+        "open_and_first_frame_ms": 1.69075,
+        "frame_ms": 1.6518329999999999
       },
       {
         "tool": "media.trim",
         "options": 4,
-        "open_and_first_frame_ms": 3.6202080000000003,
-        "frame_ms": 3.5323339999999996
+        "open_and_first_frame_ms": 3.467417,
+        "frame_ms": 3.376333
       },
       {
         "tool": "pdf.compress",
         "options": 8,
-        "open_and_first_frame_ms": 4.021291,
-        "frame_ms": 3.897084
+        "open_and_first_frame_ms": 4.259916,
+        "frame_ms": 4.1325829999999995
       },
       {
         "tool": "pdf.images_to_pdf",
         "options": 4,
-        "open_and_first_frame_ms": 3.36375,
-        "frame_ms": 3.273291
+        "open_and_first_frame_ms": 3.307792,
+        "frame_ms": 3.213791
       },
       {
         "tool": "pdf.merge",
         "options": 4,
-        "open_and_first_frame_ms": 2.6492500000000003,
-        "frame_ms": 2.591333
+        "open_and_first_frame_ms": 2.9257079999999998,
+        "frame_ms": 2.8631249999999997
       },
       {
         "tool": "pdf.ocr",
         "options": 3,
-        "open_and_first_frame_ms": 3.067459,
-        "frame_ms": 2.964708
+        "open_and_first_frame_ms": 3.051625,
+        "frame_ms": 2.9520000000000004
       },
       {
         "tool": "pdf.organize",
         "options": 5,
-        "open_and_first_frame_ms": 4.228458,
-        "frame_ms": 4.105292
+        "open_and_first_frame_ms": 3.702083,
+        "frame_ms": 3.5945
       },
       {
         "tool": "pdf.split",
         "options": 4,
-        "open_and_first_frame_ms": 4.246333,
-        "frame_ms": 4.126792
+        "open_and_first_frame_ms": 2.8279170000000002,
+        "frame_ms": 2.7407500000000002
       },
       {
         "tool": "pdf.to_images",
         "options": 6,
-        "open_and_first_frame_ms": 3.930333,
-        "frame_ms": 3.80175
+        "open_and_first_frame_ms": 3.350791,
+        "frame_ms": 3.236
       }
     ],
-    "panel_open_max_ms": 4.697917,
+    "panel_open_max_ms": 4.259916,
     "panel_open_limit_ms": 50,
     "keystroke_to_frame_ms": {
-      "p50": 0.81225,
-      "p95": 5.317209,
-      "max": 5.317209
+      "p50": 0.9105,
+      "p95": 5.004167000000001,
+      "max": 5.004167000000001
     },
     "ui_state_change_ms": {
-      "p50": 0.125666,
-      "p95": 0.546292,
-      "max": 1.357334,
+      "p50": 0.12545800000000001,
+      "p95": 0.526917,
+      "max": 0.95475,
       "samples": 128
     },
     "ui_frame_ms": {
-      "p50": 1.161916,
-      "p95": 4.228125,
-      "max": 7.605375,
+      "p50": 1.158459,
+      "p95": 4.081208,
+      "max": 8.506291,
       "samples": 355
     },
     "ui_task_limit_ms": 4,
     "frames_over_4ms": [
       {
-        "state": "bar tool panel options",
-        "ms": 5.834333
-      },
-      {
         "state": "bar panel failure",
-        "ms": 6.033708
+        "ms": 4.353333
       },
       {
         "state": "bar consent sheet",
-        "ms": 4.811959
+        "ms": 4.785792
       },
       {
         "state": "bar text input",
-        "ms": 7.155833
-      },
-      {
-        "state": "bar text input",
-        "ms": 5.184375
-      },
-      {
-        "state": "bar text input",
-        "ms": 4.294625
+        "ms": 4.514749999999999
       },
       {
         "state": "app window home",
-        "ms": 4.6598749999999995
+        "ms": 4.081208
       },
       {
         "state": "app window modules",
-        "ms": 6.936959000000001
+        "ms": 6.923709000000001
       },
       {
         "state": "app window tool panel",
-        "ms": 5.0015
+        "ms": 5.3735
       },
       {
         "state": "app window tool panel",
-        "ms": 7.605375
+        "ms": 8.506291
       },
       {
         "state": "panel open sweep",
-        "ms": 4.544166
+        "ms": 4.0285
       },
       {
         "state": "panel open sweep",
-        "ms": 4.228125
+        "ms": 4.107083
       },
       {
         "state": "panel open sweep",
-        "ms": 4.318583
+        "ms": 4.185875
       },
       {
         "state": "panel open sweep",
-        "ms": 4.576542
+        "ms": 4.249417
       },
       {
         "state": "panel open sweep",
-        "ms": 4.579333
+        "ms": 4.168541
       },
       {
         "state": "panel open sweep",
-        "ms": 4.330375
+        "ms": 4.050875
       },
       {
         "state": "panel open sweep",
-        "ms": 4.645
+        "ms": 4.0857920000000005
       },
       {
         "state": "panel open sweep",
-        "ms": 4.0294170000000005
+        "ms": 4.508500000000001
       },
       {
         "state": "panel open sweep",
-        "ms": 4.2019589999999996
+        "ms": 4.1325829999999995
       },
       {
         "state": "panel open sweep",
-        "ms": 4.140458
+        "ms": 4.481541
       },
       {
         "state": "panel open sweep",
-        "ms": 4.023917
+        "ms": 4.202959
       },
       {
         "state": "panel open sweep",
-        "ms": 4.105292
+        "ms": 4.3527499999999995
       },
       {
         "state": "panel open sweep",
-        "ms": 4.126792
+        "ms": 4.040208
       },
       {
         "state": "panel open sweep",
-        "ms": 4.124709
-      },
-      {
-        "state": "panel open sweep",
-        "ms": 4.724666
+        "ms": 4.476667
       }
     ],
-    "idle_rss_mb_before_sampling": 168.46875,
-    "idle_rss_mb": 168.40625,
+    "idle_rss_mb_before_sampling": 171.453125,
+    "idle_rss_mb": 171.421875,
     "idle_rss_limit_mb": 100,
-    "idle_cpu_percent": 0.04358359394614108,
-    "idle_sample_seconds": 8.014483625
+    "idle_cpu_percent": 0.045627277961116895,
+    "idle_sample_seconds": 8.012750625
   },
   "accessibility": [
     {
@@ -384,17 +368,18 @@
     },
     {
       "state": "bar with a tool panel",
-      "actionable": 21,
+      "actionable": 12,
       "unlabelled": [],
       "roles": {
         "Button": 6,
+        "ComboBox": 1,
         "DisclosureTriangle": 1,
         "Group": 1,
         "Heading": 1,
         "List": 1,
         "ListItem": 1,
-        "RadioButton": 12,
-        "RadioGroup": 2,
+        "RadioButton": 3,
+        "RadioGroup": 1,
         "Status": 1,
         "TextInput": 2,
         "Window": 1
@@ -485,23 +470,23 @@
     "pass": true
   },
   "screens": [
-    "screens/01-bar-at-rest.png (1440x920)",
-    "screens/02-bar-pdf-dropped.png (1440x920)",
-    "screens/03-bar-plain-words.png (1440x920)",
-    "screens/04-bar-convert.png (1440x920)",
-    "screens/05-bar-convert-route.png (1440x920)",
-    "screens/06-panel-options.png (1440x920)",
-    "screens/07-panel-running.png (1440x920)",
-    "screens/08-panel-result.png (1440x920)",
-    "screens/09-panel-undone.png (1440x920)",
-    "screens/10-panel-failed.png (1440x920)",
-    "screens/10b-panel-consent.png (1440x920)",
-    "screens/11-bar-instant-transform-result.png (1440x920)",
-    "screens/12-app-home.png (2320x1440)",
-    "screens/13-app-category-pdf.png (2320x1440)",
-    "screens/14-app-modules.png (2320x1440)",
-    "screens/15-app-tool-panel.png (2320x1440)",
-    "screens/16-bar-at-rest-dark.png (1440x920)",
-    "screens/17-app-home-dark.png (2320x1440)"
+    "apps/desktop/screens/01-bar-at-rest.png (1440x920)",
+    "apps/desktop/screens/02-bar-pdf-dropped.png (1440x920)",
+    "apps/desktop/screens/03-bar-plain-words.png (1440x920)",
+    "apps/desktop/screens/04-bar-convert.png (1440x920)",
+    "apps/desktop/screens/05-bar-convert-route.png (1440x920)",
+    "apps/desktop/screens/06-panel-options.png (1440x920)",
+    "apps/desktop/screens/07-panel-running.png (1440x920)",
+    "apps/desktop/screens/08-panel-result.png (1440x920)",
+    "apps/desktop/screens/09-panel-undone.png (1440x920)",
+    "apps/desktop/screens/10-panel-failed.png (1440x920)",
+    "apps/desktop/screens/10b-panel-consent.png (1440x920)",
+    "apps/desktop/screens/11-bar-instant-transform-result.png (1440x920)",
+    "apps/desktop/screens/12-app-home.png (2320x1440)",
+    "apps/desktop/screens/13-app-category-pdf.png (2320x1440)",
+    "apps/desktop/screens/14-app-modules.png (2320x1440)",
+    "apps/desktop/screens/15-app-tool-panel.png (2320x1440)",
+    "apps/desktop/screens/16-bar-at-rest-dark.png (1440x920)",
+    "apps/desktop/screens/17-app-home-dark.png (2320x1440)"
   ]
 }

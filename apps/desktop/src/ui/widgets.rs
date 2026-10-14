@@ -355,8 +355,17 @@ pub(crate) fn note(icon_name: &str, tone: Hsla, message: impl Into<SharedString>
         .child(div().flex_1().min_w_0().child(message.into()))
 }
 
-/// A segmented control: one of several values, all the same width, in as many equal columns as
-/// fit. Left and Right move the selection when it has focus.
+/// Whether a choice reads as a segmented control: four values or fewer, none long. Anything else
+/// is a pop-up button, as the HIG says. A segmented control never wraps onto a second row.
+pub(crate) fn fits_segmented(values: &[String]) -> bool {
+    values.len() <= 4
+        && values
+            .iter()
+            .all(|v| segment_label(v).chars().count() <= 12)
+}
+
+/// A segmented control: one of up to four values, all the same width, on one row. Left and Right
+/// move the selection when it has focus.
 pub(crate) fn segmented(
     id: String,
     label: &str,
@@ -366,9 +375,7 @@ pub(crate) fn segmented(
     t: Theme,
     on_pick: impl Fn(String, &mut Window, &mut App) + Clone + 'static,
 ) -> Stateful<Div> {
-    let long = values.iter().any(|v| v.chars().count() > 12);
-    let cols = if long { 2 } else { values.len().clamp(1, 4) };
-    let cell = 1.0 / cols as f32;
+    let cell = 1.0 / values.len().max(1) as f32;
     focus_border(div().id(SharedString::from(id.clone())), t)
         .role(Role::RadioGroup)
         .aria_label(label.to_string())
@@ -376,7 +383,6 @@ pub(crate) fn segmented(
         .tab_stop(true)
         .flex()
         .flex_row()
-        .flex_wrap()
         .rounded(px(radius::ROW))
         .bg(t.fill8)
         .children(values.iter().enumerate().map(|(i, v)| {
@@ -649,4 +655,135 @@ pub(crate) fn scroll_thumb(h: &ScrollHandle, t: Theme) -> Option<Div> {
     let max = h.max_offset().y.as_f32().abs();
     let offset = (-h.offset().y.as_f32()).clamp(0.0, max);
     thumb(offset, viewport, viewport + max, t)
+}
+
+/// The pop-up button of a choice with more than four values: the current value and the up-down
+/// chevrons, 32 pt tall, opens a menu. Space and the arrow keys open it from the keyboard.
+pub(crate) fn popup_button(
+    id: String,
+    label: &str,
+    current: &str,
+    open: bool,
+    focus: &FocusHandle,
+    t: Theme,
+    on_open: impl Fn(&mut Window, &mut App) + 'static,
+) -> Stateful<Div> {
+    focus_border(div().id(SharedString::from(id)), t)
+        .role(Role::ComboBox)
+        .aria_label(label.to_string())
+        .aria_value(current.to_string())
+        .aria_expanded(open)
+        .track_focus(focus)
+        .flex()
+        .flex_row()
+        .items_center()
+        .gap(px(sp::S))
+        .w_full()
+        .h(px(32.))
+        .pl(px(10.))
+        .pr(px(sp::S))
+        .rounded(px(radius::CONTROL))
+        .bg(if open { t.fill12 } else { t.fill8 })
+        .hover(move |s| s.bg(t.fill12))
+        .ramp(ty::BODY)
+        .font_weight(FontWeight::MEDIUM)
+        .text_color(t.ink)
+        .on_mouse_down(MouseButton::Left, move |_, window, cx| {
+            if !open {
+                on_open(window, cx);
+            }
+        })
+        .child(
+            div()
+                .flex_1()
+                .min_w_0()
+                .overflow_hidden()
+                .whitespace_nowrap()
+                .text_ellipsis()
+                .child(current.to_string()),
+        )
+        .child(icon("chevrons-up-down", 14., t.ink2))
+}
+
+/// The menu a pop-up button opens, drawn over everything else under the button: one row of 28 pt
+/// per value, a check in front of the current one, the highlighted row tinted with the accent.
+/// It closes on a click outside it and on Escape (the panel handles the keys).
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn popup_menu(
+    id: String,
+    values: &[String],
+    selected: Option<&str>,
+    highlight: usize,
+    width: f32,
+    t: Theme,
+    on_pick: impl Fn(String, &mut Window, &mut App) + Clone + 'static,
+    on_close: impl Fn(&mut Window, &mut App) + 'static,
+) -> impl IntoElement {
+    let rows = values.len();
+    deferred(
+        anchored()
+            .snap_to_window_with_margin(px(8.))
+            .offset(point(px(0.), px(36.)))
+            .child(
+                div()
+                    .id(SharedString::from(format!("{id}-menu")))
+                    .role(Role::Menu)
+                    .occlude()
+                    .flex()
+                    .flex_col()
+                    .w(px(width))
+                    .max_h(px(12. * HIT + 8.))
+                    .p(px(sp::XS))
+                    .overflow_y_scroll()
+                    .rounded(px(radius::ROW))
+                    .bg(t.window)
+                    .border_1()
+                    .border_color(t.hair)
+                    .shadow_md()
+                    .on_mouse_down_out(move |_, window, cx| on_close(window, cx))
+                    .children(values.iter().enumerate().map(|(i, v)| {
+                        let on = selected == Some(v.as_str());
+                        let pick = on_pick.clone();
+                        let value = v.clone();
+                        let shown = segment_label(v);
+                        div()
+                            .id(SharedString::from(format!("{id}-item-{i}")))
+                            .role(Role::MenuItem)
+                            .aria_label(shown.clone())
+                            .aria_selected(on)
+                            .aria_position_in_set(i + 1)
+                            .aria_size_of_set(rows)
+                            .on_a11y_action(AccessibleAction::Click, {
+                                let pick = on_pick.clone();
+                                let value = v.clone();
+                                move |_, window, cx| pick(value.clone(), window, cx)
+                            })
+                            .flex()
+                            .flex_row()
+                            .items_center()
+                            .gap(px(sp::S))
+                            .flex_none()
+                            .h(px(HIT))
+                            .px(px(sp::S))
+                            .rounded(px(radius::CONTROL - 2.))
+                            .ramp(ty::BODY)
+                            .text_color(t.ink)
+                            .when(i == highlight, |d| d.bg(t.selection))
+                            .when(i != highlight, |d| d.hover(move |s| s.bg(t.fill8)))
+                            .on_mouse_down(MouseButton::Left, move |_, window, cx| {
+                                pick(value.clone(), window, cx)
+                            })
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_none()
+                                    .items_center()
+                                    .justify_center()
+                                    .w(px(14.))
+                                    .when(on, |d| d.child(icon("check", 13., t.ink))),
+                            )
+                            .child(shown)
+                    })),
+            ),
+    )
 }

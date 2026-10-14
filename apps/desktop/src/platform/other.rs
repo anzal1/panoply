@@ -61,49 +61,47 @@ impl Panel {
     }
 }
 
-/// Whether a boolean system setting is on, read off the UI thread. The answer is cached and
-/// refreshed every few seconds by a small background thread, so asking costs an atomic load.
+/// One boolean system setting read through gsettings: where its answer is kept, and what to ask.
 #[cfg(target_os = "linux")]
-fn gnome_flag(
+#[derive(Clone, Copy)]
+struct Watch {
     slot: &'static std::sync::atomic::AtomicU8,
     schema: &'static str,
     key: &'static str,
     on: &'static str,
-) -> bool {
+}
+
+/// Whether a boolean system setting is on, read off the UI thread. The answer is cached and
+/// refreshed every few seconds by a small background thread, so asking costs an atomic load.
+#[cfg(target_os = "linux")]
+fn gnome_flag(w: Watch) -> bool {
     use std::sync::atomic::Ordering;
     static STARTED: std::sync::Once = std::sync::Once::new();
-    static SLOTS: std::sync::Mutex<
-        Vec<(
-            &'static std::sync::atomic::AtomicU8,
-            &'static str,
-            &'static str,
-            &'static str,
-        )>,
-    > = std::sync::Mutex::new(Vec::new());
-    if let Ok(mut s) = SLOTS.lock()
-        && !s.iter().any(|(a, ..)| std::ptr::eq(*a, slot))
+    static WATCHED: std::sync::Mutex<Vec<Watch>> = std::sync::Mutex::new(Vec::new());
+    if let Ok(mut list) = WATCHED.lock()
+        && !list.iter().any(|x| std::ptr::eq(x.slot, w.slot))
     {
-        s.push((slot, schema, key, on));
+        list.push(w);
     }
     STARTED.call_once(|| {
         std::thread::spawn(|| {
             loop {
-                let list = SLOTS.lock().map(|s| s.clone()).unwrap_or_default();
-                for (slot, schema, key, on) in list {
+                let list: Vec<Watch> = WATCHED.lock().map(|l| l.clone()).unwrap_or_default();
+                for x in list {
                     let v = std::process::Command::new("gsettings")
-                        .args(["get", schema, key])
+                        .args(["get", x.schema, x.key])
                         .output()
                         .ok()
-                        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == on);
+                        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == x.on);
                     if let Some(v) = v {
-                        slot.store(1 + u8::from(v), Ordering::Relaxed);
+                        x.slot.store(1 + u8::from(v), Ordering::Relaxed);
                     }
                 }
                 std::thread::sleep(std::time::Duration::from_secs(4));
             }
         });
     });
-    slot.load(Ordering::Relaxed) == 2
+    w.slot.load(Ordering::Relaxed) == 2
 }
 
 #[cfg(windows)]
@@ -171,12 +169,12 @@ pub(crate) fn reduce_motion() -> bool {
     #[cfg(target_os = "linux")]
     {
         static SLOT: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
-        gnome_flag(
-            &SLOT,
-            "org.gnome.desktop.interface",
-            "enable-animations",
-            "false",
-        )
+        gnome_flag(Watch {
+            slot: &SLOT,
+            schema: "org.gnome.desktop.interface",
+            key: "enable-animations",
+            on: "false",
+        })
     }
     #[cfg(not(any(windows, target_os = "linux")))]
     {
@@ -197,12 +195,12 @@ pub(crate) fn increase_contrast() -> bool {
     #[cfg(target_os = "linux")]
     {
         static SLOT: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
-        gnome_flag(
-            &SLOT,
-            "org.gnome.desktop.a11y.interface",
-            "high-contrast",
-            "true",
-        )
+        gnome_flag(Watch {
+            slot: &SLOT,
+            schema: "org.gnome.desktop.a11y.interface",
+            key: "high-contrast",
+            on: "true",
+        })
     }
     #[cfg(not(any(windows, target_os = "linux")))]
     {
