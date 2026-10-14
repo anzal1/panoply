@@ -18,6 +18,7 @@ panoply-convert.workspace = true
 panoply-host.workspace = true
 panoply-mcp.workspace = true
 panoply-wasm.workspace = true
+panoply-share.workspace = true
 clap.workspace = true
 serde_json.workspace = true
 
