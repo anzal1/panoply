@@ -8,9 +8,10 @@ updates:
     open-pull-requests-limit: 5
     labels: ["dependencies"]
     groups:
-      # Patch and minor bumps arrive as one pull request a week. Majors stay separate so they get a real look.
-      rust-minor-and-patch:
-        update-types: ["minor", "patch"]
+      # Everything arrives as one pull request a week, so the tree stays quiet. CI decides if it can merge.
+      # Run the notices generator on that branch (see CONTRIBUTING.md) before merging, since Cargo.lock changes.
+      rust-dependencies:
+        patterns: ["*"]
     ignore:
       # Pinned to the 49 line on purpose, see Cargo.toml.
       - dependency-name: "wasmtime*"
