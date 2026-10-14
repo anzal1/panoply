@@ -1,0 +1,41 @@
+[package]
+name = "panoply-ocr"
+description = "OCR engine ladder (Apple Vision, Windows.Media.Ocr, PP-OCRv5 on ONNX Runtime) and the searchable PDF text layer writer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+panoply-core.workspace = true
+panoply-pdf.workspace = true
+panoply-image.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+png.workspace = true
+pdfium-render.workspace = true
+# ONNX Runtime is loaded at run time from a checksum-pinned download (like pdfium in
+# panoply-pdf), never linked: no download-binaries, no build-time network, nothing resident
+# until the first fallback job runs.
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+panoply-platform-macos = { path = "../panoply-platform-macos" }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = [
+    "Foundation",
+    "Foundation_Collections",
+    "Globalization",
+    "Graphics_Imaging",
+    "Media_Ocr",
+    "Storage_Streams",
+    "Win32_System_WinRT",
+] }
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

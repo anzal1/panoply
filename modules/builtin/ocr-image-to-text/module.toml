@@ -1,0 +1,76 @@
+# Image to text. Pattern A (answer in the bar). Spec: docs/specs/id-and-image.md 3.33.
+# Engine ladder (ADR 0004): Apple Vision on macOS and Windows.Media.Ocr on Windows first, then
+# PP-OCRv5 mobile on ONNX Runtime, then Tesseract for what neither reads (Bengali).
+accepts = ["image/*"]
+outputs = ["text/plain", "text/markdown"]
+
+[module]
+id = "image.to_text"
+name = "Image to text"
+version = "0.1.0"
+pattern = "A"
+summary = "Copy the text out of this picture."
+
+[options.languages]
+type = "text"
+default = "auto"
+label = "Languages"
+help = "auto, or a list such as hi,en. English, French, German, Spanish, Hindi, Marathi, Bengali, Arabic, Russian, Chinese, Japanese, Korean and more."
+
+[options.format]
+type = "choice"
+values = ["text", "markdown"]
+default = "text"
+label = "Format"
+help = "Plain text in reading order, or Markdown with headings and lists."
+
+[options.keep_line_breaks]
+type = "bool"
+default = false
+label = "Keep line breaks"
+help = "One line of text per line of the picture, instead of joining lines into paragraphs."
+
+[options.copy]
+type = "bool"
+default = false
+label = "Copy to clipboard"
+help = "Put the text on the clipboard."
+
+[options.save]
+type = "bool"
+default = false
+label = "Save as a file"
+help = "Also write name.txt (or name.md) next to the picture."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the text recognition model and the ONNX Runtime once, the first time a language needs them. Pictures never leave the computer."
+
+[[capabilities.models]]
+id = "ppocrv5-mobile-det"
+size_mb = 5
+license = "Apache-2.0"
+
+[[capabilities.models]]
+id = "ppocrv5-mobile-rec-en"
+size_mb = 8
+license = "Apache-2.0"
+
+[[capabilities.models]]
+id = "ppocrv5-mobile-rec-latin"
+size_mb = 8
+license = "Apache-2.0"
+
+[[capabilities.models]]
+id = "ppocrv5-mobile-rec-devanagari"
+size_mb = 8
+license = "Apache-2.0"
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true
