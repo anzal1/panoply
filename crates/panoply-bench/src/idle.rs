@@ -321,7 +321,14 @@ mod tests {
 
     #[test]
     fn a_sleeping_process_is_idle() {
-        let mut c = Command::new("sleep").arg("30").spawn().unwrap();
+        let mut c = if cfg!(windows) {
+            Command::new("powershell")
+                .args(["-NoProfile", "-Command", "Start-Sleep -Seconds 30"])
+                .spawn()
+                .unwrap()
+        } else {
+            Command::new("sleep").arg("30").spawn().unwrap()
+        };
         let r = measure(
             &Target::Pids(vec![c.id()]),
             Window {

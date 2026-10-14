@@ -6,10 +6,26 @@ use panoply_core::{CancelToken, JobSpec};
 use panoply_host::Registry;
 use serde_json::{Value, json};
 
+fn corpus_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/corpus/cache/pdf")
+}
+
+/// True when the PDF corpus is on disk. Without it these tests skip, unless
+/// `PANOPLY_REQUIRE_CORPUS` is set (as CI does on Linux), in which case they fail.
+fn have_corpus() -> bool {
+    if corpus_dir().is_dir() {
+        return true;
+    }
+    assert!(
+        std::env::var_os("PANOPLY_REQUIRE_CORPUS").is_none(),
+        "the PDF corpus is missing and PANOPLY_REQUIRE_CORPUS is set: run `python3 -I tests/corpus/fetch.py --kind pdf`"
+    );
+    eprintln!("skipping: PDF corpus not fetched (python3 -I tests/corpus/fetch.py --kind pdf)");
+    false
+}
+
 fn corpus(file: &str) -> PathBuf {
-    let p = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tests/corpus/cache/pdf")
-        .join(file);
+    let p = corpus_dir().join(file);
     assert!(
         p.is_file(),
         "{file} is not on disk: run `python3 -I tests/corpus/fetch.py --kind pdf`"
@@ -50,6 +66,9 @@ fn pages(p: &Path) -> usize {
 
 #[test]
 fn compress_shrinks_a_photo_pdf_and_keeps_the_original_of_a_scan_it_cannot_shrink() {
+    if !have_corpus() {
+        return;
+    }
     let (dir, f) = scratch_copy("compress", "qpdf/image-streams.pdf");
     let out = run("pdf.compress", &f, json!({}));
     assert_eq!(out.outputs.len(), 1);
@@ -82,6 +101,9 @@ fn compress_shrinks_a_photo_pdf_and_keeps_the_original_of_a_scan_it_cannot_shrin
 
 #[test]
 fn page_modules_agree_on_page_counts_on_a_long_tagged_document() {
+    if !have_corpus() {
+        return;
+    }
     let (dir, f) = scratch_copy("pages", "gov/nist-sp800-53r5.pdf");
     let n = pages(&f);
     assert!(n > 400);
@@ -100,6 +122,9 @@ fn page_modules_agree_on_page_counts_on_a_long_tagged_document() {
 
 #[test]
 fn encrypted_and_broken_files_get_plain_errors() {
+    if !have_corpus() {
+        return;
+    }
     for (file, want) in [
         ("qpdf/enc-r3-rc4-128.pdf", "password-protected"),
         ("qpdf/not-a-pdf.pdf", "not a PDF"),
