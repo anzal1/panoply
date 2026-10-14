@@ -140,6 +140,9 @@ jobs:
           # One cache per target and per profile: beta and release compile dependencies differently.
           shared-key: ${{ needs.plan.outputs.profile }}-${{ matrix.id }}
           cache-on-failure: true
+          # Only a run on main (the warm-cache dispatch) writes the cache. A tag run cannot share its cache
+          # with the next tag anyway, so saving it only fills the repository's cache quota.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: System packages (Linux)
         if: runner.os == 'Linux'
