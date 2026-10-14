@@ -1,18 +1,24 @@
 name: Module proposal
 description: Propose a new tool for Panoply
-labels: ["module"]
+labels: ["module request"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Panoply only adds a tool when it can beat the paid one it replaces. The questions below are how we decide.
+        See [CONTRIBUTING.md](https://github.com/anzal1/panoply/blob/main/CONTRIBUTING.md) for the rules every module follows.
   - type: input
     id: job
     attributes:
       label: Job
-      description: The sentence a user would say, e.g. "make this PDF small enough to email".
+      description: The sentence a user would say, for example "make this PDF small enough to email".
     validations:
       required: true
   - type: dropdown
     id: pattern
     attributes:
-      label: Flow pattern (see docs/FLOWS.md)
+      label: Flow pattern
+      description: See docs/FLOWS.md for what each pattern means.
       options:
         - A. Instant transform
         - B. Tuned transform
@@ -39,4 +45,11 @@ body:
     id: engine
     attributes:
       label: Engine
-      description: OS engine per platform, and the fallback (library or model with a clean license and its size).
+      description: The OS engine per platform, and the fallback (a library, or a model with a clean license and its size).
+  - type: checkboxes
+    id: offline
+    attributes:
+      label: Privacy
+      options:
+        - label: It can run fully on the device, with no upload.
+          required: true

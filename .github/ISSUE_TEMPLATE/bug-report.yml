@@ -1,25 +1,70 @@
 name: Bug report
-description: Something did not work
+description: Something did not work as it should
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. A sample file and exact steps are what make a bug fixable.
+        For a security problem, do not file it here. Use the Security tab instead.
   - type: input
     id: module
     attributes:
-      label: Module
+      label: Tool or module
+      description: The tool you used, for example "Compress PDF" or "Remove background".
     validations:
       required: true
   - type: textarea
     id: what
     attributes:
-      label: What happened and what you expected
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you dropped, which options you chose, and what you clicked. Command line users can paste the command.
+      placeholder: |
+        1. Drop a 40 page scanned PDF on the bar
+        2. Choose Compress, target 1 MB
+        3. See the error
     validations:
       required: true
   - type: textarea
     id: file
     attributes:
-      label: Sample file or steps to reproduce
-      description: Only share files you are happy to make public. For security issues use the Security tab instead.
-  - type: input
+      label: Sample file
+      description: Only share files you are happy to make public. If the file is private, describe it (type, size, how it was made).
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you run it
+      options:
+        - Desktop app
+        - Command line
+        - MCP server
+        - Not sure
+    validations:
+      required: true
+  - type: dropdown
     id: platform
     attributes:
-      label: Platform and version
+      label: Operating system
+      options:
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Windows (x64)
+        - Windows (arm64)
+        - Linux (x64)
+        - Linux (arm64)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Panoply version
+      description: Shown in the app under About, or run `panoply version`.
+      placeholder: v0.1.0-beta
+    validations:
+      required: true

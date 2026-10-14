@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question or share an idea
+    url: https://github.com/anzal1/panoply/discussions
+    about: Questions, how-tos and early ideas belong in Discussions. Open an issue once there is something to fix or build.
+  - name: Report a security problem
+    url: https://github.com/anzal1/panoply/security/policy
+    about: Please do not open a public issue for a vulnerability. Follow the security policy.

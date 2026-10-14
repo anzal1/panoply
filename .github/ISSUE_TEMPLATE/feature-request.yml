@@ -1,0 +1,42 @@
+name: Feature request
+description: Improve something that Panoply already does
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form is for changes to an existing tool or to the app. For a whole new tool, use the module proposal form.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: Describe the job and where Panoply gets in the way. The problem first, the solution second.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like instead
+      description: A rough idea is fine.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do today
+      description: Another tool or a workaround you use, and what it does better.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - PDF
+        - Image
+        - Video and audio
+        - OCR
+        - ID and document photos
+        - Device sharing
+        - Desktop app
+        - Command line
+        - MCP
+        - Other
+    validations:
+      required: true
