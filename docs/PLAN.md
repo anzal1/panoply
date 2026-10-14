@@ -120,7 +120,7 @@ measured and published.
 - Signing: Apple Developer account ($99 a year) to notarize on macOS,
   otherwise macOS warns users away. Windows SmartScreen warns on unsigned
   apps until reputation builds; winget and Scoop installs avoid most of it,
-  and free signing for open source (SignPath Foundation) can be applied for.
+  and the beta ships unsigned on purpose.
   Linux needs no signing. Everything else stays free.
 - Launch format, from the X research:
   - one gesture demo (drop a file on the bar, Shift-drag to convert)

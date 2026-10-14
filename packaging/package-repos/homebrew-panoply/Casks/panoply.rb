@@ -3,9 +3,11 @@
 #   brew install --cask anzal1/panoply/panoply
 cask "panoply" do
   version "0.1.0-beta"
-  sha256 "0000000000000000000000000000000000000000000000000000000000000000"
+  arch arm: "arm64", intel: "x64"
+  sha256 arm:   "0000000000000000000000000000000000000000000000000000000000000000",
+         intel: "0000000000000000000000000000000000000000000000000000000000000000"
 
-  url "https://github.com/anzal1/panoply/releases/download/v#{version}/Panoply-#{version}-macos-universal.zip"
+  url "https://github.com/anzal1/panoply/releases/download/v#{version}/Panoply-#{version}-macos-#{arch}.zip"
   name "Panoply"
   desc "Every file tool in one fast app, running on your own computer"
   homepage "https://github.com/anzal1/panoply"
@@ -30,8 +32,8 @@ cask "panoply" do
   ]
 
   caveats <<~EOS
-    This build is not notarized yet, so macOS may stop the first launch.
-    Allow it in System Settings > Privacy & Security > Open Anyway, or run:
+    Panoply is not signed or notarized (no Apple Developer account yet), so macOS blocks the first launch.
+    Allow it once in System Settings > Privacy & Security > Open Anyway, or run:
       xattr -dr com.apple.quarantine /Applications/Panoply.app
   EOS
 end

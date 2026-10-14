@@ -22,7 +22,8 @@ PKG = Path(__file__).resolve().parent.parent
 
 # key -> release asset name
 ASSETS = {
-    "MACOS_ZIP": "Panoply-{v}-macos-universal.zip",
+    "MACOS_ARM64_ZIP": "Panoply-{v}-macos-arm64.zip",
+    "MACOS_X64_ZIP": "Panoply-{v}-macos-x64.zip",
     "WIN_X64_ZIP": "Panoply-{v}-windows-x64.zip",
     "WIN_ARM64_ZIP": "Panoply-{v}-windows-arm64.zip",
     "WIN_X64_MSI": "Panoply-{v}-windows-x64.msi",
@@ -42,8 +43,8 @@ OUTPUTS = {
 
 CAVEATS = '''
   caveats <<~EOS
-    This build is not notarized yet, so macOS may stop the first launch.
-    Allow it in System Settings > Privacy & Security > Open Anyway, or run:
+    Panoply is not signed or notarized (no Apple Developer account yet), so macOS blocks the first launch.
+    Allow it once in System Settings > Privacy & Security > Open Anyway, or run:
       xattr -dr com.apple.quarantine /Applications/Panoply.app
   EOS
 '''

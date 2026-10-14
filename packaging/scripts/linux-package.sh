@@ -125,5 +125,7 @@ else
   (cd "$WORK" && "$APPIMAGE" --appimage-extract >/dev/null)
   test -x "$WORK/squashfs-root/usr/bin/panoply-desktop"
   test -x "$WORK/squashfs-root/usr/bin/panoply"
+  test -f "$WORK/squashfs-root/usr/share/doc/panoply/THIRD-PARTY-NOTICES.md"
+  test -f "$WORK/squashfs-root/panoply.png"
 fi
 ls -lh "$OUT"

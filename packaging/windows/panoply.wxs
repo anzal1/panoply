@@ -45,10 +45,15 @@
       <Component Id="IconFile">
         <File Id="IconFileFile" Source="$(AssetDir)\panoply.ico" KeyPath="yes" />
       </Component>
-      <Component Id="LicenseFiles">
+      <!-- One file per component: auto-generated GUIDs (WIX0367) need a single file in each. -->
+      <Component Id="LicenseMit">
         <File Id="LicenseMitFile" Source="$(AssetDir)\LICENSE-MIT" KeyPath="yes" />
-        <File Id="LicenseApacheFile" Source="$(AssetDir)\LICENSE-APACHE" />
-        <File Id="ThirdPartyNoticesFile" Source="$(AssetDir)\THIRD-PARTY-NOTICES.md" />
+      </Component>
+      <Component Id="LicenseApache">
+        <File Id="LicenseApacheFile" Source="$(AssetDir)\LICENSE-APACHE" KeyPath="yes" />
+      </Component>
+      <Component Id="ThirdPartyNotices">
+        <File Id="ThirdPartyNoticesFile" Source="$(AssetDir)\THIRD-PARTY-NOTICES.md" KeyPath="yes" />
       </Component>
     </ComponentGroup>
 

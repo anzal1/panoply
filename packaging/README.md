@@ -24,7 +24,7 @@ artifacts without creating a release.
 |---|---|---|
 | `plan` | ubuntu | version, MSI version, and whether `apps/desktop` is in the workspace |
 | `build` (6 legs) | macos-latest (arm64 and x64 cross), windows-latest, windows-11-arm, ubuntu-22.04, ubuntu-22.04-arm | `panoply` and `panoply-desktop` per target |
-| `package-macos` | macos-latest | universal2 binaries (lipo), `.app` in `.zip` and `.dmg`, optional signing and notarization |
+| `package-macos` (arm64, x64) | macos-latest | `.app` in `.zip` and `.dmg` per architecture, ad-hoc signed, not notarized |
 | `package-windows` (x64, arm64) | windows-latest, windows-11-arm | `.zip` and `.msi` (WiX v4), MSI installed, checked and removed on the runner |
 | `package-linux` (x64, arm64) | ubuntu-22.04, ubuntu-22.04-arm | `.tar.gz` and `.AppImage` |
 | `publish` (tags only) | ubuntu | `SHA256SUMS`, filled manifests, provenance attestation, draft release |
@@ -36,7 +36,7 @@ Linux builds on 22.04 so the binaries run on older glibc. Windows builds link th
 
 | File | What |
 |---|---|
-| `Panoply-V-macos-universal.dmg` / `.zip` | the app (`Panoply.app`, with the CLI inside as `Contents/MacOS/panoply-cli`) |
+| `Panoply-V-macos-{arm64,x64}.dmg` / `.zip` | the app (`Panoply.app`, with the CLI inside as `Contents/MacOS/panoply-cli`) |
 | `Panoply-V-windows-{x64,arm64}.msi` / `.zip` | installer / portable folder with `panoply-desktop.exe` and `panoply.exe` |
 | `Panoply-V-linux-{x64,arm64}.AppImage` / `.tar.gz` | AppImage / folder with `bin/`, `share/` and `install.sh` |
 | `panoply-cli-V-<platform>.tar.gz` or `.zip` | the command line tool alone (also the MCP server) |
@@ -58,13 +58,14 @@ not build, the release fails (by design: a release must not silently drop the ap
 
 ## Signing
 
-Releases are unsigned for now (no Apple Developer account, no Windows certificate). Nothing is required to
-produce one; every signing step skips cleanly when its secrets are absent, and the release notes and the
-Homebrew cask tell users how to get past the first-launch warnings.
+Releases are unsigned on purpose (no Apple Developer account, no Windows certificate). Nothing signs or
+notarizes in the workflow, and the release notes, the README and the Homebrew cask tell users the first-open step.
 
-- macOS: set the six `APPLE_*` repository secrets, see `signing/APPLE.md`.
-- Windows: not signed. `package.ps1` has two `SIGNING HOOK` markers where a signing step would go.
-- Linux: none needed. Every release file carries a GitHub build provenance attestation:
+- macOS: the app is ad-hoc signed (Apple Silicon will not run unsigned code at all) and not notarized.
+  First open: System Settings > Privacy & Security > Open Anyway, or `xattr -dr com.apple.quarantine /Applications/Panoply.app`.
+- Windows: not signed. SmartScreen shows "Windows protected your PC": More info, then Run anyway.
+  `package.ps1` has `SIGNING HOOK` markers where a signing step would go.
+- Linux: no signing needed. Every release file carries a GitHub build provenance attestation:
   `gh attestation verify FILE --repo anzal1/panoply`.
 
 ## Package managers

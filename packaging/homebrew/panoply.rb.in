@@ -3,9 +3,11 @@
 #   brew install --cask anzal1/panoply/panoply
 cask "panoply" do
   version "@VERSION@"
-  sha256 "@SHA256_MACOS_ZIP@"
+  arch arm: "arm64", intel: "x64"
+  sha256 arm:   "@SHA256_MACOS_ARM64_ZIP@",
+         intel: "@SHA256_MACOS_X64_ZIP@"
 
-  url "https://github.com/@REPO@/releases/download/v#{version}/Panoply-#{version}-macos-universal.zip"
+  url "https://github.com/@REPO@/releases/download/v#{version}/Panoply-#{version}-macos-#{arch}.zip"
   name "Panoply"
   desc "Every file tool in one fast app, running on your own computer"
   homepage "https://github.com/@REPO@"

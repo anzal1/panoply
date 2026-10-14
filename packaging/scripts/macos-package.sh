@@ -1,18 +1,19 @@
 #!/bin/bash
-# Packages the macOS artifacts from universal2 binaries already built and lipo'd into --stage.
+# Packages the macOS artifacts for one architecture from binaries already built into --stage.
 #
-#   macos-package.sh --version 0.1.0-beta.1 --stage DIR --out DIR --desktop real|stub|none
+#   macos-package.sh --version 0.1.0-beta.1 --arch arm64|x64 --stage DIR --out DIR --desktop real|stub|none
 #
-# --stage holds `panoply` (the CLI) and, with --desktop real, `panoply-desktop`.
+# --stage holds `panoply` (the CLI) and, with --desktop real, `panoply-desktop`, both built for --arch.
 #   real  builds Panoply.app with apps/desktop/packaging/macos/bundle.sh
 #   stub  builds a throwaway app around the CLI to exercise the zip, dmg and signing paths while the
 #         desktop crate is absent. Outputs get a `selftest-` prefix and are never released.
 #   none  CLI archive only
-# Output in --out: panoply-cli-V-macos-universal.tar.gz always, Panoply-V-macos-universal.{zip,dmg} with the app.
+# Output in --out: panoply-cli-V-macos-ARCH.tar.gz always, Panoply-V-macos-ARCH.{zip,dmg} with the app.
 #
-# Signing and notarization run only when these environment variables (repository secrets) are set,
-# and are skipped cleanly otherwise (the build is then ad-hoc signed, which Apple Silicon requires
-# for any code to run, but Gatekeeper still warns):
+# Releases are unsigned on purpose (no Apple Developer account): the build is ad-hoc signed, which Apple
+# Silicon requires for any code to run, and Gatekeeper warns on first open. Real signing and
+# notarization run only if these environment variables (repository secrets) are set, and are skipped
+# cleanly otherwise. Nothing sets them today:
 #   APPLE_CERTIFICATE_P12_BASE64   Developer ID Application certificate and key, exported as .p12, base64
 #   APPLE_CERTIFICATE_PASSWORD     the .p12 password
 #   APPLE_SIGNING_IDENTITY         e.g. "Developer ID Application: Name (TEAMID)"
@@ -20,17 +21,28 @@
 # See packaging/signing/APPLE.md.
 set -euo pipefail
 
-VERSION=""; STAGE=""; OUT=""; DESKTOP="none"
+VERSION=""; ARCH=""; STAGE=""; OUT=""; DESKTOP="none"
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) VERSION="$2"; shift 2 ;;
+    --arch) ARCH="$2"; shift 2 ;;
     --stage) STAGE="$(cd "$2" && pwd)"; shift 2 ;;
     --out) mkdir -p "$2"; OUT="$(cd "$2" && pwd)"; shift 2 ;;
     --desktop) DESKTOP="$2"; shift 2 ;;
     *) echo "unknown option $1"; exit 2 ;;
   esac
 done
-[ -n "$VERSION" ] && [ -n "$STAGE" ] && [ -n "$OUT" ] || { echo "usage: see header"; exit 2; }
+[ -n "$VERSION" ] && [ -n "$ARCH" ] && [ -n "$STAGE" ] && [ -n "$OUT" ] || { echo "usage: see header"; exit 2; }
+case "$ARCH" in
+  arm64) LIPO_ARCH=arm64 ;;
+  x64) LIPO_ARCH=x86_64 ;;
+  *) echo "unknown arch $ARCH"; exit 2 ;;
+esac
+# The binaries must really be for --arch (the x64 ones are cross-compiled on an arm64 runner).
+for b in "$STAGE"/panoply "$STAGE"/panoply-desktop; do
+  [ -f "$b" ] || continue
+  [ "$(lipo -archs "$b")" = "$LIPO_ARCH" ] || { echo "$b is $(lipo -archs "$b"), expected $LIPO_ARCH"; exit 1; }
+done
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PKG="$(cd "$HERE/.." && pwd)"
@@ -60,11 +72,11 @@ if [ -n "${APPLE_CERTIFICATE_P12_BASE64:-}" ] && [ -n "${APPLE_CERTIFICATE_PASSW
   fi
 fi
 if [ "$SIGNING" = 0 ]; then
-  echo "::notice title=macOS signing skipped::No Developer ID secrets set. The build is ad-hoc signed and Gatekeeper will warn. See packaging/signing/APPLE.md."
+  echo "::notice title=macOS signing skipped::Unsigned on purpose: no Developer ID secrets, so the build is ad-hoc signed and not notarized. Users get the first-open prompt described in the release notes."
 elif [ "$NOTARIZE" = 0 ] && [ "$DESKTOP" != stub ]; then
   echo "::notice title=macOS notarization skipped::Signed with Developer ID, but APPLE_ID, APPLE_TEAM_ID or APPLE_APP_SPECIFIC_PASSWORD is missing."
 fi
-echo "NOTARIZED=$NOTARIZE" > "$STATE/macos.env"
+echo "NOTARIZED=$NOTARIZE" > "$STATE/macos-$ARCH.env"
 
 sign() {
   if [ "$SIGNING" = 1 ]; then
@@ -101,7 +113,7 @@ if [ "$NOTARIZE" = 1 ]; then
   ditto -c -k "$WORK/cli/panoply" "$WORK/panoply-cli.zip"
   notarize "$WORK/panoply-cli.zip"
 fi
-CLI_NAME="panoply-cli-$VERSION-macos-universal"
+CLI_NAME="panoply-cli-$VERSION-macos-$ARCH"
 EXTRA=()
 [ -f "$ROOT/THIRD-PARTY-NOTICES.md" ] && EXTRA+=("$ROOT/THIRD-PARTY-NOTICES.md")
 $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
@@ -160,7 +172,7 @@ sign "$APPW"
 codesign --verify --deep --strict --verbose=2 "$APPW"
 lipo -archs "$APPW/Contents/MacOS/Panoply"
 
-APP_NAME="${PREFIX}Panoply-$VERSION-macos-universal"
+APP_NAME="${PREFIX}Panoply-$VERSION-macos-$ARCH"
 ZIP="$OUT/$APP_NAME.zip"
 ditto -c -k --sequesterRsrc --keepParent "$APPW" "$ZIP"
 if [ "$NOTARIZE" = 1 ]; then
@@ -185,6 +197,15 @@ if [ "$NOTARIZE" = 1 ]; then
   xcrun stapler staple "$DMG"
 fi
 hdiutil verify "$DMG"
+# The app on the disk image carries the notices and the icon.
+MNT="$WORK/mnt"; mkdir -p "$MNT"
+hdiutil attach "$DMG" -readonly -nobrowse -mountpoint "$MNT" >/dev/null
+trap 'hdiutil detach "$MNT" -force >/dev/null 2>&1 || true' EXIT
+test -f "$MNT/Panoply.app/Contents/Resources/THIRD-PARTY-NOTICES.md"
+ls "$MNT"/Panoply.app/Contents/Resources/*.icns >/dev/null
+test -L "$MNT/Applications"
+hdiutil detach "$MNT" >/dev/null
+trap - EXIT
 
 # ---- smoke test (stub builds only: the real app opens windows) -------------------------------------
 if [ "$DESKTOP" = stub ]; then

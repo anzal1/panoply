@@ -38,6 +38,9 @@ $licenses = @((Join-Path $Root 'LICENSE-MIT'), (Join-Path $Root 'LICENSE-APACHE'
 $notices = Join-Path $Root 'THIRD-PARTY-NOTICES.md'
 if (Test-Path $notices) { $licenses += $notices }
 
+$icon = Join-Path $Root 'apps/desktop/packaging/windows/panoply.ico'
+if (-not (Test-Path $icon)) { $icon = Join-Path $Pkg 'assets/panoply.ico' }
+
 # SIGNING HOOK (unused while releases are unsigned): sign "$Stage\panoply.exe" and "$Stage\panoply-desktop.exe" here, before anything is
 # archived or put in the MSI, then sign the .msi once it is built (below).
 
@@ -49,15 +52,13 @@ if ($Desktop -eq 'none') { return }
 $desktopExe = Join-Path $Stage 'panoply-desktop.exe'
 if ($Desktop -eq 'stub') { Copy-Item "$Stage/panoply.exe" $desktopExe -Force }
 $appName = "${prefix}Panoply-$Version-windows-$Arch"
-python -I $mk "$Out/$appName.zip" $appName "$Stage/panoply-desktop.exe=panoply-desktop.exe" "$Stage/panoply.exe=panoply.exe" @licenses "$Root/README.md"
+python -I $mk "$Out/$appName.zip" $appName "$Stage/panoply-desktop.exe=panoply-desktop.exe" "$Stage/panoply.exe=panoply.exe" "$icon=panoply.ico" @licenses "$Root/README.md"
 
 # ---- MSI -----------------------------------------------------------------------------------------
 $work = Join-Path ([IO.Path]::GetTempPath()) "panoply-msi-$Arch"
 Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $work | Out-Null
 
-$icon = Join-Path $Root 'apps/desktop/packaging/windows/panoply.ico'
-if (-not (Test-Path $icon)) { $icon = Join-Path $Pkg 'assets/panoply.ico' }
 Copy-Item $icon (Join-Path $work 'panoply.ico')
 # License files and the third-party notices are installed next to the program (see panoply.wxs).
 foreach ($f in 'LICENSE-MIT', 'LICENSE-APACHE', 'THIRD-PARTY-NOTICES.md') { Copy-Item (Join-Path $Root $f) (Join-Path $work $f) }
