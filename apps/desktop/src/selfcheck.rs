@@ -1528,12 +1528,12 @@ pub(crate) fn run_frames(out: PathBuf) {
         cx.set_activation_policy(ActivationPolicy::Accessory);
         crate::ui::theme::force_appearance(Some(false));
         platform::set_trash_dir(work.join("trash"));
-        let mut dirs = crate::paths::module_search_dirs();
-        dirs.push(
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../modules/examples-wasm"),
-        );
-        let catalog = Arc::new(Catalog::with_dirs(&dirs));
+        // The renders are README and launch images, so they show a fresh install: the built-in
+        // tools and no community modules. A shipped release carries none (the release workflow does
+        // not build modules/examples-wasm), and the machine's own module folders, PANOPLY_MODULES
+        // and the source-tree examples must not leak in either, or the tool count in the search
+        // field changes with whatever happens to be compiled or installed here.
+        let catalog = Arc::new(Catalog::with_dirs(&[]));
         let now = crate::units::now_secs();
         // Two recent jobs, so the list ends above the footer and no row is cut by it.
         let recents = cx.new(|_| Recents {
