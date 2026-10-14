@@ -139,7 +139,7 @@ jobs:
           fsutil devdrv trust /f "${letter}:"
           fsutil devdrv enable /disallowAv
           fsutil devdrv query "${letter}:"
-          New-Item -ItemType Directory -Force -Path $env:MOUNT | Out-Null
+          if ($env:MOUNT_MODE -ne 'junction') { New-Item -ItemType Directory -Force -Path $env:MOUNT | Out-Null }
           if ($env:MOUNT_MODE -eq 'junction') {
             New-Item -ItemType Directory -Force -Path "${letter}:\target" | Out-Null
             cmd /c mklink /J "$env:MOUNT" "${letter}:\target"
@@ -168,7 +168,7 @@ jobs:
           fsutil devdrv trust /f "${letter}:"
           fsutil devdrv enable /disallowAv
           fsutil devdrv query "${letter}:"
-          New-Item -ItemType Directory -Force -Path $env:MOUNT | Out-Null
+          if ($env:MOUNT_MODE -ne 'junction') { New-Item -ItemType Directory -Force -Path $env:MOUNT | Out-Null }
           if ($env:MOUNT_MODE -eq 'junction') {
             New-Item -ItemType Directory -Force -Path "${letter}:\target" | Out-Null
             cmd /c mklink /J "$env:MOUNT" "${letter}:\target"
