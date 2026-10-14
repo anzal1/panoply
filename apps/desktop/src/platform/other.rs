@@ -172,7 +172,7 @@ pub(crate) fn x11_take_focus(window: &Window) -> Option<u32> {
     use x11rb::CURRENT_TIME;
     use x11rb::connection::Connection;
     use x11rb::protocol::xproto::{ConnectionExt, InputFocus};
-    let id = match window.window_handle().ok()?.as_raw() {
+    let id = match HasWindowHandle::window_handle(window).ok()?.as_raw() {
         RawWindowHandle::Xcb(h) => h.window.get(),
         RawWindowHandle::Xlib(h) => u32::try_from(h.window).ok()?,
         _ => return None,
