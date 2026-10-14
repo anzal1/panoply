@@ -1,0 +1,24 @@
+id = "ae-passport"
+country = "AE"
+country_name = "United Arab Emirates"
+aliases = ["ARE", "UAE", "Emirates", "United Arab Emirates"]
+document = "passport"
+name = "UAE passport photo"
+authority = "Federal Authority for Identity, Citizenship, Customs and Port Security (ICP)"
+width_mm = 35
+height_mm = 45
+dpi = 300
+head_min_pct = 70
+head_max_pct = 80
+background = "#ffffff"
+glasses = "no_glare"
+status = "stale"
+source_url = "https://icp.gov.ae/en/faq/"
+source_quote = "A personal photo sized 3.5×4.5 cm with a white background."
+source_date = "2026-10-08"
+last_verified = "2026-10-14"
+notes = "The ICP FAQ states 3.5x4.5 cm, white background, recent, ICAO specifications, straight face and neutral expression. It gives no head size, so 70 to 80 percent is the ICAO default and this rule is marked stale. Hats and sunglasses are not allowed; only medical glasses that do not cover the eyes. A renewal photo must differ from the one in the current passport. No official pixel or KB limit was found. A 2022 Khaleej Times report on ICP criteria said 35x40 mm, and some third party sites say 40x60 mm; the current ICP page was preferred."
+
+[[conflicts]]
+source_url = "https://www.khaleejtimes.com/life-and-living/visa-and-immigration-in-uae/uae-updates-personal-photo-criteria-for-issuing-renewing-passports-emirates-ids"
+source_quote = "The dimensions of the photo must be 35mm X 40mm."

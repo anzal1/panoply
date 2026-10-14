@@ -1,0 +1,27 @@
+id = "in-passport"
+country = "IN"
+country_name = "India"
+aliases = ["IND", "India"]
+document = "passport"
+name = "India passport photo"
+authority = "Ministry of External Affairs, Passport Seva (Global Passport Seva 2.0)"
+width_mm = 35
+height_mm = 45
+dpi = 300
+width_px = 630
+height_px = 810
+head_min_pct = 80
+head_max_pct = 85
+background = "#ffffff"
+size_preset = "passport-seva-photo"
+glasses = "no_glare"
+status = "conflict"
+source_url = "https://www.indembhelsinki.gov.in/pdf/Guidelines for ICAO Compliant Photographs for Passport Applications.pdf"
+source_quote = "Close up of the head and top of the shoulders such that the face takes up 80-85% of the photograph."
+source_date = ""
+last_verified = "2026-10-14"
+notes = "The Passport Seva guideline (as posted by Indian missions) gives 630x810 pixels, colour, white background and a face of 80-85% of the frame, but no printed size in millimetres. 35x45 mm is the 7:9 shape of 630x810 and the usual ICAO print size, so treat it as derived. It tells applicants to remove glasses to avoid reflections. Head coverings are allowed only for religious reasons with the face from chin to forehead clear. Upload is mandatory from 1 December 2025. The Hague embassy still lists a 51x51 mm print with the face at 70 to 80 percent and a plain white or off-white background."
+
+[[conflicts]]
+source_url = "https://www.indianembassynetherlands.gov.in/page/basic-requirements-and-photo-specifications/"
+source_quote = "The photo should be in colour and of the size 2 inch x 2 inch (51mm x 51 mm). The face should be 70 to 80% of the photo."
