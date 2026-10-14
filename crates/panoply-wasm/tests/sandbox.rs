@@ -62,6 +62,9 @@ fn build(dir: &Path) -> PathBuf {
             ])
             .arg("--manifest-path")
             .arg(dir.join("Cargo.toml"))
+            // A target folder set for the host build (CI sets one) would take the module out of the
+            // project folder the tests look in.
+            .env_remove("CARGO_TARGET_DIR")
             .status()
             .expect("cargo runs");
         assert!(

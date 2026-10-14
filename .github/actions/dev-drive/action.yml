@@ -1,0 +1,20 @@
+name: Dev Drive
+description: >
+  Windows only. Mounts a ReFS Dev Drive as V: and points CARGO_HOME, CARGO_TARGET_DIR and the temp folders at it.
+  A Dev Drive scans files in the background instead of on every open, which is most of why a Rust build
+  and a test run that creates thousands of small files are so much slower on a stock Windows runner.
+runs:
+  using: composite
+  steps:
+    - shell: pwsh
+      run: |
+        # A fixed drive letter, so the paths (and with them the cache keys) are the same on every run.
+        $v = New-VHD -Path C:/dev_drive.vhdx -SizeBytes 30GB -Dynamic |
+          Mount-VHD -Passthru | Initialize-Disk -Passthru |
+          New-Partition -DriveLetter V -UseMaximumSize |
+          Format-Volume -DevDrive -Confirm:$false -Force
+        New-Item -ItemType Directory -Force V:/cargo, V:/target, V:/tmp | Out-Null
+        "CARGO_HOME=V:/cargo" >> $env:GITHUB_ENV
+        "CARGO_TARGET_DIR=V:/target" >> $env:GITHUB_ENV
+        "TEMP=V:/tmp" >> $env:GITHUB_ENV
+        "TMP=V:/tmp" >> $env:GITHUB_ENV

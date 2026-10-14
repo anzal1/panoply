@@ -1,9 +1,18 @@
-# cargo-nextest settings. Local runs use the default profile; CI uses `--profile ci`.
+# cargo-nextest settings. Local runs use the default profile (everything). CI uses the profiles below;
+# docs/CI.md lists which tests run where and why.
+#
+#   ci        every test on the machine, except the timing tests below
+#   ci-core   ci minus the "heavy" tests: the slowest corpus and model tests, which run on Linux only
+#   ci-idle   the timing tests (CPU and idle budgets), one at a time, after everything else has finished,
+#             because a test that measures a quiet process must not share the machine with 1000 others
+
 [profile.default]
 fail-fast = false
 
+# Tests that measure how quiet or how fast a process is. Alone, on a machine that is not busy.
 [profile.ci]
 fail-fast = false
+default-filter = "not (package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-vision::idle))"
 # Print only what matters in the log: failures, slow tests and a summary.
 status-level = "fail"
 final-status-level = "slow"
@@ -11,3 +20,29 @@ slow-timeout = { period = "60s", terminate-after = 10 }
 
 [profile.ci.junit]
 path = "junit.xml"
+
+# The heavy set: every test that takes 10 seconds or more on a Linux runner and has a Linux twin.
+# Tests that exist only on one OS (panoply-platform-macos) are never in this list: they would run nowhere.
+[profile.ci-core]
+inherits = "ci"
+default-filter = """
+not (package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-vision::idle))
+& not (
+    (binary_id(panoply-image::modules) & test(/^(quality_target_and_format_shootout|under_a_size_lands_within_two_percent_below)$/))
+  | (binary_id(panoply-pdf::compress) & test(/^(smallest_over_the_corpus_opens_everywhere_and_keeps_the_look|jpeg_2000_and_jbig2_scans_shrink_and_keep_the_look)$/))
+  | (binary_id(panoply-ocr::searchable) & test(=a_long_file_keeps_every_page_and_flags_the_blank_ones))
+  | (binary_id(panoply-image::corpus) & test(/^all_eight_orientations_come_out_upright_and_tagged_one$/))
+  | (binary_id(panoply-image::kb) & test(=every_preset_lands_in_its_window_under_both_readings))
+  | (binary_id(panoply-image::memory) & test(/^(the_400_megapixel_png_goes_through_every_module_under_the_cap|a_120_megapixel_jpeg_panorama_goes_through_in_strips)$/))
+  | (binary_id(panoply-id::faces) & test(/^(photos_for_every_country_hit_the_rule_to_within_a_millimetre|sharpness_numbers_separate_real_portraits_from_a_blur)$/))
+  | (binary_id(panoply-vision::modules) & test(/^(upscale_4x_has_the_right_size_and_tiles_leave_no_seams|solid_color_and_blur_results_are_opaque_and_keep_the_subject|the_model_engine_also_cuts_out_a_subject_when_asked|cutout_of_a_portrait_has_a_solid_subject_and_a_clear_background)$/))
+  | (binary_id(panoply-host::pdf_corpus) & test(=compress_shrinks_a_photo_pdf_and_keeps_the_original_of_a_scan_it_cannot_shrink))
+)
+"""
+
+[profile.ci-idle]
+inherits = "ci"
+default-filter = "package(panoply-bench) | binary_id(panoply-ocr::idle) | binary_id(panoply-vision::idle)"
+test-threads = 1
+[profile.ci-idle.junit]
+path = "junit-idle.xml"

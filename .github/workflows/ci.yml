@@ -1,48 +1,160 @@
 name: CI
 
+# What runs where, and why the jobs are split the way they are: docs/CI.md.
+
 on:
   push:
-    branches: [main]
+    branches: [main, "polish/**"]
   pull_request:
+  # Weekly, so a new advisory against dependencies nobody touched still shows up, and so the
+  # slow caches never go cold. A scheduled run always runs every job.
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
 
+# A superseded pull request or branch run is cancelled. A push to main is never cancelled by a
+# later push (each gets its own group), so the last green run on main always finishes.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  CARGO_NET_RETRY: "10"
+  RUST_BACKTRACE: short
+  # Tests that need a model or engine download it. Panoply asks before any download, so the test
+  # run says yes the way `--yes` does (each yes is recorded in a throwaway data folder).
+  PANOPLY_YES: "1"
 
 jobs:
-  rust:
+  # ------------------------------------------------------------------------------------------------
+  # Which jobs does this change need? A push that only touches documentation skips every Rust job.
+  # ------------------------------------------------------------------------------------------------
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      code: ${{ steps.c.outputs.code }}
+      deps: ${{ steps.c.outputs.deps }}
+      notices: ${{ steps.c.outputs.notices }}
+      conversions: ${{ steps.c.outputs.conversions }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: tools/ci
+      - id: c
+        run: python3 -I tools/ci/changes.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+
+  # Runs on every push and takes a few seconds: every relative link in the Markdown files resolves.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: python3 -I tools/ci/check_docs.py
+
+  # ------------------------------------------------------------------------------------------------
+  # Rust, split so the quick answers come first and the slow one starts at once.
+  # ------------------------------------------------------------------------------------------------
+  fmt:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all --check
+
+  clippy:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    name: clippy (${{ matrix.os }})
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - if: runner.os == 'Windows'
+        uses: ./.github/actions/dev-drive
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
-          components: rustfmt, clippy
-          targets: wasm32-wasip2
-      - uses: Swatinem/rust-cache@v2
-      - name: Linux system libraries for the GPUI desktop app
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq --no-install-recommends \
-            pkg-config cmake clang libclang-dev libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev \
-            libx11-dev libx11-xcb-dev libxcb1-dev libxcb-xkb-dev libxcb-render0-dev libxcb-shape0-dev \
-            libxcb-xfixes0-dev libfontconfig-dev libfreetype-dev libssl-dev libasound2-dev libvulkan-dev \
-            libdbus-1-dev libgtk-3-dev
-      - run: cargo fmt --all --check
-        if: matrix.os == 'ubuntu-latest'
+          components: clippy
+      - if: runner.os == 'Linux'
+        uses: ./.github/actions/linux-libs
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          shared-key: clippy-${{ matrix.os }}
+          save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/polish/') }}
       - run: cargo clippy --workspace --exclude gpui-base --all-targets -- -D warnings
-      - uses: actions/setup-python@v5
+
+  # Every test, on every OS, except the slowest corpus and model tests, which run on Linux only (the
+  # nextest profiles in .config/nextest.toml and the table in docs/CI.md). The tests are built once
+  # with the `ci` profile in Cargo.toml and run by cargo-nextest, which runs the test binaries side by
+  # side instead of one after the other.
+  test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    name: test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, profile: ci }
+          - { os: windows-latest, profile: ci-core }
+          - { os: macos-latest, profile: ci-core }
+    runs-on: ${{ matrix.os }}
+    env:
+      NEXTEST_ARGS: --workspace --exclude gpui-base --cargo-profile ci --profile ${{ matrix.profile }} --lib --bins --tests
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Folders for the test run
+        shell: bash
+        run: |
+          echo "PANOPLY_DATA_DIR=$RUNNER_TEMP/panoply-data" >> "$GITHUB_ENV"
+          echo "PANOPLY_ENGINES_DIR=$RUNNER_TEMP/panoply-engines" >> "$GITHUB_ENV"
+      - if: runner.os == 'Windows'
+        uses: ./.github/actions/dev-drive
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
-          python-version: "3.12"
-      - uses: actions/cache@v4
+          targets: wasm32-wasip2
+      - if: runner.os == 'Linux'
+        uses: ./.github/actions/linux-libs
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          shared-key: test-${{ matrix.os }}
+          save-if: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/polish/') }}
+      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        with:
+          tool: nextest
+
+      # The test corpus, cached by the hash of its manifests. A hit skips Python and the downloads.
+      - id: corpus
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: tests/corpus/cache
           key: corpus-${{ runner.os }}-${{ hashFiles('tests/corpus/*.toml', 'tests/corpus/*.py') }}
+      - if: steps.corpus.outputs.cache-hit != 'true'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
       - name: Fetch and generate the test corpus
+        if: steps.corpus.outputs.cache-hit != 'true'
         shell: bash
         run: |
           python -m pip install --quiet pillow
@@ -50,49 +162,106 @@ jobs:
           python tests/corpus/generate.py --kind pdf,image || echo "some generated files need local tools; their tests skip"
       # Corpus tests run on every file that is present; set PANOPLY_REQUIRE_CORPUS=1
       # once generate.py builds every generated file on all three OSes.
-      # Tests that need a model or engine download it. Panoply asks before any download, so the
-      # test run says yes the way `--yes` does (each yes is recorded in a throwaway data folder).
-      - run: cargo test --workspace --exclude gpui-base --no-fail-fast
-        env:
-          PANOPLY_YES: "1"
-          PANOPLY_DATA_DIR: ${{ runner.temp }}/panoply-data
 
+      # Engines and models the tests download (pdfium, ONNX Runtime, the small models), cached by the
+      # pins in the source: a new pin changes the key, a checksum is still verified on every use.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/panoply-engines
+          key: engines-${{ runner.os }}-${{ hashFiles('crates/panoply-pdf/src/pdfium.rs', 'crates/panoply-ocr/src/models.rs', 'crates/panoply-id/src/runtime.rs', 'crates/panoply-vision/src/runtime.rs', 'crates/panoply-vision/src/models.rs', 'crates/panoply-vision/src/fetch.rs', 'crates/panoply-media/src/engine/pins.rs') }}
+
+      # Some tests build small WebAssembly modules. Built here once, from a cache, they are ready
+      # when the tests start instead of being compiled by a dozen test processes at the same moment.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: wasm
+        with:
+          path: |
+            crates/panoply-wasm/tests/fixtures/*/target
+            modules/examples-wasm/*/target
+          key: wasm-${{ runner.os }}-${{ hashFiles('crates/panoply-wasm/tests/fixtures/**', 'modules/examples-wasm/**') }}
+      - name: Build the WebAssembly test modules
+        if: steps.wasm.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          for d in crates/panoply-wasm/tests/fixtures/* modules/examples-wasm/*; do
+            env -u CARGO_TARGET_DIR cargo build --release --target wasm32-wasip2 --quiet --manifest-path "$d/Cargo.toml"
+          done
+
+      - name: Build the tests
+        run: cargo nextest run ${{ env.NEXTEST_ARGS }} --no-run
+      - name: Run the tests
+        run: cargo nextest run ${{ env.NEXTEST_ARGS }}
+      # The timing tests (idle CPU and memory budgets) get the machine to themselves.
+      - name: Run the timing tests alone
+        run: cargo nextest run --workspace --exclude gpui-base --cargo-profile ci --profile ci-idle --lib --bins --tests
+      - name: Doc tests
+        run: cargo test --workspace --exclude gpui-base --profile ci --doc
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: junit-${{ matrix.os }}
+          path: ${{ env.CARGO_TARGET_DIR || 'target' }}/nextest/*/junit*.xml
+          if-no-files-found: ignore
+          retention-days: 3
+
+  # ------------------------------------------------------------------------------------------------
+  # Dependency checks and generated files.
+  # ------------------------------------------------------------------------------------------------
   licenses:
+    needs: changes
+    if: needs.changes.outputs.deps == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: EmbarkStudios/cargo-deny-action@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
         with:
           command: check licenses bans sources
 
   # Advisories are a separate job: a new advisory against an untouched dependency should show up here
   # without hiding the license result. Ignored advisories and their reasons are in deny.toml.
   advisories:
+    needs: changes
+    if: needs.changes.outputs.deps == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: EmbarkStudios/cargo-deny-action@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: EmbarkStudios/cargo-deny-action@3c6349835b2b7b196a839186cb8b78e02f7b5f25 # v2.1.1
         with:
           command: check advisories
 
   # THIRD-PARTY-NOTICES.md is generated from Cargo.lock. This fails when Cargo.lock (or the hand-written
-  # parts in tools/notices) changed and the file was not regenerated. It runs on every push and pull
-  # request, which covers every Cargo.lock change.
+  # parts in tools/notices) changed and the file was not regenerated.
   notices:
+    needs: changes
+    if: needs.changes.outputs.notices == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: cargo fetch --locked
       - run: python3 -I tools/notices/generate.py --check
 
   conversions:
+    needs: changes
+    if: needs.changes.outputs.conversions == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Regenerate conversion graph and fail if it changed
         run: |
           python3 conversions/formats.py
           git diff --exit-code docs/CONVERSIONS.md crates/panoply-convert/data/graph.json
+
+  # One name to require in branch protection. Skipped jobs (a docs-only push) count as passed;
+  # failed or cancelled ones do not.
+  ci:
+    if: always()
+    needs: [changes, docs, fmt, clippy, test, licenses, advisories, notices, conversions]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every needed job passed or was skipped
+        run: |
+          echo '${{ toJSON(needs) }}' | python3 -c '
+          import json, sys
+          bad = {k: v["result"] for k, v in json.load(sys.stdin).items() if v["result"] not in ("success", "skipped")}
+          print("all jobs passed or were skipped" if not bad else f"not green: {bad}")
+          sys.exit(1 if bad else 0)'
