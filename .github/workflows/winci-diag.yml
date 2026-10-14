@@ -32,7 +32,10 @@ jobs:
           PANOPLY_YES: "1"
         run: |
           cargo test -p panoply-ocr --test accuracy --no-run
-          for t in a_tall_page_read_in_strips_loses_no_lines bengali_goes_to_tesseract_when_it_is_installed ppocr_reads_a_crooked_noisy_scan ppocr_reads_clean_english_text ppocr_reads_clean_hindi_and_mixed_hindi_english word_boxes_sit_on_the_words; do
-            echo "=== $t"
-            cargo test -p panoply-ocr --test accuracy -- --exact $t --nocapture --test-threads=1 2>&1 | tail -25 || true
-          done
+          run() { echo "=== $*"; cargo test -p panoply-ocr --test accuracy -- "$@" --nocapture --test-threads=1 2>&1 | grep -vE "Compiling|Downloaded|Finished|Running|warning" | tail -30 || true; }
+          run
+          run a_tall_page bengali
+          run bengali ppocr_reads_a_crooked_noisy_scan
+          run a_tall_page ppocr_reads_a_crooked_noisy_scan
+          run ppocr_reads_a_crooked_noisy_scan ppocr_reads_clean_english_text
+          run word_boxes ppocr_reads_clean_hindi
