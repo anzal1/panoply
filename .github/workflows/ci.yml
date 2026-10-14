@@ -178,26 +178,20 @@ jobs:
           "DEVDRIVE_LETTER=$letter" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "dev drive ready in $($sw.Elapsed.TotalSeconds) s"
       - name: Experiment settings
+        id: xv
         shell: bash
         run: |
           v="${{ inputs.variant }}"
           if [[ "$v" == *lld* && "$RUNNER_OS" == Windows ]]; then
             echo "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=rust-lld.exe" >> "$GITHUB_ENV"
           fi
-          if [[ "$v" == *w2* ]]; then
-            awk '/^\[profile.ci\]/{ci=1} {if(ci) sub(/opt-level = 3/,"opt-level = 2"); print}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
-          fi
-          if [[ "$v" == *d1* ]]; then
-            awk '/^\[profile.ci.package."\*"\]/{star=1;print;next} star&&/opt-level/{print "opt-level = 1";star=0;next} {print}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
-          fi
-          if [[ "$v" == *cgu16* ]]; then
-            awk '{print} /^strip = "debuginfo"/{print "codegen-units = 16"}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
-          fi
-          git diff --stat Cargo.toml || true
           if [[ "$v" == *sccache* ]]; then
             echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
             echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
           fi
+          # w1 and w2 only change workspace crates, which rust-cache never stores, so they share a cache key.
+          ck="${v//-w1/}"; ck="${ck//-w2/}"
+          echo "ckey=$ck" >> "$GITHUB_OUTPUT"
       - name: Folders for the test run
         shell: bash
         run: |
@@ -212,10 +206,27 @@ jobs:
         uses: ./.github/actions/linux-libs
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
-          shared-key: test-${{ matrix.os }}${{ inputs.variant && format('-{0}', inputs.variant) || '' }}
+          shared-key: test-${{ matrix.os }}${{ steps.xv.outputs.ckey && format('-{0}', steps.xv.outputs.ckey) || '' }}
           # A failing test must not throw away a 15 minute build.
           cache-on-failure: true
           save-if: ${{ matrix.shard == 1 }}
+      - name: Experiment profile edits
+        shell: bash
+        run: |
+          v="${{ inputs.variant }}"
+          if [[ "$v" == *w2* ]]; then
+            awk '/^\[profile.ci\]/{ci=1} {if(ci) sub(/opt-level = 3/,"opt-level = 2"); print}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
+          fi
+          if [[ "$v" == *w1* ]]; then
+            awk '/^\[profile.ci\]/{ci=1} {if(ci) sub(/opt-level = 3/,"opt-level = 1"); print}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
+          fi
+          if [[ "$v" == *d1* ]]; then
+            awk '/^\[profile.ci.package."\*"\]/{star=1;print;next} star&&/opt-level/{print "opt-level = 1";star=0;next} {print}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
+          fi
+          if [[ "$v" == *cgu16* ]]; then
+            awk '{print} /^strip = "debuginfo"/{print "codegen-units = 16"}' Cargo.toml > Cargo.new && mv Cargo.new Cargo.toml
+          fi
+          git diff --stat Cargo.toml || true
       - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
         with:
           tool: nextest
