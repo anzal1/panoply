@@ -43,7 +43,7 @@ pub struct Options {
     pub dpi: f32,
     /// Most pixels one page may have at that resolution; larger pages are drawn smaller. Apple
     /// Vision's memory grows with the picture, and a page of this size (A4 at about 250 dpi)
-    /// reads as well as a bigger one, so the default keeps a job inside 300 MB.
+    /// reads as well as a bigger one, so on macOS the default keeps a job inside 300 MB.
     pub max_pixels: usize,
     /// Also collect the text of the read pages, for a text file.
     pub collect_text: bool,
