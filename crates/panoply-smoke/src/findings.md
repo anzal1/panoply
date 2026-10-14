@@ -21,7 +21,7 @@ Beyond the 244, the stricter matrix and a read of the results that passed found 
 - `media.compress` (sound): when the default quality cannot make a file smaller, the original is left alone and the card says so.
 - `image.resize`: a JPEG 2000, JPEG XL or RAW photo is written as a JPEG, not a PNG several times its size. Test: `resizing_a_jpeg_2000_photo_writes_a_jpeg_not_a_larger_png`.
 - `media.streams`: "1 stream", not "1 streams".
-- `image.to_text` and `pdf.ocr`: pictures and pages are read at no more than 6 million pixels (A4 at about 250 dpi). A 31 MP photograph took 660 MB, now 288 MB. Test: `a_page_sized_picture_is_read_whole_and_a_huge_one_is_brought_down`.
+- `image.to_text` and `pdf.ocr`: on macOS, pictures and pages are read at no more than 6 million pixels (A4 at about 250 dpi), because Apple Vision's memory grows with the picture. Other systems keep 36 million. A 31 MP photograph took 660 MB, now 288 MB. Test: `a_page_sized_picture_is_read_whole_and_a_huge_one_is_brought_down`.
 - Manifests: `image/heif` is listed as an output of Compress, Convert, Resize and Strip metadata, and `image/x-canon-cr2` for Strip metadata.
 
 ### Budgets

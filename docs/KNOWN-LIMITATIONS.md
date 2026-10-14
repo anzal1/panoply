@@ -114,7 +114,7 @@ More about the gaps:
   1080p. A 33 megapixel HEIF photo or a camera RAW file can take 0.4 to 1.6 GB in any picture tool,
   because the system's decoder holds it. Everything else stays under 300 MB. Pictures over 24
   megapixels are processed at a reduced size for cutout, erase and watermark, and the result card says
-  so. OCR reads pictures and pages at no more than 6 million pixels (A4 at about 250 dpi).
+  so. On macOS, OCR reads pictures and pages at no more than 6 million pixels (A4 at about 250 dpi).
 - **Compress video picks a hardware encoder first.** Hardware encoders are fast and less efficient than
   x264 at tight sizes. Pass `--codec av1` when you need the smallest file and have time.
 - **A tool that cannot reach a target says so.** "Under 1 MB" on a scan may produce a bigger file than

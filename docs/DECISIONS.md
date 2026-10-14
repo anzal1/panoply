@@ -133,7 +133,7 @@ The smoke matrix (`crates/panoply-smoke`, results in `docs/research/beta-smoke.m
 | PDF 12 OCR | any file | 650 MB | 347 to 543 MB | Apple Vision is 156 MB before a page is read. A page with next to no text also starts the Hindi and Bengali fallback (ONNX Runtime and the PP-OCR models, about 200 MB). The row for PDF 12 above says "inside the 300 MB cap", which holds for pages that Vision reads |
 | 3.11 Upscale | a batch | 400 MB | 313 MB | The model plus the allocator keeping its high-water mark between the pictures of a batch |
 
-What was fixed instead of excepted: Image to text and OCR on pictures held a 31 MP photograph at 8192 pixels on the long side, 660 MB. Pictures and pages are now read at no more than 6 million pixels (A4 at about 250 dpi), 156 MB plus about 20 MB per million pixels. The first thing to revisit before a public release is the model-backed rows (Erase, Remove watermark, OCR): they are the ones that could come back under the cap with work, by releasing Vision before the fallback starts and by encoding results in strips.
+What was fixed instead of excepted: Image to text and OCR on pictures held a 31 MP photograph at 8192 pixels on the long side, 660 MB. On macOS, pictures and pages are now read at no more than 6 million pixels (A4 at about 250 dpi), 156 MB plus about 20 MB per million pixels; other systems keep 36 million. The first thing to revisit before a public release is the model-backed rows (Erase, Remove watermark, OCR): they are the ones that could come back under the cap with work, by releasing Vision before the fallback starts and by encoding results in strips.
 
 ## Decided by the user (2026-10-13)
 

@@ -11,12 +11,18 @@ use crate::types::OcrImage;
 /// Longest side of a picture handed to an engine. Bigger pictures are reduced on the way in.
 pub const MAX_SIDE: u32 = 8192;
 
-/// Most pixels of a picture handed to an engine, and of a page drawn for reading. Six million is
-/// A4 at about 250 dpi, where 10 point text is 35 pixels tall and reads as well as at 300 dpi.
-/// Apple Vision's memory grows by about 20 MB per million pixels on top of 156 MB (measured on a
-/// 31 MP photograph: 660 MB at full size, 346 MB at 9 MP), so this keeps a job inside the 300 MB
-/// budget.
+/// Most pixels of a picture handed to an engine, and of a page drawn for reading. On macOS it is
+/// six million, A4 at about 250 dpi, where 10 point text is 35 pixels tall and reads as well as at
+/// 300 dpi: Apple Vision's memory grows by about 20 MB per million pixels on top of 156 MB
+/// (measured on a 31 MP photograph: 660 MB at full size), and this keeps a job inside the 300 MB
+/// budget. The other engines have no such cost and keep the larger limit, so a page is read at
+/// 300 dpi as before.
+#[cfg(target_os = "macos")]
 pub const MAX_PIXELS: usize = 6_000_000;
+
+/// See the macOS value above.
+#[cfg(not(target_os = "macos"))]
+pub const MAX_PIXELS: usize = 36_000_000;
 
 /// Read a picture file as an upright (EXIF orientation applied), sRGB, 8 bit image, with any
 /// transparency flattened onto white.
@@ -162,9 +168,9 @@ mod tests {
         // A4 at 200 dpi, and a 4 MP photo, are read as they are.
         assert_eq!(side_for(1654, 2339), MAX_SIDE);
         assert_eq!(side_for(2400, 1700), MAX_SIDE);
-        // A 31 megapixel panorama comes down to the pixel cap, keeping its shape.
-        let side = side_for(9000, 3500);
-        let (w, h) = (f64::from(side), f64::from(side) * 3500.0 / 9000.0);
+        // A 100 megapixel panorama comes down to the pixel cap, keeping its shape.
+        let side = side_for(14_000, 7_200);
+        let (w, h) = (f64::from(side), f64::from(side) * 7200.0 / 14000.0);
         assert!(w * h <= MAX_PIXELS as f64 * 1.001, "{w} x {h}");
         assert!(side > 3000, "{side}");
     }
