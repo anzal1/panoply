@@ -90,8 +90,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - if: runner.os == 'Windows'
-        uses: ./.github/actions/dev-drive
       - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
           components: clippy
@@ -128,8 +126,6 @@ jobs:
         run: |
           echo "PANOPLY_DATA_DIR=$RUNNER_TEMP/panoply-data" >> "$GITHUB_ENV"
           echo "PANOPLY_ENGINES_DIR=$RUNNER_TEMP/panoply-engines" >> "$GITHUB_ENV"
-      - if: runner.os == 'Windows'
-        uses: ./.github/actions/dev-drive
       - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
         with:
           targets: wasm32-wasip2
@@ -187,7 +183,7 @@ jobs:
         shell: bash
         run: |
           for d in crates/panoply-wasm/tests/fixtures/* modules/examples-wasm/*; do
-            env -u CARGO_TARGET_DIR cargo build --release --target wasm32-wasip2 --quiet --manifest-path "$d/Cargo.toml"
+            cargo build --release --target wasm32-wasip2 --quiet --manifest-path "$d/Cargo.toml"
           done
 
       - name: Build the tests
@@ -214,7 +210,7 @@ jobs:
         if: always()
         with:
           name: junit-${{ matrix.os }}
-          path: ${{ env.CARGO_TARGET_DIR || 'target' }}/nextest/*/junit*.xml
+          path: target/nextest/*/junit*.xml
           if-no-files-found: ignore
           retention-days: 3
 
