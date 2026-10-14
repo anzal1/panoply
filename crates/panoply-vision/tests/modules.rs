@@ -63,7 +63,7 @@ fn the_model_engine_also_cuts_out_a_subject_when_asked() {
     if !have(&ISNET) {
         return;
     }
-    let Some(src) = corpus("heic/xiaomi.heic") else {
+    let Some(src) = heic_corpus("heic/xiaomi.heic") else {
         return;
     };
     let d = Scratch::new("cutout-model");
@@ -89,7 +89,7 @@ fn the_model_engine_also_cuts_out_a_subject_when_asked() {
 
 #[test]
 fn solid_color_and_blur_results_are_opaque_and_keep_the_subject() {
-    let Some(src) = corpus("heic/xiaomi.heic") else {
+    let Some(src) = heic_corpus("heic/xiaomi.heic") else {
         return;
     };
     let d = Scratch::new("cutout-bg");

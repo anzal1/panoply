@@ -120,6 +120,9 @@ pub async fn read_limited(body: Incoming, limit: usize) -> Result<Bytes> {
 /// Limits for the server loop.
 const MAX_CONNECTIONS: usize = 256;
 const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
+/// How long a closing server waits for connections in flight (a little over the 5 seconds each
+/// connection gets to finish its response).
+pub const DRAIN_TIMEOUT: Duration = Duration::from_secs(6);
 
 /// Handle requests on `listener` until `shutdown` flips to true. Connections in flight are
 /// closed gracefully: they get a few seconds to finish their current response.
@@ -143,7 +146,16 @@ pub async fn serve<F, Fut>(
                     continue;
                 }
             },
-            _ = shutdown.changed() => return,
+            _ = shutdown.changed() => {
+                // Connections in flight finish their current response before this returns, so a
+                // caller that waits for the server task never cuts a download short.
+                let _ = tokio::time::timeout(
+                    DRAIN_TIMEOUT,
+                    limit.acquire_many(MAX_CONNECTIONS as u32),
+                )
+                .await;
+                return;
+            }
         };
         let Ok(permit) = limit.clone().try_acquire_owned() else {
             drop(tcp);
