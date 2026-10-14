@@ -25,6 +25,21 @@ fn lan_config(alias: &str, mport: u16) -> NodeConfig {
     c
 }
 
+/// True when this machine can send to the multicast group on that LAN. Hosted CI VMs (the
+/// macOS runners) answer "No route to host" for any multicast send, which no code can fix, so
+/// the multicast tests say so and stand down there. The HTTP scan test needs no multicast.
+fn multicast_works(ip: Ipv4Addr) -> bool {
+    use socket2::{Domain, Protocol, Socket, Type};
+    let Ok(sock) = Socket::new(Domain::IPV4, Type::DGRAM, Some(Protocol::UDP)) else {
+        return false;
+    };
+    let target = std::net::SocketAddr::from((Ipv4Addr::new(224, 0, 0, 167), free_udp_port()));
+    sock.bind(&std::net::SocketAddr::from((ip, 0)).into())
+        .is_ok()
+        && sock.set_multicast_if_v4(&ip).is_ok()
+        && sock.send_to(b"probe", &target.into()).is_ok()
+}
+
 async fn until(what: &str, mut f: impl FnMut() -> bool) {
     let end = Instant::now() + Duration::from_secs(8);
     while Instant::now() < end {
@@ -41,6 +56,9 @@ async fn two_nodes_find_each_other_by_multicast_without_polling() {
     let Some(ip) = lan_ip() else {
         return eprintln!("SKIPPED: no private LAN interface");
     };
+    if !multicast_works(ip) {
+        return eprintln!("SKIPPED: this machine cannot send multicast on {ip}");
+    }
     let mport = free_udp_port();
     let a = Node::start(lan_config("Alpha", mport)).await.unwrap();
     let mut events = a.subscribe();
@@ -111,6 +129,9 @@ async fn an_independent_peer_announcing_on_the_group_is_found_and_answered() {
     let Some(ip) = lan_ip() else {
         return eprintln!("SKIPPED: no private LAN interface");
     };
+    if !multicast_works(ip) {
+        return eprintln!("SKIPPED: this machine cannot send multicast on {ip}");
+    }
     let Some(py) = tls13_python() else {
         return eprintln!("SKIPPED: no python3 with TLS 1.3");
     };
