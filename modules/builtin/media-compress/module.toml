@@ -9,7 +9,7 @@ id = "media.compress"
 name = "Compress video"
 version = "0.1.0"
 pattern = "B"
-summary = "Make this video small enough to send or upload, under a size or as small as it can look good."
+summary = "Make this video small enough to send or upload, under a size or as small as looks good."
 
 [options.under]
 type = "size"

@@ -62,7 +62,7 @@ label = "Animated files"
 [capabilities]
 files = "chosen"
 network = true
-network_reason = "Downloads the ONNX Runtime (about 33 MB) and the MI-GAN fill model (about 28 MB) once, the first time you erase something. Nothing else leaves your device."
+network_reason = "Downloads a model once, after you say yes."
 
 [[capabilities.models]]
 id = "migan-512-places2"
