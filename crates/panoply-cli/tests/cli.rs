@@ -67,6 +67,21 @@ fn version_prints() {
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
+/// `cargo`, at low priority where the platform has `nice`. Windows has no `nice`; the copy that
+/// Git for Windows puts on PATH eats the backslashes in the arguments it forwards.
+fn low_priority_cargo() -> Command {
+    #[cfg(unix)]
+    {
+        let mut c = Command::new("nice");
+        c.args(["-n", "15"]).arg(env!("CARGO"));
+        c
+    }
+    #[cfg(not(unix))]
+    {
+        Command::new(env!("CARGO"))
+    }
+}
+
 /// Build an example module project once per test run, at low priority on three jobs.
 fn build_module(name: &str) -> PathBuf {
     static BUILD: Mutex<()> = Mutex::new(());
@@ -74,9 +89,7 @@ fn build_module(name: &str) -> PathBuf {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../modules/examples-wasm")
         .join(name);
-    let status = Command::new("nice")
-        .args(["-n", "15"])
-        .arg(env!("CARGO"))
+    let status = low_priority_cargo()
         .args([
             "build",
             "--release",
