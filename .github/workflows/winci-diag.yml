@@ -25,9 +25,6 @@ jobs:
           python -m pip install --quiet pillow
           python -I tests/corpus/fetch.py --kind pdf,image
           python tests/corpus/generate.py --kind pdf,image || true
-      - name: faces sharpness
-        if: always()
-        run: cargo test -p panoply-id --test faces sharpness_numbers -- --nocapture --test-threads=1
-      - name: ocr accuracy one at a time
+      - name: ocr probe
         if: always() && matrix.os == 'windows-latest'
-        run: cargo test -p panoply-ocr --test accuracy -- --nocapture --test-threads=1
+        run: cargo test -p panoply-ocr --test zz_diag -- --nocapture --test-threads=1
