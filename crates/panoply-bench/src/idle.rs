@@ -364,14 +364,15 @@ mod tests {
     fn a_sleeping_process_is_idle() {
         let mut c = if cfg!(windows) {
             // ping.exe waits on a timer and costs nothing in between, unlike a PowerShell that
-            // is still loading its runtime while the window opens.
+            // is still loading its runtime while the window opens. It runs far longer than the
+            // measurement (which can take most of a minute on a loaded runner) and is killed after.
             Command::new("ping")
-                .args(["-n", "30", "127.0.0.1"])
+                .args(["-n", "600", "127.0.0.1"])
                 .stdout(Stdio::null())
                 .spawn()
                 .unwrap()
         } else {
-            Command::new("sleep").arg("30").spawn().unwrap()
+            Command::new("sleep").arg("600").spawn().unwrap()
         };
         let r = measure(
             &Target::Pids(vec![c.id()]),
