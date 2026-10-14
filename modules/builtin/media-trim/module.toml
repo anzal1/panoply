@@ -15,26 +15,26 @@ summary = "Cut out the parts you do not want, without re-encoding what does not 
 [options.keep]
 type = "text"
 label = "Keep"
-help = "The parts to keep, for example 0:12-1:40 or 0:12-1:40, 2:00-2:30. A missing end means to the end, a missing start means from the start."
+help = "The parts to keep, for example 0:12-1:40."
 
 [options.remove]
 type = "text"
 label = "Remove"
-help = "The parts to cut out instead, for example 0:30-0:45. Everything else is kept."
+help = "The parts to cut out, for example 0:30-0:45."
 
 [options.precision]
 type = "choice"
 values = ["auto", "exact", "keyframes"]
 default = "auto"
 label = "Precision"
-help = "Auto cuts video to the frame (only the frames at the edges are re-encoded) and audio at a codec frame, both without re-encoding the rest. Exact does the same for audio to the sample, which re-encodes it once. Keyframes copies everything and starts each cut at the nearest earlier keyframe."
+help = "Auto cuts video to the frame."
 
 [options.output]
 type = "choice"
 values = ["one", "each"]
 default = "one"
 label = "Output"
-help = "One file with all the kept parts joined, or one file per part."
+help = "One joined file, or one file per part."
 
 [capabilities]
 files = "chosen"

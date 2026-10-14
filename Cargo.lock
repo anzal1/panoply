@@ -2320,9 +2320,9 @@ checksum = "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
 
 [[package]]
 name = "global-hotkey"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9247516746aa8e53411a0db9b62b0e24efbcf6a76e0ba73e5a91b512ddabed7"
+checksum = "8c386b0a4a70cb2d39fffd74480f985b6f0bfbcb934b6a6b6b7e630e448f242e"
 dependencies = [
  "crossbeam-channel",
  "keyboard-types",
@@ -4957,7 +4957,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-bench"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "panoply-core",
@@ -4970,7 +4970,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-cli"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "clap",
  "panoply-convert",
@@ -4986,7 +4986,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-convert"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -4995,7 +4995,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "infer",
  "serde",
@@ -5005,7 +5005,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-desktop"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anyhow",
  "futures",
@@ -5029,11 +5029,11 @@ dependencies = [
 
 [[package]]
 name = "panoply-ffi"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "panoply-host"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "panoply-core",
  "panoply-id",
@@ -5051,7 +5051,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-id"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ort",
  "panoply-core",
@@ -5069,7 +5069,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-image"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytemuck",
  "fast_image_resize",
@@ -5098,7 +5098,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-manifest"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -5108,7 +5108,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-mcp"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "panoply-manifest",
  "serde_json",
@@ -5116,7 +5116,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-media"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "panoply-core",
  "panoply-manifest",
@@ -5129,7 +5129,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-ocr"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "ort",
  "panoply-core",
@@ -5146,12 +5146,12 @@ dependencies = [
 
 [[package]]
 name = "panoply-pdf"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fax",
  "jpeg-encoder",
  "lopdf",
- "miniz_oxide 0.8.9",
+ "miniz_oxide 0.9.1",
  "panoply-core",
  "pdfium-render",
  "png 0.18.1",
@@ -5159,14 +5159,14 @@ dependencies = [
  "sha2 0.11.1",
  "thiserror 2.0.21",
  "toml 1.1.8+spec-1.1.0",
- "weezl 0.1.12",
+ "weezl 0.2.1",
  "zune-core",
  "zune-jpeg",
 ]
 
 [[package]]
 name = "panoply-platform-macos"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "objc2 0.6.5",
  "objc2-core-foundation",
@@ -5176,13 +5176,13 @@ dependencies = [
 
 [[package]]
 name = "panoply-share"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "bytes",
  "clap",
  "crc32fast",
  "fs4",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "http-body-util",
  "hyper",
  "hyper-util",
@@ -5202,7 +5202,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-smoke"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "panoply-bench",
  "panoply-core",
@@ -5215,10 +5215,10 @@ dependencies = [
 
 [[package]]
 name = "panoply-vision"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "fast_image_resize",
- "miniz_oxide 0.8.9",
+ "miniz_oxide 0.9.1",
  "ort",
  "panoply-core",
  "panoply-image",
@@ -5230,7 +5230,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-wasm"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "panoply-core",
  "panoply-host",
@@ -6942,7 +6942,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",

@@ -20,6 +20,7 @@ Everything about the project, in the order most people need it. The front page i
 | [MODULES.md](MODULES.md) | Every planned tool, ranked by demand, with its status |
 | [CONVERSIONS.md](CONVERSIONS.md) | The conversion graph: 214 formats and 9,214 routes (generated) |
 | [WIREFRAMES.md](WIREFRAMES.md) | The nine key screens, light mode, with their source |
+| [design/UI-AUDIT.md](design/UI-AUDIT.md) | The desktop UI audited against the Apple, Fluent 2 and GNOME guidelines: what was fixed, what is open, the contrast and frame-time numbers, and before and after renders in [design/review/](design/review/) |
 | [PLAN.md](PLAN.md) | Build phases and the gates between them |
 
 ## Building on Panoply

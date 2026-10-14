@@ -14,13 +14,13 @@ type = "choice"
 values = ["transparent", "color", "blur"]
 default = "transparent"
 label = "Result"
-help = "Transparent PNG, the subject on a solid color, or the subject on a blurred copy of the picture."
+help = "Transparent, a solid color, or a blur."
 
 [options.background]
 type = "text"
 default = "#ffffff"
 label = "Background color"
-help = "For the color result, for example #ffffff for studio white."
+help = "For example #ffffff for studio white."
 
 [options.blur]
 type = "number"
@@ -28,33 +28,33 @@ min = 1
 max = 100
 default = 30
 label = "Blur strength"
-help = "For the blur result. Scaled to the size of the picture."
+help = "Scaled to the size of the picture."
 
 [options.engine]
 type = "choice"
 values = ["auto", "os", "model"]
 default = "auto"
 label = "Engine"
-help = "Auto uses the system's own subject finder where there is one (macOS) and the IS-Net model otherwise. Model forces IS-Net, which keeps more hair and fur."
+help = "Model keeps more hair and fur."
 
 [options.edge_refine]
 type = "bool"
 default = true
 label = "Refine edges"
-help = "Snaps the edge onto hair, fur and fabric at full resolution."
+help = "Snaps the edge onto hair and fabric."
 
 [options.decontaminate]
 type = "bool"
 default = true
 label = "Clean edge colors"
-help = "Removes the old background's color from the soft edge, so there is no halo on a new background."
+help = "Removes the old background from soft edges."
 
 [options.format]
 type = "choice"
 values = ["auto", "png", "webp", "jpg"]
 default = "auto"
 label = "Format"
-help = "Auto writes a PNG for a transparent cutout, and the original's format for a color or blur result."
+help = "Auto writes PNG for a transparent cutout."
 
 [options.quality]
 type = "number"

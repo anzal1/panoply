@@ -21,9 +21,14 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   the user's own folder `~/Library/Application Support/Panoply/modules/`.
 - Release builds use the workspace profile (fat LTO). For a quick bundle while developing, build with
   `CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16` and pass `--binary`.
-- The icon is `macos/Panoply.icns`, copied into `Contents/Resources` and named by `CFBundleIconFile`. Its source is
-  `icon/panoply-macos.svg` (824 of 1024 on the macOS grid, shadow baked in); `tools/gen_app_icon.mjs` regenerates every
-  raster (needs `resvg`).
+- The icon is `macos/Panoply.icns` (16, 32, 128, 256 and 512 px, each as an @1x and @2x pair), copied into
+  `Contents/Resources` and named by `CFBundleIconFile`. The source is `icon/panoply-macos.svg`: a continuous-corner
+  squircle body of 824 of 1024 px on the macOS grid, a light plate, and the Fan mark (three rounded cards spread from one hinge, the front one
+  in the accent blue with a plate-coloured stroke and a rivet on its bottom edge) with a contact shadow and a hairline top highlight on each card, and the
+  soft body shadow baked in. 16, 32 and 64 px use their own pixel-grid drawings
+  (`icon/panoply-macos-<size>.svg`). `icon/panoply-macos-dark.svg` is a dark-plate variant kept for reference.
+  `tools/gen_app_icon.mjs` regenerates every icon file, the flat layers in `icon/fan-layers/` that the app UI embeds, the README brand
+  assets in `docs/assets/` and `docs/design/icon-sheet.png` (needs `resvg`).
 - Still to do: notarization (`xcrun notarytool submit` with the Developer ID
   signature, then `stapler staple`), the Finder and share extensions (small Swift targets, Phase 2 later).
 
@@ -34,7 +39,8 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   `apps/desktop/tools/linux-check.sh [check|clippy|test]` runs them in Docker (colima is enough).
 - `linux/panoply.desktop` is the launcher and file handler (`Exec=panoply-desktop %F` takes files from
   "Open with"). Install to `/usr/share/applications/` with the binary in `/usr/bin/` and an icon named
-  `panoply`. The icon files are in `linux/icons/hicolor/` (16 to 512 px PNG and a scalable SVG): copy that folder
+  `panoply`. The icon files are in `linux/icons/hicolor/` (16, 22, 24, 32, 48, 64, 128, 256 and 512 px PNG and a scalable SVG, in the GNOME
+  app icon style with its shadow baked in; 64 px and below are pixel-grid drawings): copy that folder
   into `/usr/share/icons/` and run `gtk-update-icon-cache`.
 - Channels: Flatpak (Flathub) and AppImage. The Flatpak needs `--socket=wayland --socket=fallback-x11
   --device=dri --filesystem=home` (or the file chooser portal only, which is the cleaner choice) and the
@@ -46,11 +52,15 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   `panoply-desktop --background` plus a future `--bar` flag, or use the app window.
 - Trash uses the freedesktop trash folders (`~/.local/share/Trash`).
 - Unverified until someone runs it on a real desktop: bar window kind (`WindowKind::PopUp` on X11 and
-  Wayland), hide and show of the bar, Reduce Motion (read from GNOME gsettings), IME on the search field.
+  Wayland), hide and show of the bar, Reduce Motion and high contrast (read from GNOME gsettings every few seconds on a
+  background thread), IME on the search field, and the header bar and resize edges the app draws when the compositor
+  (GNOME under Wayland) gives it no window frame.
 
 ## Windows (compile target only so far)
 
-- The icon is `windows/panoply.ico` (16, 24, 32, 48, 64, 128 and 256 px). The installer and the Start menu shortcut use
+- The icon is `windows/panoply.ico` (16, 20, 24, 32, 40, 48, 64, 96, 128 and 256 px; 32-bit BMP entries below 256 and
+  a PNG entry at 256). It is the Fan on a flat Fluent style tile, nearly full bleed, drawn separately from the macOS icon; sizes up
+  to 64 px are pixel-grid drawings (`icon/panoply-windows-<size>.svg`). The installer and the Start menu shortcut use
   it. Embedding it in the `.exe` itself (so Explorer and the taskbar show it without a shortcut) needs a build script
   with a resource compiler (the `winresource` crate); that is not wired yet.
 
@@ -62,6 +72,9 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   with `"panoply-desktop.exe" "%1"`, and a shortcut in `shell:sendto`.
 - Trash is not wired: `Undo` removes the new file instead of sending it to the Recycle Bin (needs
   `SHFileOperationW`, which needs the `windows` crate behind `cfg(windows)`).
-- Reduce Motion is not read yet (`SPI_GETCLIENTAREAANIMATION`); `PANOPLY_REDUCE_MOTION=1` forces it.
+- The window draws its own 32 pt title bar with the Fluent caption buttons on a solid Mica-like surface (`ui/chrome.rs`), because
+  GPUI's transparent title bar leaves no native caption. Reduce Motion (`SPI_GETCLIENTAREAANIMATION`) and High Contrast
+  (`SPI_GETHIGHCONTRAST`) are read through `user32`; `PANOPLY_REDUCE_MOTION=1` and `PANOPLY_HIGH_CONTRAST=1` force them.
+  Compiled by CI, not yet run on a Windows desktop.
 - Global hotkey uses `RegisterHotKey` through `global-hotkey`; Alt+Space is the system menu on Windows, so
   the default should change there (try Ctrl+Alt+Space) before launch.

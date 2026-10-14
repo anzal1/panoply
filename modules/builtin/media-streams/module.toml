@@ -14,29 +14,29 @@ summary = "Take out, drop or relabel the audio, subtitle and video tracks of a f
 [options.drop]
 type = "text"
 label = "Drop streams"
-help = "Stream numbers to leave out of the new file, for example 5 or 2,5. The table of streams shows the numbers."
+help = "Stream numbers to leave out, such as 2,5."
 
 [options.extract]
 type = "text"
 label = "Extract streams"
-help = "Stream numbers to write out as files of their own, into a folder named after the source."
+help = "Stream numbers to save as separate files."
 
 [options.default]
 type = "text"
 label = "Set default"
-help = "A stream number to mark as the default of its kind (audio, subtitles); the others of that kind stop being default."
+help = "A stream number to make the default."
 
 [options.language]
 type = "text"
 label = "Set language"
-help = "Language codes by stream number, for example 1=eng,2=fra."
+help = "For example 1=eng,2=fra."
 
 [options.container]
 type = "choice"
 values = ["same", "mkv"]
 default = "same"
 label = "Container"
-help = "Same keeps the file's own container. MKV holds every kind of stream."
+help = "Same keeps the file's own container."
 
 [capabilities]
 files = "chosen"

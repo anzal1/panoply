@@ -3,11 +3,11 @@
   "gpui_focus": "a",
   "active_descendant_focus": null,
   "frame": {
-    "rendered_at": "2026-10-14T13:38:14.248+05:30",
-    "frame_number": 2,
+    "rendered_at": "2026-10-14T22:04:47.091+05:30",
+    "frame_number": 26,
     "window_title": null,
     "node_count": 12,
-    "tab_stop_count": 1,
+    "tab_stop_count": 3,
     "viewport_size": {
       "width": 720.0,
       "height": 460.0
@@ -24,7 +24,7 @@
         ],
         "label": "Search tools and files",
         "value": "",
-        "placeholder": "Search 24 tools and your files, or drop anything"
+        "placeholder": "Search 31 tools and your files, or drop anything"
       }
     },
     "b": {
@@ -76,8 +76,8 @@
         "on_action": [
           "Click"
         ],
-        "label": "Resize image",
-        "description": "Make this image an exact size, a percentage, or fit a longest side.",
+        "label": "Print sheet",
+        "description": "Put several copies of this photo on one sheet for the print shop, at the exact size.",
         "selected": false,
         "position_in_set": 4,
         "size_of_set": 7
@@ -146,7 +146,8 @@
       "aria": {
         "role": "Button",
         "on_action": [
-          "Click"
+          "Click",
+          "Focus"
         ],
         "label": "Open"
       }
@@ -156,7 +157,8 @@
       "aria": {
         "role": "Button",
         "on_action": [
-          "Click"
+          "Click",
+          "Focus"
         ],
         "label": "Actions"
       }

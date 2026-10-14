@@ -22,7 +22,7 @@ min = 1
 max = 65535
 default = 1080
 label = "Longest side (px)"
-help = "The default, 1080, is the size most social platforms show."
+help = "The default, 1080, is a common social size."
 
 [options.width]
 type = "number"
@@ -47,13 +47,13 @@ type = "choice"
 values = ["contain", "cover", "pad", "stretch"]
 default = "contain"
 label = "Fit"
-help = "For width and height together: fit inside, crop to fill, pad with a color, or stretch."
+help = "Fit inside, crop, pad or stretch."
 
 [options.enlarge]
 type = "bool"
 default = false
 label = "Allow enlarging"
-help = "Off by default: a picture smaller than the target stays as it is."
+help = "Off, a smaller picture stays as it is."
 
 [options.format]
 type = "choice"
@@ -66,7 +66,7 @@ type = "number"
 min = 1
 max = 100
 label = "Quality"
-help = "Left empty, a JPEG keeps close to the quality it came in at."
+help = "Left empty, a JPEG keeps its own quality."
 
 [options.keep_metadata]
 type = "bool"
@@ -83,7 +83,7 @@ label = "Color profile"
 type = "text"
 default = "#ffffff"
 label = "Background"
-help = "For padding and for formats without transparency."
+help = "For padding and for opaque formats."
 
 [options.animation]
 type = "choice"

@@ -15,25 +15,25 @@ type = "choice"
 values = ["natural", "given"]
 default = "natural"
 label = "Order"
-help = "Natural puts file2 before file10. Given keeps the order the files were chosen in."
+help = "Natural puts file2 before file10."
 
 [options.bookmarks]
 type = "bool"
 default = true
 label = "Bookmark each file"
-help = "One bookmark per source file, with that file's own bookmarks under it."
+help = "One bookmark per source file."
 
 [options.interleave]
 type = "bool"
 default = false
 label = "Interleave two files"
-help = "Front scans and back scans: page 1 of the first file, page 1 of the second, page 2 of the first, and so on."
+help = "Alternates pages between two files."
 
 [options.reverse_second]
 type = "bool"
 default = false
 label = "Reverse the second file"
-help = "For back sides scanned in reverse order. Used with interleave."
+help = "For back sides scanned in reverse order."
 
 [capabilities]
 files = "chosen"

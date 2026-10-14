@@ -1,13 +1,13 @@
 {
-  "root": "ac",
+  "root": "t",
   "gpui_focus": "l",
   "active_descendant_focus": null,
   "frame": {
-    "rendered_at": "2026-10-14T13:38:14.338+05:30",
-    "frame_number": 7,
+    "rendered_at": "2026-10-14T22:04:47.178+05:30",
+    "frame_number": 31,
     "window_title": null,
-    "node_count": 29,
-    "tab_stop_count": 4,
+    "node_count": 20,
+    "tab_stop_count": 11,
     "viewport_size": {
       "width": 720.0,
       "height": 460.0
@@ -16,104 +16,107 @@
   },
   "nodes": {
     "a": {
-      "accesskit_id": "336288425992239980",
+      "accesskit_id": "17284802721383657279",
       "aria": {
         "role": "Button",
         "on_action": [
-          "Click"
+          "Click",
+          "Focus"
         ],
         "label": "Back to all tools"
       }
     },
     "b": {
-      "accesskit_id": "3743925997490624160",
+      "accesskit_id": "2245696219172489844",
       "aria": {
         "role": "Heading",
         "label": "Compress image"
       }
     },
     "c": {
-      "accesskit_id": "6682219324797064942",
+      "accesskit_id": "5271944268317121922",
       "aria": {
         "role": "Button",
         "on_action": [
-          "Click"
+          "Click",
+          "Focus"
+        ],
+        "label": "Add files"
+      }
+    },
+    "d": {
+      "accesskit_id": "9951384468496762544",
+      "aria": {
+        "role": "Button",
+        "on_action": [
+          "Click",
+          "Focus"
         ],
         "label": "Remove signature.png"
       }
     },
-    "d": {
-      "accesskit_id": "1200548286522203053",
+    "e": {
+      "accesskit_id": "5016035265191625461",
       "children": [
-        "c"
+        "d"
       ],
       "aria": {
         "role": "ListItem",
         "label": "signature.png, 67 KB"
       }
     },
-    "e": {
-      "accesskit_id": "2805250918349831238",
+    "f": {
+      "accesskit_id": "4717417560375206380",
       "children": [
-        "d"
+        "e"
       ],
       "aria": {
         "role": "List",
         "label": "Files"
       }
     },
-    "f": {
-      "accesskit_id": "3359777626358855644",
-      "aria": {
-        "role": "Button",
-        "on_action": [
-          "Click"
-        ],
-        "label": "Add files"
-      }
-    },
     "g": {
-      "accesskit_id": "5294379627785441912",
+      "accesskit_id": "7206546269810817054",
       "aria": {
         "role": "Status",
         "label": "Estimate: 67 KB to at most 50 KB"
       }
     },
     "h": {
-      "accesskit_id": "4687160334822272483",
+      "accesskit_id": "4779482504688896249",
       "aria": {
         "role": "RadioButton",
         "on_action": [
           "Click"
         ],
-        "label": "smallest",
+        "label": "Smallest",
         "selected": false
       }
     },
     "i": {
-      "accesskit_id": "10639899455117427993",
+      "accesskit_id": "10732221625051160623",
       "aria": {
         "role": "RadioButton",
         "on_action": [
           "Click"
         ],
-        "label": "under size",
+        "label": "Under size",
         "selected": true
       }
     },
     "j": {
-      "accesskit_id": "11877138016119251315",
+      "accesskit_id": "11969460185985875081",
       "aria": {
         "role": "RadioButton",
         "on_action": [
           "Click"
         ],
-        "label": "quality",
+        "label": "Quality",
         "selected": false
       }
     },
     "k": {
-      "accesskit_id": "12052644521324127099",
+      "accesskit_id": "29489811064403126",
       "children": [
         "h",
         "i",
@@ -128,7 +131,7 @@
       }
     },
     "l": {
-      "accesskit_id": "17959051855651212363",
+      "accesskit_id": "5935897145391488390",
       "aria": {
         "role": "TextInput",
         "on_action": [
@@ -139,127 +142,19 @@
       }
     },
     "m": {
-      "accesskit_id": "1077561068552470765",
+      "accesskit_id": "9455205763070908706",
       "aria": {
-        "role": "RadioButton",
-        "on_action": [
-          "Click"
-        ],
-        "label": "keep",
-        "selected": true
-      }
-    },
-    "n": {
-      "accesskit_id": "444449016859328665",
-      "aria": {
-        "role": "RadioButton",
-        "on_action": [
-          "Click"
-        ],
-        "label": "smallest",
-        "selected": false
-      }
-    },
-    "o": {
-      "accesskit_id": "5313174739965075953",
-      "aria": {
-        "role": "RadioButton",
-        "on_action": [
-          "Click"
-        ],
-        "label": "jpg",
-        "selected": false
-      }
-    },
-    "p": {
-      "accesskit_id": "9628287957571403889",
-      "aria": {
-        "role": "RadioButton",
-        "on_action": [
-          "Click"
-        ],
-        "label": "png",
-        "selected": false
-      }
-    },
-    "q": {
-      "accesskit_id": "5622446476350837083",
-      "aria": {
-        "role": "RadioButton",
-        "on_action": [
-          "Click"
-        ],
-        "label": "webp",
-        "selected": false
-      }
-    },
-    "r": {
-      "accesskit_id": "10599258590532648343",
-      "aria": {
-        "role": "RadioButton",
-        "on_action": [
-          "Click"
-        ],
-        "label": "avif",
-        "selected": false
-      }
-    },
-    "s": {
-      "accesskit_id": "4248601961753670162",
-      "aria": {
-        "role": "RadioButton",
-        "on_action": [
-          "Click"
-        ],
-        "label": "heic",
-        "selected": false
-      }
-    },
-    "t": {
-      "accesskit_id": "11894591372541921410",
-      "aria": {
-        "role": "RadioButton",
-        "on_action": [
-          "Click"
-        ],
-        "label": "tiff",
-        "selected": false
-      }
-    },
-    "u": {
-      "accesskit_id": "18273798824558586220",
-      "aria": {
-        "role": "RadioButton",
-        "on_action": [
-          "Click"
-        ],
-        "label": "gif",
-        "selected": false
-      }
-    },
-    "v": {
-      "accesskit_id": "3031616399621081064",
-      "children": [
-        "m",
-        "n",
-        "o",
-        "p",
-        "q",
-        "r",
-        "s",
-        "t",
-        "u"
-      ],
-      "aria": {
-        "role": "RadioGroup",
+        "role": "ComboBox",
         "on_action": [
           "Focus"
         ],
-        "label": "Format"
+        "label": "Format",
+        "value": "Keep",
+        "expanded": false
       }
     },
-    "w": {
-      "accesskit_id": "17961975279279064601",
+    "n": {
+      "accesskit_id": "5938820569019340628",
       "aria": {
         "role": "TextInput",
         "on_action": [
@@ -269,73 +164,78 @@
         "value": ""
       }
     },
-    "x": {
-      "accesskit_id": "13753193719494376632",
+    "o": {
+      "accesskit_id": "1730039009234652659",
       "aria": {
         "role": "Button",
         "on_action": [
-          "Click"
+          "Click",
+          "Focus"
         ],
         "label": "Decrease Quality"
       }
     },
-    "y": {
-      "accesskit_id": "10354381890616881355",
+    "p": {
+      "accesskit_id": "16777971254066708997",
       "aria": {
         "role": "Button",
         "on_action": [
-          "Click"
+          "Click",
+          "Focus"
         ],
         "label": "Increase Quality"
       }
     },
-    "z": {
-      "accesskit_id": "14292020819031363232",
+    "q": {
+      "accesskit_id": "2268866108771639259",
       "aria": {
         "role": "DisclosureTriangle",
         "on_action": [
-          "Click"
+          "Click",
+          "Focus"
         ],
         "label": "More options",
         "expanded": false
       }
     },
-    "aa": {
-      "accesskit_id": "14990629464739613947",
+    "r": {
+      "accesskit_id": "13492399686421479631",
       "children": [
         "k",
         "l",
-        "v",
-        "w",
-        "x",
-        "y",
-        "z"
+        "m",
+        "n",
+        "o",
+        "p",
+        "q"
       ],
       "aria": {
         "role": "Group",
         "label": "Options"
       }
     },
-    "ab": {
-      "accesskit_id": "296438570668819543",
+    "s": {
+      "accesskit_id": "17115756802747616004",
       "aria": {
         "role": "Button",
         "on_action": [
-          "Click"
+          "Click",
+          "Focus"
         ],
-        "label": "Run"
+        "label": "Run",
+        "keyboard_shortcut": "Enter"
       }
     },
-    "ac": {
+    "t": {
       "accesskit_id": "0",
       "children": [
         "a",
         "b",
-        "e",
+        "c",
         "f",
         "g",
-        "aa",
-        "ab"
+        "r",
+        "s"
       ],
       "aria": {
         "role": "Window"

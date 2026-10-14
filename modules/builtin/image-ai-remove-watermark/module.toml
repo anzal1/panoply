@@ -17,19 +17,19 @@ summary = "Remove a watermark, logo or date stamp from pictures you own. Finds t
 type = "bool"
 default = false
 label = "These are my pictures"
-help = "Confirm that you own these pictures or have the right to edit them. The tool does not run without it."
+help = "Confirm you have the right to edit these."
 
 [options.search]
 type = "choice"
 values = ["anywhere", "edges"]
 default = "anywhere"
 label = "Where to look"
-help = "Edges looks only within 18% of an edge (corner stamps, bottom credits) and is the safer choice for photos."
+help = "Edges looks only within 18% of an edge."
 
 [options.rect]
 type = "text"
 label = "Rectangle"
-help = "Skip the search and clean this area, as x,y,w,h in pixels or percentages. Several, separated by a semicolon."
+help = "As x,y,w,h in pixels or percentages."
 
 [options.expand]
 type = "number"
@@ -37,20 +37,20 @@ min = 0
 max = 64
 default = 4
 label = "Expand (px)"
-help = "Grows the cleaned area a little, because re-saved pictures have soft mark edges."
+help = "Grows the cleaned area a little."
 
 [options.fill]
 type = "choice"
 values = ["auto", "blur"]
 default = "auto"
 label = "Fill"
-help = "Auto fills with the MI-GAN model. Blur uses the surroundings, for flat areas."
+help = "Auto fills with the MI-GAN model."
 
 [options.save_mask]
 type = "bool"
 default = false
 label = "Save the mask"
-help = "Also writes the cleaned area as a picture, to check what was found."
+help = "Writes the cleaned area as a picture."
 
 [options.format]
 type = "choice"

@@ -20,7 +20,7 @@ use crate::profile::FileProfile;
 use crate::ui::app::{AppView, Route};
 use crate::ui::bar::{Bar, BarMode};
 use crate::ui::icons::Icons;
-use crate::ui::live::{app_window_options, bar_window_options};
+use crate::ui::live::{app_window_options_at, bar_window_options};
 use crate::ui::{Hub, Recents};
 
 struct Drv<'a> {
@@ -42,7 +42,17 @@ fn flatten(img: &image::RgbaImage, dark: bool) -> image::RgbaImage {
         image::Rgba([201, 208, 219, 255])
     };
     let mut out = image::RgbaImage::from_pixel(img.width(), img.height(), bg);
-    image::imageops::overlay(&mut out, img, 0, 0);
+    // render_to_image returns premultiplied colour; undo that so the overlay blends straight alpha.
+    let mut straight = img.clone();
+    for p in straight.pixels_mut() {
+        let a = u32::from(p[3]);
+        if a > 0 && a < 255 {
+            for c in 0..3 {
+                p[c] = ((u32::from(p[c]) * 255 + a / 2) / a).min(255) as u8;
+            }
+        }
+    }
+    image::imageops::overlay(&mut out, &straight, 0, 0);
     out
 }
 
@@ -240,14 +250,26 @@ fn seeded_recents(now: u64, home: &Path) -> Vec<Entry> {
     ]
 }
 
-/// A file of the kind a tool takes, for the open-time measurement.
+/// A file of the kind a tool takes, for the open-time measurement and the contact sheet. The
+/// bytes are just enough for the sniffer to say what it is.
 fn sample_for(manifest: &panoply_manifest::Manifest, dir: &Path) -> Option<PathBuf> {
     let a = manifest.accepts.first()?;
-    let (name, bytes): (&str, Vec<u8>) = if a.contains("pdf") {
-        ("budget.pdf", b"%PDF-1.4\n%%EOF\n".to_vec())
-    } else if a.starts_with("image") {
+    if a.starts_with("image") {
         sample_png(&dir.join("budget.png"), 64, 48);
         return Some(dir.join("budget.png"));
+    }
+    let (name, bytes): (&str, Vec<u8>) = if a.contains("pdf") {
+        ("budget.pdf", b"%PDF-1.4\n%%EOF\n".to_vec())
+    } else if a.starts_with("video") {
+        // An MP4 `ftyp` box.
+        let mut v = vec![0, 0, 0, 24];
+        v.extend_from_slice(b"ftypisom\0\0\x02\0isomiso2mp41");
+        ("budget.mp4", v)
+    } else if a.starts_with("audio") {
+        let mut v = b"ID3\x03\0\0\0\0\0\0".to_vec();
+        v.extend_from_slice(&[0xFF, 0xFB, 0x90, 0x00]);
+        v.resize(64, 0);
+        ("budget.mp3", v)
     } else {
         ("budget.txt", b"hello\n".to_vec())
     };
@@ -265,6 +287,7 @@ pub(crate) fn run(out: PathBuf) {
     let app = gpui_platform::application().with_assets(Icons);
     app.run(move |cx: &mut App| {
         gpui_base::init(cx);
+        crate::ui::live::bind_input_keys(cx);
         cx.set_activation_policy(ActivationPolicy::Accessory);
         crate::ui::theme::force_appearance(Some(false));
         platform::set_trash_dir(work.join("trash"));
@@ -275,7 +298,7 @@ pub(crate) fn run(out: PathBuf) {
         let catalog = Arc::new(Catalog::with_dirs(&dirs));
         let catalog_ms = t_catalog.elapsed().as_secs_f64() * 1000.0;
         let now = crate::units::now_secs();
-        let recents = cx.new(|_| Recents { entries: seeded_recents(now, Path::new("/Users/me/Documents")) });
+        let recents = cx.new(|_| Recents { entries: seeded_recents(now, Path::new("/Users/me/Documents")), loaded: true });
         let hub = Hub { catalog, history: History::at(work.join("history.jsonl")), recents };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
@@ -286,7 +309,7 @@ pub(crate) fn run(out: PathBuf) {
             .expect("open the offscreen bar");
         let app_hub = hub.clone();
         let app_win = cx
-            .open_window(app_window_options(true), move |window, cx| cx.new(|cx| AppView::new(window, cx, app_hub)))
+            .open_window(app_window_options_at(true, None), move |window, cx| cx.new(|cx| AppView::new(window, cx, app_hub)))
             .expect("open the offscreen app window");
         let out2 = out.clone();
         let work2 = work.clone();
@@ -527,22 +550,27 @@ pub(crate) fn run(out: PathBuf) {
             d.tag = "app window".into();
             // ---- the app window ----
             d.change(bar, |b, window, cx| b.close_panel(window, cx));
+            d.tag = "app window home".into();
             d.settle(app_win).await;
             log.push(d.png(app_win, &png("12-app-home.png")));
             let a_app = d.a11y(app_win);
             let c_app = check_a11y("app window home", &a_app);
+            d.tag = "app window category".into();
             d.change(app_win, |a, _, cx| a.go(Route::Category(crate::catalog::Category::Pdf), cx));
             d.settle(app_win).await;
             log.push(d.png(app_win, &png("13-app-category-pdf.png")));
+            d.tag = "app window modules".into();
             d.change(app_win, |a, _, cx| a.go(Route::Modules, cx));
             d.settle(app_win).await;
             log.push(d.png(app_win, &png("14-app-modules.png")));
+            d.tag = "app window history".into();
             d.change(app_win, |a, _, cx| a.go(Route::History, cx));
             d.settle(app_win).await;
             let c_hist = check_a11y("app window history", &d.a11y(app_win));
             let rz = hub.catalog.index_of("image.resize_to_kb").unwrap_or(0);
             let sigp = vec![FileProfile::read(&sig)];
             let t_app = Instant::now();
+            d.tag = "app window tool panel".into();
             d.change(app_win, |a, window, cx| {
                 a.open_tool(rz, sigp, vec![("max_kb".to_string(), json!(50))], false, window, cx)
             });
@@ -552,6 +580,30 @@ pub(crate) fn run(out: PathBuf) {
             log.push(d.png(app_win, &png("15-app-tool-panel.png")));
             let c_app_panel = check_a11y("app window tool panel", &d.a11y(app_win));
             d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+            d.settle(app_win).await;
+
+            // ---- keyboard: Tab through the home page and record what takes focus ----
+            d.change(app_win, |a, window, cx| {
+                a.go(Route::Home, cx);
+                a.reset_focus(window, cx);
+            });
+            d.settle(app_win).await;
+            let mut tab_sequence: Vec<String> = Vec::new();
+            for _ in 0..16 {
+                let ks = Keystroke::parse("tab").expect("keystroke");
+                d.win(app_win, move |window, cx| window.dispatch_keystroke(ks, cx));
+                let tree = d.a11y(app_win);
+                if let Some(label) = tree["gpui_focus"]
+                    .as_str()
+                    .and_then(|id| tree["nodes"][id]["aria"]["label"].as_str())
+                {
+                    tab_sequence.push(label.to_string());
+                }
+            }
+            let mut distinct = tab_sequence.clone();
+            distinct.sort();
+            distinct.dedup();
+            d.change(app_win, |a, window, cx| a.reset_focus(window, cx));
             d.settle(app_win).await;
 
             // ---- dark ----
@@ -662,6 +714,11 @@ pub(crate) fn run(out: PathBuf) {
                     "idle_sample_seconds": idle_s,
                 },
                 "accessibility": [c_bar, c_panel, c_app, c_hist, c_app_panel, c_consent],
+                "keyboard": {
+                    "tab_sequence_on_home": tab_sequence,
+                    "distinct_controls_reached": distinct.len(),
+                    "pass": distinct.len() >= 12,
+                },
                 "screens": log,
             });
             let text = serde_json::to_string_pretty(&report).unwrap_or_default();
@@ -681,12 +738,14 @@ pub(crate) fn run_idle(hold_secs: u64) {
     let app = gpui_platform::application().with_assets(Icons);
     app.run(move |cx: &mut App| {
         gpui_base::init(cx);
+        crate::ui::live::bind_input_keys(cx);
         cx.set_activation_policy(ActivationPolicy::Accessory);
         crate::ui::theme::force_appearance(Some(false));
         let t = Instant::now();
         let catalog = Arc::new(Catalog::load());
         let recents = cx.new(|_| Recents {
             entries: Vec::new(),
+            loaded: true,
         });
         let hub = Hub {
             catalog,
@@ -702,7 +761,7 @@ pub(crate) fn run_idle(hold_secs: u64) {
             .expect("open the offscreen bar");
         let app_hub = hub.clone();
         let app_win = cx
-            .open_window(app_window_options(true), move |window, cx| {
+            .open_window(app_window_options_at(true, None), move |window, cx| {
                 cx.new(|cx| AppView::new(window, cx, app_hub))
             })
             .expect("open the offscreen app window");
@@ -747,6 +806,712 @@ pub(crate) fn run_idle(hold_secs: u64) {
     });
 }
 
+/// One review shot: the steady-state frame cost (median of five draws), then the PNG.
+fn shot<V: 'static>(
+    d: &mut Drv,
+    h: WindowHandle<V>,
+    name: &str,
+    path: &Path,
+    log: &mut Vec<String>,
+    times: &mut Vec<(String, f64)>,
+) {
+    let mut v: Vec<f64> = (0..5).map(|_| d.draw(h)).collect();
+    v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    times.push((
+        format!("{name} ({})", if d.dark { "dark" } else { "light" }),
+        v[2],
+    ));
+    log.push(d.png(h, path));
+}
+
+/// `--selfcheck-review --out DIR`: every screen and state of the bar and the app window in light and
+/// dark, one PNG each (`<state>-light.png`, `<state>-dark.png`, rendered at the display's 2x), plus
+/// one contact sheet of the options panel of every tool. Nothing is shown on screen. The files in
+/// `docs/design/review/` come from here.
+pub(crate) fn run_review(out: PathBuf) {
+    let _ = std::fs::create_dir_all(&out);
+    let work = std::env::temp_dir().join(format!("panoply-review-{}", std::process::id()));
+    let _ = std::fs::create_dir_all(&work);
+    let app = gpui_platform::application().with_assets(Icons);
+    app.run(move |cx: &mut App| {
+        gpui_base::init(cx);
+        crate::ui::live::bind_input_keys(cx);
+        cx.set_activation_policy(ActivationPolicy::Accessory);
+        crate::ui::theme::force_appearance(Some(false));
+        platform::set_trash_dir(work.join("trash"));
+        let mut dirs = crate::paths::module_search_dirs();
+        dirs.push(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../modules/examples-wasm"),
+        );
+        let catalog = Arc::new(Catalog::with_dirs(&dirs));
+        let now = crate::units::now_secs();
+        let recents = cx.new(|_| Recents {
+            entries: seeded_recents(now, Path::new("/Users/me/Documents")),
+            loaded: true,
+        });
+        let hub = Hub {
+            catalog,
+            history: History::at(work.join("history.jsonl")),
+            recents: recents.clone(),
+        };
+        cx.set_global(hub.clone());
+        let bar_hub = hub.clone();
+        let bar = cx
+            .open_window(bar_window_options(BarMode::Offscreen), move |window, cx| {
+                cx.new(|cx| Bar::new(window, cx, bar_hub, BarMode::Offscreen))
+            })
+            .expect("open the offscreen bar");
+        let app_hub = hub.clone();
+        let app_win = cx
+            .open_window(app_window_options_at(true, None), move |window, cx| {
+                cx.new(|cx| AppView::new(window, cx, app_hub))
+            })
+            .expect("open the offscreen app window");
+        let out2 = out.clone();
+        let work2 = work.clone();
+        cx.spawn(async move |cx| {
+            let mut d = Drv {
+                cx,
+                dark: false,
+                update_ms: vec![],
+                draw_ms: vec![],
+                tag: String::new(),
+                slow: vec![],
+            };
+            d.settle(bar).await;
+            d.settle(app_win).await;
+            let pdf = work2.join("Lease.pdf");
+            sample_pdf(&pdf, 4_200_000);
+            let sig = work2.join("signature.png");
+            sample_png(&sig, 1200, 480);
+            let junk = work2.join("Scan.pdf");
+            let mut junk_bytes = b"%PDF-1.7\nthis is not a pdf at all\n".to_vec();
+            junk_bytes.resize(600_000, b' ');
+            let _ = std::fs::write(&junk, junk_bytes);
+            let only = std::env::args().skip_while(|a| a != "--appearance").nth(1);
+            let mut log: Vec<String> = Vec::new();
+            let mut times: Vec<(String, f64)> = Vec::new();
+            for dark in [false, true] {
+                if only.as_deref().is_some_and(|o| (o == "dark") != dark) {
+                    continue;
+                }
+                let tag = if dark { "dark" } else { "light" };
+                crate::ui::theme::force_appearance(Some(dark));
+                d.dark = dark;
+                let seeded =
+                    seeded_recents(crate::units::now_secs(), Path::new("/Users/me/Documents"));
+                let seeded2 = seeded.clone();
+                {
+                    let rc = recents.clone();
+                    d.win(bar, move |_, cx| {
+                        rc.update(cx, |r, cx| {
+                            r.entries = seeded2;
+                            cx.notify();
+                        })
+                    });
+                }
+                let file = |name: &str| out2.join(format!("{name}-{tag}.png"));
+
+                // ---- the bar ----
+                d.change(bar, |b, window, cx| {
+                    b.close_panel(window, cx);
+                    b.set_files(Vec::new(), cx);
+                    b.set_query("", window, cx);
+                });
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-rest",
+                    &file("bar-rest"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, _, cx| {
+                    b.set_files(vec![profile_with(&pdf, 4_200_000)], cx)
+                });
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-pdf",
+                    &file("bar-pdf"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, window, cx| {
+                    b.set_files(vec![FileProfile::read(&sig)], cx);
+                    b.set_query("make this under 50 kb", window, cx);
+                });
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-words",
+                    &file("bar-words"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, window, cx| {
+                    b.set_files(Vec::new(), cx);
+                    b.set_query("heic to jpg", window, cx);
+                });
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-convert",
+                    &file("bar-convert"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, window, cx| b.set_query("zzzqx", window, cx));
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-empty",
+                    &file("bar-empty"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, window, cx| {
+                    b.set_query("", window, cx);
+                    b.set_files(vec![FileProfile::read(&sig)], cx);
+                    b.set_query("under 50 kb", window, cx);
+                });
+                d.settle(bar).await;
+                d.change(bar, |b, window, cx| b.activate(window, cx));
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-options",
+                    &file("bar-options"),
+                    &mut log,
+                    &mut times,
+                );
+                for _ in 0..2 {
+                    let ks = Keystroke::parse("tab").expect("keystroke");
+                    d.win(bar, move |window, cx| window.dispatch_keystroke(ks, cx));
+                    d.draw(bar);
+                }
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-options-focus",
+                    &file("bar-options-focus"),
+                    &mut log,
+                    &mut times,
+                );
+                // The Format pop-up menu, open.
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                if let Some(p) = panel {
+                    d.win(bar, |_, cx| {
+                        p.update(cx, |p, cx| p.preview_menu("format", cx))
+                    });
+                }
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-options-menu",
+                    &file("bar-options-menu"),
+                    &mut log,
+                    &mut times,
+                );
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                if let Some(p) = panel {
+                    d.win(bar, |_, cx| p.update(cx, |p, _| p.menu = None));
+                }
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                if let Some(p) = panel {
+                    d.win(bar, |window, cx| p.update(cx, |p, cx| p.run(window, cx)));
+                }
+                let ran_at = Instant::now();
+                let mut saw_running = false;
+                for _ in 0..400 {
+                    d.cx.background_executor()
+                        .timer(Duration::from_millis(25))
+                        .await;
+                    d.draw(bar);
+                    let done = d
+                        .change(bar, |b, _, cx| {
+                            b.panel
+                                .as_ref()
+                                .map(|p| p.read(cx).is_done() || p.read(cx).failure().is_some())
+                                .unwrap_or(false)
+                        })
+                        .unwrap_or(false);
+                    if !done && !saw_running && ran_at.elapsed() > Duration::from_millis(350) {
+                        saw_running = true;
+                        shot(
+                            &mut d,
+                            bar,
+                            "bar-running",
+                            &file("bar-running"),
+                            &mut log,
+                            &mut times,
+                        );
+                    }
+                    if done {
+                        break;
+                    }
+                }
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-result",
+                    &file("bar-result"),
+                    &mut log,
+                    &mut times,
+                );
+                // Failure.
+                d.change(bar, |b, window, cx| {
+                    b.close_panel(window, cx);
+                    b.set_files(vec![FileProfile::read(&junk)], cx);
+                });
+                d.settle(bar).await;
+                d.change(bar, |b, window, cx| b.activate(window, cx));
+                d.settle(bar).await;
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                if let Some(p) = panel {
+                    d.win(bar, |window, cx| p.update(cx, |p, cx| p.run(window, cx)));
+                }
+                for _ in 0..200 {
+                    d.cx.background_executor()
+                        .timer(Duration::from_millis(25))
+                        .await;
+                    d.draw(bar);
+                    if d.change(bar, |b, _, cx| {
+                        b.panel
+                            .as_ref()
+                            .is_some_and(|p| p.read(cx).failure().is_some())
+                    })
+                    .unwrap_or(false)
+                    {
+                        break;
+                    }
+                }
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-failed",
+                    &file("bar-failed"),
+                    &mut log,
+                    &mut times,
+                );
+                // Consent sheet.
+                panoply_core::assets::set_data_dir_override(Some(out2.join("consent-data")));
+                panoply_core::assets::ignore_environment_yes(true);
+                d.change(bar, |b, window, cx| {
+                    b.close_panel(window, cx);
+                    b.set_files(vec![FileProfile::read(&sig)], cx);
+                    b.set_query("under 50 kb", window, cx);
+                });
+                d.settle(bar).await;
+                d.change(bar, |b, window, cx| b.activate(window, cx));
+                d.settle(bar).await;
+                let wanted = panoply_host::assets::find("isnet").map(|e| e.info);
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                if let (Some(p), Some(info)) = (panel.clone(), wanted) {
+                    let _ = d.win(bar, |window, cx| {
+                        p.update(cx, |p, cx| p.preview_consent(info, window, cx))
+                    });
+                }
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-consent",
+                    &file("bar-consent"),
+                    &mut log,
+                    &mut times,
+                );
+                if let Some(p) = panel {
+                    d.win(bar, |_, cx| {
+                        p.update(cx, |p, cx| p.answer_consent(false, cx))
+                    });
+                }
+                panoply_core::assets::set_data_dir_override(None);
+                panoply_core::assets::ignore_environment_yes(false);
+                let _ = std::fs::remove_dir_all(out2.join("consent-data"));
+                d.change(bar, |b, window, cx| {
+                    b.close_panel(window, cx);
+                    b.set_files(Vec::new(), cx);
+                    b.set_query("", window, cx);
+                });
+                d.settle(bar).await;
+
+                // ---- the app window ----
+                d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-home",
+                    &file("app-home"),
+                    &mut log,
+                    &mut times,
+                );
+                // Keyboard focus: Tab three times, then the ring shows on the third control.
+                for _ in 0..3 {
+                    let ks = Keystroke::parse("tab").expect("keystroke");
+                    d.win(app_win, move |window, cx| window.dispatch_keystroke(ks, cx));
+                    d.draw(app_win);
+                }
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-focus",
+                    &file("app-focus"),
+                    &mut log,
+                    &mut times,
+                );
+                {
+                    let rc = recents.clone();
+                    d.win(bar, move |_, cx| {
+                        rc.update(cx, |r, cx| {
+                            r.entries.clear();
+                            cx.notify();
+                        })
+                    });
+                }
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-home-empty",
+                    &file("app-home-empty"),
+                    &mut log,
+                    &mut times,
+                );
+                {
+                    let rc = recents.clone();
+                    let s = seeded.clone();
+                    d.win(bar, move |_, cx| {
+                        rc.update(cx, |r, cx| {
+                            r.entries = s;
+                            cx.notify();
+                        })
+                    });
+                }
+                d.change(app_win, |a, _, cx| a.set_query("compress".into(), cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-results",
+                    &file("app-results"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(app_win, |a, _, cx| a.set_query("zzzqx".into(), cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-results-empty",
+                    &file("app-results-empty"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(app_win, |a, _, cx| {
+                    a.set_query(String::new(), cx);
+                    a.go(Route::Home, cx);
+                });
+                d.change(app_win, |a, _, cx| {
+                    a.go(Route::Category(crate::catalog::Category::Pdf), cx)
+                });
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-category",
+                    &file("app-category"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(app_win, |a, _, cx| a.go(Route::Modules, cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-modules",
+                    &file("app-modules"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(app_win, |a, _, cx| a.go(Route::History, cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-history",
+                    &file("app-history"),
+                    &mut log,
+                    &mut times,
+                );
+                {
+                    let rc = recents.clone();
+                    d.win(bar, move |_, cx| {
+                        rc.update(cx, |r, cx| {
+                            r.entries.clear();
+                            cx.notify();
+                        })
+                    });
+                }
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-history-empty",
+                    &file("app-history-empty"),
+                    &mut log,
+                    &mut times,
+                );
+                {
+                    let rc = recents.clone();
+                    let s = seeded.clone();
+                    d.win(bar, move |_, cx| {
+                        rc.update(cx, |r, cx| {
+                            r.entries = s;
+                            cx.notify();
+                        })
+                    });
+                }
+                d.change(app_win, |a, _, cx| a.go(Route::Find, cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-find",
+                    &file("app-find"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(app_win, |a, _, cx| a.go(Route::Nearby, cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-nearby",
+                    &file("app-nearby"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(app_win, |a, _, cx| a.go(Route::Settings, cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-settings",
+                    &file("app-settings"),
+                    &mut log,
+                    &mut times,
+                );
+                let rz = hub.catalog.index_of("image.resize_to_kb").unwrap_or(0);
+                let sigp = vec![FileProfile::read(&sig)];
+                d.change(app_win, |a, window, cx| {
+                    a.open_tool(
+                        rz,
+                        sigp,
+                        vec![("max_kb".to_string(), json!(50))],
+                        false,
+                        window,
+                        cx,
+                    )
+                });
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-tool-options",
+                    &file("app-tool-options"),
+                    &mut log,
+                    &mut times,
+                );
+                let pp = hub.catalog.index_of("id.passport_photo").unwrap_or(0);
+                let sigp = vec![FileProfile::read(&sig)];
+                d.change(app_win, |a, window, cx| {
+                    a.open_tool(pp, sigp, Vec::new(), false, window, cx)
+                });
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-tool-many-options",
+                    &file("app-tool-many-options"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(app_win, |a, window, cx| {
+                    a.open_tool(rz, Vec::new(), Vec::new(), false, window, cx)
+                });
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-tool-no-file",
+                    &file("app-tool-no-file"),
+                    &mut log,
+                    &mut times,
+                );
+                let sigp = vec![FileProfile::read(&sig)];
+                d.change(app_win, |a, window, cx| {
+                    a.open_tool(
+                        rz,
+                        sigp,
+                        vec![("max_kb".to_string(), json!(50))],
+                        false,
+                        window,
+                        cx,
+                    )
+                });
+                d.settle(app_win).await;
+                let panel = d.change(app_win, |a, _, _| a.panel.clone()).flatten();
+                if let Some(p) = panel {
+                    d.win(app_win, |window, cx| {
+                        p.update(cx, |p, cx| p.run(window, cx))
+                    });
+                }
+                for _ in 0..400 {
+                    d.cx.background_executor()
+                        .timer(Duration::from_millis(25))
+                        .await;
+                    d.draw(app_win);
+                    if d.change(app_win, |a, _, cx| {
+                        a.panel.as_ref().is_some_and(|p| p.read(cx).is_done())
+                    })
+                    .unwrap_or(false)
+                    {
+                        break;
+                    }
+                }
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-tool-result",
+                    &file("app-tool-result"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+                d.settle(app_win).await;
+
+                // ---- the same screens with Increase Contrast on ----
+                crate::ui::theme::force_contrast(Some(true));
+                d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+                d.change(bar, |b, window, cx| {
+                    b.close_panel(window, cx);
+                    b.set_files(Vec::new(), cx);
+                    b.set_query("", window, cx);
+                });
+                d.settle(bar).await;
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-rest-contrast",
+                    &file("bar-rest-contrast"),
+                    &mut log,
+                    &mut times,
+                );
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-home-contrast",
+                    &file("app-home-contrast"),
+                    &mut log,
+                    &mut times,
+                );
+                crate::ui::theme::force_contrast(Some(false));
+
+                // ---- every tool's options panel, in the app window, as one contact sheet ----
+                let tools: Vec<(usize, String)> = hub
+                    .catalog
+                    .tools()
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| (i, t.id.clone()))
+                    .collect();
+                let mut shots: Vec<image::RgbaImage> = Vec::new();
+                for (i, _id) in &tools {
+                    let i = *i;
+                    let files = hub
+                        .catalog
+                        .tool(i)
+                        .manifest
+                        .accepts
+                        .first()
+                        .map(|_| ())
+                        .and_then(|_| sample_for(&hub.catalog.tool(i).manifest, &work2))
+                        .map(|p| vec![FileProfile::read(&p)])
+                        .unwrap_or_default();
+                    d.change(app_win, move |a, window, cx| {
+                        a.open_tool(i, files, Vec::new(), false, window, cx)
+                    });
+                    d.settle(app_win).await;
+                    d.draw(app_win);
+                    if let Some(Ok(img)) = d.win(app_win, |window, _| window.render_to_image()) {
+                        let (w, h) = (img.width() / 3, img.height() / 3);
+                        shots.push(image::imageops::resize(
+                            &img,
+                            w,
+                            h,
+                            image::imageops::FilterType::Lanczos3,
+                        ));
+                    }
+                }
+                d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+                if let Some(first) = shots.first() {
+                    let (w, h) = (first.width(), first.height());
+                    let cols = 6u32;
+                    let rows = (shots.len() as u32).div_ceil(cols);
+                    let gap = 8u32;
+                    let bg = if dark {
+                        image::Rgba([24, 24, 27, 255])
+                    } else {
+                        image::Rgba([214, 217, 224, 255])
+                    };
+                    let mut sheet = image::RgbaImage::from_pixel(
+                        cols * w + (cols + 1) * gap,
+                        rows * h + (rows + 1) * gap,
+                        bg,
+                    );
+                    for (n, s) in shots.iter().enumerate() {
+                        let (c, r) = (n as u32 % cols, n as u32 / cols);
+                        image::imageops::overlay(
+                            &mut sheet,
+                            s,
+                            (gap + c * (w + gap)) as i64,
+                            (gap + r * (h + gap)) as i64,
+                        );
+                    }
+                    let _ = sheet.save(out2.join(format!("all-panels-{tag}.png")));
+                }
+            }
+            let _ = std::fs::write(out2.join("review-log.txt"), log.join("\n"));
+            // Steady-state frame cost of every screen: the median of five draws, in milliseconds.
+            let mut table = String::from("state\twarm frame ms\n");
+            for (name, ms) in &times {
+                table.push_str(&format!("{name}\t{ms:.2}\n"));
+            }
+            let _ = std::fs::write(out2.join("frame-times.tsv"), table);
+            println!("{} screens", log.len());
+            let _ = std::fs::remove_dir_all(&work2);
+            d.cx.update(|cx| cx.quit());
+        })
+        .detach();
+    });
+}
+
 /// `--selfcheck-frames --out DIR`: the showcase run. The same offscreen windows as `run`, but it
 /// saves the states a README or a launch post wants, in light and dark, as raw RGBA PNGs (no flat
 /// desktop colour under them, so a page can set its own backdrop), and the frame sequence of one
@@ -759,6 +1524,7 @@ pub(crate) fn run_frames(out: PathBuf) {
     let app = gpui_platform::application().with_assets(Icons);
     app.run(move |cx: &mut App| {
         gpui_base::init(cx);
+        crate::ui::live::bind_input_keys(cx);
         cx.set_activation_policy(ActivationPolicy::Accessory);
         crate::ui::theme::force_appearance(Some(false));
         platform::set_trash_dir(work.join("trash"));
@@ -775,6 +1541,7 @@ pub(crate) fn run_frames(out: PathBuf) {
                 .into_iter()
                 .take(2)
                 .collect(),
+            loaded: true,
         });
         let hub = Hub {
             catalog,
@@ -790,7 +1557,7 @@ pub(crate) fn run_frames(out: PathBuf) {
             .expect("open the offscreen bar");
         let app_hub = hub.clone();
         let app_win = cx
-            .open_window(app_window_options(true), move |window, cx| {
+            .open_window(app_window_options_at(true, None), move |window, cx| {
                 cx.new(|cx| AppView::new(window, cx, app_hub))
             })
             .expect("open the offscreen app window");

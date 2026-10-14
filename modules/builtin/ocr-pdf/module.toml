@@ -15,13 +15,13 @@ summary = "Make this scan searchable and selectable."
 type = "text"
 default = "auto"
 label = "Languages"
-help = "auto, or a list such as hi,en. Hindi plus English is common."
+help = "auto, or a list such as hi,en."
 
 [options.text_file]
 type = "bool"
 default = false
 label = "Also save the text"
-help = "Write name.txt with the recognized text, one page after another."
+help = "Write name.txt with the recognized text."
 
 [options.dpi]
 type = "number"
@@ -29,7 +29,7 @@ default = 300
 min = 150
 max = 600
 label = "Reading resolution (DPI)"
-help = "Pages are drawn at this resolution to be read. 300 suits printed text; lower is faster, higher helps small print."
+help = "300 suits printed text, lower is faster."
 
 [capabilities]
 files = "chosen"

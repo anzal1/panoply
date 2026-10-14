@@ -14,28 +14,28 @@ summary = "Make this video small enough to send or upload, under a size or as sm
 [options.under]
 type = "size"
 label = "Under (size)"
-help = "The result is at most this big, for example 25mb. The picture gets what is left after the sound; resolution drops only as far as the codec needs, and the card says so."
+help = "At most this big, for example 25mb."
 
 [options.preset]
 type = "choice"
 values = ["none", "whatsapp", "discord", "discord_nitro_basic", "discord_nitro", "gmail", "slack", "telegram", "x"]
 default = "none"
 label = "Fit a service"
-help = "The upload limit of a service, read from its preset file with the source link and the date it was checked. H.264 in MP4, standard range, so it plays everywhere."
+help = "The upload limit of a service."
 
 [options.quality]
 type = "number"
 min = 1
 max = 100
 label = "Quality"
-help = "Without a size: 50 is the smallest that still looks good, higher keeps more detail, lower saves more."
+help = "Without a size. Higher keeps more detail."
 
 [options.codec]
 type = "choice"
 values = ["auto", "h264", "hevc", "av1", "vp9"]
 default = "auto"
 label = "Codec"
-help = "Auto picks HEVC where the computer encodes it in hardware, else H.264, else AV1. A service preset always uses H.264. VP9 writes WebM with a true two-pass encode."
+help = "Auto picks HEVC with a hardware encoder."
 
 [options.max_height]
 type = "number"
@@ -43,20 +43,20 @@ min = 0
 max = 4320
 default = 0
 label = "Largest shorter side (pixels)"
-help = "0 keeps the resolution. 720 means nothing taller than 720p."
+help = "0 keeps the resolution, 720 means 720p."
 
 [options.hdr]
 type = "choice"
 values = ["auto", "keep", "sdr"]
 default = "auto"
 label = "HDR"
-help = "Auto keeps HDR in HEVC and AV1 and converts it to standard range for H.264 and for service presets."
+help = "Auto keeps HDR in HEVC and AV1."
 
 [options.measure_quality]
 type = "bool"
 default = true
 label = "Measure the quality"
-help = "Compares the result with the original (VMAF, on a 20 second sample from the middle) and shows the score on the card."
+help = "Compares the result with the original."
 
 [capabilities]
 files = "chosen"

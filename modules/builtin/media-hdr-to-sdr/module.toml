@@ -17,7 +17,7 @@ type = "choice"
 values = ["bt2390", "hable", "mobius"]
 default = "bt2390"
 label = "Tone-map curve"
-help = "How bright highlights are rolled off. BT.2390 is the broadcast recommendation, Hable is filmic, Mobius keeps midtones linear longer."
+help = "How bright highlights are rolled off."
 
 [options.peak_nits]
 type = "number"
@@ -25,20 +25,20 @@ min = 0
 max = 10000
 default = 0
 label = "Source peak brightness (nits)"
-help = "0 reads it from the file (the brightest the video says it gets), and falls back to 1000."
+help = "0 reads it from the file."
 
 [options.saturation_protection]
 type = "bool"
 default = true
 label = "Protect saturated colours"
-help = "Colours that the SDR range cannot show are pulled toward gray gently instead of being clipped."
+help = "Pulls out-of-range colors toward gray."
 
 [options.codec]
 type = "choice"
 values = ["h264", "hevc"]
 default = "h264"
 label = "Output codec"
-help = "H.264 plays everywhere. HEVC keeps 10 bits, so gradients stay smooth, but needs a hardware encoder."
+help = "H.264 plays everywhere, HEVC keeps 10 bits."
 
 [capabilities]
 files = "chosen"

@@ -14,12 +14,12 @@ type = "choice"
 values = ["smallest", "size", "quality"]
 default = "smallest"
 label = "Target"
-help = "Smallest that still looks good, under a size, or a quality level."
+help = "Smallest, under a size, or a set quality."
 
 [options.under_mb]
 type = "size"
 label = "Under"
-help = "Used when the target is a size, for example 20mb, 5mb or 1mb."
+help = "For a size target, for example 20mb."
 
 [options.keep_text_selectable]
 type = "bool"

@@ -13,24 +13,24 @@ summary = "Reorder, delete, rotate or pull out pages."
 [options.keep]
 type = "text"
 label = "Pages to keep"
-help = "Ranges in the order you want them, for example 5, 1-3, 9-. Leave empty to keep every page. Also first, last, odd, even."
+help = "In the order you want, such as 5, 1-3, 9-."
 
 [options.delete]
 type = "text"
 label = "Pages to delete"
-help = "Ranges to remove from the pages being kept, by their original numbers."
+help = "Ranges to remove, by original page number."
 
 [options.rotate]
 type = "choice"
 values = ["0", "90", "180", "270"]
 default = "0"
 label = "Rotate"
-help = "Degrees clockwise, added to each page's own rotation."
+help = "Degrees clockwise."
 
 [options.rotate_pages]
 type = "text"
 label = "Pages to rotate"
-help = "Which pages the rotation applies to, by original number. Empty means every kept page."
+help = "By original number. Empty means every page."
 
 [options.reverse]
 type = "bool"

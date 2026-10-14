@@ -13,14 +13,14 @@ summary = "Fit a photo to the exact pixels and KB a form or exam portal asks for
 [options.preset]
 type = "text"
 label = "Exam or portal preset"
-help = "A preset id such as ssc-signature or passport-seva-photo. Sets pixels, the size window, format and background. Anything else you give overrides it."
+help = "A preset id such as ssc-signature."
 
 [options.width]
 type = "number"
 min = 1
 max = 10000
 label = "Width (px)"
-help = "Both width and height, or neither. Neither keeps the picture's shape and lets the size search shrink it if it must."
+help = "Both width and height, or neither."
 
 [options.height]
 type = "number"
@@ -42,20 +42,20 @@ label = "Largest size (KB)"
 type = "choice"
 values = ["both", "1000", "1024"]
 label = "What counts as 1 KB"
-help = "Some portals count 1 KB as 1000 bytes, some as 1024. Both targets a size that is inside the window under either reading, and is used when neither the preset nor you say which."
+help = "Some portals use 1000 bytes, some 1024."
 
 [options.fit]
 type = "choice"
 values = ["auto", "crop", "pad", "stretch"]
 label = "Fit"
-help = "Auto crops, and pads with the background when the shape differs by more than 15 percent."
+help = "Auto pads if the shape differs over 15%."
 
 [options.anchor]
 type = "choice"
 values = ["center", "top"]
 default = "center"
 label = "Crop position"
-help = "Top keeps the upper part of the picture, which suits portraits. Face detection arrives with the face tools."
+help = "Top keeps the upper part of the picture."
 
 [options.format]
 type = "choice"
@@ -65,18 +65,18 @@ label = "Format"
 [options.background]
 type = "text"
 label = "Background"
-help = "For padding and for transparent pictures. White unless the preset says otherwise."
+help = "For padding and for transparent pictures."
 
 [options.baseline]
 type = "bool"
 label = "Baseline JPEG only"
-help = "Some portals reject progressive JPEG. On by default for presets, off (progressive, a little smaller) otherwise."
+help = "Some portals reject progressive JPEG."
 
 [options.pad_to_min]
 type = "bool"
 default = true
 label = "Pad to reach the minimum"
-help = "Last resort when a portal enforces a minimum size: add a comment segment. The result card says so."
+help = "Adds a comment to reach a minimum size."
 
 [options.animation]
 type = "choice"

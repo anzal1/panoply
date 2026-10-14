@@ -14,21 +14,21 @@ type = "choice"
 values = ["auto", "2", "4"]
 default = "auto"
 label = "Scale"
-help = "Auto picks 4x under 1000 px and 2x above, and says so when the picture is already large."
+help = "Auto picks 4x under 1000 px and 2x above."
 
 [options.format]
 type = "choice"
 values = ["keep", "png", "jpg"]
 default = "keep"
 label = "Format"
-help = "Keep writes a JPEG for a JPEG and a PNG for everything else."
+help = "Keep writes JPEG for JPEG, PNG otherwise."
 
 [options.quality]
 type = "number"
 min = 1
 max = 100
 label = "Quality"
-help = "For JPG results. Left empty, it follows the original."
+help = "Left empty, it follows the original."
 
 [options.keep_metadata]
 type = "bool"

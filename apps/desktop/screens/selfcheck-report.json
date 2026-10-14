@@ -2,24 +2,24 @@
   "build": "release",
   "note": "Windows were never shown. A frame here is Window::draw (layout and paint on the UI thread); nothing is presented, so GPU time is not included.",
   "startup": {
-    "catalog_load_ms": 1.9122080000000001,
-    "process_to_scenarios_ms": 17951.27975,
-    "first_frame_bar_ms": 0.345041,
-    "first_frame_app_ms": 0.43470800000000004,
-    "tools": 24,
-    "community_modules": 2
+    "catalog_load_ms": 0.587208,
+    "process_to_scenarios_ms": 18736.93725,
+    "first_frame_bar_ms": 0.34008299999999997,
+    "first_frame_app_ms": 0.717,
+    "tools": 31,
+    "community_modules": 0
   },
   "flow": {
-    "bar_panel_open_then_first_frame_ms": 6.504792,
-    "bar_panel_first_frame_ms": 6.306042000000001,
-    "app_panel_open_then_first_frame_ms": 2.396208,
-    "run_wall_ms": 433.17704200000003,
+    "bar_panel_open_then_first_frame_ms": 3.7277500000000003,
+    "bar_panel_first_frame_ms": 3.633,
+    "app_panel_open_then_first_frame_ms": 2.325375,
+    "run_wall_ms": 434.066542,
     "frames_drawn_while_running": 16,
     "saw_running_state": true,
     "result_headline": "67 KB to 43 KB, 35% smaller",
     "input_bytes": 66887,
     "outputs": [
-      "/private/var/folders/1p/2sjkczk95p1g0v6z8gqr1njc0000gp/T/panoply-selfcheck-13062/signature (compressed).png"
+      "/private/var/folders/1p/2sjkczk95p1g0v6z8gqr1njc0000gp/T/panoply-selfcheck-85034/signature (compressed).png"
     ],
     "undo_trashed_outputs": true,
     "then_chain": {
@@ -32,11 +32,23 @@
     "text_after_backspace": "क्षे",
     "instant_transform_png_to_jpg": {
       "headline": "67 KB to 17 KB, 75% smaller",
-      "return_to_result_ms": 28.874042
+      "return_to_result_ms": 29.415667
     },
     "failure": {
       "message": "This PDF is damaged and could not be repaired (startxref is missing; failed parsing cross reference table). Open it in a viewer and print it to a new PDF, then try again.",
       "next_step": "Check the file and the options, then try again."
+    },
+    "consent": {
+      "asked_before_starting": {
+        "id": "isnet",
+        "name": "IS-Net background model",
+        "size": "44 MB",
+        "source": "huggingface.co",
+        "license": "MIT"
+      },
+      "nothing_written_while_asking": true,
+      "not_now_tells_the_job_no": true,
+      "not_now_recorded_nothing": true
     }
   },
   "budgets": {
@@ -44,219 +56,237 @@
       {
         "tool": "files.hash",
         "options": 0,
-        "open_and_first_frame_ms": 1.0030830000000002,
-        "frame_ms": 0.9834579999999999
+        "open_and_first_frame_ms": 1.0547090000000001,
+        "frame_ms": 1.036792
+      },
+      {
+        "tool": "id.passport_photo",
+        "options": 16,
+        "open_and_first_frame_ms": 2.673791,
+        "frame_ms": 2.553875
+      },
+      {
+        "tool": "id.print_sheet",
+        "options": 11,
+        "open_and_first_frame_ms": 2.87025,
+        "frame_ms": 2.760167
+      },
+      {
+        "tool": "id.signature_cleaner",
+        "options": 8,
+        "open_and_first_frame_ms": 2.7447090000000003,
+        "frame_ms": 2.672708
       },
       {
         "tool": "image.compress",
         "options": 9,
-        "open_and_first_frame_ms": 1.5302499999999999,
-        "frame_ms": 1.488
+        "open_and_first_frame_ms": 2.913541,
+        "frame_ms": 2.806167
       },
       {
         "tool": "image.convert",
         "options": 7,
-        "open_and_first_frame_ms": 4.3997079999999995,
-        "frame_ms": 4.324291
+        "open_and_first_frame_ms": 2.539875,
+        "frame_ms": 2.45875
+      },
+      {
+        "tool": "image.erase",
+        "options": 8,
+        "open_and_first_frame_ms": 2.799625,
+        "frame_ms": 2.702083
+      },
+      {
+        "tool": "image.remove_background",
+        "options": 9,
+        "open_and_first_frame_ms": 2.062542,
+        "frame_ms": 1.9987080000000002
+      },
+      {
+        "tool": "image.remove_watermark",
+        "options": 10,
+        "open_and_first_frame_ms": 1.213125,
+        "frame_ms": 1.1668340000000001
       },
       {
         "tool": "image.resize",
         "options": 13,
-        "open_and_first_frame_ms": 3.354958,
-        "frame_ms": 3.26525
+        "open_and_first_frame_ms": 1.281709,
+        "frame_ms": 1.220416
       },
       {
         "tool": "image.resize_to_kb",
         "options": 13,
-        "open_and_first_frame_ms": 2.773292,
-        "frame_ms": 2.659625
+        "open_and_first_frame_ms": 1.8253329999999999,
+        "frame_ms": 1.742083
       },
       {
         "tool": "image.strip_metadata",
         "options": 1,
-        "open_and_first_frame_ms": 2.118166,
-        "frame_ms": 2.099
+        "open_and_first_frame_ms": 1.575084,
+        "frame_ms": 1.554416
+      },
+      {
+        "tool": "image.to_text",
+        "options": 5,
+        "open_and_first_frame_ms": 1.659375,
+        "frame_ms": 1.628291
+      },
+      {
+        "tool": "image.upscale",
+        "options": 5,
+        "open_and_first_frame_ms": 1.211875,
+        "frame_ms": 1.182625
       },
       {
         "tool": "media.compress",
         "options": 7,
-        "open_and_first_frame_ms": 5.814917,
-        "frame_ms": 5.727791000000001
+        "open_and_first_frame_ms": 1.400875,
+        "frame_ms": 1.36125
       },
       {
         "tool": "media.convert",
         "options": 2,
-        "open_and_first_frame_ms": 4.568041,
-        "frame_ms": 4.5107919999999995
+        "open_and_first_frame_ms": 2.505792,
+        "frame_ms": 2.454792
       },
       {
         "tool": "media.extract_audio",
         "options": 3,
-        "open_and_first_frame_ms": 3.8920410000000003,
-        "frame_ms": 3.831417
+        "open_and_first_frame_ms": 3.510875,
+        "frame_ms": 3.390833
       },
       {
         "tool": "media.hdr_to_sdr",
         "options": 4,
-        "open_and_first_frame_ms": 4.538875,
-        "frame_ms": 4.4765
+        "open_and_first_frame_ms": 4.107667,
+        "frame_ms": 3.999667
       },
       {
         "tool": "media.info",
         "options": 2,
-        "open_and_first_frame_ms": 2.753875,
-        "frame_ms": 2.727125
+        "open_and_first_frame_ms": 2.588875,
+        "frame_ms": 2.523625
       },
       {
         "tool": "media.normalize",
         "options": 5,
-        "open_and_first_frame_ms": 4.924625,
-        "frame_ms": 4.843667
+        "open_and_first_frame_ms": 1.984417,
+        "frame_ms": 1.9374170000000002
       },
       {
         "tool": "media.repair",
         "options": 2,
-        "open_and_first_frame_ms": 3.7619580000000004,
-        "frame_ms": 3.706417
+        "open_and_first_frame_ms": 1.745209,
+        "frame_ms": 1.711584
       },
       {
         "tool": "media.streams",
         "options": 5,
-        "open_and_first_frame_ms": 3.397542,
-        "frame_ms": 3.322167
+        "open_and_first_frame_ms": 2.23825,
+        "frame_ms": 2.158375
       },
       {
         "tool": "media.to_mono",
         "options": 1,
-        "open_and_first_frame_ms": 2.895292,
-        "frame_ms": 2.8625
+        "open_and_first_frame_ms": 1.560625,
+        "frame_ms": 1.523416
       },
       {
         "tool": "media.trim",
         "options": 4,
-        "open_and_first_frame_ms": 4.275417,
-        "frame_ms": 4.207790999999999
+        "open_and_first_frame_ms": 2.994792,
+        "frame_ms": 2.91325
       },
       {
         "tool": "pdf.compress",
         "options": 8,
-        "open_and_first_frame_ms": 3.621625,
-        "frame_ms": 3.538
+        "open_and_first_frame_ms": 2.984833,
+        "frame_ms": 2.912875
       },
       {
         "tool": "pdf.images_to_pdf",
         "options": 4,
-        "open_and_first_frame_ms": 1.401375,
-        "frame_ms": 1.360667
+        "open_and_first_frame_ms": 2.5387500000000003,
+        "frame_ms": 2.456334
       },
       {
         "tool": "pdf.merge",
         "options": 4,
-        "open_and_first_frame_ms": 3.3560410000000003,
-        "frame_ms": 3.314417
+        "open_and_first_frame_ms": 1.370083,
+        "frame_ms": 1.3475
+      },
+      {
+        "tool": "pdf.ocr",
+        "options": 3,
+        "open_and_first_frame_ms": 1.551958,
+        "frame_ms": 1.516334
       },
       {
         "tool": "pdf.organize",
         "options": 5,
-        "open_and_first_frame_ms": 3.893125,
-        "frame_ms": 3.823042
+        "open_and_first_frame_ms": 2.441834,
+        "frame_ms": 2.361208
       },
       {
         "tool": "pdf.split",
         "options": 4,
-        "open_and_first_frame_ms": 3.56275,
-        "frame_ms": 3.485792
+        "open_and_first_frame_ms": 2.333166,
+        "frame_ms": 2.2542500000000003
       },
       {
         "tool": "pdf.to_images",
         "options": 6,
-        "open_and_first_frame_ms": 3.5485,
-        "frame_ms": 3.4730410000000003
-      },
-      {
-        "tool": "text.slugify_lines",
-        "options": 1,
-        "open_and_first_frame_ms": 1.843833,
-        "frame_ms": 1.819167
-      },
-      {
-        "tool": "text.word_count",
-        "options": 0,
-        "open_and_first_frame_ms": 1.763709,
-        "frame_ms": 1.7442499999999999
+        "open_and_first_frame_ms": 2.8778330000000003,
+        "frame_ms": 2.791042
       }
     ],
-    "panel_open_max_ms": 5.814917,
+    "panel_open_max_ms": 4.107667,
     "panel_open_limit_ms": 50,
     "keystroke_to_frame_ms": {
-      "p50": 0.727792,
-      "p95": 2.516666,
-      "max": 2.516666
+      "p50": 0.720458,
+      "p95": 4.848875,
+      "max": 4.848875
     },
     "ui_state_change_ms": {
-      "p50": 0.092583,
-      "p95": 0.3635,
-      "max": 0.797125,
-      "samples": 107
+      "p50": 0.096541,
+      "p95": 0.49287500000000006,
+      "max": 1.164209,
+      "samples": 128
     },
     "ui_frame_ms": {
-      "p50": 0.903292,
-      "p95": 3.881875,
-      "max": 8.032083,
-      "samples": 274
+      "p50": 0.9268329999999999,
+      "p95": 3.1674580000000003,
+      "max": 6.607791,
+      "samples": 355
     },
     "ui_task_limit_ms": 4,
     "frames_over_4ms": [
       {
-        "state": "bar tool panel options",
-        "ms": 6.306042000000001
-      },
-      {
         "state": "bar text input",
-        "ms": 5.640375000000001
+        "ms": 5.023792
       },
       {
-        "state": "bar text input",
-        "ms": 4.143542
+        "state": "app window modules",
+        "ms": 6.607791
       },
       {
-        "state": "app window",
-        "ms": 8.032083
+        "state": "app window tool panel",
+        "ms": 4.6660829999999995
       },
       {
-        "state": "app window",
-        "ms": 5.732708000000001
-      },
-      {
-        "state": "panel open sweep",
-        "ms": 4.324291
+        "state": "app window tool panel",
+        "ms": 5.596959
       },
       {
         "state": "panel open sweep",
-        "ms": 5.727791000000001
-      },
-      {
-        "state": "panel open sweep",
-        "ms": 4.5107919999999995
-      },
-      {
-        "state": "panel open sweep",
-        "ms": 4.4765
-      },
-      {
-        "state": "panel open sweep",
-        "ms": 4.843667
-      },
-      {
-        "state": "panel open sweep",
-        "ms": 4.207790999999999
+        "ms": 4.491542
       }
     ],
-    "idle_rss_mb_before_sampling": 151.375,
-    "idle_rss_mb": 151.375,
+    "idle_rss_mb_before_sampling": 168.0625,
+    "idle_rss_mb": 168.0,
     "idle_rss_limit_mb": 100,
-    "idle_cpu_percent": 0.027968858955686796,
-    "idle_sample_seconds": 8.3986265
+    "idle_cpu_percent": 0.04021657495349008,
+    "idle_sample_seconds": 8.011622083
   },
   "accessibility": [
     {
@@ -274,17 +304,18 @@
     },
     {
       "state": "bar with a tool panel",
-      "actionable": 21,
+      "actionable": 12,
       "unlabelled": [],
       "roles": {
         "Button": 6,
+        "ComboBox": 1,
         "DisclosureTriangle": 1,
         "Group": 1,
         "Heading": 1,
         "List": 1,
         "ListItem": 1,
-        "RadioButton": 12,
-        "RadioGroup": 2,
+        "RadioButton": 3,
+        "RadioGroup": 1,
         "Status": 1,
         "TextInput": 2,
         "Window": 1
@@ -293,14 +324,13 @@
     },
     {
       "state": "app window home",
-      "actionable": 23,
+      "actionable": 29,
       "unlabelled": [],
       "roles": {
-        "Button": 7,
-        "Link": 5,
+        "Button": 17,
+        "Heading": 1,
         "ListBox": 1,
-        "ListBoxOption": 10,
-        "ListItem": 5,
+        "ListBoxOption": 11,
         "SearchInput": 1,
         "Window": 1
       },
@@ -308,21 +338,20 @@
     },
     {
       "state": "app window history",
-      "actionable": 16,
+      "actionable": 23,
       "unlabelled": [],
       "roles": {
+        "Button": 12,
         "Heading": 1,
-        "Link": 6,
         "ListBox": 1,
-        "ListBoxOption": 10,
-        "ListItem": 6,
+        "ListBoxOption": 11,
         "Window": 1
       },
       "pass": true
     },
     {
       "state": "app window tool panel",
-      "actionable": 28,
+      "actionable": 29,
       "unlabelled": [],
       "roles": {
         "Button": 10,
@@ -331,7 +360,7 @@
         "Heading": 1,
         "List": 1,
         "ListBox": 1,
-        "ListBoxOption": 10,
+        "ListBoxOption": 11,
         "ListItem": 1,
         "RadioButton": 4,
         "RadioGroup": 1,
@@ -340,25 +369,60 @@
         "Window": 1
       },
       "pass": true
+    },
+    {
+      "state": "bar consent sheet",
+      "actionable": 3,
+      "unlabelled": [],
+      "roles": {
+        "Alert": 1,
+        "Button": 3,
+        "Heading": 1,
+        "Window": 1
+      },
+      "pass": true
     }
   ],
+  "keyboard": {
+    "tab_sequence_on_home": [
+      "Home",
+      "Find",
+      "History",
+      "PDF, 7 tools",
+      "ID and forms, 3 tools",
+      "Images, 10 tools",
+      "Video, 10 tools",
+      "Files, 1 tool",
+      "Nearby",
+      "Modules",
+      "Settings",
+      "Search tools and files",
+      "Drop anything here, or choose files",
+      "Convert image",
+      "Compress image",
+      "Resize to exact KB"
+    ],
+    "distinct_controls_reached": 16,
+    "pass": true
+  },
   "screens": [
-    "screens/01-bar-at-rest.png (1440x920)",
-    "screens/02-bar-pdf-dropped.png (1440x920)",
-    "screens/03-bar-plain-words.png (1440x920)",
-    "screens/04-bar-convert.png (1440x920)",
-    "screens/05-bar-convert-route.png (1440x920)",
-    "screens/06-panel-options.png (1440x920)",
-    "screens/07-panel-running.png (1440x920)",
-    "screens/08-panel-result.png (1440x920)",
-    "screens/09-panel-undone.png (1440x920)",
-    "screens/10-panel-failed.png (1440x920)",
-    "screens/11-bar-instant-transform-result.png (1440x920)",
-    "screens/12-app-home.png (2320x1440)",
-    "screens/13-app-category-pdf.png (2320x1440)",
-    "screens/14-app-modules.png (2320x1440)",
-    "screens/15-app-tool-panel.png (2320x1440)",
-    "screens/16-bar-at-rest-dark.png (1440x920)",
-    "screens/17-app-home-dark.png (2320x1440)"
+    "apps/desktop/screens/01-bar-at-rest.png (1440x920)",
+    "apps/desktop/screens/02-bar-pdf-dropped.png (1440x920)",
+    "apps/desktop/screens/03-bar-plain-words.png (1440x920)",
+    "apps/desktop/screens/04-bar-convert.png (1440x920)",
+    "apps/desktop/screens/05-bar-convert-route.png (1440x920)",
+    "apps/desktop/screens/06-panel-options.png (1440x920)",
+    "apps/desktop/screens/07-panel-running.png (1440x920)",
+    "apps/desktop/screens/08-panel-result.png (1440x920)",
+    "apps/desktop/screens/09-panel-undone.png (1440x920)",
+    "apps/desktop/screens/10-panel-failed.png (1440x920)",
+    "apps/desktop/screens/10b-panel-consent.png (1440x920)",
+    "apps/desktop/screens/11-bar-instant-transform-result.png (1440x920)",
+    "apps/desktop/screens/12-app-home.png (2320x1440)",
+    "apps/desktop/screens/13-app-category-pdf.png (2320x1440)",
+    "apps/desktop/screens/14-app-modules.png (2320x1440)",
+    "apps/desktop/screens/15-app-tool-panel.png (2320x1440)",
+    "apps/desktop/screens/16-bar-at-rest-dark.png (1440x920)",
+    "apps/desktop/screens/17-app-home-dark.png (2320x1440)"
   ]
 }

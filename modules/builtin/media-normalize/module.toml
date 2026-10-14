@@ -17,7 +17,7 @@ type = "choice"
 values = ["custom", "ebu-r128", "atsc-a85", "apple-podcasts", "spotify", "netflix", "podcast-general", "youtube"]
 default = "custom"
 label = "Standard"
-help = "A named target. Custom uses the target and ceiling below. Each standard's numbers, source link and check date are in the preset files."
+help = "A named target. Custom uses the values below."
 
 [options.target]
 type = "number"
@@ -25,7 +25,7 @@ min = -70
 max = -5
 default = -16
 label = "Target (LUFS)"
-help = "Integrated loudness. -16 suits speech and podcasts, -14 music, -23 broadcast."
+help = "-16 suits speech, -14 music, -23 broadcast."
 
 [options.true_peak]
 type = "number"
@@ -33,20 +33,20 @@ min = -20
 max = 0
 default = -1
 label = "True peak ceiling (dBTP)"
-help = "The result never goes over this, measured with oversampling."
+help = "The result never goes over this."
 
 [options.mode]
 type = "choice"
 values = ["loudness", "peak", "tags"]
 default = "loudness"
 label = "Mode"
-help = "Loudness reaches the target. Peak only brings the loudest peak to the ceiling. Tags writes ReplayGain tags and changes no sound at all, so a lossy file loses nothing."
+help = "Tags only writes tags and changes no sound."
 
 [options.track]
 type = "text"
 default = "first"
 label = "Audio track"
-help = "For a file with several sound tracks: first, a number such as 2, or all (each track is set separately)."
+help = "First, a number such as 2, or all."
 
 [capabilities]
 files = "chosen"
