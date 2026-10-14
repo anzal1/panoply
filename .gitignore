@@ -52,3 +52,27 @@ prototypes/ilovepdf-compare/results/
 # Build folders renamed so macOS Spotlight skips them (target is a symlink to target.noindex)
 *.noindex/
 **/target
+
+# Caches, local config and tool output
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+node_modules/
+.env
+.env.*
+!.env.example
+*.profraw
+*.profdata
+*.rs.bk
+Thumbs.db
+.claude/
+
+# Release workflow scratch folders (a local run of packaging/scripts leaves these behind)
+/stage/
+/staging/
+/dist/
+/release/
+/manifests/

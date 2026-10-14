@@ -12,6 +12,42 @@ paid one it replaces, so the bar for merging is high and written down.
 3. Check [docs/DECISIONS.md](docs/DECISIONS.md) so you do not rebuild something
    already merged into a shared engine.
 
+## The quick dev loop
+
+You need the Rust toolchain pinned in `rust-toolchain.toml` (rustup installs it for you) and Python 3.
+
+```sh
+# Format, lint, test. These are the same checks CI runs.
+cargo fmt --all --check
+cargo clippy --workspace --exclude gpui-base --all-targets -- -D warnings
+cargo test --workspace --exclude gpui-base --no-fail-fast
+
+# Test corpus: files are fetched or generated on demand, and only the manifests are committed.
+pip install pillow
+python3 -I tests/corpus/fetch.py --kind pdf,image
+python3 tests/corpus/generate.py --kind pdf,image
+```
+
+Notes:
+
+- `gpui-base` is a patched copy of a UI library, kept in the workspace tree but excluded from lint and tests.
+- Tests that need a model or an engine download it. Panoply asks before any download, so tests set
+  `PANOPLY_YES=1` (the same as `--yes`). Point `PANOPLY_DATA_DIR` at a throwaway folder so test runs do not
+  touch your own data folder.
+- Tests that use a corpus file skip when it is not on disk. Run the fetch step above to run them all.
+- The first build compiles the PDF, image and media engines and takes a while. Later builds are incremental.
+- Run `cargo test -p <crate>` while you work and the whole workspace before you push.
+- A change to `Cargo.lock` needs `THIRD-PARTY-NOTICES.md` regenerated (see Notices below).
+
+**macOS tip: keep Spotlight out of your build folder.** Spotlight indexes a `target` folder and burns CPU
+during big builds. A folder whose name ends in `.noindex` is skipped, so point cargo at one:
+
+```sh
+export CARGO_TARGET_DIR="$HOME/panoply-target.noindex"
+```
+
+Put the line in your shell profile. The repository ignores `*.noindex/` already.
+
 ## The rules every change follows
 
 **Budgets.** Every module meets the table in
@@ -59,13 +95,17 @@ happened and what to do next.
 3. Do not build UI. The app renders your manifest with native components.
 4. Add tests on the shared corpora and a benchmark against the named
    competitor.
-5. Run `cargo fmt`, `cargo clippy -- -D warnings`, `cargo test`,
-   `cargo deny check`.
+5. Run the quick dev loop above, then `cargo deny check`.
 
 ## Adding a format or conversion
 
 Edit `conversions/formats.py`, run `python3 conversions/formats.py`, commit the
 regenerated `docs/CONVERSIONS.md` and `crates/panoply-convert/data/graph.json`.
+
+## Pull requests
+
+Keep a pull request to one change. Fill in the template, link the issue it closes, and say how you checked it.
+CI must be green on macOS, Windows and Linux. Use plain sentences for commit messages.
 
 ## Decisions
 
