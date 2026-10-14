@@ -42,7 +42,17 @@ fn flatten(img: &image::RgbaImage, dark: bool) -> image::RgbaImage {
         image::Rgba([201, 208, 219, 255])
     };
     let mut out = image::RgbaImage::from_pixel(img.width(), img.height(), bg);
-    image::imageops::overlay(&mut out, img, 0, 0);
+    // render_to_image returns premultiplied colour; undo that so the overlay blends straight alpha.
+    let mut straight = img.clone();
+    for p in straight.pixels_mut() {
+        let a = u32::from(p[3]);
+        if a > 0 && a < 255 {
+            for c in 0..3 {
+                p[c] = ((u32::from(p[c]) * 255 + a / 2) / a).min(255) as u8;
+            }
+        }
+    }
+    image::imageops::overlay(&mut out, &straight, 0, 0);
     out
 }
 

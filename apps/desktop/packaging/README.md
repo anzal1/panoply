@@ -50,7 +50,9 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   `panoply-desktop --background` plus a future `--bar` flag, or use the app window.
 - Trash uses the freedesktop trash folders (`~/.local/share/Trash`).
 - Unverified until someone runs it on a real desktop: bar window kind (`WindowKind::PopUp` on X11 and
-  Wayland), hide and show of the bar, Reduce Motion (read from GNOME gsettings), IME on the search field.
+  Wayland), hide and show of the bar, Reduce Motion and high contrast (read from GNOME gsettings every few seconds on a
+  background thread), IME on the search field, and the header bar and resize edges the app draws when the compositor
+  (GNOME under Wayland) gives it no window frame.
 
 ## Windows (compile target only so far)
 
@@ -68,6 +70,9 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   with `"panoply-desktop.exe" "%1"`, and a shortcut in `shell:sendto`.
 - Trash is not wired: `Undo` removes the new file instead of sending it to the Recycle Bin (needs
   `SHFileOperationW`, which needs the `windows` crate behind `cfg(windows)`).
-- Reduce Motion is not read yet (`SPI_GETCLIENTAREAANIMATION`); `PANOPLY_REDUCE_MOTION=1` forces it.
+- The window draws its own 32 pt title bar with the Fluent caption buttons on a solid Mica-like surface (`ui/chrome.rs`), because
+  GPUI's transparent title bar leaves no native caption. Reduce Motion (`SPI_GETCLIENTAREAANIMATION`) and High Contrast
+  (`SPI_GETHIGHCONTRAST`) are read through `user32`; `PANOPLY_REDUCE_MOTION=1` and `PANOPLY_HIGH_CONTRAST=1` force them.
+  Compiled by CI, not yet run on a Windows desktop.
 - Global hotkey uses `RegisterHotKey` through `global-hotkey`; Alt+Space is the system menu on Windows, so
   the default should change there (try Ctrl+Alt+Space) before launch.
