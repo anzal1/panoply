@@ -53,17 +53,16 @@ fn family(codec: &str) -> AudioFormat {
     }
 }
 
-/// The stream with a bit rate to keep. Ogg and some other containers state none per stream; a
-/// file that is only one sound track has it in its size and length, and writing it again at the
-/// encoder's default rate (about 112 kb/s for Vorbis) made a 395 KB file 740 KB.
+/// The stream with the bit rate to keep. Ogg and some other containers state none per stream, or
+/// a nominal one far above what the file really spends (a Vorbis file that says 112 kb/s and
+/// takes 59). A file that is only one sound track has the real rate in its size and length, and
+/// writing it again at the stated rate made a 395 KB file 555 KB, at the encoder's default 740 KB.
 fn with_rate(s: &Stream, profile: &Profile) -> Stream {
     let mut s = s.clone();
     let only_sound = profile.of(Kind::Audio).count() == 1 && !profile.has_video();
-    if s.bit_rate.is_none()
-        && only_sound
-        && let Some(d) = profile.duration.filter(|d| *d > 1.0 && d.is_finite())
-    {
-        s.bit_rate = Some((profile.size as f64 * 8.0 / d) as u64);
+    if only_sound && let Some(d) = profile.duration.filter(|d| *d > 1.0 && d.is_finite()) {
+        let real = (profile.size as f64 * 8.0 / d) as u64;
+        s.bit_rate = Some(s.bit_rate.map_or(real, |stated| stated.min(real)));
     }
     s
 }
@@ -81,13 +80,20 @@ fn plan_for(job: &Job, s: &Stream, t: &Treatment, container_ext: &str) -> Result
         fmt = AudioFormat::Opus;
         extra = Some("This engine has no Vorbis encoder, so the sound was written as Opus, which Ogg files hold as well.".to_string());
     }
+    // Opus standing in for Vorbis keeps the sound's own rate, with a smaller channel count taking
+    // its share (a stereo file written as mono must not come out bigger).
+    let src_ch = s.channels.max(1);
+    let bitrate = extra.as_ref().and(s.bit_rate).map(|b| {
+        let out_ch = t.channels.map_or(src_ch, |c| c.min(src_ch));
+        audio::same_codec_bitrate(b, src_ch, out_ch, ACodec::Opus)
+    });
     let mut plan = audio::plan_audio(
         &job.engine,
         s,
         fmt,
         &AudioWish {
             force_encode: true,
-            bitrate: None,
+            bitrate,
             channels: t.channels,
         },
     )?;
@@ -275,6 +281,10 @@ mod tests {
         let s = &profile.streams[0];
         assert_eq!(s.bit_rate, None);
         assert_eq!(with_rate(s, &profile).bit_rate, Some(32_000));
+        // A stated rate above what the file spends gives way to the real one.
+        let mut stated = s.clone();
+        stated.bit_rate = Some(112_000);
+        assert_eq!(with_rate(&stated, &profile).bit_rate, Some(32_000));
     }
 
     #[test]
