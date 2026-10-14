@@ -3545,7 +3545,11 @@ impl<M: InputModeKind> InputBaseState<M> {
         let mut cursor = GraphemeCursor::new(rel, line.len(), true);
         match cursor.is_boundary(&line, 0) {
             Ok(false) => {
-                let found = if forward { cursor.next_boundary(&line, 0) } else { cursor.prev_boundary(&line, 0) };
+                let found = if forward {
+                    cursor.next_boundary(&line, 0)
+                } else {
+                    cursor.prev_boundary(&line, 0)
+                };
                 match found {
                     Ok(Some(b)) => start + b,
                     _ => offset,
