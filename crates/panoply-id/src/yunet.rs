@@ -15,7 +15,7 @@ use panoply_image::error::{ImageError, Result};
 use panoply_image::ops::kb::resample_image;
 use panoply_image::types::{Image, Samples};
 
-use crate::face::{Engine, Face, P};
+use crate::face::{Engine, Face, P, rotate};
 use crate::runtime;
 
 /// Faces scoring under this are dropped.
@@ -111,31 +111,15 @@ pub fn nms(mut dets: Vec<Det>, thr: f32) -> Vec<Det> {
     keep
 }
 
-/// Find the faces in an 8 bit RGB picture.
-///
-/// The published model takes a fixed 640 by 640 input, so the picture is brought to fit inside
-/// it (aspect ratio kept) and the rest is left black. Coordinates come back divided by the same
-/// ratio, so nothing is stretched.
-pub fn detect(img: &Image) -> Result<Vec<Face>> {
-    let Samples::U8(_) = &img.samples else {
-        return Err(ImageError::Failed("internal: YuNet needs 8 bit RGB".into()));
-    };
-    let long = f64::from(img.width.max(img.height));
-    let k = f64::from(INPUT) / long;
-    let (nw, nh) = (
-        ((f64::from(img.width) * k).round() as u32).clamp(1, INPUT),
-        ((f64::from(img.height) * k).round() as u32).clamp(1, INPUT),
-    );
-    let net = resample_image(img, nw, nh)?;
-    let Samples::U8(px) = &net.samples else {
-        return Err(ImageError::Failed("internal: YuNet needs 8 bit RGB".into()));
-    };
+/// Run the network on an 8 bit RGB picture no larger than the input square (placed at the top
+/// left, the rest black) and return the merged detections in that picture's own pixels.
+fn infer(px: &[u8], nw: usize, nh: usize) -> Result<Vec<Det>> {
     let side = INPUT as usize;
     let plane = side * side;
     let mut data = vec![0f32; 3 * plane];
-    for y in 0..nh as usize {
-        for x in 0..nw as usize {
-            let p = &px[(y * nw as usize + x) * 3..][..3];
+    for y in 0..nh {
+        for x in 0..nw {
+            let p = &px[(y * nw + x) * 3..][..3];
             let i = y * side + x;
             // BGR order, plain 0 to 255.
             data[i] = f32::from(p[2]);
@@ -143,8 +127,6 @@ pub fn detect(img: &Image) -> Result<Vec<Face>> {
             data[2 * plane + i] = f32::from(p[0]);
         }
     }
-    let (sx, sy) = (1.0 / k, 1.0 / k);
-
     let dets = runtime::with_session(|session| {
         let input = Tensor::from_array(([1usize, 3, side, side], data)).map_err(|e| {
             ImageError::Failed(format!("The face model could not take the picture: {e}"))
@@ -193,8 +175,156 @@ pub fn detect(img: &Image) -> Result<Vec<Face>> {
         }
         Ok(all)
     })?;
-    let dets = nms(dets, NMS_IOU);
-    Ok(dets.into_iter().map(|d| to_face(&d, sx, sy)).collect())
+    Ok(nms(dets, NMS_IOU))
+}
+
+fn rgb_px(img: &Image) -> Result<&[u8]> {
+    match &img.samples {
+        Samples::U8(px) if img.layout == panoply_image::types::Layout::Rgb => Ok(px),
+        _ => Err(ImageError::Failed("internal: YuNet needs 8 bit RGB".into())),
+    }
+}
+
+/// Find the faces in an 8 bit RGB picture, one network pass, no refinement.
+///
+/// The published model takes a fixed 640 by 640 input, so the picture is brought to fit inside
+/// it (aspect ratio kept) and the rest is left black. Coordinates come back divided by the same
+/// ratio, so nothing is stretched.
+pub fn detect_once(img: &Image) -> Result<Vec<Face>> {
+    rgb_px(img)?;
+    let long = f64::from(img.width.max(img.height));
+    let k = f64::from(INPUT) / long;
+    let (nw, nh) = (
+        ((f64::from(img.width) * k).round() as u32).clamp(1, INPUT),
+        ((f64::from(img.height) * k).round() as u32).clamp(1, INPUT),
+    );
+    let net = resample_image(img, nw, nh)?;
+    let dets = infer(rgb_px(&net)?, nw as usize, nh as usize)?;
+    let inv = 1.0 / k;
+    Ok(dets.into_iter().map(|d| to_face(&d, inv, inv)).collect())
+}
+
+/// Rounds of re-reading a face on a level crop, at most.
+const REFINE_ROUNDS: usize = 3;
+/// A residual roll under this many degrees ends the refinement.
+const REFINE_DONE_DEG: f64 = 0.5;
+/// The face box is brought to this many pixels on the model's 640 pixel input. YuNet reads
+/// landmarks best on a face that is large and upright: measured on the corpus portraits turned
+/// by -15 to 15 degrees, 480 gives the smallest error (0.9 degrees RMS, against 5.7 for the
+/// single pass at the picture's own scale, where a face is small and tilted).
+const REFINE_FACE_PX: f64 = 480.0;
+/// Only this many of the largest faces are refined; a photo with more is a group shot, which
+/// the passport tool refuses anyway.
+const REFINE_FACES: usize = 3;
+
+/// Find the faces in an 8 bit RGB picture.
+///
+/// The first pass reads the eye line from the picture as it is, and YuNet pulls a turned head
+/// toward upright: a face rotated 11 degrees reads as 4 to 6. So each face is then read again on
+/// a crop turned by the roll found so far (see [`refine`]).
+pub fn detect(img: &Image) -> Result<Vec<Face>> {
+    let mut faces = detect_once(img)?;
+    let mut by_size: Vec<usize> = (0..faces.len()).collect();
+    by_size.sort_by(|&a, &b| (faces[b].w * faces[b].h).total_cmp(&(faces[a].w * faces[a].h)));
+    for &i in by_size.iter().take(REFINE_FACES) {
+        refine(img, &mut faces[i]);
+    }
+    Ok(faces)
+}
+
+/// Re-read `face` on a crop turned level by the roll found so far, add the residual, and repeat
+/// until it is under [`REFINE_DONE_DEG`] or after [`REFINE_ROUNDS`] rounds. The eyes, nose and
+/// mouth corners are replaced by the refined ones in picture pixels; the box stays as the first
+/// pass found it. If no round finds the face near the crop's centre, the first pass is kept.
+fn refine(img: &Image, face: &mut Face) {
+    use crate::warp::{self, Affine};
+    let size = face.w.max(face.h).max(8.0);
+    let pts = [
+        face.eye_l,
+        face.eye_r,
+        face.nose,
+        face.mouth_l,
+        face.mouth_r,
+    ];
+    let ctr = (
+        pts.iter().map(|p| p.0).sum::<f64>() / 5.0,
+        pts.iter().map(|p| p.1).sum::<f64>() / 5.0,
+    );
+    // Picture pixels per crop pixel.
+    let k = size / REFINE_FACE_PX;
+    let half = f64::from(INPUT) / 2.0;
+    let mut phi = face.roll_deg();
+    // Each round: the roll it ended on (turn applied plus residual), the crop's map to picture
+    // pixels and the landmarks it read.
+    let mut rounds: Vec<(f64, Affine, Face)> = Vec::new();
+    for _ in 0..REFINE_ROUNDS {
+        // The crop's x axis points along the face's eye line, its centre is the face's centre.
+        let (s, co) = phi.to_radians().sin_cos();
+        let m = Affine {
+            a: co * k,
+            b: -s * k,
+            c: ctr.0 - (co - s) * half * k,
+            d: s * k,
+            e: co * k,
+            f: ctr.1 - (s + co) * half * k,
+        };
+        let Ok((crop, _)) = warp::render(img, &m, INPUT, INPUT, &[0u8; 3]) else {
+            break;
+        };
+        let Ok(px) = rgb_px(&crop) else { break };
+        let Ok(dets) = infer(px, INPUT as usize, INPUT as usize) else {
+            break;
+        };
+        let off = |d: &Det| {
+            (f64::from(d.bbox[0] + d.bbox[2] / 2.0) - half)
+                .hypot(f64::from(d.bbox[1] + d.bbox[3] / 2.0) - half)
+        };
+        let Some(d) = dets.into_iter().min_by(|a, b| off(a).total_cmp(&off(b))) else {
+            break;
+        };
+        // A face that is not where the crop was centred is another face, not this one.
+        if off(&d) > 0.35 * REFINE_FACE_PX {
+            break;
+        }
+        let read = to_face(&d, 1.0, 1.0);
+        let r = read.roll_deg();
+        rounds.push((phi + r, m, read));
+        if r.abs() < REFINE_DONE_DEG {
+            break;
+        }
+        phi += r;
+    }
+    let Some((last_roll, m, read)) = rounds.last() else {
+        return;
+    };
+    // The landmarks of the last round, in picture pixels, turned about their centre to the mean
+    // of the rolls the rounds ended on. YuNet's reading jumps by a few degrees between crops
+    // that differ by a few degrees (it can settle on 17 and then on 20 for a head turned 17),
+    // and the mean of the rounds is steadier than any one of them.
+    let roll = rounds.iter().map(|r| r.0).sum::<f64>() / rounds.len() as f64;
+    let mut pts = [
+        read.eye_l,
+        read.eye_r,
+        read.nose,
+        read.mouth_l,
+        read.mouth_r,
+    ]
+    .map(|p| m.at(p.0, p.1));
+    let c = (
+        pts.iter().map(|p| p.0).sum::<f64>() / 5.0,
+        pts.iter().map(|p| p.1).sum::<f64>() / 5.0,
+    );
+    let turn = (roll - last_roll).to_radians();
+    for p in &mut pts {
+        *p = rotate(*p, c, turn);
+    }
+    [
+        face.eye_l,
+        face.eye_r,
+        face.nose,
+        face.mouth_l,
+        face.mouth_r,
+    ] = pts;
 }
 
 fn to_face(d: &Det, sx: f64, sy: f64) -> Face {
