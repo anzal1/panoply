@@ -23,7 +23,7 @@ jpeg-encoder.workspace = true
 png.workspace = true
 weezl.workspace = true
 # CCITT Group 4 encoder and decoder (MIT, pure Rust, already in the tree through tiff).
-fax = "0.2.7"
+fax = "0.3.0"
 serde_json.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
