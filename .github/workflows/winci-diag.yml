@@ -1,0 +1,33 @@
+name: winci-diag
+on:
+  push:
+    branches: [fix/windows-ci]
+    paths: [".github/workflows/winci-diag.yml"]
+jobs:
+  diag:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      RUST_BACKTRACE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Corpus
+        shell: bash
+        run: |
+          python -m pip install --quiet pillow
+          python -I tests/corpus/fetch.py --kind pdf,image
+          python tests/corpus/generate.py --kind pdf,image || true
+      - name: faces sharpness
+        if: always()
+        run: cargo test -p panoply-id --test faces sharpness_numbers -- --nocapture --test-threads=1
+      - name: ocr accuracy one at a time
+        if: always() && matrix.os == 'windows-latest'
+        run: cargo test -p panoply-ocr --test accuracy -- --nocapture --test-threads=1
