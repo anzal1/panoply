@@ -69,6 +69,22 @@ step "docs check"
 python3 -I tools/ci/check_docs.py
 done_step
 
+# ---- the test corpus -----------------------------------------------------------------------------
+# Corpus tests fail (they never skip quietly) when the files are missing. A new git worktree starts
+# without them: link the cache of the first worktree when it has one, else fetch what CI fetches.
+if [ ! -e tests/corpus/cache ]; then
+  first="$(git worktree list --porcelain | awk '/^worktree /{print $2; exit}')"
+  if [ -d "$first/tests/corpus/cache" ] && [ "$first" != "$PWD" ]; then
+    ln -s "$first/tests/corpus/cache" tests/corpus/cache
+    echo "corpus: linked $first/tests/corpus/cache"
+  else
+    step "fetching the test corpus (once)"
+    python3 -I tests/corpus/fetch.py --kind pdf,image
+    python3 tests/corpus/generate.py --kind pdf,image || echo "some generated files need local tools; their tests skip"
+    done_step
+  fi
+fi
+
 # Writes "all" or a list of "-p crate" words, or nothing when no Rust crate is touched.
 plan="$(
   printf '%s\n' "$changed" | ALL="$all" python3 -I -c '
