@@ -25,6 +25,14 @@ jobs:
           python -m pip install --quiet pillow
           python -I tests/corpus/fetch.py --kind pdf,image
           python tests/corpus/generate.py --kind pdf,image || true
-      - name: ocr probe
+      - name: ocr tests one by one
         if: always() && matrix.os == 'windows-latest'
-        run: cargo test -p panoply-ocr --test zz_diag -- --nocapture --test-threads=1
+        shell: bash
+        env:
+          PANOPLY_YES: "1"
+        run: |
+          cargo test -p panoply-ocr --test accuracy --no-run
+          for t in a_tall_page_read_in_strips_loses_no_lines bengali_goes_to_tesseract_when_it_is_installed ppocr_reads_a_crooked_noisy_scan ppocr_reads_clean_english_text ppocr_reads_clean_hindi_and_mixed_hindi_english word_boxes_sit_on_the_words; do
+            echo "=== $t"
+            cargo test -p panoply-ocr --test accuracy -- --exact $t --nocapture --test-threads=1 2>&1 | tail -25 || true
+          done
