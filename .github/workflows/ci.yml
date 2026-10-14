@@ -201,12 +201,11 @@ jobs:
         run: |
           panoply="${CARGO_TARGET_DIR:-target}/ci/panoply"
           "$panoply" models list
-          "$panoply" --yes models fetch
+          "$panoply" models fetch
           du -sh "$PANOPLY_ENGINES_DIR"
       - name: Run the tests
         run: cargo nextest run ${{ env.NEXTEST_ARGS }}
       # The timing tests (idle CPU and memory budgets) get the machine to themselves.
- get the machine to themselves.
       - name: Run the timing tests alone
         run: cargo nextest run --workspace --exclude gpui-base --cargo-profile ci --profile ci-idle --lib --bins --tests
       - name: Doc tests
