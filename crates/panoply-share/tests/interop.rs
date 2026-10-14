@@ -102,7 +102,7 @@ async fn curl_acts_as_a_stock_sender() {
         "-X",
         "POST",
         "-o",
-        "/dev/null",
+        if cfg!(windows) { "NUL" } else { "/dev/null" },
         "-w",
         "%{http_code}",
         "--data-binary",
