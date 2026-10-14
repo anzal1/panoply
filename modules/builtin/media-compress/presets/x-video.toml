@@ -1,0 +1,33 @@
+# X (Twitter): video attached to a Post. Default (non-Premium) account is the base; Premium / verified is a tier.
+# Source is the X API v2 media docs, which state "These Post-video caps match the X app."
+# The help.x.com help-center pages sit behind a bot check and could not be read.
+id = "x-video"
+service = "X (Twitter)"
+kind = "video"
+limit_bytes = 8000000000
+limit_unit_claimed = "GB"
+basis = "unknown"
+container = "mp4"
+video_codec = "h264"
+audio_codec = "aac"
+max_height = 0               # an older "advanced" spec on the best-practices page lists 1280x1024 max dimensions; not treated as a cap
+max_duration_s = 1200
+status = "verified"
+source_url = "https://docs.x.com/x-api/media/introduction"
+source_quote = '"Default (no Premium) tweet_video , amplify_video 20 minutes 8 GB"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "Post video, account without X Premium: 20 minutes and 8 GB. Direct Message video is tighter (140 seconds, 512 MB default; 10 minutes, 1 GB Premium) and is not covered by this entry. Older v1 docs reportedly said 512 MB and 140 seconds for post video; seen only in search summaries, not read directly, and superseded by the v2 page. Minimum video duration is 0.5 seconds."
+
+[[tiers]]
+tier = "Premium / verified"
+limit_bytes = 16000000000
+limit_unit_claimed = "GB"
+basis = "unknown"
+max_duration_s = 7500
+status = "verified"
+source_url = "https://docs.x.com/x-api/media/introduction"
+source_quote = '"X Premium / verified tweet_video , amplify_video 125 minutes 16 GB"'
+source_date = "undated"
+last_verified = "2026-10-14"
+notes = "Post video for X Premium or verified accounts: 125 minutes and 16 GB."

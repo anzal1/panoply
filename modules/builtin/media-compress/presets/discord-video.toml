@@ -1,0 +1,49 @@
+# Discord: per-file attachment limit by account. Free account is the base entry; paid tiers follow.
+# Status is "conflict" because Discord's own Nitro help article still carries older 10MB wording
+# while the File Attachments FAQ states the free limit rose to 20MB in August 2026.
+id = "discord-video"
+service = "Discord"
+kind = "video"
+limit_bytes = 20000000
+limit_unit_claimed = "MB"
+basis = "unknown"            # Discord does not say MB vs MiB. 20 MiB would be 20971520. Decimal used as the safe value.
+container = "mp4"
+video_codec = "h264"         # Discord lists MP4 encoded with H264, HEVC/H265 or AV1
+audio_codec = "aac"
+max_height = 0
+max_duration_s = 0
+status = "conflict"
+source_url = "https://support.discord.com/hc/en-us/articles/25444343291031-File-Attachments-FAQ"
+source_quote = '"For non-Nitro subscribers, the maximum file upload is 20MB."'
+source_date = "2026-10-12"   # article updated_at from the help center API (article created 2024-08-06)
+last_verified = "2026-10-14"
+notes = "Free account (no Nitro), per file. The FAQ says Discord is currently experimenting with upload limits and some users may get larger ones. Since August 2026 the size is checked before compression on mobile too. If a conservative target is wanted, use 10000000, the pre-August figure still quoted in the Nitro article. Server boost perks are not covered."
+
+[[conflicts]]
+source_url = "https://support.discord.com/hc/en-us/articles/115000435108-What-are-Nitro-Nitro-Basic"
+source_quote = '"Why do I need Nitro to upload more than 10MB of files?"'
+note = "Official Nitro article (updated 2026-10-13) still frames the free limit as 10MB, contradicting the 20MB figure in the File Attachments FAQ. Likely stale wording."
+
+[[tiers]]
+tier = "Nitro Basic"
+limit_bytes = 50000000
+limit_unit_claimed = "MB"
+basis = "unknown"
+status = "verified"
+source_url = "https://support.discord.com/hc/en-us/articles/25444343291031-File-Attachments-FAQ"
+source_quote = '"Nitro Basic offers 50MB and Nitro offers up to 1GB."'
+source_date = "2026-10-12"
+last_verified = "2026-10-14"
+notes = "Also stated on the Nitro article as 'Enhanced File Uploads Share larger files up to 50 MB' (updated 2026-10-13)."
+
+[[tiers]]
+tier = "Nitro"
+limit_bytes = 1000000000
+limit_unit_claimed = "GB"
+basis = "unknown"
+status = "verified"
+source_url = "https://support.discord.com/hc/en-us/articles/25444343291031-File-Attachments-FAQ"
+source_quote = '"Nitro Basic offers 50MB and Nitro offers up to 1GB."'
+source_date = "2026-10-12"
+last_verified = "2026-10-14"
+notes = "Nitro article says 'Share larger files up to 1GB' (updated 2026-10-13). Wording is 'up to', so treat as a ceiling. Older community posts quoting 500MB are not official and are superseded."

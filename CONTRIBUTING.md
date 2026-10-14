@@ -32,6 +32,12 @@ it on first use. No bundled language models.
 dependencies; `cargo deny check` must pass. Model weights need MIT, Apache-2.0,
 BSD or a similar clean license, verified on the model card.
 
+**Notices.** `THIRD-PARTY-NOTICES.md` is generated and ships in every download. When you change
+`Cargo.lock`, run `cargo fetch --locked && python3 -I tools/notices/generate.py` and commit the result, or
+CI fails. When you add or change a download (a model, an engine, a helper), update
+`tools/notices/runtime.md` with its source URL and the license you read there. The generator fails if a
+pinned version or commit in the source is missing from that file.
+
 **Clean room.** We study how great tools work (with
 [REA](https://github.com/morluto/rea) when a bar is hard to reach) and write
 down the technique with evidence in `docs/research/`. Code is written from

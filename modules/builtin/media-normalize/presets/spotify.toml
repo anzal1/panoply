@@ -1,0 +1,25 @@
+id = "spotify"
+name = "Spotify"
+target_lufs = -14.0
+target_lufs_mono = 0.0
+tolerance_lu = 0.0
+true_peak_dbtp = -1.0          # for lossy encodes; -2 dBTP if the master is louder than -14 LUFS integrated
+measure = "integrated"
+status = "verified"
+source_url = "https://support.spotify.com/us/artists/article/loudness-normalization/"
+source_quote = "We adjust tracks to -14 dB LUFS"
+source_date = "undated"        # page shows no article date
+last_verified = "2026-10-14"
+notes = "Spotify for Artists page, music tracks measured per ITU 1770 and normalized during playback. Spotify applies negative gain to louder masters and positive gain to softer masters, limited by true peak headroom, so it does raise quiet tracks (unlike a turn-down-only service). Premium listeners can choose Loud (-11), Normal (-14) or Quiet (-19) LUFS. Guidance for masters: keep true peak below -1 dBTP for lossy formats and below -2 dBTP if the master is louder than -14 LUFS integrated. The page says nothing about podcasts, so no podcast figure is recorded."
+
+[[extra_sources]]
+field = "true_peak_dbtp"
+url = "https://support.spotify.com/us/artists/article/loudness-normalization/"
+quote = "Keep it below -1dB TP (True Peak) max"
+date = "undated"
+
+[[extra_sources]]
+field = "true_peak_dbtp"
+url = "https://support.spotify.com/us/artists/article/loudness-normalization/"
+quote = "keep True Peak below -2dB"
+date = "undated"

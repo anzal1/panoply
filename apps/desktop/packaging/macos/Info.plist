@@ -6,6 +6,7 @@
   <key>CFBundleDisplayName</key><string>Panoply</string>
   <key>CFBundleIdentifier</key><string>dev.panoply.desktop</string>
   <key>CFBundleExecutable</key><string>Panoply</string>
+  <key>CFBundleIconFile</key><string>Panoply</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>@VERSION@</string>
   <key>CFBundleVersion</key><string>@VERSION@</string>

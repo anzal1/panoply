@@ -1,0 +1,1 @@
+Optical character recognition converts pictures of printed text into characters that a computer can search and copy. Its accuracy depends on resolution, contrast and the cleanliness of the scan, and it is usually measured as the character error rate against a text that a person has typed from the same page.

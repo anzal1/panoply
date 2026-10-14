@@ -1,5 +1,13 @@
 # Panoply build plan
 
+> **Compressed 2026-10-14: ship fast.** Public beta on macOS, Windows and Linux
+> around 28 October 2026, built in parallel: PDF and image engines (done),
+> media engine, ID and forms, background removal and erase, OCR, LocalSend
+> sharing, the GPUI desktop app and the release pipeline. The rest of the top
+> 30 (PDF to Word, edit text, redact, transcribe, text to speech, find,
+> clipboard) follows in weekly updates. The phases below are the full scope,
+> no longer a serial schedule.
+
 Built from VISION.md, FLOWS.md, MODULES.md, DECISIONS.md and specs/. Weeks are
 rough. Every phase ends on a gate: a measured check that must pass before the
 next phase starts. Philosophy gates apply throughout: blazing fast, bang on

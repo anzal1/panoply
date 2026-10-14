@@ -1,0 +1,60 @@
+# Upscale (image AI). Pattern B. Spec: docs/specs/id-and-image.md 3.11.
+accepts = ["image/*"]
+outputs = ["image/png", "image/jpeg"]
+
+[module]
+id = "image.upscale"
+name = "Upscale"
+version = "0.1.0"
+pattern = "B"
+summary = "Make a small or soft picture 2 or 4 times bigger and sharper."
+
+[options.scale]
+type = "choice"
+values = ["auto", "2", "4"]
+default = "auto"
+label = "Scale"
+help = "Auto picks 4x under 1000 px and 2x above, and says so when the picture is already large."
+
+[options.format]
+type = "choice"
+values = ["keep", "png", "jpg"]
+default = "keep"
+label = "Format"
+help = "Keep writes a JPEG for a JPEG and a PNG for everything else."
+
+[options.quality]
+type = "number"
+min = 1
+max = 100
+label = "Quality"
+help = "For JPG results. Left empty, it follows the original."
+
+[options.keep_metadata]
+type = "bool"
+default = true
+label = "Keep metadata"
+
+[options.animation]
+type = "choice"
+values = ["ask", "first"]
+default = "ask"
+label = "Animated files"
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the ONNX Runtime (about 33 MB) and the Real-ESRGAN upscale model (about 5 MB) once, the first time you upscale. Nothing else leaves your device."
+
+[[capabilities.models]]
+id = "realesr-general-x4v3"
+size_mb = 5
+license = "BSD-3-Clause"
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

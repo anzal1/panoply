@@ -1,0 +1,30 @@
+# WhatsApp: video sent as a normal chat attachment (Photos & Videos), NOT as a Document.
+# The official help center is internally inconsistent, so status = "conflict".
+# limit_bytes uses the lower official figure (64 MB) as the safe fit target.
+id = "whatsapp-video"
+service = "WhatsApp"
+kind = "video"
+limit_bytes = 64000000
+limit_unit_claimed = "MB"
+basis = "unknown"            # page says "64MB"; 64 MiB would be 67108864. Decimal used as the safe (smaller) value.
+container = "mp4"
+video_codec = "h264"
+audio_codec = "aac"
+max_height = 0               # page states a 720p DEFAULT (fast connection) and 480p (slow); not a hard cap, so 0
+max_duration_s = 0
+status = "conflict"
+source_url = "https://faq.whatsapp.com/545917406122452/?locale=en_US"
+source_quote = '"videos sent or forwarded through WhatsApp is 64MB on all platforms"'
+source_date = "undated"      # page footer shows only the 2026 copyright
+last_verified = "2026-10-14"
+notes = "Page title is 'Can't send longer videos'. Same page also says the default video limit is 100MB at 720p on a fast connection and 64MB at 480p on a slow connection, so the page contradicts itself. Older guidance and the Cloud API doc say 16 MB. Documents (not videos) are allowed up to 2 GB; this preset is for the normal video attachment path only. WhatsApp may re-encode the video on send."
+
+[[conflicts]]
+source_url = "https://faq.whatsapp.com/545917406122452/?locale=en_US"
+source_quote = '"default video size limit is 100MB and 720p resolution"'
+note = "Same official page, fast-connection default; contradicts the 64MB maximum stated one sentence earlier. Also repeated on faq.whatsapp.com/164676891531296 (How to send media)."
+
+[[conflicts]]
+source_url = "https://developers.facebook.com/documentation/business-messaging/whatsapp/business-phone-numbers/media"
+source_quote = '"16 MB" (table cell for 3GPP and MP4 video)'
+note = "WhatsApp Business Cloud API media limit, a different product from the consumer app; undated. The 16 MB figure also appears in older consumer FAQ text indexed by search engines, but the current consumer page no longer says it."

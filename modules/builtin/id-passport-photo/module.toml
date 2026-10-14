@@ -1,0 +1,116 @@
+# Passport and visa photo. Pattern D (guided capture). Spec: docs/FLOWS.md worked example 2.
+# Country rules: rules/*.toml, each with its source link, quote and date.
+accepts = ["image/*"]
+outputs = ["image/jpeg", "application/json"]
+
+[module]
+id = "id.passport_photo"
+name = "Passport photo"
+version = "0.1.0"
+pattern = "D"
+summary = "Make a photo that passes the passport or visa rules of a country, with live pass, warn and fail checks."
+
+[options.country]
+type = "text"
+label = "Country"
+help = "A country code or name (IN, US, UK, Canada, Schengen, Bangladesh, UAE, China, Australia), or a rule id such as us-visa. Left out, the country of this computer's region is used."
+
+[options.document]
+type = "choice"
+values = ["passport", "visa"]
+label = "Document"
+help = "Passport or visa. Left out, the country's passport rule is used, or its only rule."
+
+[options.output]
+type = "choice"
+values = ["single", "sheet", "both"]
+default = "single"
+label = "Output"
+help = "One digital file with the portal's pixel and KB limits, a print sheet, or both."
+
+[options.paper]
+type = "text"
+label = "Sheet paper"
+help = "Left out, 4x6 in the US, Canada and India and A4 elsewhere. For the print sheet: 4x6, 5x7, 6x8, a4, a5, a6 or letter."
+
+[options.copies]
+type = "number"
+min = 1
+max = 200
+label = "Copies on the sheet"
+help = "Left out, the sheet is filled."
+
+[options.dpi]
+type = "number"
+min = 72
+max = 1200
+label = "Print resolution (DPI)"
+help = "Turns the rule's millimetres into pixels and sets the resolution the sheet and the file carry. Left out, the rule's own pixel size (or 300 DPI) is used."
+
+[options.background]
+type = "text"
+label = "Background"
+help = "A color such as #ffffff. Left out, the rule's background is used."
+
+[options.whiten]
+type = "bool"
+default = true
+label = "Make the background the rule's color"
+help = "Cuts the person out (Apple's subject mask on a Mac, a plain-backdrop cut elsewhere) and sets the background. A busy backdrop is left alone and reported."
+
+[options.cutout]
+type = "choice"
+values = ["auto", "color"]
+default = "auto"
+label = "Cut-out engine"
+help = "Auto uses Apple's subject mask on a Mac. Color uses the plain-backdrop colour cut everywhere (it needs an even backdrop)."
+
+[options.fix_tilt]
+type = "bool"
+default = true
+label = "Straighten the head"
+
+[options.fix_exposure]
+type = "bool"
+default = true
+label = "Correct a dark or bright face"
+
+[options.face]
+type = "number"
+min = 1
+max = 20
+label = "Which face"
+help = "When the photo has several faces: 1 is the leftmost."
+
+[options.engine]
+type = "choice"
+values = ["auto", "vision", "yunet"]
+default = "auto"
+label = "Face engine"
+help = "Auto uses Apple Vision on a Mac and the small YuNet model elsewhere."
+
+[options.kb_basis]
+type = "choice"
+values = ["both", "1000", "1024"]
+label = "What counts as 1 KB"
+help = "Some portals count 1 KB as 1000 bytes, some as 1024. Both lands inside the window under either reading."
+
+[options.strict]
+type = "bool"
+default = false
+label = "Stop on a failed check"
+help = "Write nothing when any check fails, instead of writing the photo and saying what failed."
+
+[options.report]
+type = "bool"
+default = false
+label = "Write the checks as a JSON file"
+
+[capabilities]
+network = true
+network_reason = "Only on Windows and Linux, the first time: downloads the small face model (YuNet, 0.2 MB) and its runtime (ONNX Runtime, up to 80 MB), checked against pinned checksums. A Mac uses Apple Vision and downloads nothing."
+
+[[capabilities.models]]
+id = "yunet-2023mar"
+size_mb = 1
+license = "MIT"

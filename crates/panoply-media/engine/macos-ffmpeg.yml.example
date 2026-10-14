@@ -1,0 +1,48 @@
+# Copy to .github/workflows/media-engine-macos.yml to build and publish the macOS engine.
+# Public repo, so the macOS runner minutes are free (see docs/research/media-results.md for why
+# heavy builds go to Actions and not to a developer's Mac).
+name: media engine (macOS)
+on:
+  workflow_dispatch:
+    inputs:
+      ffmpeg_version:
+        description: FFmpeg release to build
+        default: "9.0.2"
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - { runner: macos-15, arch: arm64 }
+          - { runner: macos-15-intel, arch: x86_64 }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        working-directory: crates/panoply-media/engine
+        env:
+          ARCH: ${{ matrix.arch }}
+          FFMPEG_VERSION: ${{ inputs.ffmpeg_version }}
+        run: ./build-macos.sh
+      - name: Check the build is LGPL and has what Panoply asks for
+        run: |
+          B=crates/panoply-media/engine/build-${{ matrix.arch }}/ffmpeg-${{ inputs.ffmpeg_version }}-macos-${{ matrix.arch }}-lgpl/bin
+          $B/ffmpeg -hide_banner -buildconf | tee conf.txt
+          ! grep -E -- '--enable-(gpl|nonfree)' conf.txt
+          for e in h264_videotoolbox hevc_videotoolbox libsvtav1 libvpx-vp9 libopus libmp3lame aac_at; do
+            $B/ffmpeg -hide_banner -encoders | grep -w "$e"
+          done
+          for f in lut3d libvmaf; do $B/ffmpeg -hide_banner -filters | grep -w "$f"; done
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "media-engine-${{ inputs.ffmpeg_version }}" \
+            crates/panoply-media/engine/build-${{ matrix.arch }}/*.tar.xz \
+            crates/panoply-media/engine/build-${{ matrix.arch }}/*.sha256 --clobber \
+            || gh release create "media-engine-${{ inputs.ffmpeg_version }}" \
+            crates/panoply-media/engine/build-${{ matrix.arch }}/*.tar.xz \
+            crates/panoply-media/engine/build-${{ matrix.arch }}/*.sha256 \
+            --title "Media engine ${{ inputs.ffmpeg_version }}" --notes "LGPL ffmpeg for Panoply. Source and build script in crates/panoply-media/engine."
