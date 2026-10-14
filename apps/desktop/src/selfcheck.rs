@@ -422,6 +422,42 @@ pub(crate) fn run(out: PathBuf) {
                 .flatten()
                 .map(|f| json!({"message": f.message, "next_step": f.next_step}));
 
+            // ---- a tool that needs a download asks first, in the panel, before anything starts ----
+            // The question is put to the panel the way a job does it (the real job path is covered
+            // by tests/consent.rs). A throwaway data folder, and no yes from the environment.
+            d.tag = "bar consent sheet".into();
+            panoply_core::assets::set_data_dir_override(Some(out2.join("consent-data")));
+            panoply_core::assets::ignore_environment_yes(true);
+            d.change(bar, |b, window, cx| {
+                b.close_panel(window, cx);
+                b.set_files(vec![FileProfile::read(&sig)], cx);
+                b.set_query("under 50 kb", window, cx);
+            });
+            d.settle(bar).await;
+            d.change(bar, |b, window, cx| b.activate(window, cx));
+            d.settle(bar).await;
+            let wanted = panoply_host::assets::find("isnet").map(|e| e.info);
+            let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+            let mut answers = None;
+            if let (Some(p), Some(info)) = (panel.clone(), wanted) {
+                answers = d.win(bar, |window, cx| p.update(cx, |p, cx| p.preview_consent(info, window, cx)));
+            }
+            d.settle(bar).await;
+            let consent_item = d.change(bar, |b, _, cx| b.panel.as_ref().and_then(|p| p.read(cx).consent_item())).flatten();
+            log.push(d.png(bar, &png("10b-panel-consent.png")));
+            let c_consent = check_a11y("bar consent sheet", &d.a11y(bar));
+            let wrote_nothing_while_asking = !panoply_core::assets::consent_file().exists();
+            // Not now: the worker is told no, and nothing is recorded.
+            if let Some(p) = panel {
+                d.win(bar, |_, cx| p.update(cx, |p, cx| p.answer_consent(false, cx)));
+            }
+            let told_no = answers.as_ref().is_some_and(|rx| rx.try_recv() == Ok(false));
+            let nothing_recorded = !panoply_core::assets::consent_file().exists();
+            panoply_core::assets::set_data_dir_override(None);
+            panoply_core::assets::ignore_environment_yes(false);
+            d.change(bar, |b, window, cx| b.close_panel(window, cx));
+            d.settle(bar).await;
+
             // ---- an instant transform (pattern A) runs the moment Return is pressed ----
             d.tag = "bar instant transform".into();
             d.change(bar, |b, window, cx| {
@@ -603,6 +639,12 @@ pub(crate) fn run(out: PathBuf) {
                     "text_after_backspace": after_backspace,
                     "instant_transform_png_to_jpg": {"headline": instant_headline, "return_to_result_ms": instant_ms},
                     "failure": failure,
+                    "consent": {
+                        "asked_before_starting": consent_item.as_ref().map(|i| json!({"id": i.id, "name": i.name, "size": i.size_label(), "source": i.source, "license": i.license})),
+                        "nothing_written_while_asking": wrote_nothing_while_asking,
+                        "not_now_tells_the_job_no": told_no,
+                        "not_now_recorded_nothing": nothing_recorded,
+                    },
                 },
                 "budgets": {
                     "panel_open_ms_every_tool": opens,
@@ -619,7 +661,7 @@ pub(crate) fn run(out: PathBuf) {
                     "idle_cpu_percent": idle_cpu_pct,
                     "idle_sample_seconds": idle_s,
                 },
-                "accessibility": [c_bar, c_panel, c_app, c_hist, c_app_panel],
+                "accessibility": [c_bar, c_panel, c_app, c_hist, c_app_panel, c_consent],
                 "screens": log,
             });
             let text = serde_json::to_string_pretty(&report).unwrap_or_default();

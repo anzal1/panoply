@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use panoply_core::assets::{Answer, AssetInfo, Asker};
+use panoply_core::assets::{Answer, Asker, AssetInfo};
 use panoply_core::{CancelToken, JobEvent, JobSpec};
 use panoply_host::{ModuleError, Registry};
 use serde_json::Value;
@@ -42,6 +42,15 @@ impl ConsentReply {
     /// Answer the question. A job that was cancelled meanwhile ignores a late answer.
     pub fn answer(&self, yes: bool) {
         let _ = self.0.send(yes);
+    }
+}
+
+impl ConsentReply {
+    /// A reply and the receiving end of its answer, for a check that plays the worker's part.
+    #[cfg(feature = "snapshot")]
+    pub fn pair() -> (Self, std::sync::mpsc::Receiver<bool>) {
+        let (tx, rx) = std::sync::mpsc::channel();
+        (Self(tx), rx)
     }
 }
 

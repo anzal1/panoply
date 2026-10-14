@@ -253,6 +253,29 @@ impl ToolPanel {
         }
     }
 
+    /// Open the consent sheet as a job that needs `info` would, and hand back where the answer
+    /// goes. For the headless check, which has no real download to wait on.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn preview_consent(
+        &mut self,
+        info: panoply_core::assets::AssetInfo,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> std::sync::mpsc::Receiver<bool> {
+        let (reply, rx) = ConsentReply::pair();
+        self.on_msg(JobMsg::NeedsConsent { info, reply }, window, cx);
+        rx
+    }
+
+    /// The item the consent sheet is asking about, while it is open.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn consent_item(&self) -> Option<panoply_core::assets::AssetInfo> {
+        match &self.phase {
+            Phase::Consent { info, .. } => Some(info.clone()),
+            _ => None,
+        }
+    }
+
     pub(crate) fn outputs(&self) -> Vec<PathBuf> {
         match &self.phase {
             Phase::Done { done, .. } => done.outputs.clone(),
@@ -508,11 +531,8 @@ impl ToolPanel {
 
     /// The consent sheet's two answers. Download lets the job go on; Not now stops it with
     /// nothing fetched and nothing written.
-    fn answer_consent(&mut self, yes: bool, cx: &mut Context<Self>) {
-        let Phase::Consent {
-            reply, started, ..
-        } = &self.phase
-        else {
+    pub(crate) fn answer_consent(&mut self, yes: bool, cx: &mut Context<Self>) {
+        let Phase::Consent { reply, started, .. } = &self.phase else {
             return;
         };
         reply.answer(yes);

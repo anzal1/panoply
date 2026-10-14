@@ -808,18 +808,13 @@ fn image(tool: ImageTool) -> ExitCode {
     };
     let started = Instant::now();
     let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
-    let result = run_builtin(
-        &spec,
-        out.as_deref(),
-        CancelToken::new(),
-        move |event| {
-            if let JobEvent::Progress { fraction, label } = event
-                && started.elapsed() > slow
-            {
-                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
-            }
-        },
-    );
+    let result = run_builtin(&spec, out.as_deref(), CancelToken::new(), move |event| {
+        if let JobEvent::Progress { fraction, label } = event
+            && started.elapsed() > slow
+        {
+            eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+        }
+    });
     match result {
         Ok(o) => {
             let n = o.notes.len();

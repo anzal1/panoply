@@ -75,8 +75,8 @@ Panoply at a copy with the variables the tool names (`PANOPLY_PDFIUM_LIB`, `PANO
 
 ### 3. The QR page, only when you ask for one
 
-`panoply share qr` serves your files from your computer, over HTTP on your local network address, to one
-browser on the same network. It is protected by a one-time token, closes after the download, and in any case
+`panoply share qr` serves your files from your computer, on your local network address, to a browser on the
+same network. The link carries a long random token, the page closes after the first completed transfer, and in any case
 after ten minutes. The same local-network rule applies.
 
 ### Nothing else
@@ -92,8 +92,13 @@ How this was checked (repeat it before a release):
 - `cargo tree -i hyper` (and `rustls`, `socket2`, `if-addrs`, `rcgen`) shows only `panoply-share` and the
   command line. The desktop app does not depend on `panoply-share`. The only network crate it carries is
   `tokio`, through the WebAssembly runtime, whose sockets and HTTP interfaces are refused at module load.
-- A test (`crates/panoply-host/tests/trust.rs`) runs every module with an empty engines folder and no
-  consent and checks that nothing is downloaded, and that a module without a network declaration is refused.
+- Tests cover the consent gate at every layer, and run on all three systems in CI:
+  `crates/panoply-core/src/assets.rs` (the decision rules and the remembered yes),
+  `crates/panoply-host/tests/consent.rs` (a job with no yes stops and writes nothing, a no is asked again, a
+  yes is remembered per item, a module without a network declaration is refused even after a yes),
+  `crates/panoply-cli/tests/consent.rs` (the real binary without a terminal refuses every listed item, `--yes`
+  and `models allow` record, `models remove` deletes and forgets) and `apps/desktop/tests/consent.rs` (the
+  job pauses on the question, Download goes on, Not now stops with nothing recorded).
 
 ## What stays on your device
 

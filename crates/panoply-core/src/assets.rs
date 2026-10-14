@@ -116,30 +116,30 @@ pub fn format_size(bytes: u64) -> String {
 pub enum ConsentError {
     /// Nobody has said yes to this item yet and nobody could be asked.
     #[error(
-        "Panoply needs to download the {}, and that has not been allowed yet. Allow it when asked, or run `panoply models allow {}`, then try again.",
+        "Panoply needs to download the {}, and that has not been allowed yet. Run the command again with --yes to allow it, or run `panoply models allow {}` first, then try again.",
         .0.summary(),
         .0.id
     )]
-    Needed(AssetInfo),
+    Needed(Box<AssetInfo>),
     /// The person was asked and said no.
     #[error(
         "The {} was not downloaded because you said no. Nothing was changed. Run it again and say yes to continue.",
         .0.name
     )]
-    Declined(AssetInfo),
+    Declined(Box<AssetInfo>),
     /// The module that needs the item never declared network access in its manifest.
     #[error(
         "This module needs the {} but its manifest does not declare network access, so the download was refused.",
         .0.name
     )]
-    NotDeclared(AssetInfo),
+    NotDeclared(Box<AssetInfo>),
 }
 
 impl ConsentError {
     /// The item the decision was about.
     pub fn info(&self) -> &AssetInfo {
         match self {
-            Self::Needed(i) | Self::Declined(i) | Self::NotDeclared(i) => i,
+            Self::Needed(i) | Self::Declined(i) | Self::NotDeclared(i) => i.as_ref(),
         }
     }
 }
@@ -204,6 +204,7 @@ pub fn with_network_scope<T>(declared: bool, f: impl FnOnce() -> T) -> T {
 }
 
 static YES_FLAG: AtomicBool = AtomicBool::new(false);
+static IGNORE_ENV_YES: AtomicBool = AtomicBool::new(false);
 
 /// Say yes to every download for the rest of this process (the command line's `--yes`).
 pub fn set_assume_yes(yes: bool) {
@@ -214,7 +215,15 @@ pub fn set_assume_yes(yes: bool) {
 /// `0`, `false` or `no`: the environment form of `--yes`, for scripts, CI and agents that cannot
 /// answer a prompt. A yes given this way is still recorded per item.
 pub fn assume_yes() -> bool {
-    YES_FLAG.load(Ordering::Relaxed) || yes_value(std::env::var("PANOPLY_YES").ok().as_deref())
+    YES_FLAG.load(Ordering::Relaxed)
+        || (!IGNORE_ENV_YES.load(Ordering::Relaxed)
+            && yes_value(std::env::var("PANOPLY_YES").ok().as_deref()))
+}
+
+/// Make this process ignore `PANOPLY_YES`. Tests that check what happens without a yes call it,
+/// because the test run itself (CI) may have `PANOPLY_YES` set so that download tests can run.
+pub fn ignore_environment_yes(ignore: bool) {
+    IGNORE_ENV_YES.store(ignore, Ordering::Relaxed);
 }
 
 fn yes_value(v: Option<&str>) -> bool {
@@ -226,9 +235,24 @@ fn yes_value(v: Option<&str>) -> bool {
     })
 }
 
+static DATA_DIR_OVERRIDE: RwLock<Option<PathBuf>> = RwLock::new(None);
+
+/// Point [`data_dir`] somewhere else for this process (tests, which cannot set environment
+/// variables). `None` goes back to the normal choice.
+pub fn set_data_dir_override(dir: Option<PathBuf>) {
+    *DATA_DIR_OVERRIDE.write().unwrap_or_else(|p| p.into_inner()) = dir;
+}
+
 /// Where Panoply keeps its data (history, consent, community modules). `PANOPLY_DATA_DIR`
 /// overrides it (tests and portable installs).
 pub fn data_dir() -> PathBuf {
+    if let Some(p) = DATA_DIR_OVERRIDE
+        .read()
+        .unwrap_or_else(|p| p.into_inner())
+        .clone()
+    {
+        return p;
+    }
     if let Some(p) = std::env::var_os("PANOPLY_DATA_DIR") {
         return PathBuf::from(p);
     }
@@ -344,11 +368,7 @@ pub fn authorize_with(store: &ConsentStore, info: &AssetInfo) -> Result<(), Cons
     authorize_inner(store, info, assume_yes())
 }
 
-fn authorize_inner(
-    store: &ConsentStore,
-    info: &AssetInfo,
-    yes: bool,
-) -> Result<(), ConsentError> {
+fn authorize_inner(store: &ConsentStore, info: &AssetInfo, yes: bool) -> Result<(), ConsentError> {
     let r = decide(store, info, yes);
     if let Err(e) = &r {
         REFUSAL.with(|x| *x.borrow_mut() = Some(e.clone()));
@@ -358,7 +378,7 @@ fn authorize_inner(
 
 fn decide(store: &ConsentStore, info: &AssetInfo, yes: bool) -> Result<(), ConsentError> {
     if NETWORK_SCOPE.with(|s| s.get()) == Some(false) {
-        return Err(ConsentError::NotDeclared(info.clone()));
+        return Err(ConsentError::NotDeclared(Box::new(info.clone())));
     }
     if store.is_allowed(&info.id) {
         return Ok(());
@@ -373,9 +393,9 @@ fn decide(store: &ConsentStore, info: &AssetInfo, yes: bool) -> Result<(), Conse
                 let _ = store.allow(&info.id);
                 Ok(())
             }
-            Answer::No => Err(ConsentError::Declined(info.clone())),
+            Answer::No => Err(ConsentError::Declined(Box::new(info.clone()))),
         },
-        None => Err(ConsentError::Needed(info.clone())),
+        None => Err(ConsentError::Needed(Box::new(info.clone()))),
     }
 }
 
@@ -504,7 +524,14 @@ mod tests {
     use std::sync::Mutex;
 
     /// Tests that install the process-wide asker or read `PANOPLY_YES` run one at a time.
-    static SERIAL: Mutex<()> = Mutex::new(());
+    static SERIAL_LOCK: Mutex<()> = Mutex::new(());
+
+    /// Take the lock, and ignore `PANOPLY_YES` (CI sets it for the download tests).
+    fn serial() -> std::sync::MutexGuard<'static, ()> {
+        let g = SERIAL_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+        ignore_environment_yes(true);
+        g
+    }
 
     fn info(id: &str) -> AssetInfo {
         AssetInfo {
@@ -543,14 +570,17 @@ mod tests {
 
     #[test]
     fn nothing_downloads_without_a_yes_and_the_message_says_how_to_allow_it() {
-        let _s = SERIAL.lock().unwrap_or_else(|p| p.into_inner());
+        let _s = serial();
         set_asker(None);
         let d = scratch("none");
         let store = ConsentStore::at(d.join("consent.json"));
         let err = authorize_with(&store, &info("isnet")).unwrap_err();
         assert!(matches!(err, ConsentError::Needed(_)));
         let m = err.to_string();
-        assert!(m.contains("44 MB") && m.contains("MIT") && m.contains("example.org"), "{m}");
+        assert!(
+            m.contains("44 MB") && m.contains("MIT") && m.contains("example.org"),
+            "{m}"
+        );
         assert!(m.contains("panoply models allow isnet"), "{m}");
         assert!(!store.is_allowed("isnet"));
         assert!(!d.join("consent.json").exists(), "a refusal writes nothing");
@@ -559,7 +589,7 @@ mod tests {
 
     #[test]
     fn the_last_refusal_can_be_taken_back_out() {
-        let _s = SERIAL.lock().unwrap_or_else(|p| p.into_inner());
+        let _s = serial();
         set_asker(None);
         let d = scratch("refusal");
         let store = ConsentStore::at(d.join("consent.json"));
@@ -574,7 +604,7 @@ mod tests {
 
     #[test]
     fn a_yes_is_remembered_per_item() {
-        let _s = SERIAL.lock().unwrap_or_else(|p| p.into_inner());
+        let _s = serial();
         let d = scratch("yes");
         let store = ConsentStore::at(d.join("consent.json"));
         let asker = Arc::new(Fixed(Answer::Yes, Mutex::new(0)));
@@ -594,7 +624,7 @@ mod tests {
 
     #[test]
     fn a_no_is_not_remembered_and_nothing_is_recorded() {
-        let _s = SERIAL.lock().unwrap_or_else(|p| p.into_inner());
+        let _s = serial();
         let d = scratch("no");
         let store = ConsentStore::at(d.join("consent.json"));
         set_asker(Some(Arc::new(Fixed(Answer::No, Mutex::new(0)))));
@@ -603,14 +633,17 @@ mod tests {
         assert!(err.to_string().contains("Nothing was changed"));
         assert!(!store.is_allowed("isnet"));
         set_asker(Some(Arc::new(Fixed(Answer::Yes, Mutex::new(0)))));
-        assert!(authorize_with(&store, &info("isnet")).is_ok(), "asked again");
+        assert!(
+            authorize_with(&store, &info("isnet")).is_ok(),
+            "asked again"
+        );
         set_asker(None);
         let _ = std::fs::remove_dir_all(d);
     }
 
     #[test]
     fn a_manifest_without_network_gets_no_download_even_after_a_yes() {
-        let _s = SERIAL.lock().unwrap_or_else(|p| p.into_inner());
+        let _s = serial();
         set_asker(None);
         let d = scratch("scope");
         let store = ConsentStore::at(d.join("consent.json"));
@@ -625,7 +658,7 @@ mod tests {
 
     #[test]
     fn yes_in_the_environment_records_the_item() {
-        let _s = SERIAL.lock().unwrap_or_else(|p| p.into_inner());
+        let _s = serial();
         set_asker(None);
         let d = scratch("env");
         let store = ConsentStore::at(d.join("consent.json"));

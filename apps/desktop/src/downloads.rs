@@ -54,10 +54,15 @@ pub fn rows() -> Vec<Row> {
 
 /// Remove one item from disk and forget the yes. Returns a plain line for the page.
 pub fn remove(id: &str) -> Result<String, String> {
-    let entry = host_assets::find(id).ok_or_else(|| format!("There is no download called {id}."))?;
+    let entry =
+        host_assets::find(id).ok_or_else(|| format!("There is no download called {id}."))?;
     match entry.remove() {
         Ok(0) => Ok(format!("{} was not on this computer.", entry.info.name)),
-        Ok(n) => Ok(format!("Removed {}, {} freed.", entry.info.name, format_size(n))),
+        Ok(n) => Ok(format!(
+            "Removed {}, {} freed.",
+            entry.info.name,
+            format_size(n)
+        )),
         Err(e) => Err(format!(
             "Could not remove {} ({e}). Close anything using it and try again.",
             entry.info.name
@@ -108,13 +113,24 @@ mod tests {
     #[test]
     fn the_real_catalog_lists_the_engines_and_models() {
         let ids: Vec<String> = rows().into_iter().map(|r| r.id).collect();
-        for want in ["pdfium", "onnxruntime", "isnet", "migan", "esrgan", "ppocr-det"] {
+        for want in [
+            "pdfium",
+            "onnxruntime",
+            "isnet",
+            "migan",
+            "esrgan",
+            "ppocr-det",
+        ] {
             assert!(ids.iter().any(|i| i == want), "{want} in {ids:?}");
         }
     }
 
     #[test]
     fn removing_something_unknown_is_a_plain_error() {
-        assert!(remove("nonsense").unwrap_err().contains("no download called"));
+        assert!(
+            remove("nonsense")
+                .unwrap_err()
+                .contains("no download called")
+        );
     }
 }

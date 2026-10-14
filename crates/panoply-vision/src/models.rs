@@ -148,7 +148,10 @@ pub static ESRGAN: Model = Model {
 pub fn asset(model: &Model) -> panoply_core::assets::AssetInfo {
     use panoply_core::assets::{AssetInfo, AssetKind};
     let (id, purpose) = match model.id {
-        "isnet-general-int8" => ("isnet", "removes backgrounds where the system has no subject finder"),
+        "isnet-general-int8" => (
+            "isnet",
+            "removes backgrounds where the system has no subject finder",
+        ),
         "migan-512-places2" => ("migan", "fills in what you erase and removes watermarks"),
         _ => ("esrgan", "makes pictures 2 or 4 times bigger"),
     };
