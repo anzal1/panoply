@@ -6,10 +6,28 @@ name: Release
 # or notarizes, and the release notes tell users the first-open step.
 # Manual runs (Actions > Release > Run workflow) build everything and keep the files as workflow
 # artifacts but never create a release. Packaging details: packaging/README.md.
+#
+# Build profile: stable tags (v0.2.0) use the `release` profile with fat LTO. Prerelease tags
+# (v0.2.0-beta.1, -rc.1) use the `beta` profile (thin LTO), which links much faster. See Cargo.toml.
+#
+# Caches: compiled dependencies are cached per target and per profile (Swatinem/rust-cache). GitHub only
+# lets a tag run read caches saved by the default branch, not by another tag, so the caches that help are
+# the ones saved from main. After Cargo.lock changes, run this workflow by hand from main with "Only warm
+# the build caches" ticked (once for each profile) and the next tag starts with dependencies already built.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      profile:
+        description: "Build profile for a manual run (a tag always picks its own)"
+        type: choice
+        options: [beta, release]
+        default: beta
+      warm_cache_only:
+        description: "Only warm the build caches: build, skip packaging, publish nothing"
+        type: boolean
+        default: false
 
 concurrency:
   group: release-${{ github.ref }}
@@ -33,6 +51,7 @@ jobs:
       tag: ${{ steps.p.outputs.tag }}
       release: ${{ steps.p.outputs.release }}
       prerelease: ${{ steps.p.outputs.prerelease }}
+      profile: ${{ steps.p.outputs.profile }}
       msi_version: ${{ steps.p.outputs.msi_version }}
       desktop: ${{ steps.p.outputs.desktop }}
     steps:
@@ -41,6 +60,7 @@ jobs:
         shell: bash
         env:
           SKIP_DESKTOP: ${{ vars.PANOPLY_SKIP_DESKTOP }}
+          MANUAL_PROFILE: ${{ inputs.profile }}
         run: |
           set -euo pipefail
           cargo_version="$(sed -n '/^\[workspace.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)"
@@ -59,6 +79,13 @@ jobs:
           n="$(printf '%s' "$pre" | grep -o '[0-9]*$' || true)"
           msi_version="$base.${n:-0}"
           case "$version" in *-*) prerelease=true ;; *) prerelease=false ;; esac
+          # Prerelease tags build thin LTO (profile beta), stable tags fat LTO (profile release). A manual
+          # run uses the profile chosen in the form.
+          if [ "$release" = true ]; then
+            if [ "$prerelease" = true ]; then profile=beta; else profile=release; fi
+          else
+            profile="${MANUAL_PROFILE:-beta}"
+          fi
 
           # The desktop app is built when it is a member of the workspace. Set the repository
           # variable PANOPLY_SKIP_DESKTOP=1 to ship the command line tool alone. Without the
@@ -72,8 +99,9 @@ jobs:
           {
             echo "version=$version"; echo "tag=$tag"; echo "release=$release"
             echo "prerelease=$prerelease"; echo "msi_version=$msi_version"; echo "desktop=$desktop"
+            echo "profile=$profile"
           } >> "$GITHUB_OUTPUT"
-          echo "Release $version (tag '${tag:-none}'), msi $msi_version, desktop: $desktop" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "Release $version (tag '${tag:-none}'), msi $msi_version, desktop: $desktop, profile: $profile" | tee -a "$GITHUB_STEP_SUMMARY"
 
   # ------------------------------------------------------------------------------------------------
   # Compile the release binaries, one leg per platform. macOS builds both architectures on the arm
@@ -101,6 +129,7 @@ jobs:
       # Windows: link the C runtime statically so a clean Windows install needs no VC++ redistributable.
       RUSTFLAGS: ${{ startsWith(matrix.id, 'windows') && '-C target-feature=+crt-static' || '' }}
       DESKTOP: ${{ needs.plan.outputs.desktop }}
+      PROFILE: ${{ needs.plan.outputs.profile }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
@@ -108,7 +137,8 @@ jobs:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
         with:
-          shared-key: release-${{ matrix.id }}
+          # One cache per target and per profile: beta and release compile dependencies differently.
+          shared-key: ${{ needs.plan.outputs.profile }}-${{ matrix.id }}
           cache-on-failure: true
 
       - name: System packages (Linux)
@@ -133,14 +163,16 @@ jobs:
           set -euo pipefail
           pkgs="-p panoply-cli"
           [ "$DESKTOP" = real ] && pkgs="$pkgs -p panoply-desktop"
-          cargo build --release --locked --target "${{ matrix.target }}" $pkgs
+          # Both binaries go through one cargo call so their dependency builds are shared and their
+          # links run side by side. Splitting them into two jobs would compile the shared crates twice.
+          cargo build --profile "$PROFILE" --locked --target "${{ matrix.target }}" $pkgs
 
       - name: Collect the executables
         shell: bash
         run: |
           set -euo pipefail
           ext=""; [ "$RUNNER_OS" = Windows ] && ext=".exe"
-          rel="target/${{ matrix.target }}/release"
+          rel="target/${{ matrix.target }}/$PROFILE"
           mkdir -p stage
           cp "$rel/panoply$ext" stage/
           [ "$DESKTOP" = real ] && cp "$rel/panoply-desktop$ext" stage/
@@ -158,6 +190,7 @@ jobs:
   # ------------------------------------------------------------------------------------------------
   package-macos:
     needs: [plan, build]
+    if: ${{ !inputs.warm_cache_only }}
     name: package macos-${{ matrix.arch }}
     runs-on: macos-latest
     timeout-minutes: 60
@@ -186,6 +219,7 @@ jobs:
   # ------------------------------------------------------------------------------------------------
   package-windows:
     needs: [plan, build]
+    if: ${{ !inputs.warm_cache_only }}
     name: package windows-${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -226,6 +260,7 @@ jobs:
   # ------------------------------------------------------------------------------------------------
   package-linux:
     needs: [plan, build]
+    if: ${{ !inputs.warm_cache_only }}
     name: package linux-${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30

@@ -11,6 +11,7 @@ edition = "2024"
 rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/anzal1/panoply"
+homepage = "https://github.com/anzal1/panoply"
 publish = false
 
 # Small dependency tree on purpose. Every addition must be permissively
@@ -68,6 +69,13 @@ codegen-units = 1
 # panic = "abort" one bad file would kill the whole process instead of showing a plain error.
 panic = "unwind"
 strip = true
+
+# Prerelease tags (v0.1.0-beta.2, v0.2.0-rc.1) build with this profile: the release profile with thin
+# instead of fat LTO, which links noticeably faster. Stable tags use `release` with fat LTO. See
+# .github/workflows/release.yml, which picks the profile from the tag.
+[profile.beta]
+inherits = "release"
+lto = "thin"
 
 [profile.dev]
 debug = "line-tables-only"

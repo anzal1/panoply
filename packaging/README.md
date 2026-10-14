@@ -18,6 +18,17 @@ platform caveats) are in `apps/desktop/packaging/README.md`.
 A manual run (Actions > Release > Run workflow) builds everything and keeps the files as workflow
 artifacts without creating a release.
 
+### Build profile and caches
+
+Stable tags (`v0.2.0`) build with the `release` profile, fat LTO. Prerelease tags (anything with a `-`, such
+as `v0.2.0-beta.1`) build with the `beta` profile in `Cargo.toml`, which is `release` with thin LTO and links
+much faster. The plan job picks the profile from the tag.
+
+Compiled dependencies are cached per target and per profile with `Swatinem/rust-cache`. A tag run can only
+read caches that the default branch saved, not another tag's, so after `Cargo.lock` changes run Actions >
+Release > Run workflow from `main` with "Only warm the build caches" ticked, once for `beta` and once for
+`release`. That builds the six legs, skips packaging and publishes nothing.
+
 ## What the workflow does
 
 | Job | Runs on | Produces |
