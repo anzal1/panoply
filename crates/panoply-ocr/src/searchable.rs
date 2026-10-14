@@ -41,7 +41,9 @@ pub struct Options {
     pub langs: Vec<Lang>,
     /// Resolution pages are drawn at for reading.
     pub dpi: f32,
-    /// Most pixels one page may have at that resolution; larger pages are drawn smaller.
+    /// Most pixels one page may have at that resolution; larger pages are drawn smaller. Apple
+    /// Vision's memory grows with the picture, and a page of this size (A4 at about 250 dpi)
+    /// reads as well as a bigger one, so the default keeps a job inside 300 MB.
     pub max_pixels: usize,
     /// Also collect the text of the read pages, for a text file.
     pub collect_text: bool,
@@ -52,7 +54,7 @@ impl Default for Options {
         Options {
             langs: Vec::new(),
             dpi: 300.0,
-            max_pixels: 36_000_000,
+            max_pixels: crate::input::MAX_PIXELS,
             collect_text: false,
         }
     }

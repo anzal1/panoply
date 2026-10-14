@@ -9,7 +9,8 @@ use panoply_bench::stats::{human_bytes, median};
 
 use crate::budgets::EXCEPTIONS;
 use crate::child::Outcome;
-use crate::matrix::Row;
+use crate::expect::RULES;
+use crate::matrix::{Row, Verdict};
 
 /// Where and when the run happened.
 pub struct Header {
@@ -56,18 +57,27 @@ fn card(row: &Row) -> String {
     let Some(r) = &row.result else {
         return String::new();
     };
-    if !r.headline.trim().is_empty() {
-        return cell(&r.headline);
-    }
-    cell(r.notes.first().map(String::as_str).unwrap_or(""))
+    let text = if r.headline.trim().is_empty() {
+        r.notes.first().map(String::as_str).unwrap_or("")
+    } else {
+        &r.headline
+    };
+    // The temporary folder is different every run, and the card of a long answer is long.
+    let text = text.replace(&std::env::temp_dir().to_string_lossy().to_string(), "$TMP");
+    let short: String = text.chars().take(140).collect();
+    cell(&if short.len() < text.len() {
+        format!("{short}...")
+    } else {
+        short
+    })
 }
 
 /// The full markdown report.
 pub fn markdown(rows: &[Row], h: &Header) -> String {
     let mut s = String::new();
-    let count = |o: Outcome| rows.iter().filter(|r| r.crash.is_none() && r.outcome() == Some(o)).count();
-    let (pass, noop, declined) = (count(Outcome::Pass), count(Outcome::NoOp), count(Outcome::Declined));
-    let fail = rows.len() - pass - noop - declined;
+    let pass = rows.iter().filter(|r| r.verdict() == Verdict::Pass).count();
+    let refused = rows.iter().filter(|r| r.declined()).count();
+    let fail = rows.iter().filter(|r| r.verdict() == Verdict::Fail).count();
     let violations: usize = rows.iter().map(|r| r.budget_violations.len()).sum();
     let mut by_module: BTreeMap<&str, Vec<&Row>> = BTreeMap::new();
     for r in rows {
@@ -99,22 +109,21 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
     );
     let _ = writeln!(
         s,
-        "- {} modules, {} jobs: **{} passed, {} passed with no change, {} declined in plain words, {} failed**, {} undocumented budget violations.",
+        "- {} modules, {} jobs: **{} pass, {} expected refusals, {} fail**, {} budget violations that are not documented exceptions.",
         by_module.len(),
         rows.len(),
         pass,
-        noop,
-        declined,
+        refused,
         fail,
         violations
     );
     let _ = writeln!(
         s,
-        "- Pass: the job wrote what the manifest promises. Pass with no change: nothing needed doing and the \
-         result card says why (already the target format, a report). Declined: the module refused with a \
-         plain sentence and a next step, because the file needs a choice from the person or is a variant it \
-         cannot read yet. Those are listed under Known gaps. Fail: a crash, a hang, a wrong or empty output, \
-         or an error with no next step."
+        "- Pass: the job wrote what the manifest promises, or did nothing and the result card says why \
+         (already the target format, a report, the answer on the card). Expected refusal: the module \
+         declined with a plain sentence and a next step, and a rule in `crates/panoply-smoke/src/expect.rs` \
+         says that was right for this input (see Expected refusals below). Fail: a crash, a hang, a wrong \
+         or empty output, an error with no next step, or a refusal no rule explains."
     );
     let _ = writeln!(
         s,
@@ -133,12 +142,14 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
     let _ = writeln!(s, "## Summary\n");
     let _ = writeln!(
         s,
-        "| Module | Pattern | Source | Jobs | Pass | No change | Declined | Fail | Budget flags | Median job ms | Worst job ms | Worst peak MB |"
+        "| Module | Pattern | Source | Jobs | Pass | Expected refusal | Fail | Budget flags | Median job ms | Worst job ms | Worst peak MB |"
     );
-    let _ = writeln!(s, "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|");
+    let _ = writeln!(s, "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|");
     for (id, rs) in &by_module {
-        let n = |o: Outcome| rs.iter().filter(|r| r.crash.is_none() && r.outcome() == Some(o)).count();
-        let (p, nc, dc) = (n(Outcome::Pass), n(Outcome::NoOp), n(Outcome::Declined));
+        let n = |v: fn(&Verdict) -> bool| rs.iter().filter(|r| v(&r.verdict())).count();
+        let p = n(|v| *v == Verdict::Pass);
+        let rf = n(|v| matches!(v, Verdict::Refused(_)));
+        let fl = n(|v| *v == Verdict::Fail);
         let flags: usize = rs.iter().map(|r| r.budget_violations.len()).sum();
         let jobs: Vec<f64> = rs
             .iter()
@@ -154,15 +165,18 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
         let first = rs[0];
         let _ = writeln!(
             s,
-            "| `{}` | {} | {} | {} | {} | {} | {} | {} | {} | {:.0} | {:.0} | {} |",
+            "| `{}` | {} | {} | {} | {} | {} | {} | {} | {:.0} | {:.0} | {} |",
             id,
             first.pattern,
-            if first.community { "WASM example" } else { "built in" },
+            if first.community {
+                "WASM example"
+            } else {
+                "built in"
+            },
             rs.len(),
             p,
-            nc,
-            dc,
-            rs.len() - p - nc - dc,
+            rf,
+            fl,
             flags,
             median(&jobs),
             worst_job,
@@ -181,48 +195,64 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
         let _ = writeln!(s, "| Module | Files | Problem |");
         let _ = writeln!(s, "|---|---|---|");
         for r in bad {
-            let what = r.failure().unwrap_or_else(|| r.budget_violations.join("; "));
-            let _ = writeln!(s, "| `{}` | {} | {} |", r.module, cell(&r.ids.join(", ")), cell(&what));
+            let what = r
+                .failure()
+                .unwrap_or_else(|| r.budget_violations.join("; "));
+            let _ = writeln!(
+                s,
+                "| `{}` | {} | {} |",
+                r.module,
+                cell(&r.ids.join(", ")),
+                cell(&what)
+            );
         }
         let _ = writeln!(s);
     }
 
-    // Known gaps: what the modules decline, grouped so a reader sees the reason once.
-    let _ = writeln!(s, "## Known gaps (declined in plain words)\n");
+    // Expected refusals: grouped by rule, so a reader sees each reason once.
+    let _ = writeln!(s, "## Expected refusals\n");
     if gaps.is_empty() {
         let _ = writeln!(s, "None.\n");
     } else {
         let _ = writeln!(
             s,
-            "Each of these is a refusal the app shows on its result card, with the next step. They are not \
-             crashes, but they are places where a person's drop and Return does not finish.\n"
+            "Each is a refusal the app shows on its result card in plain words with a next step, \
+             for an input the module is right to refuse. A refusal no rule explains is a failure.\n"
         );
-        let mut grouped: BTreeMap<(String, String), Vec<String>> = BTreeMap::new();
-        for r in &gaps {
-            let res = r.result.as_ref();
-            let msg = res.and_then(|x| x.error.clone()).unwrap_or_default();
-            // File names differ per case, so key on the sentence without the name in front.
-            let key = msg
-                .split_once(" is ")
-                .filter(|(name, _)| name.contains('.'))
-                .map(|(_, rest)| format!("... is {rest}"))
-                .unwrap_or(msg);
-            let next = res.and_then(|x| x.next_step.clone()).unwrap_or_default();
-            grouped
-                .entry((r.module.clone(), format!("{key} {next}").trim().to_string()))
-                .or_default()
-                .push(r.ids.join("+"));
-        }
-        let _ = writeln!(s, "| Module | What it says | Files |");
-        let _ = writeln!(s, "|---|---|---|");
-        for ((module, msg), files) in grouped {
-            let _ = writeln!(s, "| `{}` | {} | {} |", module, cell(&msg), cell(&files.join(", ")));
+        let _ = writeln!(s, "| Rule | Why it is right | Jobs | Modules |");
+        let _ = writeln!(s, "|---|---|---:|---|");
+        for rule in RULES {
+            let hits: Vec<&&Row> = gaps
+                .iter()
+                .filter(|r| r.verdict() == Verdict::Refused(rule.id))
+                .collect();
+            if hits.is_empty() {
+                continue;
+            }
+            let mut modules: Vec<&str> = hits.iter().map(|r| r.module.as_str()).collect();
+            modules.sort_unstable();
+            modules.dedup();
+            let _ = writeln!(
+                s,
+                "| {} | {} | {} | {} |",
+                cell(rule.id),
+                cell(rule.why),
+                hits.len(),
+                modules
+                    .iter()
+                    .map(|m| format!("`{m}`"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
         }
         let _ = writeln!(s);
     }
 
     // Exceptions that were used.
-    let used: Vec<&Row> = rows.iter().filter(|r| !r.exceptions_used.is_empty()).collect();
+    let used: Vec<&Row> = rows
+        .iter()
+        .filter(|r| !r.exceptions_used.is_empty())
+        .collect();
     let _ = writeln!(s, "## Budget exceptions in use\n");
     let _ = writeln!(
         s,
@@ -265,7 +295,13 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
     );
     for (id, rs) in &by_module {
         let first = rs[0];
-        let _ = writeln!(s, "### `{}` ({}, pattern {})\n", id, cell(&first.name), first.pattern);
+        let _ = writeln!(
+            s,
+            "### `{}` ({}, pattern {})\n",
+            id,
+            cell(&first.name),
+            first.pattern
+        );
         let _ = writeln!(
             s,
             "| Files | Type | Input | Result | Job ms | Process ms | Peak MB | Output | Result card |"
@@ -283,7 +319,11 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
                 ),
                 _ => ("".into(), "".into()),
             };
-            let label = r.outcome().map(Outcome::label).unwrap_or("FAIL");
+            let label = match r.verdict() {
+                Verdict::Pass => "PASS",
+                Verdict::Refused(_) => "EXPECTED REFUSAL",
+                Verdict::Fail => "FAIL",
+            };
             let verdict = if r.crash.is_none() && !r.budget_violations.is_empty() {
                 format!("{label}, over budget")
             } else {
@@ -291,6 +331,7 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
             };
             let text = match r.outcome() {
                 Some(Outcome::Pass | Outcome::NoOp) if r.crash.is_none() => card(r),
+                Some(Outcome::Declined) if !r.declined() => cell(&r.failure().unwrap_or_default()),
                 _ => cell(
                     &r.result
                         .as_ref()
@@ -303,7 +344,11 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
                 s,
                 "| {} | {} | {} | {} | {} | {:.0} | {} | {} | {} |",
                 cell(&r.ids.join(", ")),
-                cell(&if r.typed.is_empty() { r.group.clone() } else { format!("{} (typed {})", r.group, r.typed.join(" ")) }),
+                cell(&if r.typed.is_empty() {
+                    r.group.clone()
+                } else {
+                    format!("{} (typed {})", r.group, r.typed.join(" "))
+                }),
                 human_bytes(r.input_bytes),
                 verdict,
                 job,

@@ -14,11 +14,13 @@
 //!   of its own so the kernel can report that job's peak memory.
 //! - [`matrix`] copies the inputs to a scratch folder, starts the child under `time`, and judges
 //!   the result against the module's manifest and the FLOWS.md budgets.
+//! - [`expect`] holds the refusals that are right for the input they were given.
 //! - [`budgets`] holds the memory caps, with the documented exceptions from the specs.
 //! - [`report`] writes the markdown table and the JSON.
 
 pub mod budgets;
 pub mod child;
+pub mod expect;
 pub mod matrix;
 pub mod plan;
 pub mod report;
@@ -80,7 +82,13 @@ pub fn build_wasm_examples() -> Vec<String> {
             continue;
         }
         let status = Command::new(std::env::var_os("CARGO").unwrap_or_else(|| "cargo".into()))
-            .args(["build", "--release", "--target", "wasm32-wasip2", "--manifest-path"])
+            .args([
+                "build",
+                "--release",
+                "--target",
+                "wasm32-wasip2",
+                "--manifest-path",
+            ])
             .arg(m.join("Cargo.toml"))
             // The host's own build settings must not leak into a module build.
             .env_remove("RUSTFLAGS")
@@ -146,4 +154,14 @@ pub fn run_all(
 /// True when `dir` holds the corpus manifests and cached files.
 pub fn corpus_present(dir: &Path) -> bool {
     plan::corpus_present(dir)
+}
+
+/// True when the corpus on disk has files of every kind the matrix needs: pictures, PDFs, video
+/// and sound. The matrix test runs only then. CI fetches pictures and PDFs only, and the media
+/// modules need `ffmpeg`, so a partial corpus would make most media modules look broken.
+pub fn corpus_complete(dir: &Path) -> bool {
+    let cands = plan::candidates(dir);
+    ["image", "pdf", "video", "audio"]
+        .iter()
+        .all(|k| cands.iter().any(|c| c.kind == *k))
 }

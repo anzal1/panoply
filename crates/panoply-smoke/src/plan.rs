@@ -66,6 +66,9 @@ pub struct Candidate {
     pub mime: String,
     /// True for files made by `generate.py`.
     pub generated: bool,
+    /// What is known about the file: the corpus' own tags, plus `no-audio` for a video or sound
+    /// file that has no audio stream. The expected refusals are judged on these.
+    pub traits: Vec<String>,
 }
 
 /// One job to run.
@@ -83,6 +86,8 @@ pub struct Case {
     pub typed: Vec<(String, String)>,
     /// Input size, bytes.
     pub bytes: u64,
+    /// The traits of each input, in the order of `ids`.
+    pub traits: Vec<Vec<String>>,
 }
 
 /// Options a module cannot default, because the answer is the person's: which country's photo
@@ -188,6 +193,11 @@ pub fn candidates(root: &Path) -> Vec<Candidate> {
                 continue;
             }
             let p = FileProfile::read(&path);
+            let mut traits: Vec<String> =
+                entry.tags.iter().map(|t| t.to_ascii_lowercase()).collect();
+            if matches!(entry.kind().as_str(), "video" | "audio") && has_no_audio(&path) {
+                traits.push("no-audio".into());
+            }
             out.push(Candidate {
                 id: entry.id.clone(),
                 kind: entry.kind().as_str().to_string(),
@@ -196,6 +206,7 @@ pub fn candidates(root: &Path) -> Vec<Candidate> {
                 ext: p.sniffed.ext,
                 mime: p.sniffed.mime,
                 generated: entry.is_generated(),
+                traits,
             });
         }
     }
@@ -214,9 +225,31 @@ pub fn candidates(root: &Path) -> Vec<Candidate> {
             ext: p.sniffed.ext,
             mime: p.sniffed.mime,
             generated: false,
+            traits: Vec::new(),
         });
     }
     out
+}
+
+/// True when `ffprobe` says the file has no audio stream. A machine without `ffprobe` answers
+/// false, so the file is not marked and a refusal for missing sound is then not expected.
+fn has_no_audio(path: &Path) -> bool {
+    std::process::Command::new("ffprobe")
+        .args([
+            "-v",
+            "error",
+            "-select_streams",
+            "a",
+            "-show_entries",
+            "stream=index",
+            "-of",
+            "csv=p=0",
+        ])
+        .arg(path)
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .is_some_and(|o| String::from_utf8_lossy(&o.stdout).trim().is_empty())
 }
 
 /// Pick `n` files from a group, spread across the size range: the smallest, the largest, then the
@@ -246,8 +279,44 @@ fn spread(group: &[&Candidate], n: usize) -> Vec<Candidate> {
     picks.into_iter().cloned().collect()
 }
 
+/// Files that exercise what a module does and the spread by size would miss: a tag that makes a
+/// file the right input for the module. The face modules need a face, the HDR module needs an HDR
+/// picture, OCR needs a page with no text layer. Each module gets up to two of them as an extra
+/// group, so the matrix shows the module doing its job and not only declining a landscape.
+pub fn wanted_tags(module: &str) -> &'static [&'static str] {
+    match module {
+        "id.passport_photo" | "id.print_sheet" => &["face"],
+        "media.hdr_to_sdr" => &["hdr"],
+        "media.streams" => &["multi-audio"],
+        "pdf.ocr" => &["no-text-layer"],
+        "image.to_text" => &["ocr-text"],
+        _ => &[],
+    }
+}
+
+fn case(module: &str, group: String, picks: &[Candidate], typed: Vec<(String, String)>) -> Case {
+    Case {
+        module: module.to_string(),
+        group,
+        ids: picks.iter().map(|c| c.id.clone()).collect(),
+        files: picks.iter().map(|c| c.path.clone()).collect(),
+        typed,
+        bytes: picks.iter().map(|c| c.bytes).sum(),
+        traits: picks.iter().map(|c| c.traits.clone()).collect(),
+    }
+}
+
+fn tagged(c: &Candidate, tag: &str) -> bool {
+    c.traits.iter().any(|t| t == tag)
+}
+
 /// The cases for the given modules over these candidates.
-pub fn plan(mods: &[ModuleInfo], catalog: &Catalog, cands: &[Candidate], opts: Options) -> Vec<Case> {
+pub fn plan(
+    mods: &[ModuleInfo],
+    catalog: &Catalog,
+    cands: &[Candidate],
+    opts: Options,
+) -> Vec<Case> {
     let mut cases = Vec::new();
     for m in mods {
         let Some(i) = catalog.index_of(&m.id) else {
@@ -255,14 +324,7 @@ pub fn plan(mods: &[ModuleInfo], catalog: &Catalog, cands: &[Candidate], opts: O
         };
         let tool = catalog.tool(i);
         if !tool.takes_files() {
-            cases.push(Case {
-                module: m.id.clone(),
-                group: "none".into(),
-                ids: vec![],
-                files: vec![],
-                typed: typed(&m.id),
-                bytes: 0,
-            });
+            cases.push(case(&m.id, "none".into(), &[], typed(&m.id)));
             continue;
         }
         // Group what the module accepts by the type the bytes sniff as.
@@ -277,14 +339,12 @@ pub fn plan(mods: &[ModuleInfo], catalog: &Catalog, cands: &[Candidate], opts: O
         for (ext, group) in &groups {
             let picks = spread(group, opts.per_type);
             for c in &picks {
-                cases.push(Case {
-                    module: m.id.clone(),
-                    group: ext.clone(),
-                    ids: vec![c.id.clone()],
-                    files: vec![c.path.clone()],
-                    typed: typed(&m.id),
-                    bytes: c.bytes,
-                });
+                cases.push(case(
+                    &m.id,
+                    ext.clone(),
+                    std::slice::from_ref(c),
+                    typed(&m.id),
+                ));
             }
             // The refusal itself: the same first file, nothing typed.
             if !needs_input(&m.id).is_empty()
@@ -293,30 +353,69 @@ pub fn plan(mods: &[ModuleInfo], catalog: &Catalog, cands: &[Candidate], opts: O
                     .any(|c: &Case| c.module == m.id && c.group == "defaults only")
                 && let Some(c) = picks.first()
             {
-                cases.push(Case {
-                    module: m.id.clone(),
-                    group: "defaults only".into(),
-                    ids: vec![c.id.clone()],
-                    files: vec![c.path.clone()],
-                    typed: vec![],
-                    bytes: c.bytes,
-                });
+                cases.push(case(
+                    &m.id,
+                    "defaults only".into(),
+                    std::slice::from_ref(c),
+                    vec![],
+                ));
             }
             if biggest.as_ref().is_none_or(|(_, n, _)| group.len() > *n) {
                 biggest = Some((ext.clone(), group.len(), spread(group, opts.batch)));
             }
         }
+        // Files that are the right input for this module, whatever their size.
+        for tag in wanted_tags(&m.id) {
+            let group: Vec<&Candidate> = cands
+                .iter()
+                .filter(|c| tagged(c, tag) && tool.manifest.accepts_file(&c.mime, &c.ext))
+                .collect();
+            for c in spread(&group, 2) {
+                if !cases
+                    .iter()
+                    .any(|k| k.module == m.id && k.ids == [c.id.clone()])
+                {
+                    cases.push(case(
+                        &m.id,
+                        format!("{} ({tag})", c.ext),
+                        std::slice::from_ref(&c),
+                        typed(&m.id),
+                    ));
+                }
+            }
+        }
+        // Animated pictures: the form asks what to do by default, so the plan also answers it
+        // the way a person would ("first frame") to check the answer works.
+        let takes_first_frame = tool
+            .manifest
+            .options
+            .get("animation")
+            .is_some_and(|o| o.values.iter().any(|v| v == "first"));
+        if takes_first_frame {
+            let group: Vec<&Candidate> = cands
+                .iter()
+                .filter(|c| tagged(c, "animated") && tool.manifest.accepts_file(&c.mime, &c.ext))
+                .collect();
+            for c in spread(&group, 2) {
+                let mut t = typed(&m.id);
+                t.push(("animation".into(), "first".into()));
+                cases.push(case(
+                    &m.id,
+                    format!("{} (first frame)", c.ext),
+                    std::slice::from_ref(&c),
+                    t,
+                ));
+            }
+        }
         if let Some((ext, _, picks)) = biggest
             && picks.len() >= 2
         {
-            cases.push(Case {
-                module: m.id.clone(),
-                group: format!("batch of {} {ext}", picks.len()),
-                ids: picks.iter().map(|c| c.id.clone()).collect(),
-                files: picks.iter().map(|c| c.path.clone()).collect(),
-                typed: typed(&m.id),
-                bytes: picks.iter().map(|c| c.bytes).sum(),
-            });
+            cases.push(case(
+                &m.id,
+                format!("batch of {} {ext}", picks.len()),
+                &picks,
+                typed(&m.id),
+            ));
         }
     }
     cases
@@ -335,12 +434,15 @@ mod tests {
             ext: "png".into(),
             mime: "image/png".into(),
             generated,
+            traits: Vec::new(),
         }
     }
 
     #[test]
     fn spread_takes_the_smallest_and_the_largest() {
-        let cs: Vec<Candidate> = (1..=7).map(|i| cand(&format!("c{i}"), i * 100, false)).collect();
+        let cs: Vec<Candidate> = (1..=7)
+            .map(|i| cand(&format!("c{i}"), i * 100, false))
+            .collect();
         let refs: Vec<&Candidate> = cs.iter().collect();
         let got: Vec<String> = spread(&refs, 3).into_iter().map(|c| c.id).collect();
         assert_eq!(got, ["c1", "c4", "c7"]);
@@ -350,18 +452,18 @@ mod tests {
 
     #[test]
     fn synthetic_files_fill_in_only_when_nothing_real_exists() {
-        let cs = vec![cand("real", 50, false), cand("fake", 10, true)];
+        let cs = [cand("real", 50, false), cand("fake", 10, true)];
         let refs: Vec<&Candidate> = cs.iter().collect();
         let got: Vec<String> = spread(&refs, 2).into_iter().map(|c| c.id).collect();
         assert_eq!(got, ["real"]);
-        let only_fake = vec![cand("fake", 10, true)];
+        let only_fake = [cand("fake", 10, true)];
         let refs: Vec<&Candidate> = only_fake.iter().collect();
         assert_eq!(spread(&refs, 2).len(), 1);
     }
 
     #[test]
     fn a_small_group_is_taken_whole() {
-        let cs = vec![cand("a", 1, false), cand("b", 2, false)];
+        let cs = [cand("a", 1, false), cand("b", 2, false)];
         let refs: Vec<&Candidate> = cs.iter().collect();
         assert_eq!(spread(&refs, 5).len(), 2);
     }

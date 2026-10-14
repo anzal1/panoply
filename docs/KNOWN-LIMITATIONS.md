@@ -108,10 +108,13 @@ More about the gaps:
 - **First use downloads something.** The PDF engine, ONNX Runtime, each model and the video helper are
   fetched the first time a tool needs them. In the beta the download starts without a separate approval
   screen, and the size is shown in the progress line. See [PRIVACY.md](PRIVACY.md).
-- **Some AI tools use a lot of memory.** Remove background (IS-Net) peaks near 750 MB, erase near 600 to
-  760 MB, and software AV1 video compression near 1.3 GB at 1080p. Everything else stays under 300 MB.
-  Pictures over 24 megapixels are processed at a reduced size for cutout, erase and watermark, and the
-  result card says so.
+- **Some tools use a lot of memory.** Remove background (IS-Net) peaks near 750 MB, erase near 600 MB and
+  up to about 1.2 GB on a large picture, remove watermark up to about 900 MB, OCR on a PDF up to about
+  550 MB when the Hindi and Bengali fallback starts, and software AV1 video compression near 1.3 GB at
+  1080p. A 33 megapixel HEIF photo or a camera RAW file can take 0.4 to 1.6 GB in any picture tool,
+  because the system's decoder holds it. Everything else stays under 300 MB. Pictures over 24
+  megapixels are processed at a reduced size for cutout, erase and watermark, and the result card says
+  so. OCR reads pictures and pages at no more than 6 million pixels (A4 at about 250 dpi).
 - **Compress video picks a hardware encoder first.** Hardware encoders are fast and less efficient than
   x264 at tight sizes. Pass `--codec av1` when you need the smallest file and have time.
 - **A tool that cannot reach a target says so.** "Under 1 MB" on a scan may produce a bigger file than

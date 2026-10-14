@@ -235,6 +235,11 @@ fn run_in(
                 .collect();
             let headline = done.headline(n_inputs);
             problems.extend(check_outputs(&tool.manifest, &done.outputs, &outputs));
+            problems.extend(check_size(
+                module,
+                input_bytes,
+                outputs.iter().map(|o| o.bytes).sum(),
+            ));
             if headline.trim().is_empty() {
                 problems.push("the result card has no text".into());
             }
@@ -261,6 +266,29 @@ fn run_in(
                 problems,
             }
         }
+    }
+}
+
+/// Modules whose whole purpose is a smaller file. Their result may not be bigger than what went
+/// in: "compressed" or "mono" files that came out larger were wrong output the matrix once let
+/// through (a 7 kb/s Opus recording became 68 KB, a stereo Vorbis file became a bigger mono one).
+const MUST_NOT_GROW: &[&str] = &[
+    "media.compress",
+    "image.compress",
+    "pdf.compress",
+    "media.to_mono",
+];
+
+/// A result that is bigger than its input, for a module that exists to make files smaller.
+fn check_size(module: &str, input_bytes: u64, output_bytes: u64) -> Vec<String> {
+    // A little room for container overhead on tiny files.
+    let room = input_bytes / 50 + 4096;
+    if MUST_NOT_GROW.contains(&module) && output_bytes > input_bytes + room {
+        vec![format!(
+            "the result is {output_bytes} bytes, bigger than the {input_bytes} bytes that went in, for a module that makes files smaller"
+        )]
+    } else {
+        Vec::new()
     }
 }
 
@@ -301,4 +329,18 @@ fn check_outputs(
         }
     }
     problems
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_smaller_file_may_not_come_out_bigger() {
+        assert!(check_size("media.compress", 10_000, 68_000).len() == 1);
+        assert!(check_size("media.to_mono", 395_000, 738_000).len() == 1);
+        // Within the room for container overhead, and for modules that do not shrink.
+        assert!(check_size("media.compress", 10_000, 10_100).is_empty());
+        assert!(check_size("image.convert", 10_000, 68_000).is_empty());
+    }
 }

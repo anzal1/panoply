@@ -1,7 +1,12 @@
 //! The smoke matrix as a test: every registered module over real corpus files, through the path
-//! the desktop app takes (see the crate docs).
+//! the desktop app takes (see the crate docs). Each job is a pass, an expected refusal (a plain
+//! "no" that a rule in `expect.rs` says is right for that input) or a fail, and the test fails on
+//! any fail, on any memory budget missed without a written exception, and on a module that never
+//! once passed on a real file.
 //!
-//! It runs on every file that is on disk. Without the corpus it skips, unless
+//! It runs on every file that is on disk, and only when the whole corpus is (pictures, PDFs, video
+//! and sound: the media modules need `ffmpeg`, so CI, which fetches pictures and PDFs, skips it).
+//! Without the whole corpus it skips, unless
 //! `PANOPLY_REQUIRE_CORPUS` is set, in which case it fails, the same rule the host's corpus tests
 //! follow. `PANOPLY_SMOKE_REPORT=docs/research/beta-smoke.md` writes the table.
 //!
@@ -13,14 +18,17 @@ use std::path::PathBuf;
 use panoply_smoke::{Settings, report};
 
 fn corpus_ready(s: &Settings) -> bool {
-    if panoply_smoke::corpus_present(&s.corpus) {
+    if panoply_smoke::corpus_present(&s.corpus) && panoply_smoke::corpus_complete(&s.corpus) {
         return true;
     }
     assert!(
         std::env::var_os("PANOPLY_REQUIRE_CORPUS").is_none(),
-        "the corpus is missing and PANOPLY_REQUIRE_CORPUS is set: run `python3 -I tests/corpus/fetch.py`"
+        "the corpus is missing or partial and PANOPLY_REQUIRE_CORPUS is set: run `python3 -I tests/corpus/fetch.py` (all kinds)"
     );
-    eprintln!("skipping: corpus not fetched (python3 -I tests/corpus/fetch.py)");
+    eprintln!(
+        "skipping: the matrix needs the whole corpus on disk (python3 -I tests/corpus/fetch.py), \
+         not only pictures and PDFs"
+    );
     false
 }
 
@@ -65,6 +73,18 @@ fn every_module_runs_on_real_files_within_its_budgets() {
         bad.len(),
         rows.len(),
         bad.join("\n")
+    );
+
+    // A module that only ever refused has not been shown to work.
+    let never_passed: Vec<&str> = mods
+        .iter()
+        .map(|m| m.id.as_str())
+        .filter(|id| !rows.iter().any(|r| r.module == *id && r.passed()))
+        .collect();
+    assert!(
+        never_passed.is_empty(),
+        "no job passed for: {}",
+        never_passed.join(", ")
     );
 
     // Coverage: every module that takes files ran on at least one file when the corpus has a

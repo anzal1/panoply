@@ -438,6 +438,27 @@ fn animated_files_ask_by_default_and_use_the_first_frame_on_request() {
     assert!(seen > 0 || !MAC || corpus("generated/animated.webp").is_none());
 }
 
+#[test]
+fn resizing_a_jpeg_2000_photo_writes_a_jpeg_not_a_larger_png() {
+    // Found by the beta smoke matrix: Resize "keep format" on a JPEG 2000 file wrote a lossless
+    // PNG seven times its size, because Panoply cannot write JPEG 2000.
+    if !MAC {
+        return;
+    }
+    let Some(src) = corpus("libvips/world.jp2") else {
+        return;
+    };
+    let s = Scratch::new("jp2-resize");
+    let (out, _) = run_ok("image.resize", &src, json!({"longest": 400}), s.path());
+    let ext = out.extension().and_then(|e| e.to_str()).unwrap_or("");
+    assert_eq!(ext, "jpg", "{}", out.display());
+    let (before, after) = (
+        std::fs::metadata(&src).unwrap().len(),
+        std::fs::metadata(&out).unwrap().len(),
+    );
+    assert!(after < before * 3, "{before} bytes became {after}");
+}
+
 // ------------------------------------------------------------------ IPC-3 and HEIC
 
 #[test]

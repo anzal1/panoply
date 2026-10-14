@@ -778,6 +778,17 @@ fn compress_audio(job: &mut Job, input: &Path, p: &Profile, w: &Wish) -> Result<
             size_text(cap.unwrap_or(0))
         )));
     };
+    // A sound that is already coded at a low rate does not shrink at the default quality. Keep
+    // the original rather than hand back a bigger "compressed" file.
+    if target.is_none() && after >= p.size {
+        job.stage.discard(&part);
+        job.note(format!(
+            "{} is already small for its length ({}), so Compress could not make it smaller and left it as it is.",
+            name_of(input),
+            size_text(p.size)
+        ));
+        return Ok(());
+    }
     let out = job.commit(
         &part,
         &dir,

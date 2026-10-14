@@ -118,6 +118,23 @@ Every module whose budget is not plain "standard". The Budgets line in each spec
 
 Totals: 98 modules in 31 rows. Of these, 55 have a real exception (memory, preview, always-on, frame rate or server), 31 are model-backed inside the cap, and 12 were already budgeted in the text-calc file.
 
+## Exceptions found by the beta smoke matrix (2026-10-14)
+
+The smoke matrix (`crates/panoply-smoke`, results in `docs/research/beta-smoke.md`) runs every module over real corpus files and measures each job's peak memory. After the fixes below, the jobs that still pass the 300 MB budget only because of a row here are these. The caps are the measured worst case plus a margin, so a regression on the same files still shows. Nothing here changes what a module promises, it records what the system decoders and the models cost. A row that names files covers those files only; the same module on an ordinary picture is held to 300 MB.
+
+| Modules | Files | Cap | Measured | Reason |
+|---|---|---|---|---|
+| Every image module that decodes through ImageIO | `img-heic-rotated-cw90`, a 33 MP 10-bit HEIF in 3520 x 1600 tiles | 1800 MB | 306 to 1612 MB | One tile is the smallest unit ImageIO decodes, about 800 MB inside the system whatever the module does. Compress and Convert read it whole, ID and Resize decode it smaller, and the fill model adds its own for Erase and Remove watermark. Same finding as `image-compress-results.md` section 3 |
+| Every image module that decodes through ImageIO | `img-raw-canon-7d-sraw`, `img-raw-pixel-7-pro-dng`, camera RAW | 1000 MB | 355 to 938 MB | ImageIO has no tiled RAW path. 3.1 Convert already carries a RAW exception (about 8 bytes a pixel); measured it is higher, and the other modules share the decoder |
+| Every image module that decodes through ImageIO | `img-avif-gainmap-avif`, an HDR AVIF at 400 x 300 | 450 MB | 336 to 380 MB | An HDR AVIF costs ImageIO about 170 MB before any module touches it |
+| 3.14 Object eraser | any picture | 1250 MB | 575 to 1156 MB | The fill model is about 575 MB resident. The working picture adds about 7 bytes a pixel up to the 24 MP limit (1025 MB at 31 MP), and a batch keeps the allocator's high-water mark between pictures. The 600 MB row above holds for pictures under about 8 MP |
+| 3.15 Remove watermark | any picture the fill runs on | 950 MB | 786 to 892 MB | The same fill model as 3.14. The row for 3.15 above says "inside the 300 MB cap", which no build of the model can meet |
+| 2.1 Passport photo | any photo | 450 MB | 332 to 348 MB | The cutout is Apple Vision's foreground mask, and the 2.1 Budgets line says it carries the 3.8 exception. It had no number |
+| PDF 12 OCR | any file | 650 MB | 535 to 543 MB | Apple Vision is 156 MB before a page is read. A page with next to no text also starts the Hindi and Bengali fallback (ONNX Runtime and the PP-OCR models, about 200 MB). The row for PDF 12 above says "inside the 300 MB cap", which holds for pages that Vision reads |
+| 3.11 Upscale | a batch | 400 MB | 313 MB | The model plus the allocator keeping its high-water mark between the pictures of a batch |
+
+What was fixed instead of excepted: Image to text and OCR on pictures held a 31 MP photograph at 8192 pixels on the long side, 660 MB. Pictures and pages are now read at no more than 6 million pixels (A4 at about 250 dpi), 156 MB plus about 20 MB per million pixels. The first thing to revisit before a public release is the model-backed rows (Erase, Remove watermark, OCR): they are the ones that could come back under the cap with work, by releasing Vision before the fallback starts and by encoding results in strips.
+
 ## Decided by the user (2026-10-13)
 
 - **License:** permissive only. No GPL or AGPL engine in the core. Panoply ships under a permissive license (MIT or Apache-2.0). We write our own GIF quantizer and SSIM.

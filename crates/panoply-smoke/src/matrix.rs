@@ -37,6 +37,9 @@ pub struct Row {
     /// What was typed into the options form first, as `option=text`.
     #[serde(default)]
     pub typed: Vec<String>,
+    /// The traits of each input (corpus tags, `no-audio`), in the order of `ids`.
+    #[serde(default)]
+    pub traits: Vec<Vec<String>>,
     /// Input size, bytes.
     pub input_bytes: u64,
     /// What the job reported. `None` when the child died without a report.
@@ -54,10 +57,36 @@ pub struct Row {
     pub exceptions_used: Vec<String>,
 }
 
+/// What the matrix says about one job.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Verdict {
+    /// The job did what the manifest promises, or did nothing and said why.
+    Pass,
+    /// The module declined in plain words, and the named rule says that was right.
+    Refused(&'static str),
+    /// A crash, a hang, a wrong or empty output, an error with no next step, or a refusal that
+    /// no rule explains.
+    Fail,
+}
+
 impl Row {
+    /// What the matrix says about this job, before budgets.
+    pub fn verdict(&self) -> Verdict {
+        if self.crash.is_some() {
+            return Verdict::Fail;
+        }
+        match self.outcome() {
+            Some(Outcome::Pass | Outcome::NoOp) => Verdict::Pass,
+            Some(Outcome::Declined) => crate::expect::explain(self)
+                .map(|r| Verdict::Refused(r.id))
+                .unwrap_or(Verdict::Fail),
+            _ => Verdict::Fail,
+        }
+    }
+
     /// True when the job worked and produced what the manifest promises.
     pub fn passed(&self) -> bool {
-        self.crash.is_none() && self.result.as_ref().is_some_and(OneResult::ok)
+        self.verdict() == Verdict::Pass
     }
 
     /// The outcome, `None` when the child died without a report.
@@ -65,14 +94,15 @@ impl Row {
         self.result.as_ref().map(|r| r.outcome)
     }
 
-    /// True when the module refused in plain words with a next step.
+    /// True when the module refused, in plain words, a file it is right to refuse.
     pub fn declined(&self) -> bool {
-        self.crash.is_none() && self.outcome() == Some(Outcome::Declined)
+        matches!(self.verdict(), Verdict::Refused(_))
     }
 
-    /// True when the job worked and no undocumented budget was missed.
+    /// True when the job passed or was refused for a reason that holds, and no undocumented
+    /// budget was missed.
     pub fn clean(&self) -> bool {
-        self.passed() && self.budget_violations.is_empty()
+        self.verdict() != Verdict::Fail && self.budget_violations.is_empty()
     }
 
     /// Why it failed, in one line.
@@ -81,6 +111,16 @@ impl Row {
             return Some(c.clone());
         }
         let r = self.result.as_ref()?;
+        if r.outcome == Outcome::Declined {
+            if self.declined() {
+                return None;
+            }
+            return Some(format!(
+                "declined, and no rule explains it for this input: {} {}",
+                r.error.clone().unwrap_or_default(),
+                r.next_step.clone().unwrap_or_default()
+            ));
+        }
         if r.ok() {
             return None;
         }
@@ -169,6 +209,7 @@ fn run_case(m: Option<&ModuleInfo>, case: &Case, opts: &RunOptions) -> Row {
         group: case.group.clone(),
         ids: case.ids.clone(),
         typed: case.typed.iter().map(|(k, v)| format!("{k}={v}")).collect(),
+        traits: case.traits.clone(),
         input_bytes: case.bytes,
         result: None,
         crash: None,
@@ -180,7 +221,8 @@ fn run_case(m: Option<&ModuleInfo>, case: &Case, opts: &RunOptions) -> Row {
     match stage(&dir, &case.files) {
         Err(e) => row.crash = Some(format!("could not copy the input: {e}")),
         Ok(staged) => {
-            let mut args: Vec<OsString> = vec!["one".into(), "--module".into(), (&case.module).into()];
+            let mut args: Vec<OsString> =
+                vec!["one".into(), "--module".into(), (&case.module).into()];
             for (k, v) in &case.typed {
                 args.push("--set".into());
                 args.push(format!("{k}={v}").into());
@@ -238,7 +280,7 @@ fn judge(row: &mut Row, judge_time: bool) {
         return;
     }
     let exts = row.exts();
-    let (cap, exception) = budgets::peak_cap(&row.module, &exts);
+    let (cap, exception) = budgets::peak_cap(&row.module, &exts, &row.ids);
     if let Some(peak) = row.peak_mem_bytes {
         if peak > cap {
             row.budget_violations.push(format!(
@@ -256,7 +298,7 @@ fn judge(row: &mut Row, judge_time: bool) {
             ));
         }
     }
-    if budgets::first_preview_applies(&row.module, &row.pattern, row.input_bytes, &exts)
+    if budgets::first_preview_applies(&row.module, &row.pattern, row.input_bytes, &exts, &row.ids)
         && r.job_ms > budgets::first_preview_ms()
         && judge_time
     {
@@ -287,16 +329,17 @@ fn spawn(exe: &Path, args: &[OsString], dir: &Path, timeout: Duration) -> Result
     let measured = measure::available();
     let mut cmd = if measured {
         let mut c = Command::new("/usr/bin/time");
-        c.arg(if cfg!(target_os = "macos") { "-l" } else { "-v" })
-            .arg(exe);
+        c.arg(if cfg!(target_os = "macos") {
+            "-l"
+        } else {
+            "-v"
+        })
+        .arg(exe);
         c
     } else {
         Command::new(exe)
     };
-    cmd.args(args)
-        .stdin(Stdio::null())
-        .stdout(out)
-        .stderr(err);
+    cmd.args(args).stdin(Stdio::null()).stdout(out).stderr(err);
     let started = Instant::now();
     let mut child = cmd
         .spawn()
@@ -371,6 +414,7 @@ mod tests {
             group: group.into(),
             ids: vec![],
             typed: vec![],
+            traits: vec![],
             input_bytes: 1_000_000,
             result: Some(r),
             crash: None,
@@ -397,7 +441,10 @@ mod tests {
     fn the_first_preview_row_needs_the_time_flag_and_an_instant_transform() {
         let mut slow = row("pdf.merge", "pdf", 50, 400.0);
         judge(&mut slow, false);
-        assert!(slow.budget_violations.is_empty(), "time is not judged by default");
+        assert!(
+            slow.budget_violations.is_empty(),
+            "time is not judged by default"
+        );
         judge(&mut slow, true);
         assert_eq!(slow.budget_violations.len(), 1);
 
