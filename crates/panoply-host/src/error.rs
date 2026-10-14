@@ -15,6 +15,10 @@ pub enum ModuleError {
     /// The module asked for the network without having been granted it.
     #[error("network access denied")]
     NetworkDenied,
+    /// A model or engine download was not allowed: nobody said yes yet, the person said no, or
+    /// the module never declared network access.
+    #[error("{0}")]
+    Consent(panoply_core::assets::ConsentError),
     /// A file operation failed.
     #[error("{}: {source}", path.display())]
     Io {
@@ -59,6 +63,7 @@ impl ModuleError {
             Self::NetworkDenied => {
                 "This module tried to use the network, which it was not allowed to.".into()
             }
+            Self::Consent(e) => e.to_string(),
             Self::Io { path, source } => match source.kind() {
                 std::io::ErrorKind::NotFound => format!("Could not find {}.", path.display()),
                 std::io::ErrorKind::PermissionDenied => {
@@ -87,6 +92,15 @@ impl ModuleError {
                 "Choose the file again so Panoply can hand it to the module.".into()
             }
             Self::NetworkDenied => "Report this to the module author, or remove the module.".into(),
+            Self::Consent(e) => match e {
+                panoply_core::assets::ConsentError::NotDeclared(_) => {
+                    "Report this to the module author, or remove the module.".into()
+                }
+                _ => format!(
+                    "Allow the download when asked, or run `panoply models allow {}` (or add --yes), then run it again.",
+                    e.info().id
+                ),
+            },
             Self::Io { source, .. } => match source.kind() {
                 std::io::ErrorKind::NotFound => {
                     "Check that the file was not moved or deleted.".into()

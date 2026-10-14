@@ -96,6 +96,19 @@ pub fn entries() -> Vec<Entry> {
     v
 }
 
+/// The downloadable parts of the image AI engine as consent entries: the ONNX Runtime and the
+/// three models.
+pub fn assets() -> Vec<panoply_core::assets::Entry> {
+    let mut v: Vec<panoply_core::assets::Entry> = runtime::entry().into_iter().collect();
+    for m in models::all() {
+        v.push(panoply_core::assets::Entry {
+            info: models::asset(m),
+            paths: vec![models::model_dir(m)],
+        });
+    }
+    v
+}
+
 /// Downloads one item now (`runtime`, `isnet`, `migan`, `esrgan`), so a later job starts at once.
 pub fn fetch(io: &dyn VisionIo, id: &str) -> Result<PathBuf> {
     match id {

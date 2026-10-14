@@ -107,7 +107,22 @@ impl Registry {
         let ctx = RunContext::new(guard)
             .with_cancel(cancel)
             .with_progress(sink);
-        let outputs = module.run(&ctx, &spec.inputs, &spec.options)?;
+        // The manifest's network line is the scope for every download this job could start, and
+        // a refusal from the consent gate is reported as what it is, not as a vague failure.
+        panoply_core::assets::clear_refusal();
+        let ran = panoply_core::assets::with_network_scope(caps.network, || {
+            module.run(&ctx, &spec.inputs, &spec.options)
+        });
+        let outputs = match ran {
+            Ok(o) => o,
+            Err(e @ ModuleError::Cancelled) => return Err(e),
+            Err(e) => {
+                return Err(match panoply_core::assets::take_refusal() {
+                    Some(refusal) => ModuleError::Consent(refusal),
+                    None => e,
+                });
+            }
+        };
         Ok(JobOutcome {
             outputs,
             notes: ctx.take_notes(),

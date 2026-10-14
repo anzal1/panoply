@@ -332,6 +332,8 @@ pub fn ensure(asset: &Asset, fetch: &mut Fetch<'_>) -> Result<PathBuf> {
             asset.label
         )));
     }
+    // Nothing is fetched until the person has said yes to this item (docs/PRIVACY.md).
+    panoply_core::assets::authorize(&info(asset)).map_err(|e| engine_err(e.to_string()))?;
     (fetch.notice)(&format!(
         "Downloading the {} from {} ({}). This happens once.",
         asset.label,
@@ -340,6 +342,86 @@ pub fn ensure(asset: &Asset, fetch: &mut Fetch<'_>) -> Result<PathBuf> {
     ));
     download_to(asset.url, asset.sha256, &path)?;
     Ok(path)
+}
+
+/// What the consent sheet and the `models` list say about one OCR file. The consent id is the
+/// short name `panoply models` uses (`ppocr-det`, `ppocr-rec-en`, `tessdata-ben`).
+pub fn info(asset: &Asset) -> panoply_core::assets::AssetInfo {
+    use panoply_core::assets::{AssetInfo, AssetKind};
+    let (id, name, purpose) = match asset.id {
+        "ppocrv5-mobile-det" => (
+            "ppocr-det",
+            "PP-OCR text detection model",
+            "finds where the text is on a page",
+        ),
+        "ppocrv5-mobile-rec-en" => (
+            "ppocr-rec-en",
+            "PP-OCR English text model",
+            "reads English text",
+        ),
+        "ppocrv5-mobile-rec-latin" => (
+            "ppocr-rec-latin",
+            "PP-OCR Latin script text model",
+            "reads languages written in Latin letters",
+        ),
+        "ppocrv5-mobile-rec-devanagari" => (
+            "ppocr-rec-devanagari",
+            "PP-OCR Devanagari text model",
+            "reads Hindi, Marathi and Nepali",
+        ),
+        "tessdata-fast-ben" => (
+            "tessdata-ben",
+            "Tesseract Bengali language data",
+            "reads Bengali",
+        ),
+        "tessdata-fast-eng" => (
+            "tessdata-eng",
+            "Tesseract English language data",
+            "reads English next to another script",
+        ),
+        _ => (
+            "tessdata-hin",
+            "Tesseract Hindi language data",
+            "reads Hindi next to the Devanagari model",
+        ),
+    };
+    AssetInfo {
+        id: id.into(),
+        name: name.into(),
+        kind: AssetKind::Model,
+        size: asset.size,
+        source: host_of(asset.url).to_string(),
+        license: asset.license.into(),
+        purpose: purpose.into(),
+    }
+}
+
+/// Everything the text recognition modules may download, as consent entries: the ONNX Runtime
+/// and each model or language file, with where it is kept.
+pub fn assets() -> Vec<panoply_core::assets::Entry> {
+    use panoply_core::assets::Entry;
+    let mut v = Vec::new();
+    if let Some(pin) = ort_pin() {
+        v.push(Entry {
+            info: panoply_core::assets::onnxruntime(ORT_VERSION, pin.size),
+            paths: vec![cache_dir().join(format!("onnxruntime-{ORT_VERSION}"))],
+        });
+    }
+    for a in [
+        &DET,
+        &REC_EN,
+        &REC_LATIN,
+        &REC_DEVANAGARI,
+        &TESSDATA_BEN,
+        &TESSDATA_ENG,
+        &TESSDATA_HIN,
+    ] {
+        v.push(Entry {
+            info: info(a),
+            paths: vec![cache_dir().join(a.file)],
+        });
+    }
+    v
 }
 
 fn host_of(url: &str) -> &str {
@@ -387,6 +469,9 @@ pub fn ensure_ort(fetch: &mut Fetch<'_>) -> Result<PathBuf> {
             "Panoply needs the ONNX Runtime for this and may not use the network right now. Allow the download and try again.",
         ));
     }
+    // Nothing is fetched until the person has said yes to this item (docs/PRIVACY.md).
+    panoply_core::assets::authorize(&panoply_core::assets::onnxruntime(ORT_VERSION, pin.size))
+        .map_err(|e| engine_err(e.to_string()))?;
     (fetch.notice)(&format!(
         "Downloading the ONNX Runtime {ORT_VERSION} ({}) from github.com/microsoft/onnxruntime (MIT). This happens once.",
         mb(pin.size)

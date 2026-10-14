@@ -8,6 +8,7 @@
 //!
 //! Built-in modules live in [`builtin`]. [`Registry`] registers and looks up modules.
 
+pub mod assets;
 pub mod builtin;
 mod context;
 mod error;

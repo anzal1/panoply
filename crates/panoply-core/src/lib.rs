@@ -4,8 +4,10 @@
 //! - [`naming`] picks output names that never overwrite anything.
 //! - [`cancel`] is the cooperative cancel flag every long job polls.
 //! - [`job`] holds the job and event types exchanged with every UI.
+//! - [`assets`] is the consent gate every model and engine download goes through.
 //! - [`budgets`] holds the performance budgets from FLOWS.md as constants.
 
+pub mod assets;
 pub mod budgets;
 pub mod cancel;
 pub mod job;

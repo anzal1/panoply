@@ -1,5 +1,6 @@
 //! The `panoply` command line. Short, plain output.
 
+mod models_cmd;
 mod vision_cmd;
 
 use std::path::{Path, PathBuf};
@@ -17,6 +18,10 @@ use panoply_wasm::WasmModule;
 #[derive(Parser)]
 #[command(name = "panoply", version, about = "On-device file utilities")]
 struct Cli {
+    /// Say yes to every model or engine download. Each yes is remembered per item. Without it
+    /// Panoply asks first, and refuses when it cannot ask
+    #[arg(long, global = true)]
+    yes: bool,
     #[command(subcommand)]
     command: Command,
 }
@@ -93,9 +98,14 @@ enum Command {
         #[command(subcommand)]
         tool: IdTool,
     },
-    /// Image AI: cutout, erase, unmark, upscale, and the models they download
+    /// Image AI: cutout, erase, unmark, upscale
     #[command(flatten)]
     Vision(vision_cmd::VisionCmd),
+    /// The models and engines Panoply may download: list, fetch, allow, remove
+    Models {
+        #[command(subcommand)]
+        cmd: Option<models_cmd::ModelsCmd>,
+    },
     /// Print the version
     Version,
 }
@@ -284,8 +294,22 @@ enum ImageTool {
     },
 }
 
+/// Run a built-in module. Says first when its manifest declares network access.
+pub(crate) fn run_builtin(
+    spec: &JobSpec,
+    out: Option<&Path>,
+    cancel: CancelToken,
+    sink: impl Fn(JobEvent) + Send + Sync + Clone + 'static,
+) -> Result<panoply_host::JobOutcome, ModuleError> {
+    let registry = Registry::with_builtins();
+    models_cmd::show_network_notice(&registry, &spec.module_id);
+    registry.run_job(spec, out, cancel, sink)
+}
+
 fn main() -> ExitCode {
-    match Cli::parse().command {
+    let cli = Cli::parse();
+    models_cmd::install(cli.yes);
+    match cli.command {
         Command::Formats { family } => formats(family.as_deref()),
         Command::Route { from, to } => route(&from, &to),
         Command::Sniff { file } => sniff_cmd(&file),
@@ -304,6 +328,7 @@ fn main() -> ExitCode {
         Command::Share { tool } => panoply_share::cli::run(tool),
         Command::Id { tool } => id_cmd(tool),
         Command::Vision(cmd) => vision_cmd::run(cmd),
+        Command::Models { cmd } => models_cmd::run(cmd),
         Command::Version => {
             println!("panoply {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
@@ -506,6 +531,7 @@ fn run_module(module: &Path, files: Vec<PathBuf>, opts: &[String], out: Option<&
         // Progress is for jobs that take a while: stay quiet under 300 ms.
         let started = Instant::now();
         let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+        models_cmd::show_network_notice(&registry, &spec.module_id);
         registry.run_job(&spec, out, CancelToken::new(), move |event| {
             if let JobEvent::Progress { fraction, label } = event
                 && started.elapsed() > slow
@@ -542,7 +568,7 @@ fn hash(files: Vec<PathBuf>) -> ExitCode {
         inputs: files,
         options: serde_json::Value::Null,
     };
-    match Registry::with_builtins().run_job(&spec, None, CancelToken::new(), |_| {}) {
+    match run_builtin(&spec, None, CancelToken::new(), |_| {}) {
         Ok(out) => {
             for line in out.notes {
                 println!("{line}");
@@ -738,7 +764,7 @@ fn pdf(tool: PdfTool) -> ExitCode {
     };
     let started = Instant::now();
     let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
-    report(Registry::with_builtins().run_job(
+    report(run_builtin(
         &spec,
         out.out.as_deref(),
         CancelToken::new(),
@@ -782,7 +808,7 @@ fn image(tool: ImageTool) -> ExitCode {
     };
     let started = Instant::now();
     let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
-    let result = Registry::with_builtins().run_job(
+    let result = run_builtin(
         &spec,
         out.as_deref(),
         CancelToken::new(),
@@ -1070,7 +1096,7 @@ fn media_run(
     };
     let started = Instant::now();
     let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
-    report(Registry::with_builtins().run_job(
+    report(run_builtin(
         &spec,
         out.out.as_deref(),
         CancelToken::new(),
@@ -1587,7 +1613,7 @@ fn id_cmd(tool: IdTool) -> ExitCode {
     };
     let started = Instant::now();
     let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
-    report(Registry::with_builtins().run_job(
+    report(run_builtin(
         &spec,
         out.out.as_deref(),
         CancelToken::new(),

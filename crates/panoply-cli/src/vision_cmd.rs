@@ -1,4 +1,4 @@
-//! The image AI commands: `panoply cutout`, `erase`, `unmark`, `upscale` and `models`.
+//! The image AI commands: `panoply cutout`, `erase`, `unmark` and `upscale`.
 //!
 //! They are thin: each one builds the options of its module (`image.remove_background`,
 //! `image.erase`, `image.remove_watermark`, `image.upscale`) and runs it through the same
@@ -10,7 +10,6 @@ use std::time::{Duration, Instant};
 
 use clap::Subcommand;
 use panoply_core::{CancelToken, JobEvent, JobSpec};
-use panoply_host::Registry;
 use serde_json::{Map, Value, json};
 
 /// The image AI commands.
@@ -84,12 +83,6 @@ pub enum VisionCmd {
         #[arg(long, value_name = "DIR")]
         out: Option<PathBuf>,
     },
-    /// The files the image AI commands download: panoply models, panoply models fetch isnet
-    Models {
-        /// "fetch", then what to download now (runtime, isnet, migan, esrgan)
-        #[arg(num_args = 0..)]
-        what: Vec<String>,
-    },
 }
 
 /// Folders become the pictures inside them (not looking deeper), sorted by name.
@@ -143,7 +136,7 @@ fn run_job(
     };
     let started = Instant::now();
     let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
-    let result = Registry::with_builtins().run_job(
+    let result = crate::run_builtin(
         &spec,
         out.as_deref(),
         CancelToken::new(),
@@ -171,49 +164,6 @@ fn run_job(
             ExitCode::FAILURE
         }
     }
-}
-
-fn models(what: Vec<String>) -> ExitCode {
-    if what.first().map(String::as_str) == Some("fetch") {
-        let io = panoply_vision::ConsoleIo::new();
-        let wanted: Vec<String> = if what.len() > 1 {
-            what[1..].to_vec()
-        } else {
-            vec![
-                "runtime".into(),
-                "isnet".into(),
-                "migan".into(),
-                "esrgan".into(),
-            ]
-        };
-        for id in wanted {
-            match panoply_vision::catalog::fetch(&io, &id) {
-                Ok(p) => println!("{id}: ready at {}", p.display()),
-                Err(e) => {
-                    eprintln!("{id}: {e}");
-                    return ExitCode::FAILURE;
-                }
-            }
-        }
-        return ExitCode::SUCCESS;
-    }
-    if !what.is_empty() {
-        eprintln!(
-            "Say \"panoply models\" to list, or \"panoply models fetch isnet\" to download one."
-        );
-        return ExitCode::FAILURE;
-    }
-    println!(
-        "Downloaded once, on first use, and kept in {}:",
-        panoply_vision::cache::engines_dir().display()
-    );
-    for e in panoply_vision::catalog::entries() {
-        println!("{}", e.line());
-    }
-    println!(
-        "On macOS the system's own subject finder is used for backgrounds first, so IS-Net is only fetched when it is missing or asked for."
-    );
-    ExitCode::SUCCESS
 }
 
 /// Run one of the commands.
@@ -280,6 +230,5 @@ pub fn run(cmd: VisionCmd) -> ExitCode {
             }
             run_job("image.upscale", expand(files), o, out)
         }
-        VisionCmd::Models { what } => models(what),
     }
 }

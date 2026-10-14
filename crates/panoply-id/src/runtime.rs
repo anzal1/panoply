@@ -200,6 +200,9 @@ pub fn ensure_onnxruntime() -> Result<PathBuf> {
     if lib.is_file() {
         return Ok(lib);
     }
+    // Nothing is fetched until the person has said yes to this item (docs/PRIVACY.md).
+    panoply_core::assets::authorize(&panoply_core::assets::onnxruntime(ORT_VERSION, pin.size))
+        .map_err(|e| engine_err(e.to_string()))?;
     std::fs::create_dir_all(&dir)
         .map_err(|e| engine_err(format!("Could not create {}: {e}", dir.display())))?;
     eprintln!(
@@ -267,6 +270,8 @@ pub fn ensure_model() -> Result<PathBuf> {
     if path.is_file() {
         return Ok(path);
     }
+    // Nothing is fetched until the person has said yes to this item (docs/PRIVACY.md).
+    panoply_core::assets::authorize(&yunet_asset()).map_err(|e| engine_err(e.to_string()))?;
     std::fs::create_dir_all(&dir)
         .map_err(|e| engine_err(format!("Could not create {}: {e}", dir.display())))?;
     eprintln!(
@@ -285,6 +290,37 @@ pub fn ensure_model() -> Result<PathBuf> {
     std::fs::rename(&tmp, &path)
         .map_err(|e| engine_err(format!("Could not install the face model: {e}")))?;
     Ok(path)
+}
+
+/// What the consent sheet and the `models` list say about the face model.
+pub fn yunet_asset() -> panoply_core::assets::AssetInfo {
+    use panoply_core::assets::{AssetInfo, AssetKind};
+    AssetInfo {
+        id: "yunet".into(),
+        name: "YuNet face model".into(),
+        kind: AssetKind::Model,
+        size: MODEL_BYTES,
+        source: "github.com (opencv/opencv_zoo)".into(),
+        license: "MIT".into(),
+        purpose: "finds faces for passport and ID photos where the system has no finder".into(),
+    }
+}
+
+/// The downloadable parts of the face engine: the ONNX Runtime and the YuNet model.
+pub fn assets() -> Vec<panoply_core::assets::Entry> {
+    use panoply_core::assets::Entry;
+    let mut v = Vec::new();
+    if let Some(pin) = ort_pin() {
+        v.push(Entry {
+            info: panoply_core::assets::onnxruntime(ORT_VERSION, pin.size),
+            paths: vec![ort_dir()],
+        });
+    }
+    v.push(Entry {
+        info: yunet_asset(),
+        paths: vec![model_dir().join(MODEL_FILE)],
+    });
+    v
 }
 
 /// How long a loaded session stays when nobody uses it (FLOWS.md budgets: models unload after
