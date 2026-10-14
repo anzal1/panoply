@@ -1,8 +1,6 @@
 //! Windows and Linux. The same surface as macOS, built from portable GPUI calls, and so far
 //! compiled and checked but not driven by hand on those systems.
 
-use std::path::Path;
-
 use gpui::Window;
 
 /// Stand-in for the macOS panel handle. Visibility is done with `activate_window` and
