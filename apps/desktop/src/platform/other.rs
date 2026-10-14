@@ -169,6 +169,7 @@ mod win {
         fn MonitorFromPoint(p: Point, flags: u32) -> *mut c_void;
         fn GetMonitorInfoW(monitor: *mut c_void, info: *mut MonitorInfo) -> i32;
         fn GetDpiForWindow(hwnd: *mut c_void) -> u32;
+        fn GetWindowRect(hwnd: *mut c_void, r: *mut RectI) -> i32;
         fn SetWindowPos(
             hwnd: *mut c_void,
             after: *mut c_void,
@@ -211,9 +212,17 @@ mod win {
         }
         let m = info.monitor;
         for _ in 0..2 {
-            let dpi = unsafe { GetDpiForWindow(hwnd) };
-            let scale = if dpi == 0 { 1.0 } else { f64::from(dpi) / 96.0 };
-            let pw = (w * scale).round() as i32;
+            // The outer width: GPUI's window carries an invisible frame on each side, so it is
+            // wider than `w`, and it is the outer rectangle that SetWindowPos moves.
+            let mut outer = RectI::default();
+            let have = unsafe { GetWindowRect(hwnd, &mut outer) } != 0 && outer.right > outer.left;
+            let pw = if have {
+                outer.right - outer.left
+            } else {
+                let dpi = unsafe { GetDpiForWindow(hwnd) };
+                let scale = if dpi == 0 { 1.0 } else { f64::from(dpi) / 96.0 };
+                (w * scale).round() as i32
+            };
             let x = m.left + ((m.right - m.left) - pw) / 2;
             let y = m.top + (f64::from(m.bottom - m.top) * top_frac).round() as i32;
             unsafe {

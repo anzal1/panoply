@@ -245,7 +245,12 @@ foreach ($theme in 'light', 'dark') {
         Press-Key 0x26; Press-Key 0x0D
       }
       $run.exited_after_tray_quit = $proc.WaitForExit(15000)
-      if ($run.exited_after_tray_quit) { $run.exit_code = $proc.ExitCode; if ($run.exit_code -ne 0) { $failed += "${theme}: exit code $($run.exit_code) after tray Quit" } }
+      if ($run.exited_after_tray_quit) {
+        # The process being gone is the pass. The exit code is recorded when Windows still has it
+        # (Start-Process can return an empty one) and only a non-zero number counts as a failure.
+        $code = $proc.ExitCode; $run.exit_code = $code
+        if ($null -ne $code -and "$code" -ne '' -and [int]$code -ne 0) { $failed += "${theme}: exit code $code after tray Quit" }
+      }
       else {
         $failed += "${theme}: tray Quit did not end the process"
         Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
