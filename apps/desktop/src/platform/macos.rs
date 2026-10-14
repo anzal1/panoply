@@ -267,9 +267,24 @@ impl Panel {
 
 /// System Reduce Motion setting.
 pub(crate) fn reduce_motion() -> bool {
+    if std::env::var("PANOPLY_REDUCE_MOTION").is_ok_and(|v| v == "1") {
+        return true;
+    }
     unsafe {
         let ws: Obj = msg_send![class!(NSWorkspace), sharedWorkspace];
         let b: Bool = msg_send![ws, accessibilityDisplayShouldReduceMotion];
+        b.as_bool()
+    }
+}
+
+/// System Increase Contrast setting.
+pub(crate) fn increase_contrast() -> bool {
+    if std::env::var("PANOPLY_HIGH_CONTRAST").is_ok_and(|v| v == "1") {
+        return true;
+    }
+    unsafe {
+        let ws: Obj = msg_send![class!(NSWorkspace), sharedWorkspace];
+        let b: Bool = msg_send![ws, accessibilityDisplayShouldIncreaseContrast];
         b.as_bool()
     }
 }

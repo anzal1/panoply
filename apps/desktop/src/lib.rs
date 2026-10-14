@@ -15,6 +15,7 @@ pub mod paths;
 pub mod profile;
 pub mod search;
 pub mod units;
+pub mod window_state;
 
 mod icons_gen;
 mod platform;
@@ -34,6 +35,16 @@ pub fn run_from_args(args: Vec<String>) {
                 .and_then(|s| s.parse().ok())
                 .unwrap_or(14);
             selfcheck::run_idle(hold);
+            return;
+        }
+        if args.iter().any(|a| a == "--selfcheck-review") {
+            let out = args
+                .iter()
+                .position(|a| a == "--out")
+                .and_then(|i| args.get(i + 1))
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| std::path::PathBuf::from("review"));
+            selfcheck::run_review(out);
             return;
         }
         if args.iter().any(|a| a == "--selfcheck-frames") {

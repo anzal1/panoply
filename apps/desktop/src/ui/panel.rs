@@ -17,9 +17,11 @@ use gpui_base::input::{Input as KitInput, InputEvent, InputState};
 use serde_json::Value;
 
 use super::Hub;
-use super::theme::{Theme, is_dark, rgb8, tint};
+use super::theme::{Theme, is_dark, radius, sp, ty};
 use super::widgets::{
-    ButtonKind, button, editor_style, icon, icon_button, keycap, progress_bar, segmented, switch,
+    ButtonKind, Ramp, button, button_ex, caption, card, category_tile, cmd, editor_style,
+    file_category, file_icon, focus_ring, icon, icon_button, keycap, note, notice, progress_bar,
+    rule, scroll_thumb, segmented, switch, tip,
 };
 use crate::catalog::Tool;
 use crate::form::{Control, Field, Form, display, number};
@@ -77,6 +79,9 @@ pub(crate) struct ToolPanel {
     focus: FocusHandle,
     field_focus: BTreeMap<String, FocusHandle>,
     more_open: bool,
+    scroll_left: ScrollHandle,
+    scroll_options: ScrollHandle,
+    scroll_result: ScrollHandle,
     estimate: Option<String>,
     est_token: u64,
     phase: Phase,
@@ -197,6 +202,9 @@ impl ToolPanel {
             focus,
             field_focus,
             more_open: false,
+            scroll_left: ScrollHandle::new(),
+            scroll_options: ScrollHandle::new(),
+            scroll_result: ScrollHandle::new(),
             estimate: None,
             est_token: 0,
             phase: Phase::Options,
@@ -709,10 +717,9 @@ impl ToolPanel {
                 _ => {}
             },
             Phase::Done { .. } => match k {
-                "enter" if m.platform => self.chain(cx),
+                "enter" if m.secondary() => self.chain(cx),
                 "enter" => self.open_first(cx),
-                "z" if m.platform => self.undo(cx),
-                "r" if m.platform => self.reveal(cx),
+                "r" if m.secondary() => self.reveal(cx),
                 "escape" => cx.emit(PanelEvent::Close),
                 _ => {}
             },
@@ -727,16 +734,12 @@ impl ToolPanel {
 
 // ---- drawing ----
 
-impl ToolPanel {
-    fn label(text: &str, t: Theme) -> Div {
-        div()
-            .text_size(px(12.))
-            .line_height(px(16.))
-            .font_weight(FontWeight::MEDIUM)
-            .text_color(t.ink2)
-            .child(text.to_string())
-    }
+/// Width of the options column.
+const OPTIONS_W: f32 = 344.0;
+/// The panel's margin, the same as the app's page margin.
+const MARGIN: f32 = sp::XL;
 
+impl ToolPanel {
     fn field_view(&mut self, f: &Field, t: Theme, cx: &mut Context<Self>) -> AnyElement {
         let key = f.key.clone();
         let this = cx.entity().downgrade();
@@ -825,6 +828,8 @@ impl ToolPanel {
                 let raw = input.read(cx).value().to_string();
                 let has_err = self.form.error(&key).is_some();
                 let focus = input.read(cx).focus_handle(cx);
+                // The ring is the outer element's border, 2 pt outside the field and pulled back
+                // in by a negative margin, so the field's footprint never changes.
                 let boxed = div()
                     .id(format!("input-{key}"))
                     .role(Role::TextInput)
@@ -833,24 +838,32 @@ impl ToolPanel {
                     .track_focus(&focus)
                     .flex_1()
                     .min_w_0()
-                    .h(px(32.))
-                    .px(px(10.))
-                    .flex()
-                    .items_center()
-                    .rounded(px(8.))
-                    .bg(t.field)
-                    .border_1()
-                    .border_color(if has_err { t.bad.opacity(0.7) } else { t.hair })
-                    .text_size(px(13.))
-                    .line_height(px(18.))
-                    .text_color(t.ink)
-                    .overflow_hidden()
+                    .m(px(-2.))
+                    .rounded(px(radius::CONTROL + 2.))
+                    .border_2()
+                    .border_color(gpui::transparent_black())
+                    .focus(move |s| s.border_color(t.accent_text))
                     .child(
                         div()
                             .w_full()
-                            .h(px(18.))
+                            .h(px(32.))
+                            .px(px(10.))
+                            .flex()
+                            .items_center()
+                            .rounded(px(radius::CONTROL))
+                            .bg(t.field)
+                            .border_1()
+                            .border_color(if has_err { t.bad } else { t.hair })
+                            .ramp(ty::BODY)
+                            .text_color(t.ink)
                             .overflow_hidden()
-                            .child(KitInput::new(&input)),
+                            .child(
+                                div()
+                                    .w_full()
+                                    .h(px(18.))
+                                    .overflow_hidden()
+                                    .child(KitInput::new(&input)),
+                            ),
                     );
                 let k_minus = key.clone();
                 let k_plus = key.clone();
@@ -864,6 +877,7 @@ impl ToolPanel {
                             format!("minus-{key}"),
                             &format!("Decrease {}", f.label),
                             "minus",
+                            true,
                             t,
                             cx.listener(move |p, _, window, cx| {
                                 p.step_number(&k_minus, -1.0, window, cx)
@@ -873,6 +887,7 @@ impl ToolPanel {
                             format!("plus-{key}"),
                             &format!("Increase {}", f.label),
                             "plus",
+                            true,
                             t,
                             cx.listener(move |p, _, window, cx| {
                                 p.step_number(&k_plus, 1.0, window, cx)
@@ -927,7 +942,7 @@ impl ToolPanel {
             .flex()
             .flex_col()
             .gap(px(6.))
-            .when(show_label, |d| d.child(Self::label(&f.label, t)))
+            .when(show_label, |d| d.child(caption(&f.label, t)))
             .child(control)
             .when_some(self.form.error(&f.key).map(str::to_string), |d, e| {
                 d.child(
@@ -935,24 +950,15 @@ impl ToolPanel {
                         .flex()
                         .gap(px(6.))
                         .items_start()
-                        .text_size(px(12.))
-                        .line_height(px(16.))
+                        .ramp(ty::SMALL)
                         .text_color(t.bad)
-                        .child(icon("triangle-alert", 13., t.bad))
+                        .child(div().pt(px(1.)).child(icon("triangle-alert", 13., t.bad)))
                         .child(e),
                 )
             })
             .when_some(
                 f.help.clone().filter(|_| self.form.error(&f.key).is_none()),
-                |d, h| {
-                    d.child(
-                        div()
-                            .text_size(px(11.5))
-                            .line_height(px(15.))
-                            .text_color(t.ink3)
-                            .child(h),
-                    )
-                },
+                |d, h| d.child(div().ramp(ty::SMALL).text_color(t.ink3).child(h)),
             )
             .into_any_element()
     }
@@ -968,129 +974,146 @@ impl ToolPanel {
                     .accepts_file(&f.sniffed.mime, &f.sniffed.ext)
             })
             .collect();
-        let cat = rgb8(tint(self.tool.category, t.dark), 1.0);
-        let rows = self.files.iter().enumerate().map(|(i, f)| {
-            div()
-                .id(("file", i))
-                .role(Role::ListItem)
-                .aria_label(format!("{}, {}", f.name, format_bytes(f.bytes)))
-                .flex()
-                .flex_row()
-                .items_center()
-                .gap(px(10.))
-                .h(px(40.))
-                .px(px(10.))
-                .child(
-                    div()
-                        .flex()
-                        .flex_none()
-                        .items_center()
-                        .justify_center()
-                        .size(px(26.))
-                        .rounded(px(6.))
-                        .bg(if bad[i] {
-                            t.bad.opacity(0.14)
-                        } else {
-                            cat.opacity(0.16)
-                        })
-                        .child(icon(
-                            if bad[i] { "triangle-alert" } else { "file" },
-                            14.,
-                            if bad[i] { t.bad } else { cat },
-                        )),
-                )
-                .child(
-                    div()
-                        .flex_1()
-                        .min_w_0()
-                        .overflow_hidden()
-                        .whitespace_nowrap()
-                        .text_ellipsis_middle()
-                        .text_size(px(13.))
-                        .font_weight(FontWeight::MEDIUM)
-                        .text_color(t.ink)
-                        .child(f.name.clone()),
-                )
-                .child(
-                    div()
-                        .flex_none()
-                        .text_size(px(12.))
-                        .text_color(t.ink3)
-                        .child(format!("{}  {}", f.kind_label(), format_bytes(f.bytes))),
-                )
-                .child(icon_button(
-                    format!("remove-{i}"),
-                    &format!("Remove {}", f.name),
-                    "x",
-                    t,
-                    cx.listener(move |p, _, _, cx| p.remove_file(i, cx)),
-                ))
-                .into_any_element()
-        });
+        let last = self.files.len().saturating_sub(1);
+        let rows: Vec<AnyElement> = self
+            .files
+            .iter()
+            .enumerate()
+            .map(|(i, f)| {
+                div()
+                    .id(("file", i))
+                    .role(Role::ListItem)
+                    .aria_label(format!("{}, {}", f.name, format_bytes(f.bytes)))
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap(px(10.))
+                    .min_h(px(44.))
+                    .pl(px(10.))
+                    .pr(px(sp::S))
+                    .when(i != last, |d| d.border_b_1().border_color(t.hair))
+                    .child(if bad[i] {
+                        div()
+                            .flex()
+                            .flex_none()
+                            .items_center()
+                            .justify_center()
+                            .size(px(28.))
+                            .rounded(px(7.))
+                            .bg(t.bad.opacity(0.12))
+                            .child(icon("triangle-alert", 14., t.bad))
+                    } else {
+                        category_tile(file_category(f), file_icon(f), 28., t, t.palette.card)
+                    })
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .overflow_hidden()
+                            .whitespace_nowrap()
+                            .text_ellipsis_middle()
+                            .ramp(ty::BODY)
+                            .font_weight(FontWeight::MEDIUM)
+                            .text_color(t.ink)
+                            .child(f.name.clone()),
+                    )
+                    .child(
+                        div()
+                            .flex_none()
+                            .ramp(ty::SMALL)
+                            .text_color(t.ink2)
+                            .child(format!("{}  {}", f.kind_label(), format_bytes(f.bytes))),
+                    )
+                    .child(icon_button(
+                        format!("remove-{i}"),
+                        &format!("Remove {}", f.name),
+                        "x",
+                        false,
+                        t,
+                        cx.listener(move |p, _, _, cx| p.remove_file(i, cx)),
+                    ))
+                    .into_any_element()
+            })
+            .collect();
         let empty = self.files.is_empty();
         let takes = self.tool.takes_files();
         div()
             .flex()
             .flex_col()
-            .flex_1()
-            .min_w_0()
             .gap(px(10.))
-            .child(Self::label(
-                if takes {
-                    "Files"
-                } else {
-                    "This tool needs no file"
-                },
-                t,
-            ))
+            .child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .justify_between()
+                    .h(px(28.))
+                    .child(caption(
+                        if takes {
+                            "Files"
+                        } else {
+                            "This tool needs no file"
+                        },
+                        t,
+                    ))
+                    .when(takes && !empty, |d| {
+                        d.child(button(
+                            "add-files",
+                            "Add files",
+                            ButtonKind::Ghost,
+                            Some("plus"),
+                            t,
+                            cx.listener(|p, _, _, cx| p.choose_files(cx)),
+                        ))
+                    }),
+            )
             .when(takes, |d| {
                 d.child(
-                    div()
+                    card(t)
                         .id("files-card")
                         .role(Role::List)
                         .aria_label("Files")
-                        .flex()
-                        .flex_col()
-                        .rounded(px(12.))
-                        .bg(t.card)
-                        .border_1()
-                        .border_color(t.hair)
                         .overflow_hidden()
                         .when(empty, |d| {
                             d.child(
                                 div()
-                                    .h(px(96.))
+                                    .py(px(sp::XL))
                                     .flex()
                                     .flex_col()
                                     .items_center()
                                     .justify_center()
-                                    .gap(px(6.))
-                                    .child(icon("upload", 20., t.ink3))
+                                    .gap(px(sp::S))
+                                    .child(icon("upload", 20., t.ink2))
                                     .child(
                                         div()
-                                            .text_size(px(13.))
+                                            .ramp(ty::BODY)
                                             .text_color(t.ink2)
                                             .child("Drop files here"),
-                                    ),
+                                    )
+                                    .child(button(
+                                        "add-files",
+                                        "Choose files",
+                                        ButtonKind::Secondary,
+                                        None,
+                                        t,
+                                        cx.listener(|p, _, _, cx| p.choose_files(cx)),
+                                    )),
                             )
                         })
                         .children(rows),
                 )
-                .child(div().flex().flex_row().gap(px(8.)).child(button(
-                    "add-files",
-                    if empty { "Choose files" } else { "Add files" },
-                    ButtonKind::Secondary,
-                    Some("plus"),
-                    t,
-                    cx.listener(|p, _, _, cx| p.choose_files(cx)),
-                )))
             })
             .into_any_element()
     }
 
     fn header(&self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
         let network = self.tool.manifest.capabilities.network;
-        let privacy = if network {
+        let (status, status_icon) = if network {
+            ("Uses the network", "radio")
+        } else {
+            ("Processed on this computer", "lock")
+        };
+        let full = if network {
             format!(
                 "Uses the network: {}",
                 self.tool
@@ -1101,7 +1124,7 @@ impl ToolPanel {
                     .unwrap_or_default()
             )
         } else {
-            "Processed on this computer. Nothing uploaded.".to_string()
+            "Processed on this computer. Nothing is uploaded.".to_string()
         };
         div()
             .flex()
@@ -1110,55 +1133,56 @@ impl ToolPanel {
             .flex_none()
             .h(px(52.))
             .w_full()
-            .px(px(14.))
-            .gap(px(10.))
-            .child(icon_button(
-                "panel-back",
-                "Back to all tools",
-                "arrow-left",
-                t,
-                cx.listener(|_, _, _, cx| cx.emit(PanelEvent::Close)),
-            ))
+            .px(px(MARGIN))
+            .gap(px(sp::S))
+            .child(
+                icon_button(
+                    "panel-back",
+                    "Back to all tools",
+                    "arrow-left",
+                    false,
+                    t,
+                    cx.listener(|_, _, _, cx| cx.emit(PanelEvent::Close)),
+                )
+                .ml(px(-sp::S)),
+            )
             .child(
                 div()
                     .flex_none()
-                    .text_size(px(13.))
-                    .text_color(t.ink3)
+                    .ramp(ty::BODY)
+                    .text_color(t.ink2)
                     .child(self.tool.category.label()),
             )
-            .child(
-                div()
-                    .flex_none()
-                    .text_size(px(13.))
-                    .text_color(t.ink3)
-                    .child("/"),
-            )
+            .child(icon("chevron-right", 12., t.ink3))
             .child(
                 div()
                     .id("panel-title")
                     .role(Role::Heading)
                     .aria_label(self.tool.name.clone())
-                    .flex_none()
-                    .text_size(px(14.))
+                    .min_w_0()
+                    .overflow_hidden()
+                    .whitespace_nowrap()
+                    .text_ellipsis()
+                    .ramp(ty::HEADLINE)
                     .font_weight(FontWeight::SEMIBOLD)
                     .text_color(t.ink)
                     .child(self.tool.name.clone()),
             )
             .child(div().flex_1())
-            .child(icon(
-                if network { "triangle-alert" } else { "lock" },
-                13.,
-                if network { t.warn } else { t.ink3 },
-            ))
             .child(
                 div()
-                    .min_w_0()
-                    .overflow_hidden()
-                    .whitespace_nowrap()
-                    .text_ellipsis()
-                    .text_size(px(12.))
-                    .text_color(t.ink3)
-                    .child(privacy),
+                    .id("privacy-status")
+                    .flex()
+                    .flex_none()
+                    .flex_row()
+                    .items_center()
+                    .gap(px(6.))
+                    .h(px(28.))
+                    .ramp(ty::SMALL)
+                    .text_color(t.ink2)
+                    .tooltip(tip(&full, &[]))
+                    .child(icon(status_icon, 13., t.ink2))
+                    .child(status),
             )
             .into_any_element()
     }
@@ -1182,23 +1206,22 @@ impl ToolPanel {
             .aria_label("Options")
             .flex()
             .flex_col()
-            .flex_none()
-            .w(px(330.))
-            .h_full()
-            .gap(px(16.))
-            .p(px(16.))
-            .border_l_1()
-            .border_color(t.hair)
+            .size_full()
+            .gap(px(sp::L))
+            .p(px(MARGIN))
             .overflow_y_scroll()
-            .child(Self::label("Options", t))
+            .track_scroll(&self.scroll_options)
+            .child(
+                div()
+                    .h(px(28.))
+                    .flex()
+                    .items_center()
+                    .child(caption("Options", t)),
+            )
             .when(none, |d| {
-                d.child(
-                    div()
-                        .text_size(px(13.))
-                        .line_height(px(18.))
-                        .text_color(t.ink3)
-                        .child("This tool has no options. It runs with the best settings for each file."),
-                )
+                d.child(div().ramp(ty::BODY).text_color(t.ink2).child(
+                    "This tool has no options. It runs with the best settings for each file.",
+                ))
             })
             .children(primary_views)
             .when(n_more > 0, |d| {
@@ -1208,79 +1231,104 @@ impl ToolPanel {
                         .role(Role::DisclosureTriangle)
                         .aria_label("More options")
                         .aria_expanded(more_open)
+                        .focusable()
                         .tab_stop(true)
                         .flex()
                         .flex_row()
                         .items_center()
                         .gap(px(6.))
-                        .cursor_pointer()
-                        .text_size(px(12.5))
+                        .h(px(28.))
+                        .rounded(px(radius::CONTROL))
+                        .ramp(ty::BODY)
                         .font_weight(FontWeight::MEDIUM)
                         .text_color(t.ink2)
+                        .focus_visible(move |s| s.shadow(focus_ring(t)))
                         .on_click(cx.listener(|p, _, _, cx| {
                             p.more_open = !p.more_open;
                             cx.notify();
                         }))
-                        .child(icon(if more_open { "chevron-down" } else { "chevron-right" }, 13., t.ink2))
+                        .child(icon(
+                            if more_open {
+                                "chevron-down"
+                            } else {
+                                "chevron-right"
+                            },
+                            13.,
+                            t.ink2,
+                        ))
                         .child(format!("More options ({n_more})")),
                 )
             })
             .children(more_views);
         let blocker = self.blocker();
         let estimate = self.estimate.clone();
+        let network = self.tool.manifest.capabilities.network;
+        let reason = self
+            .tool
+            .manifest
+            .capabilities
+            .network_reason
+            .clone()
+            .unwrap_or_default();
         let left = div()
+            .id("panel-left")
             .flex()
             .flex_col()
-            .flex_1()
-            .min_w_0()
-            .gap(px(14.))
-            .p(px(16.))
+            .size_full()
+            .gap(px(sp::L))
+            .p(px(MARGIN))
+            .overflow_y_scroll()
+            .track_scroll(&self.scroll_left)
             .child(self.files_card(t, cx))
             .when_some(estimate, |d, e| {
                 d.child(
-                    div()
+                    notice("circle-check", t.good, format!("Expected: {e}"), t)
                         .id("estimate")
                         .role(Role::Status)
-                        .aria_label(format!("Estimate: {e}"))
-                        .flex()
-                        .flex_row()
-                        .items_center()
-                        .gap(px(8.))
-                        .h(px(36.))
-                        .px(px(12.))
-                        .rounded(px(10.))
-                        .bg(t.good.opacity(0.10))
-                        .text_size(px(13.))
-                        .font_weight(FontWeight::MEDIUM)
-                        .text_color(t.good)
-                        .child(icon("circle-check", 14., t.good))
-                        .child(format!("Expected: {e}")),
+                        .aria_label(format!("Estimate: {e}")),
                 )
+            })
+            .when(network, |d| {
+                d.child(note(
+                    "radio",
+                    t.warn,
+                    if reason.is_empty() {
+                        "Uses the network.".to_string()
+                    } else {
+                        format!("Uses the network. {reason}")
+                    },
+                    t,
+                ))
             })
             .when_some(
                 blocker.filter(|_| !self.files.is_empty() || !self.tool.takes_files()),
-                |d, b| {
-                    d.child(
-                        div()
-                            .flex()
-                            .flex_row()
-                            .items_start()
-                            .gap(px(8.))
-                            .text_size(px(12.5))
-                            .line_height(px(17.))
-                            .text_color(t.warn)
-                            .child(icon("triangle-alert", 14., t.warn))
-                            .child(b),
-                    )
-                },
+                |d, b| d.child(notice("triangle-alert", t.warn, b, t)),
             );
         div()
             .flex()
             .flex_row()
             .flex_1()
             .min_h_0()
-            .child(left)
-            .child(options)
+            .child(
+                div()
+                    .relative()
+                    .flex_1()
+                    .min_w_0()
+                    .h_full()
+                    .child(left)
+                    .children(scroll_thumb(&self.scroll_left, t)),
+            )
+            .child(
+                div()
+                    .relative()
+                    .flex_none()
+                    .w(px(OPTIONS_W))
+                    .h_full()
+                    .border_l_1()
+                    .border_color(t.hair)
+                    .child(options)
+                    .children(scroll_thumb(&self.scroll_options, t)),
+            )
             .into_any_element()
     }
 
@@ -1295,23 +1343,22 @@ impl ToolPanel {
                     .items_center()
                     .gap(px(10.))
                     .child(
-                        div()
-                            .id("run")
-                            .opacity(if can_run { 1.0 } else { 0.45 })
-                            .child(button(
-                                "run-button",
-                                "Run",
-                                ButtonKind::Primary,
-                                None,
-                                t,
-                                cx.listener(|p, _, window, cx| p.run(window, cx)),
-                            )),
+                        button_ex(
+                            "run-button",
+                            "Run",
+                            ButtonKind::Primary,
+                            None,
+                            can_run,
+                            t,
+                            cx.listener(|p, _, window, cx| p.run(window, cx)),
+                        )
+                        .aria_keyshortcuts("Enter"),
                     )
-                    .child(keycap("\u{21B5}", false, t))
+                    .child(keycap("\u{21B5}", t))
                     .into_any_element(),
             ),
             Phase::Running { .. } => (
-                "Cancel is instant and leaves nothing half-written.".into(),
+                "Esc cancels. Cancel is instant and leaves nothing half-written.".into(),
                 button(
                     "cancel-button",
                     "Cancel",
@@ -1345,21 +1392,32 @@ impl ToolPanel {
                         t,
                         cx.listener(|p, _, _, cx| p.answer_consent(true, cx)),
                     ))
-                    .child(keycap("\u{21B5}", false, t))
+                    .child(keycap("\u{21B5}", t))
                     .into_any_element(),
             ),
             Phase::Done { done, undone, .. } => {
                 let has_out = !done.outputs.is_empty();
                 let undone_now = undone.is_some();
                 (
-                    "Return opens it. \u{2318}Z undoes.".into(),
+                    format!("Return opens it. {}Z undoes. Esc closes.", cmd()),
                     div()
                         .flex()
                         .flex_row()
                         .items_center()
-                        .gap(px(8.))
+                        .gap(px(sp::S))
                         .when(has_out && !undone_now, |d| {
-                            d.child(button(
+                            d.child(
+                                button(
+                                    "undo",
+                                    "Undo",
+                                    ButtonKind::Ghost,
+                                    Some("undo-2"),
+                                    t,
+                                    cx.listener(|p, _, _, cx| p.undo(cx)),
+                                )
+                                .tooltip(tip("Undo", &[cmd(), "Z"])),
+                            )
+                            .child(button(
                                 "show-folder",
                                 "Show in folder",
                                 ButtonKind::Secondary,
@@ -1367,6 +1425,20 @@ impl ToolPanel {
                                 t,
                                 cx.listener(|p, _, _, cx| p.reveal(cx)),
                             ))
+                            .child(
+                                button(
+                                    "then",
+                                    "Then\u{2026}",
+                                    ButtonKind::Secondary,
+                                    Some("arrow-right"),
+                                    t,
+                                    cx.listener(|p, _, _, cx| p.chain(cx)),
+                                )
+                                .tooltip(tip(
+                                    "Use the result in another tool",
+                                    &[cmd(), "\u{21B5}"],
+                                )),
+                            )
                             .child(button(
                                 "open-result",
                                 "Open",
@@ -1374,22 +1446,6 @@ impl ToolPanel {
                                 Some("external-link"),
                                 t,
                                 cx.listener(|p, _, _, cx| p.open_first(cx)),
-                            ))
-                            .child(button(
-                                "then",
-                                "Then\u{2026}",
-                                ButtonKind::Secondary,
-                                Some("arrow-right"),
-                                t,
-                                cx.listener(|p, _, _, cx| p.chain(cx)),
-                            ))
-                            .child(button(
-                                "undo",
-                                "Undo",
-                                ButtonKind::Ghost,
-                                Some("undo-2"),
-                                t,
-                                cx.listener(|p, _, _, cx| p.undo(cx)),
                             ))
                         })
                         .when(!has_out, |d| {
@@ -1402,30 +1458,24 @@ impl ToolPanel {
                                 cx.listener(|p, _, _, cx| p.copy_report(cx)),
                             ))
                         })
-                        .child(button(
-                            "done",
-                            "Done",
-                            ButtonKind::Secondary,
-                            None,
-                            t,
-                            cx.listener(|_, _, _, cx| cx.emit(PanelEvent::Close)),
-                        ))
+                        .when(undone_now || !has_out, |d| {
+                            d.child(button(
+                                "done",
+                                "Done",
+                                ButtonKind::Primary,
+                                None,
+                                t,
+                                cx.listener(|_, _, _, cx| cx.emit(PanelEvent::Close)),
+                            ))
+                        })
                         .into_any_element(),
                 )
             }
             Phase::Failed(_) => (
-                "Nothing was changed.".into(),
+                "Nothing was changed. Return tries again. Esc closes.".into(),
                 div()
                     .flex()
-                    .gap(px(8.))
-                    .child(button(
-                        "again",
-                        "Try again",
-                        ButtonKind::Primary,
-                        None,
-                        t,
-                        cx.listener(|p, _, window, cx| p.again(window, cx)),
-                    ))
+                    .gap(px(sp::S))
                     .child(button(
                         "close-failed",
                         "Close",
@@ -1433,6 +1483,14 @@ impl ToolPanel {
                         None,
                         t,
                         cx.listener(|_, _, _, cx| cx.emit(PanelEvent::Close)),
+                    ))
+                    .child(button(
+                        "again",
+                        "Try again",
+                        ButtonKind::Primary,
+                        None,
+                        t,
+                        cx.listener(|p, _, window, cx| p.again(window, cx)),
                     ))
                     .into_any_element(),
             ),
@@ -1445,17 +1503,9 @@ impl ToolPanel {
             .flex_none()
             .h(px(56.))
             .w_full()
-            .px(px(16.))
-            .gap(px(12.))
-            .child(
-                div()
-                    .absolute()
-                    .left_0()
-                    .right_0()
-                    .top_0()
-                    .h(px(0.5))
-                    .bg(t.fill8),
-            )
+            .px(px(MARGIN))
+            .gap(px(sp::M))
+            .child(rule(t).absolute().left_0().right_0().top_0())
             .child(
                 div()
                     .flex_1()
@@ -1463,7 +1513,7 @@ impl ToolPanel {
                     .overflow_hidden()
                     .whitespace_nowrap()
                     .text_ellipsis()
-                    .text_size(px(12.))
+                    .ramp(ty::SMALL)
                     .text_color(t.ink3)
                     .child(hint),
             )
@@ -1484,32 +1534,42 @@ impl ToolPanel {
             >= Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS)
             || *fraction > 0.0;
         div()
+            .id("running")
+            .role(Role::Status)
+            .aria_label(format!("Running {}", self.tool.name))
             .flex()
             .flex_col()
             .flex_1()
             .items_center()
             .justify_center()
-            .gap(px(14.))
+            .gap(px(sp::M))
             .px(px(60.))
             .child(
                 div()
-                    .text_size(px(15.))
+                    .ramp(ty::HEADLINE)
                     .font_weight(FontWeight::SEMIBOLD)
                     .text_color(t.ink)
                     .child(format!("Running {}", self.tool.name)),
             )
             .when(show, |d| {
-                d.child(div().w_full().max_w(px(420.)).child(progress_bar(
-                    Some(*fraction),
-                    label,
-                    t,
-                )))
-                .child(
-                    div().text_size(px(12.5)).text_color(t.ink3).child(format!(
-                        "{}  {:.0}%",
-                        label,
-                        fraction * 100.0
-                    )),
+                d.child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(sp::S))
+                        .w_full()
+                        .max_w(px(420.))
+                        .child(progress_bar(Some(*fraction), label, t))
+                        .child(
+                            div()
+                                .flex()
+                                .flex_row()
+                                .justify_between()
+                                .ramp(ty::SMALL)
+                                .text_color(t.ink2)
+                                .child(label.clone())
+                                .child(format!("{:.0}%", fraction * 100.0)),
+                        ),
                 )
             })
             .into_any_element()
@@ -1521,29 +1581,13 @@ impl ToolPanel {
         let Phase::Consent { info, .. } = &self.phase else {
             return div().into_any_element();
         };
-        let row = |label: &str, value: String| {
-            div()
-                .flex()
-                .flex_row()
-                .gap(px(12.))
-                .child(
-                    div()
-                        .flex_none()
-                        .w(px(84.))
-                        .text_size(px(13.))
-                        .text_color(t.ink3)
-                        .child(label.to_string()),
-                )
-                .child(
-                    div()
-                        .flex_1()
-                        .min_w_0()
-                        .text_size(px(13.))
-                        .line_height(px(18.))
-                        .text_color(t.ink)
-                        .child(value),
-                )
-        };
+        let facts = [
+            ("What for", info.purpose.clone()),
+            ("Size", format!("{}, once", info.size_label())),
+            ("From", info.source.clone()),
+            ("License", info.license.clone()),
+        ];
+        let last = facts.len() - 1;
         div()
             .id("consent-sheet")
             .role(Role::Alert)
@@ -1556,50 +1600,84 @@ impl ToolPanel {
             .flex()
             .flex_col()
             .flex_1()
+            .min_h_0()
             .items_center()
             .justify_center()
+            .py(px(sp::L))
             .px(px(40.))
             .child(
                 div()
                     .flex()
                     .flex_col()
-                    .gap(px(14.))
+                    .gap(px(sp::M))
                     .w_full()
-                    .max_w(px(440.))
-                    .child(icon("triangle-alert", 22., t.warn))
-                    .child(
-                        div()
-                            .text_size(px(16.))
-                            .line_height(px(22.))
-                            .font_weight(FontWeight::SEMIBOLD)
-                            .text_color(t.ink)
-                            .child(format!("Download the {}?", info.name)),
-                    )
-                    .child(
-                        div()
-                            .text_size(px(13.))
-                            .line_height(px(18.))
-                            .text_color(t.ink2)
-                            .child(format!(
-                                "{} needs it to work. It is fetched once and kept on this computer.",
-                                self.tool.name
-                            )),
-                    )
+                    .max_w(px(460.))
                     .child(
                         div()
                             .flex()
-                            .flex_col()
-                            .gap(px(6.))
-                            .child(row("What for", info.purpose.clone()))
-                            .child(row("Size", format!("{}, once", info.size_label())))
-                            .child(row("From", info.source.clone()))
-                            .child(row("License", info.license.clone())),
+                            .flex_row()
+                            .items_center()
+                            .gap(px(sp::M))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_none()
+                                    .items_center()
+                                    .justify_center()
+                                    .size(px(36.))
+                                    .rounded(px(9.))
+                                    .bg(t.accent_text.opacity(0.12))
+                                    .child(icon("shield-check", 18., t.accent_text)),
+                            )
+                            .child(
+                                div()
+                                    .flex_1()
+                                    .min_w_0()
+                                    .ramp(ty::TITLE)
+                                    .font_weight(FontWeight::SEMIBOLD)
+                                    .text_color(t.ink)
+                                    .child(format!("Download the {}?", info.name)),
+                            ),
                     )
+                    .child(div().ramp(ty::BODY).text_color(t.ink2).child(format!(
+                        "{} needs it to work. It is fetched once and kept on this computer.",
+                        self.tool.name
+                    )))
+                    .child(card(t).children(facts.into_iter().enumerate().map(
+                        |(n, (label, value))| {
+                            div()
+                                .flex()
+                                .flex_row()
+                                .gap(px(sp::M))
+                                .px(px(14.))
+                                .py(px(sp::S))
+                                .when(n != last, |d| d.border_b_1().border_color(t.hair))
+                                .child(
+                                    div()
+                                        .flex_none()
+                                        .w(px(76.))
+                                        .ramp(ty::BODY)
+                                        .text_color(t.ink2)
+                                        .child(label),
+                                )
+                                .child(
+                                    div()
+                                        .flex_1()
+                                        .min_w_0()
+                                        .ramp(ty::BODY)
+                                        .text_color(t.ink)
+                                        .child(value),
+                                )
+                        },
+                    )))
                     .child(
                         div()
-                            .text_size(px(12.5))
-                            .line_height(px(17.))
-                            .text_color(t.ink3)
+                            .flex()
+                            .flex_row()
+                            .gap(px(sp::S))
+                            .ramp(ty::SMALL)
+                            .text_color(t.ink2)
+                            .child(div().pt(px(1.)).child(icon("lock", 13., t.ink2)))
                             .child(
                                 "None of your files are sent anywhere. You can remove it later from Modules.",
                             ),
@@ -1620,51 +1698,55 @@ impl ToolPanel {
         let inputs = report.request.inputs.len();
         let headline = done.headline(inputs);
         let tile = |label: &str, value: String, accent: bool| {
-            div()
-                .flex()
-                .flex_col()
+            card(t)
                 .flex_1()
-                .gap(px(4.))
+                .gap(px(sp::XS))
                 .p(px(14.))
-                .rounded(px(12.))
-                .bg(t.card)
-                .border_1()
-                .border_color(t.hair)
                 .child(
                     div()
-                        .text_size(px(12.))
-                        .text_color(t.ink3)
+                        .ramp(ty::SMALL)
+                        .text_color(t.ink2)
                         .child(label.to_string()),
                 )
                 .child(
                     div()
-                        .text_size(px(22.))
-                        .line_height(px(26.))
+                        .ramp(ty::DISPLAY)
                         .font_weight(FontWeight::SEMIBOLD)
                         .text_color(if accent { t.good } else { t.ink })
                         .child(value),
                 )
         };
-        div()
+        let outputs: Vec<PathBuf> = done.outputs.iter().take(5).cloned().collect();
+        let last = outputs.len().saturating_sub(1);
+        let card_body = div()
             .id("result-card")
             .role(Role::Group)
             .aria_label(format!("Result: {headline}"))
             .flex()
             .flex_col()
-            .flex_1()
-            .min_h_0()
-            .gap(px(14.))
-            .p(px(20.))
+            .size_full()
+            .gap(px(sp::L))
+            .p(px(MARGIN))
+            .overflow_y_scroll()
+            .track_scroll(&self.scroll_result)
             .child(
                 div()
                     .flex()
                     .flex_row()
                     .items_center()
                     .gap(px(10.))
-                    .child(icon("circle-check", 20., t.good))
+                    .child(icon(
+                        if undone.is_some() {
+                            "undo-2"
+                        } else {
+                            "circle-check"
+                        },
+                        20.,
+                        if undone.is_some() { t.ink2 } else { t.good },
+                    ))
                     .child(
                         div()
-                            .text_size(px(17.))
+                            .ramp(ty::TITLE)
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(t.ink)
                             .child(match undone {
@@ -1678,8 +1760,10 @@ impl ToolPanel {
                     div()
                         .flex()
                         .flex_row()
-                        .gap(px(12.))
+                        .items_center()
+                        .gap(px(sp::M))
                         .child(tile("Before", format_bytes(done.before_bytes), false))
+                        .child(icon("arrow-right", 16., t.ink3))
                         .child(tile(
                             "After",
                             format_bytes(after),
@@ -1690,8 +1774,7 @@ impl ToolPanel {
             .when_some(undone.clone(), |d, u| {
                 d.child(
                     div()
-                        .text_size(px(13.))
-                        .line_height(px(18.))
+                        .ramp(ty::BODY)
                         .text_color(t.ink2)
                         .child(if u.failed.is_empty() {
                             "The new files went to the Trash. Your originals were never touched."
@@ -1706,42 +1789,62 @@ impl ToolPanel {
                     .iter()
                     .filter(|n| !n.contains(&headline) && !n.contains(": wrote "))
                     .take(6)
-                    .map(|n| {
-                        div()
-                            .text_size(px(12.5))
-                            .line_height(px(17.))
-                            .text_color(t.ink2)
-                            .child(n.clone())
-                    }),
+                    .map(|n| div().ramp(ty::BODY).text_color(t.ink2).child(n.clone())),
             )
-            .when(!done.outputs.is_empty() && undone.is_none(), |d| {
-                d.child(Self::label("Written next to the original", t))
-                    .children(done.outputs.iter().take(5).map(|p| {
-                        div()
-                            .whitespace_nowrap()
-                            .overflow_hidden()
-                            .text_ellipsis_middle()
-                            .text_size(px(12.5))
-                            .text_color(t.ink)
-                            .child(
-                                p.file_name()
-                                    .map(|n| n.to_string_lossy().into_owned())
-                                    .unwrap_or_default(),
-                            )
-                    }))
+            .when(!outputs.is_empty() && undone.is_none(), |d| {
+                d.child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .gap(px(sp::S))
+                        .child(caption("Written next to the original", t))
+                        .child(card(t).children(outputs.iter().enumerate().map(|(n, p)| {
+                            let name = p
+                                .file_name()
+                                .map(|n| n.to_string_lossy().into_owned())
+                                .unwrap_or_default();
+                            div()
+                                .flex()
+                                .flex_row()
+                                .items_center()
+                                .gap(px(10.))
+                                .min_h(px(40.))
+                                .px(px(14.))
+                                .when(n != last, |d| d.border_b_1().border_color(t.hair))
+                                .child(icon("file", 14., t.ink2))
+                                .child(
+                                    div()
+                                        .flex_1()
+                                        .min_w_0()
+                                        .overflow_hidden()
+                                        .whitespace_nowrap()
+                                        .text_ellipsis_middle()
+                                        .ramp(ty::BODY)
+                                        .text_color(t.ink)
+                                        .child(name),
+                                )
+                        }))),
+                )
             })
             .when(done.outputs.len() > 5, |d| {
                 d.child(
                     div()
-                        .text_size(px(12.))
-                        .text_color(t.ink3)
+                        .ramp(ty::SMALL)
+                        .text_color(t.ink2)
                         .child(format!("and {} more", done.outputs.len() - 5)),
                 )
             })
-            .child(div().text_size(px(12.)).text_color(t.ink3).child(format!(
+            .child(div().ramp(ty::SMALL).text_color(t.ink3).child(format!(
                 "Done in {:.1} s. Processed on this computer.",
                 report.elapsed.as_secs_f32()
-            )))
+            )));
+        div()
+            .relative()
+            .flex()
+            .flex_1()
+            .min_h_0()
+            .child(card_body)
+            .children(scroll_thumb(&self.scroll_result, t))
             .into_any_element()
     }
 
@@ -1758,22 +1861,39 @@ impl ToolPanel {
             .flex_1()
             .items_center()
             .justify_center()
-            .gap(px(10.))
+            .gap(px(sp::S))
             .px(px(50.))
-            .child(icon("triangle-alert", 26., t.warn))
             .child(
                 div()
-                    .text_size(px(15.))
-                    .line_height(px(20.))
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .size(px(44.))
+                    .rounded(px(11.))
+                    .bg(t.warn.opacity(0.12))
+                    .child(icon("triangle-alert", 22., t.warn)),
+            )
+            .child(
+                div()
+                    .pt(px(sp::XS))
+                    .ramp(ty::TITLE)
                     .font_weight(FontWeight::SEMIBOLD)
+                    .text_center()
+                    .text_color(t.ink)
+                    .child("That did not work"),
+            )
+            .child(
+                div()
+                    .max_w(px(480.))
+                    .ramp(ty::BODY)
                     .text_center()
                     .text_color(t.ink)
                     .child(f.message.clone()),
             )
             .child(
                 div()
-                    .text_size(px(13.))
-                    .line_height(px(18.))
+                    .max_w(px(480.))
+                    .ramp(ty::BODY)
                     .text_center()
                     .text_color(t.ink2)
                     .child(f.next_step.clone()),
@@ -1800,6 +1920,17 @@ impl Render for ToolPanel {
             .key_context("ToolPanel")
             .track_focus(&self.focus)
             .on_key_down(cx.listener(|p, ev: &KeyDownEvent, window, cx| p.on_key(ev, window, cx)))
+            .on_action(cx.listener(|p, _: &gpui_base::input::Undo, _, cx| p.undo(cx)))
+            .on_action(
+                cx.listener(|_, _: &super::live::FocusNextControl, window, cx| {
+                    window.focus_next(cx)
+                }),
+            )
+            .on_action(
+                cx.listener(|_, _: &super::live::FocusPrevControl, window, cx| {
+                    window.focus_prev(cx)
+                }),
+            )
             .on_drop::<ExternalPaths>(cx.listener(|p, paths: &ExternalPaths, _, cx| {
                 if p.is_options() {
                     p.add_files(paths.paths().to_vec(), cx);
@@ -1810,7 +1941,7 @@ impl Render for ToolPanel {
             .flex_col()
             .text_color(t.ink)
             .child(header)
-            .child(div().h(px(0.5)).w_full().bg(t.fill8))
+            .child(rule(t))
             .child(body)
             .child(footer)
     }

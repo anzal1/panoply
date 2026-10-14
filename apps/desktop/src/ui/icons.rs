@@ -6,6 +6,26 @@ use gpui::{AssetSource, SharedString};
 
 use crate::icons_gen::ICONS;
 
+/// Hand-drawn glyphs: the Windows caption buttons (10 by 10, 1 px strokes, as Fluent draws them).
+const EXTRA: &[(&str, &str)] = &[
+    (
+        "win-min",
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1"><path d="M0 5.5h10"/></svg>"#,
+    ),
+    (
+        "win-max",
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="0.5" width="9" height="9" rx="1.5"/></svg>"#,
+    ),
+    (
+        "win-restore",
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1"><rect x="0.5" y="2.5" width="7" height="7" rx="1.25"/><path d="M2.5 2.5v-1a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-1"/></svg>"#,
+    ),
+    (
+        "win-close",
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1"><path d="M0.5 0.5l9 9M9.5 0.5l-9 9"/></svg>"#,
+    ),
+];
+
 /// The app's asset source: `icons/<name>.svg`.
 pub(crate) struct Icons;
 
@@ -15,13 +35,14 @@ impl AssetSource for Icons {
             .strip_prefix("icons/")
             .and_then(|p| p.strip_suffix(".svg"));
         Ok(name
-            .and_then(|n| ICONS.iter().find(|(k, _)| *k == n))
+            .and_then(|n| ICONS.iter().chain(EXTRA).find(|(k, _)| *k == n))
             .map(|(_, s)| Cow::Borrowed(s.as_bytes())))
     }
 
     fn list(&self, _path: &str) -> anyhow::Result<Vec<SharedString>> {
         Ok(ICONS
             .iter()
+            .chain(EXTRA)
             .map(|(k, _)| SharedString::from(format!("icons/{k}.svg")))
             .collect())
     }

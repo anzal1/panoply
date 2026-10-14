@@ -3,6 +3,7 @@
 
 pub(crate) mod app;
 pub(crate) mod bar;
+pub(crate) mod chrome;
 pub(crate) mod icons;
 pub(crate) mod live;
 pub(crate) mod panel;
@@ -17,6 +18,8 @@ use crate::history::{Entry, History};
 /// The recent jobs, shared by the bar and the app window so both update when a job finishes.
 pub(crate) struct Recents {
     pub entries: Vec<Entry>,
+    /// False until the history file has been read, so a page can show a placeholder, not "empty".
+    pub loaded: bool,
 }
 
 /// What every view needs: the tools, the history, and the live recents.

@@ -10,8 +10,11 @@ use gpui::*;
 use gpui_base::input::{Input as KitInput, InputEvent, InputState};
 
 use super::panel::{PanelEvent, ToolPanel};
-use super::theme::{Theme, col, is_dark, rgb8, tint};
-use super::widgets::{chip, editor_style, icon, keycap, snap};
+use super::theme::{HIT, Theme, is_dark, radius, sp, ty};
+use super::widgets::{
+    Ramp, brand_mark, category_tile, chip, cmd, editor_style, file_category, file_icon,
+    focus_border, icon, keycap, snap,
+};
 use super::{Hub, Recents};
 use crate::platform::{self, Panel};
 use crate::profile::{FileProfile, expand_paths, files_label};
@@ -20,7 +23,7 @@ use crate::units::{format_bytes, now_secs};
 
 pub(crate) const WIDTH: f32 = 720.0;
 pub(crate) const HEIGHT: f32 = 460.0;
-const RADIUS: f32 = 20.0;
+const RADIUS: f32 = radius::BAR;
 const SEARCH_ROW: f32 = 56.0;
 const FOOTER: f32 = 40.0;
 const LIST_TOP: f32 = 8.0;
@@ -516,7 +519,7 @@ impl Bar {
             "p" if m.control => self.move_sel(-1, cx),
             "enter" => self.activate(window, cx),
             "tab" => self.activate_with(false, window, cx),
-            "k" if m.platform => self.activate_with(false, window, cx),
+            "k" if m.secondary() => self.activate_with(false, window, cx),
             _ => {}
         }
     }
@@ -717,7 +720,6 @@ impl Bar {
         t: Theme,
         cx: &mut Context<Self>,
     ) -> AnyElement {
-        let tc = tint(r.category, t.dark);
         let selected = ord == self.selected;
         let head = div()
             .flex()
@@ -726,29 +728,24 @@ impl Bar {
             .flex_none()
             .h(px(ROW))
             .w_full()
-            .child(
-                div()
-                    .flex()
-                    .flex_none()
-                    .items_center()
-                    .justify_center()
-                    .size(px(28.))
-                    .rounded(px(7.))
-                    .bg(rgb8(tc, 0.16))
-                    .child(icon(r.icon, 15., rgb8(tc, 1.0))),
-            )
-            .child(div().flex_none().w(px(12.)))
+            .child(category_tile(
+                r.category,
+                r.icon,
+                28.,
+                t,
+                t.palette.bar_over_mid(),
+            ))
+            .child(div().flex_none().w(px(sp::M)))
             .child(
                 div()
                     .flex_none()
                     .whitespace_nowrap()
-                    .text_size(px(13.5))
-                    .line_height(px(18.))
+                    .ramp(ty::BODY)
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(t.ink)
                     .child(Self::highlighted(&r.title, &r.matched)),
             )
-            .child(div().flex_none().w(px(8.)))
+            .child(div().flex_none().w(px(sp::S)))
             .child(
                 div()
                     .flex_1()
@@ -756,19 +753,17 @@ impl Bar {
                     .overflow_hidden()
                     .whitespace_nowrap()
                     .text_ellipsis()
-                    .text_size(px(12.))
-                    .line_height(px(16.))
+                    .ramp(ty::SMALL)
                     .text_color(t.ink2)
                     .child(r.subtitle.clone()),
             )
-            .child(div().flex_none().w(px(12.)))
+            .child(div().flex_none().w(px(sp::M)))
             .child(if selected {
-                keycap("\u{21B5}", false, t).into_any_element()
+                keycap("\u{21B5}", t).into_any_element()
             } else {
                 div()
                     .flex_none()
-                    .text_size(px(11.))
-                    .line_height(px(14.))
+                    .ramp(ty::CAPTION)
                     .text_color(t.ink3)
                     .child(r.trailing.clone())
                     .into_any_element()
@@ -781,9 +776,9 @@ impl Bar {
                 .flex_none()
                 .h(px(CHIP_ROW))
                 .w_full()
-                .pl(px(40.))
-                .pb(px(6.))
-                .gap(px(8.))
+                .pl(px(28. + sp::M))
+                .pb(px(sp::S))
+                .gap(px(sp::S))
                 .child(
                     div()
                         .flex()
@@ -791,7 +786,7 @@ impl Bar {
                         .flex_1()
                         .min_w_0()
                         .overflow_hidden()
-                        .gap(px(8.))
+                        .gap(px(sp::S))
                         .children(
                             r.chips
                                 .iter()
@@ -802,7 +797,7 @@ impl Bar {
                     d.child(
                         div()
                             .flex_none()
-                            .text_size(px(12.5))
+                            .ramp(ty::SMALL)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(t.good)
                             .child(e),
@@ -927,40 +922,40 @@ impl Render for Bar {
             .min_w_0()
             .h(px(24.))
             .overflow_hidden()
-            .text_size(px(20.))
-            .line_height(px(24.))
+            .ramp(ty::INPUT)
             .text_color(t.ink)
             .child(KitInput::new(&self.input));
 
-        let file_chip = (!self.files.is_empty()).then(|| {
+        let file_chip = self.files.first().map(|first| {
             let total: u64 = self.files.iter().map(|f| f.bytes).sum();
+            let category = file_category(first);
             div()
                 .flex()
                 .flex_none()
                 .items_center()
-                .gap(px(8.))
-                .h(px(32.))
-                .max_w(px(260.))
-                .pl(px(6.))
-                .pr(px(8.))
-                .ml(px(12.))
-                .mr(px(16.))
-                .rounded(px(8.))
+                .gap(px(sp::S))
+                .h(px(36.))
+                .max_w(px(280.))
+                .pl(px(sp::S))
+                .pr(px(2.))
+                .ml(px(sp::M))
+                .mr(px(sp::M))
+                .rounded(px(radius::ROW))
                 .bg(t.fill8)
-                .child(
-                    div()
-                        .flex_none()
-                        .size(px(20.))
-                        .rounded(px(5.))
-                        .bg(rgb8(tint(crate::catalog::Category::Images, t.dark), 0.35)),
-                )
+                .child(category_tile(
+                    category,
+                    file_icon(first),
+                    24.,
+                    t,
+                    t.palette.bar_over_mid(),
+                ))
                 .child(
                     div()
                         .min_w_0()
                         .overflow_hidden()
                         .whitespace_nowrap()
                         .text_ellipsis_middle()
-                        .text_size(px(12.5))
+                        .ramp(ty::BODY)
                         .font_weight(FontWeight::MEDIUM)
                         .text_color(t.ink)
                         .child(files_label(&self.files)),
@@ -968,24 +963,24 @@ impl Render for Bar {
                 .child(
                     div()
                         .flex_none()
-                        .text_size(px(12.))
-                        .text_color(t.ink3)
+                        .ramp(ty::SMALL)
+                        .text_color(t.ink2)
                         .child(format_bytes(total)),
                 )
                 .child(
-                    div()
-                        .id("clear-file")
+                    focus_border(div().id("clear-file"), t)
                         .role(Role::Button)
                         .aria_label("Remove dropped files")
                         .flex()
                         .flex_none()
                         .items_center()
                         .justify_center()
-                        .size(px(16.))
-                        .rounded_full()
-                        .cursor_pointer()
+                        .size(px(HIT))
+                        .rounded(px(radius::CONTROL))
+                        .hover(move |s| s.bg(t.fill12))
+                        .tooltip(super::widgets::tip("Remove the files", &[]))
                         .on_click(cx.listener(|bar, _, _, cx| bar.set_files(Vec::new(), cx)))
-                        .child(icon("x", 9., t.ink2)),
+                        .child(icon("x", 12., t.ink2)),
                 )
         });
 
@@ -999,7 +994,7 @@ impl Render for Bar {
             .w_full()
             .pl(px(20.))
             .child(icon("search", 18., t.ink2))
-            .child(div().flex_none().w(px(12.)))
+            .child(div().flex_none().w(px(sp::M)))
             .child(field)
             .when_some(file_chip, |d, c| d.child(c))
             .when(self.files.is_empty(), |d| {
@@ -1012,7 +1007,7 @@ impl Render for Bar {
                     .right_0()
                     .bottom_0()
                     .h(px(0.5))
-                    .bg(t.fill8),
+                    .bg(t.hair),
             );
 
         // ---- list ----
@@ -1036,8 +1031,7 @@ impl Render for Bar {
                             .pb(px(6.))
                             .flex()
                             .items_end()
-                            .text_size(px(11.))
-                            .line_height(px(14.))
+                            .ramp(ty::CAPTION)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(t.ink3)
                             .child(title.clone())
@@ -1055,51 +1049,65 @@ impl Render for Bar {
                 }
             }
         }
-        let w = if t.dark { 1.0 } else { 0.0 };
         let pill_h = self.list.row_hs.get(self.selected).copied().unwrap_or(ROW);
+        let base = if t.dark { 0.16 } else { 0.10 };
         let pill = div()
             .absolute()
             .left(px(8.))
             .top(px(pill_y))
             .w(px(WIDTH - 16.))
             .h(px(pill_h))
-            .rounded(px(10.))
-            .bg(col(w, w, w, 0.85 * (0.09 + 0.11 * flash_k)));
+            .rounded(px(radius::ROW))
+            .bg(t.palette.accent_text.hsla(base + 0.10 * flash_k));
 
         let dragging = self.drag_active;
         let trimmed = self.query.trim().to_string();
-        let list_body: AnyElement =
-            if self.results.is_empty() {
-                div()
-                    .size_full()
-                    .flex()
-                    .flex_col()
-                    .items_center()
-                    .justify_center()
-                    .gap(px(6.))
-                    .pb(px(8.))
-                    .child(div().text_size(px(13.)).text_color(t.ink2).child(
-                        if trimmed.is_empty() {
+        let list_body: AnyElement = if self.results.is_empty() {
+            div()
+                .size_full()
+                .flex()
+                .flex_col()
+                .items_center()
+                .justify_center()
+                .gap(px(sp::S))
+                .pb(px(sp::S))
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .size(px(40.))
+                        .rounded(px(10.))
+                        .bg(t.fill8)
+                        .child(icon("search", 18., t.ink2)),
+                )
+                .child(
+                    div()
+                        .pt(px(sp::XS))
+                        .ramp(ty::BODY)
+                        .font_weight(FontWeight::MEDIUM)
+                        .text_color(t.ink)
+                        .child(if trimmed.is_empty() {
                             "No tools".to_string()
                         } else {
                             format!("No tools match \u{201C}{trimmed}\u{201D}")
-                        },
-                    ))
-                    .child(div().text_size(px(12.)).text_color(t.ink3).child(
-                        "Try \u{201C}compress\u{201D}, \u{201C}heic to jpg\u{201D} or drop a file",
-                    ))
-                    .into_any_element()
-            } else {
-                div()
-                    .absolute()
-                    .top(px(-scroll))
-                    .left_0()
-                    .w(px(WIDTH))
-                    .h(px(self.list.content_height))
-                    .child(pill)
-                    .children(items)
-                    .into_any_element()
-            };
+                        }),
+                )
+                .child(div().ramp(ty::SMALL).text_color(t.ink2).child(
+                    "Try \u{201C}compress\u{201D} or \u{201C}heic to jpg\u{201D}, or drop a file",
+                ))
+                .into_any_element()
+        } else {
+            div()
+                .absolute()
+                .top(px(-scroll))
+                .left_0()
+                .w(px(WIDTH))
+                .h(px(self.list.content_height))
+                .child(pill)
+                .children(items)
+                .into_any_element()
+        };
         let list = div()
             .id("results")
             .role(Role::ListBox)
@@ -1125,6 +1133,12 @@ impl Render for Bar {
                     .opacity(if dragging { 0.18 } else { 1.0 })
                     .child(list_body),
             )
+            .children(super::widgets::thumb(
+                scroll,
+                VIEWPORT,
+                self.list.content_height,
+                t,
+            ))
             .when(dragging, |d| {
                 d.child(
                     div()
@@ -1133,9 +1147,11 @@ impl Render for Bar {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .text_size(px(13.))
+                        .gap(px(sp::S))
+                        .ramp(ty::BODY)
                         .font_weight(FontWeight::MEDIUM)
-                        .text_color(t.ink2)
+                        .text_color(t.ink)
+                        .child(icon("upload", 18., t.accent_text))
                         .child("Drop to see the tools for this file"),
                 )
             });
@@ -1152,18 +1168,18 @@ impl Render for Bar {
                 .or_else(|| self.results.understood.clone())
                 .or_else(|| self.results.footer.clone())
                 .unwrap_or_else(|| "Everything runs on this computer".into());
-            let keys = if has_chips {
+            let c = cmd();
+            let keys = if self.results.is_empty() {
+                Vec::new()
+            } else if has_chips {
                 vec![("Edit option", vec!["\u{21E5}"]), ("Run", vec!["\u{21B5}"])]
             } else if !self.files.is_empty() {
                 vec![
                     ("Run", vec!["\u{21B5}"]),
-                    ("Chain tools", vec!["\u{2318}", "\u{21B5}"]),
+                    ("Chain tools", vec![c, "\u{21B5}"]),
                 ]
             } else {
-                vec![
-                    ("Open", vec!["\u{21B5}"]),
-                    ("Actions", vec!["\u{2318}", "K"]),
-                ]
+                vec![("Open", vec!["\u{21B5}"]), ("Actions", vec![c, "K"])]
             };
             (left, keys)
         };
@@ -1185,27 +1201,28 @@ impl Render for Bar {
                     .right_0()
                     .top_0()
                     .h(px(0.5))
-                    .bg(t.fill8),
+                    .bg(t.hair),
             )
             .when(show_brand, |d| {
-                d.child(brand_mark(t))
-                    .child(div().flex_none().w(px(8.)))
+                d.child(brand_mark(14., t))
+                    .child(div().flex_none().w(px(sp::S)))
                     .child(
                         div()
                             .flex_none()
-                            .text_size(px(12.5))
+                            .ramp(ty::SMALL)
+                            .font_weight(FontWeight::MEDIUM)
                             .text_color(t.ink2)
                             .child("Panoply"),
                     )
-                    .child(div().flex_none().w(px(12.)))
+                    .child(div().flex_none().w(px(sp::M)))
             })
             .child(
                 div()
                     .min_w_0()
                     .overflow_hidden()
                     .whitespace_nowrap()
-                    .text_size(px(12.))
-                    .line_height(px(16.))
+                    .text_ellipsis()
+                    .ramp(ty::SMALL)
                     .text_color(
                         if self.results.understood.is_some() && self.footer_msg.is_none() {
                             t.ink2
@@ -1215,20 +1232,20 @@ impl Render for Bar {
                     )
                     .child(left),
             )
-            .child(div().flex_1().min_w(px(16.)))
+            .child(div().flex_1().min_w(px(sp::L)))
             .child(
                 div()
                     .flex()
                     .flex_row()
                     .items_center()
-                    .gap(px(16.))
+                    .gap(px(sp::M))
                     .children(keys.into_iter().enumerate().map(|(i, (label, caps))| {
-                        let pressed = false;
                         let this = cx.entity().downgrade();
-                        div()
-                            .id(("footer-key", i))
+                        let this2 = cx.entity().downgrade();
+                        focus_border(div().id(("footer-key", i)), t)
                             .role(Role::Button)
                             .aria_label(label.to_string())
+                            .tab_stop(true)
                             .on_a11y_action(AccessibleAction::Click, move |_, window, cx| {
                                 this.update(cx, |bar, cx| match label {
                                     "Actions" | "Edit option" => {
@@ -1238,26 +1255,33 @@ impl Render for Bar {
                                 })
                                 .ok();
                             })
+                            .on_click(move |_, window, cx| {
+                                this2
+                                    .update(cx, |bar, cx| match label {
+                                        "Actions" | "Edit option" => {
+                                            bar.activate_with(false, window, cx)
+                                        }
+                                        _ => bar.activate(window, cx),
+                                    })
+                                    .ok();
+                            })
                             .flex()
                             .items_center()
-                            .gap(px(8.))
+                            .gap(px(sp::S))
+                            .h(px(HIT))
+                            .px(px(sp::S))
+                            .rounded(px(radius::CONTROL))
+                            .hover(move |s| s.bg(t.fill8))
+                            .child(div().ramp(ty::SMALL).text_color(t.ink2).child(label))
                             .child(
-                                div()
-                                    .text_size(px(12.))
-                                    .line_height(px(16.))
-                                    .text_color(t.ink2)
-                                    .child(label),
-                            )
-                            .child(
-                                div().flex().gap(px(4.)).children(
+                                div().flex().gap(px(sp::XS)).children(
                                     caps.into_iter()
-                                        .map(move |c| keycap(c, pressed, t).into_any_element()),
+                                        .map(move |c| keycap(c, t).into_any_element()),
                                 ),
                             )
                     })),
             );
 
-        let (ar, ag, ab) = platform::accent_rgb();
         if let Some(panel) = self.panel.clone() {
             return div()
                 .id("bar")
@@ -1288,6 +1312,17 @@ impl Render for Bar {
             .id("bar")
             .track_focus(&self.focus)
             .key_context("Bar")
+            .on_action(
+                cx.listener(|bar, _: &super::live::FocusNextControl, window, cx| {
+                    bar.activate_with(false, window, cx)
+                }),
+            )
+            .on_action(
+                cx.listener(|bar, _: &super::live::FocusPrevControl, window, cx| {
+                    bar.move_sel(-1, cx);
+                    let _ = window;
+                }),
+            )
             .on_key_down(
                 cx.listener(|bar, ev: &KeyDownEvent, window, cx| bar.on_key(ev, window, cx)),
             )
@@ -1329,28 +1364,9 @@ impl Render for Bar {
                         .inset_0()
                         .rounded(px(RADIUS))
                         .border(px(2.))
-                        .border_color(col(ar, ag, ab, 0.4)),
+                        .border_color(t.accent_text),
                 )
             })
             .into_any_element()
     }
-}
-
-/// The small four-square mark at the bottom left.
-pub(crate) fn brand_mark(t: Theme) -> impl IntoElement {
-    let sq = |c: Hsla| div().size(px(7.)).rounded(px(2.)).bg(c);
-    let blue = t.accent;
-    let ink = col(
-        if t.dark { 1.0 } else { 0.0 },
-        if t.dark { 1.0 } else { 0.0 },
-        if t.dark { 1.0 } else { 0.0 },
-        0.7,
-    );
-    div()
-        .flex()
-        .flex_none()
-        .flex_col()
-        .gap(px(2.))
-        .child(div().flex().gap(px(2.)).child(sq(blue)).child(sq(blue)))
-        .child(div().flex().gap(px(2.)).child(sq(ink)).child(sq(ink)))
 }

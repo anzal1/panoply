@@ -61,21 +61,153 @@ impl Panel {
     }
 }
 
-/// System Reduce Motion setting. `PANOPLY_REDUCE_MOTION=1` forces it; GNOME is asked through gsettings.
+/// Whether a boolean system setting is on, read off the UI thread. The answer is cached and
+/// refreshed every few seconds by a small background thread, so asking costs an atomic load.
+#[cfg(target_os = "linux")]
+fn gnome_flag(
+    slot: &'static std::sync::atomic::AtomicU8,
+    schema: &'static str,
+    key: &'static str,
+    on: &'static str,
+) -> bool {
+    use std::sync::atomic::Ordering;
+    static STARTED: std::sync::Once = std::sync::Once::new();
+    static SLOTS: std::sync::Mutex<
+        Vec<(
+            &'static std::sync::atomic::AtomicU8,
+            &'static str,
+            &'static str,
+            &'static str,
+        )>,
+    > = std::sync::Mutex::new(Vec::new());
+    if let Ok(mut s) = SLOTS.lock()
+        && !s.iter().any(|(a, ..)| std::ptr::eq(*a, slot))
+    {
+        s.push((slot, schema, key, on));
+    }
+    STARTED.call_once(|| {
+        std::thread::spawn(|| {
+            loop {
+                let list = SLOTS.lock().map(|s| s.clone()).unwrap_or_default();
+                for (slot, schema, key, on) in list {
+                    let v = std::process::Command::new("gsettings")
+                        .args(["get", schema, key])
+                        .output()
+                        .ok()
+                        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == on);
+                    if let Some(v) = v {
+                        slot.store(1 + u8::from(v), Ordering::Relaxed);
+                    }
+                }
+                std::thread::sleep(std::time::Duration::from_secs(4));
+            }
+        });
+    });
+    slot.load(Ordering::Relaxed) == 2
+}
+
+#[cfg(windows)]
+mod win {
+    use std::ffi::c_void;
+
+    #[repr(C)]
+    struct HighContrastW {
+        cb_size: u32,
+        flags: u32,
+        default_scheme: *mut u16,
+    }
+
+    #[link(name = "user32")]
+    unsafe extern "system" {
+        fn SystemParametersInfoW(action: u32, param: u32, pv: *mut c_void, win_ini: u32) -> i32;
+    }
+
+    const SPI_GETHIGHCONTRAST: u32 = 0x0042;
+    const SPI_GETCLIENTAREAANIMATION: u32 = 0x1042;
+    const HCF_HIGHCONTRASTON: u32 = 0x1;
+
+    /// `SPI_GETCLIENTAREAANIMATION` is false when animations are off.
+    pub(super) fn animations_off() -> bool {
+        let mut on: i32 = 1;
+        let ok = unsafe {
+            SystemParametersInfoW(
+                SPI_GETCLIENTAREAANIMATION,
+                0,
+                (&mut on as *mut i32).cast(),
+                0,
+            )
+        };
+        ok != 0 && on == 0
+    }
+
+    pub(super) fn high_contrast() -> bool {
+        let mut hc = HighContrastW {
+            cb_size: std::mem::size_of::<HighContrastW>() as u32,
+            flags: 0,
+            default_scheme: std::ptr::null_mut(),
+        };
+        let ok = unsafe {
+            SystemParametersInfoW(
+                SPI_GETHIGHCONTRAST,
+                hc.cb_size,
+                (&mut hc as *mut HighContrastW).cast(),
+                0,
+            )
+        };
+        ok != 0 && hc.flags & HCF_HIGHCONTRASTON != 0
+    }
+}
+
+/// System Reduce Motion setting. `PANOPLY_REDUCE_MOTION=1` forces it. Windows is asked for the
+/// client-area animation setting, GNOME for `enable-animations`.
 pub(crate) fn reduce_motion() -> bool {
     if std::env::var("PANOPLY_REDUCE_MOTION").is_ok_and(|v| v == "1") {
         return true;
     }
+    #[cfg(windows)]
+    {
+        win::animations_off()
+    }
     #[cfg(target_os = "linux")]
     {
-        if let Ok(out) = std::process::Command::new("gsettings")
-            .args(["get", "org.gnome.desktop.interface", "enable-animations"])
-            .output()
-        {
-            return String::from_utf8_lossy(&out.stdout).trim() == "false";
-        }
+        static SLOT: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+        gnome_flag(
+            &SLOT,
+            "org.gnome.desktop.interface",
+            "enable-animations",
+            "false",
+        )
     }
-    false
+    #[cfg(not(any(windows, target_os = "linux")))]
+    {
+        false
+    }
+}
+
+/// System high-contrast setting: Windows High Contrast, GNOME's high-contrast switch.
+/// `PANOPLY_HIGH_CONTRAST=1` forces it.
+pub(crate) fn increase_contrast() -> bool {
+    if std::env::var("PANOPLY_HIGH_CONTRAST").is_ok_and(|v| v == "1") {
+        return true;
+    }
+    #[cfg(windows)]
+    {
+        win::high_contrast()
+    }
+    #[cfg(target_os = "linux")]
+    {
+        static SLOT: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+        gnome_flag(
+            &SLOT,
+            "org.gnome.desktop.a11y.interface",
+            "high-contrast",
+            "true",
+        )
+    }
+    #[cfg(not(any(windows, target_os = "linux")))]
+    {
+        false
+    }
 }
 
 /// A fixed blue where the system gives no accent colour.
