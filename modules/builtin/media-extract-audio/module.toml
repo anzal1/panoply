@@ -1,0 +1,44 @@
+# Extract audio. Pattern A, instant transform. Spec: docs/specs/video-and-audio.md, section 4.10 (Extract).
+# The default copies the sound exactly as stored, with no decode and no loss.
+accepts = ["video/*", "audio/*", "*.mkv", "*.ts", "*.mts", "*.m2ts", "*.m4a", "*.opus", "*.webm", "*.avi", "*.mov"]
+outputs = ["audio/*"]
+
+[module]
+id = "media.extract_audio"
+name = "Extract audio"
+version = "0.1.0"
+pattern = "A"
+summary = "Pull the sound out of a video, as it is stored or as MP3, M4A, WAV, FLAC, Opus."
+
+[options.format]
+type = "choice"
+values = ["copy", "mp3", "m4a", "aac", "wav", "flac", "ogg", "opus"]
+default = "copy"
+label = "Format"
+help = "Copy keeps the sound exactly as it is stored: nothing is decoded, nothing is lost, and it takes seconds. The other formats encode it."
+
+[options.track]
+type = "text"
+default = "first"
+label = "Track"
+help = "Which sound track: first (the default one), a number such as 2, or all for one file per track."
+
+[options.bitrate]
+type = "number"
+min = 32
+max = 640
+label = "Bit rate (kb/s)"
+help = "For lossy formats. Left empty, it is chosen from the source and never goes under what a lossy source had."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the video engine (an LGPL ffmpeg build, about 140 MB) once, the first time a video or audio job runs. Nothing else leaves your device."
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

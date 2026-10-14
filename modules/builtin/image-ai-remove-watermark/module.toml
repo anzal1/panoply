@@ -1,0 +1,94 @@
+# Remove watermark (image AI), for your own content only. Pattern C. Spec: docs/specs/id-and-image.md 3.15.
+#
+# Scope: this is for pictures you own or have the right to edit (your own photos with a date
+# stamp, your own exports with a logo you added, your own AI images with a visible badge). It
+# takes files, never URLs, and it does not look for or touch invisible watermarks or C2PA data.
+accepts = ["image/*"]
+outputs = ["image/jpeg", "image/png", "image/webp"]
+
+[module]
+id = "image.remove_watermark"
+name = "Remove watermark"
+version = "0.1.0"
+pattern = "C"
+summary = "Remove a watermark, logo or date stamp from pictures you own. Finds the mark, then fills it in."
+
+[options.own_content]
+type = "bool"
+default = false
+label = "These are my pictures"
+help = "Confirm that you own these pictures or have the right to edit them. The tool does not run without it."
+
+[options.search]
+type = "choice"
+values = ["anywhere", "edges"]
+default = "anywhere"
+label = "Where to look"
+help = "Edges looks only within 18% of an edge (corner stamps, bottom credits) and is the safer choice for photos."
+
+[options.rect]
+type = "text"
+label = "Rectangle"
+help = "Skip the search and clean this area, as x,y,w,h in pixels or percentages. Several, separated by a semicolon."
+
+[options.expand]
+type = "number"
+min = 0
+max = 64
+default = 4
+label = "Expand (px)"
+help = "Grows the cleaned area a little, because re-saved pictures have soft mark edges."
+
+[options.fill]
+type = "choice"
+values = ["auto", "blur"]
+default = "auto"
+label = "Fill"
+help = "Auto fills with the MI-GAN model. Blur uses the surroundings, for flat areas."
+
+[options.save_mask]
+type = "bool"
+default = false
+label = "Save the mask"
+help = "Also writes the cleaned area as a picture, to check what was found."
+
+[options.format]
+type = "choice"
+values = ["keep", "png", "jpg", "webp"]
+default = "keep"
+label = "Format"
+
+[options.quality]
+type = "number"
+min = 1
+max = 100
+label = "Quality"
+
+[options.keep_metadata]
+type = "bool"
+default = true
+label = "Keep metadata"
+
+[options.animation]
+type = "choice"
+values = ["ask", "first"]
+default = "ask"
+label = "Animated files"
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the ONNX Runtime (about 33 MB) and the MI-GAN fill model (about 28 MB) once, the first time marks are filled in. Nothing else leaves your device."
+
+[[capabilities.models]]
+id = "migan-512-places2"
+size_mb = 28
+license = "MIT"
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = false
+cli = true
+mcp = true

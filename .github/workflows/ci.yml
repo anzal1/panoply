@@ -60,6 +60,26 @@ jobs:
         with:
           command: check licenses bans sources
 
+  # Advisories are a separate job: a new advisory against an untouched dependency should show up here
+  # without hiding the license result. Ignored advisories and their reasons are in deny.toml.
+  advisories:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check advisories
+
+  # THIRD-PARTY-NOTICES.md is generated from Cargo.lock. This fails when Cargo.lock (or the hand-written
+  # parts in tools/notices) changed and the file was not regenerated. It runs on every push and pull
+  # request, which covers every Cargo.lock change.
+  notices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo fetch --locked
+      - run: python3 -I tools/notices/generate.py --check
+
   conversions:
     runs-on: ubuntu-latest
     steps:

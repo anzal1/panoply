@@ -1,0 +1,77 @@
+# Print sheet. Pattern B. Spec: docs/specs/id-and-image.md 2.2.
+accepts = ["image/*"]
+outputs = ["image/jpeg", "image/png", "application/pdf"]
+
+[module]
+id = "id.print_sheet"
+name = "Print sheet"
+version = "0.1.0"
+pattern = "B"
+summary = "Put several copies of this photo on one sheet for the print shop, at the exact size."
+
+[options.paper]
+type = "text"
+label = "Paper"
+help = "Left out, 4x6 in the US, Canada and India and A4 elsewhere. 4x6, 5x7, 6x8, a4, a5, a6 or letter."
+
+[options.size]
+type = "text"
+label = "Photo size"
+help = "Millimetres as 35x45, or 3.5x4.5cm, or 1.5x2in. Left out, the size comes from rule, else from the photo's own resolution tag. It is never guessed."
+
+[options.rule]
+type = "text"
+label = "Take the size from a rule"
+help = "A country or rule id such as in-passport, us-visa or UK."
+
+[options.document]
+type = "choice"
+values = ["passport", "visa"]
+label = "Document"
+
+[options.copies]
+type = "number"
+min = 1
+max = 500
+label = "Copies"
+help = "Left out, as many as fit. With several photos, each gets the same number."
+
+[options.cut_marks]
+type = "bool"
+default = true
+label = "Cut marks"
+help = "Thin corner ticks to cut along."
+
+[options.rotate]
+type = "bool"
+default = true
+label = "Turn photos to fit more"
+help = "A photo may be turned a quarter turn to pack more on the sheet. It is never stretched."
+
+[options.margin]
+type = "number"
+min = 0
+max = 30
+default = 3
+label = "Margin (mm)"
+
+[options.gutter]
+type = "number"
+min = 0
+max = 20
+default = 2
+label = "Gap between photos (mm)"
+
+[options.dpi]
+type = "number"
+min = 150
+max = 1200
+default = 300
+label = "Resolution (DPI)"
+
+[options.format]
+type = "choice"
+values = ["jpg", "pdf", "png"]
+default = "jpg"
+label = "Format"
+help = "PDF has a page of the paper's exact size, for shops that add their own margins."

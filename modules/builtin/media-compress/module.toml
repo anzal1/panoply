@@ -1,0 +1,72 @@
+# Compress video (and audio) to a size. Pattern B, tuned transform. Spec: docs/specs/video-and-audio.md,
+# sections 4.2 and 5.3. Upload limits are data files (presets/*.toml) with the source link and the
+# date they were checked; the quality floors are measured (floors.toml). Hardware encoders first.
+accepts = ["video/*", "audio/*", "*.mkv", "*.ts", "*.mts", "*.m2ts", "*.m4a", "*.opus", "*.webm", "*.avi", "*.mov"]
+outputs = ["video/*", "audio/*"]
+
+[module]
+id = "media.compress"
+name = "Compress video"
+version = "0.1.0"
+pattern = "B"
+summary = "Make this video small enough to send or upload, under a size or as small as it can look good."
+
+[options.under]
+type = "size"
+label = "Under (size)"
+help = "The result is at most this big, for example 25mb. The picture gets what is left after the sound; resolution drops only as far as the codec needs, and the card says so."
+
+[options.preset]
+type = "choice"
+values = ["none", "whatsapp", "discord", "discord_nitro_basic", "discord_nitro", "gmail", "slack", "telegram", "x"]
+default = "none"
+label = "Fit a service"
+help = "The upload limit of a service, read from its preset file with the source link and the date it was checked. H.264 in MP4, standard range, so it plays everywhere."
+
+[options.quality]
+type = "number"
+min = 1
+max = 100
+label = "Quality"
+help = "Without a size: 50 is the smallest that still looks good, higher keeps more detail, lower saves more."
+
+[options.codec]
+type = "choice"
+values = ["auto", "h264", "hevc", "av1", "vp9"]
+default = "auto"
+label = "Codec"
+help = "Auto picks HEVC where the computer encodes it in hardware, else H.264, else AV1. A service preset always uses H.264. VP9 writes WebM with a true two-pass encode."
+
+[options.max_height]
+type = "number"
+min = 0
+max = 4320
+default = 0
+label = "Largest shorter side (pixels)"
+help = "0 keeps the resolution. 720 means nothing taller than 720p."
+
+[options.hdr]
+type = "choice"
+values = ["auto", "keep", "sdr"]
+default = "auto"
+label = "HDR"
+help = "Auto keeps HDR in HEVC and AV1 and converts it to standard range for H.264 and for service presets."
+
+[options.measure_quality]
+type = "bool"
+default = true
+label = "Measure the quality"
+help = "Compares the result with the original (VMAF, on a 20 second sample from the middle) and shows the score on the card."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the video engine (an LGPL ffmpeg build, about 140 MB) once, the first time a video or audio job runs. Nothing else leaves your device."
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

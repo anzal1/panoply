@@ -42,6 +42,10 @@ weezl = "0.1"
 panoply-core = { path = "crates/panoply-core" }
 panoply-pdf = { path = "crates/panoply-pdf" }
 panoply-image = { path = "crates/panoply-image" }
+panoply-id = { path = "crates/panoply-id" }
+panoply-ocr = { path = "crates/panoply-ocr" }
+panoply-media = { path = "crates/panoply-media" }
+panoply-vision = { path = "crates/panoply-vision" }
 panoply-manifest = { path = "crates/panoply-manifest" }
 panoply-convert = { path = "crates/panoply-convert" }
 panoply-host = { path = "crates/panoply-host" }
@@ -81,4 +85,24 @@ opt-level = 3
 # The image engine does per-pixel work (resampling, SSIM, quantizing) and its tests run on
 # multi-megapixel files, so it is optimized in dev builds too.
 [profile.dev.package.panoply-image]
+opt-level = 3
+
+# The media engine does real per-sample and per-pixel work (loudness metering, HDR tone-map
+# tables, MP4 table rebuilding), so it is optimized in dev builds too.
+[profile.dev.package.panoply-media]
+opt-level = 3
+
+# The OCR engine does real per-pixel work (detection post-processing, image preparation) and its
+# tests run recognition on page-sized images, so it is optimized in dev builds too.
+[profile.dev.package.panoply-ocr]
+opt-level = 3
+
+# The ID modules do per-pixel work (face crops, background cut, thresholding) in tests on
+# multi-megapixel portraits, so they are optimized in dev builds too.
+[profile.dev.package.panoply-id]
+opt-level = 3
+
+# The vision modules (background removal, erase, watermark, upscale) run small ONNX models and
+# do per-pixel work (mask refinement, tiling, blending), so they are optimized in dev builds too.
+[profile.dev.package.panoply-vision]
 opt-level = 3

@@ -795,3 +795,89 @@ size = 0
 tags = ["webp", "animated"]
 why = "A 12 frame animated WebP with per-frame delays; permissively licensed counterpart of the Commons sample."
 requires = ["pillow"]
+
+# Faces: public domain official portraits (NASA, via Wikimedia Commons) for the ID modules: a single frontal face, head and shoulders, with the busy flag backdrops that make the subject cut-out earn its keep. Used by crates/panoply-id/tests (docs/FLOWS.md worked example 2).
+
+[[file]]
+id = "img-face-antonelli"
+file = "faces/antonelli.jpg"
+source = "Wikimedia Commons: Tony Antonelli, official NASA astronaut portrait"
+url = "https://upload.wikimedia.org/wikipedia/commons/1/15/Antonelli.jpg"
+license = "Public-Domain"
+attribution = "NASA via Wikimedia Commons"
+sha256 = "4df83631506b64f914b62c40f6cab4f64f328ee7b10e6a885ccb341165e2abe3"
+size = 1185963
+tags = ["jpeg", "face", "portrait", "photo", "public-domain"]
+why = "Male, smiling, flag backdrop, 2400 x 3000. A single frontal face for the passport photo module: face and landmarks, the subject mask against a busy backdrop, head height and crop rules."
+
+[[file]]
+id = "img-face-borman"
+file = "faces/borman.jpg"
+source = "Wikimedia Commons: Frank Borman, NASA astronaut portrait"
+url = "https://upload.wikimedia.org/wikipedia/commons/3/37/Astronaut_Frank_Borman.jpg"
+license = "Public-Domain"
+attribution = "NASA via Wikimedia Commons"
+sha256 = "96cea7aeb0a0d32a7ccb009490c263f8384bd6e2fe480d7bfdc28581b55017be"
+size = 863036
+tags = ["jpeg", "face", "portrait", "photo", "public-domain"]
+why = "Older studio portrait, soft blue gradient backdrop with a flag edge, lit from one side, suit and tie, 2400 x 3000. A single frontal face for the passport photo module: face and landmarks, the subject mask against a busy backdrop, head height and crop rules."
+
+[[file]]
+id = "img-face-fisher"
+file = "faces/fisher.jpg"
+source = "Wikimedia Commons: Anna Fisher, NASA astronaut portrait"
+url = "https://upload.wikimedia.org/wikipedia/commons/d/d8/Anna_L._Fisher_Portrait.jpg"
+license = "Public-Domain"
+attribution = "NASA via Wikimedia Commons"
+sha256 = "645e50907521b28e204a41198bebdaaef1890a84edcd23555a2a74770ab76911"
+size = 1577576
+tags = ["jpeg", "face", "portrait", "photo", "public-domain"]
+why = "Woman with voluminous hair against a flag backdrop, 2045 x 2556. A single frontal face for the passport photo module: face and landmarks, the subject mask against a busy backdrop, head height and crop rules."
+
+[[file]]
+id = "img-face-hoshide"
+file = "faces/hoshide.jpg"
+source = "Wikimedia Commons: Akihiko Hoshide, NASA astronaut portrait"
+url = "https://upload.wikimedia.org/wikipedia/commons/9/90/Akihiko_Hoshide.jpg"
+license = "Public-Domain"
+attribution = "NASA via Wikimedia Commons"
+sha256 = "3ce33d59e830582c54641e8f4d630eb42bb63e6dc298f4601b9cabdc9018cd36"
+size = 1017653
+tags = ["jpeg", "face", "portrait", "photo", "public-domain"]
+why = "Two flags behind the head, 2400 x 3000. A single frontal face for the passport photo module: face and landmarks, the subject mask against a busy backdrop, head height and crop rules."
+
+[[file]]
+id = "img-face-jemison"
+file = "faces/jemison.jpg"
+source = "Wikimedia Commons: Mae Jemison, official portrait of 1987 astronaut candidate"
+url = "https://upload.wikimedia.org/wikipedia/commons/0/04/Mae_Jemison_-_Official_portrait_of_1987_astronaut_candidate.jpg"
+license = "Public-Domain"
+attribution = "NASA via Wikimedia Commons"
+sha256 = "c700b2b542123c5599c920b93a1e9bc1c0b75715fa989a0b615cdbfd16fc5318"
+size = 2036304
+tags = ["jpeg", "face", "portrait", "photo", "public-domain"]
+why = "Dark skin and voluminous hair, holding a shuttle model, 3684 x 4605. A single frontal face for the passport photo module: face and landmarks, the subject mask against a busy backdrop, head height and crop rules."
+
+[[file]]
+id = "img-face-sunita"
+file = "faces/sunita.jpg"
+source = "Wikimedia Commons: Sunita Williams, NASA astronaut portrait"
+url = "https://upload.wikimedia.org/wikipedia/commons/c/cb/Sunita_Williams.jpg"
+license = "Public-Domain"
+attribution = "NASA via Wikimedia Commons"
+sha256 = "59727ab6ece336a58fa22153f931d0124bf0570107c492208787a1d9ab9568ff"
+size = 1201893
+tags = ["jpeg", "face", "portrait", "photo", "public-domain"]
+why = "Long dark hair, white spacesuit and helmet in the frame, 2400 x 3000. A single frontal face for the passport photo module: face and landmarks, the subject mask against a busy backdrop, head height and crop rules."
+
+[[file]]
+id = "img-face-thomas"
+file = "faces/thomas.jpg"
+source = "Wikimedia Commons: Andy Thomas, astronaut candidate portrait"
+url = "https://upload.wikimedia.org/wikipedia/commons/d/de/Andy_Thomas_-_Astronaut_Candidate_Portrait.jpg"
+license = "Public-Domain"
+attribution = "NASA via Wikimedia Commons"
+sha256 = "2ec2ea0949312f5f52bf57917468cd734261166d4e646fefefe0fed6d9d1e227"
+size = 1005999
+tags = ["jpeg", "face", "portrait", "photo", "public-domain"]
+why = "Fair hair against a flag, shuttle model behind, 2400 x 3000. A single frontal face for the passport photo module: face and landmarks, the subject mask against a busy backdrop, head height and crop rules."

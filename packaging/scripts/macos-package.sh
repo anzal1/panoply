@@ -103,7 +103,7 @@ if [ "$NOTARIZE" = 1 ]; then
 fi
 CLI_NAME="panoply-cli-$VERSION-macos-universal"
 $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
-  "$WORK/cli/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md"
+  "$WORK/cli/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/README.md"
 
 [ "$DESKTOP" = none ] && exit 0
 
@@ -115,6 +115,7 @@ if [ "$DESKTOP" = real ]; then
   ditto "$ROOT/apps/desktop/dist/Panoply.app" "$APPW"
 else
   mkdir -p "$APPW/Contents/MacOS" "$APPW/Contents/Resources"
+  cp "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/THIRD-PARTY-NOTICES.md" "$APPW/Contents/Resources/"
   cp "$WORK/cli/panoply" "$APPW/Contents/MacOS/Panoply"
   cat > "$APPW/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

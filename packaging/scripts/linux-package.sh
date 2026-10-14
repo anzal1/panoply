@@ -52,7 +52,7 @@ esac
 # ---- CLI ------------------------------------------------------------------------------------------
 CLI_NAME="panoply-cli-$VERSION-linux-$ARCH"
 $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
-  "$STAGE/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md"
+  "$STAGE/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/README.md"
 [ "$DESKTOP" = none ] && exit 0
 
 if [ "$DESKTOP" = stub ]; then cp "$STAGE/panoply" "$STAGE/panoply-desktop"; fi
@@ -69,7 +69,7 @@ $PY "$HERE/mkarchive.py" "$OUT/$APP_NAME.tar.gz" "$APP_NAME" \
   "$DESKTOP_FILE=share/applications/panoply.desktop" \
   "$ICON=share/icons/hicolor/512x512/apps/panoply.png" \
   "$PKG/linux/install.sh=install.sh" \
-  "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md"
+  "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/README.md"
 
 # ---- AppImage -------------------------------------------------------------------------------------
 TOOLS="$WORK/tools"; mkdir -p "$TOOLS"
@@ -86,6 +86,8 @@ chmod +x "$TOOLS/appimagetool"
 APPDIR="$WORK/Panoply.AppDir"
 mkdir -p "$APPDIR/usr/bin"
 cp "$STAGE/panoply" "$STAGE/panoply-desktop" "$APPDIR/usr/bin/"
+mkdir -p "$APPDIR/usr/share/doc/panoply"
+cp "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/THIRD-PARTY-NOTICES.md" "$APPDIR/usr/share/doc/panoply/"
 cp "$DESKTOP_FILE" "$APPDIR/panoply.desktop"
 cp "$ICON" "$APPDIR/panoply.png"
 ln -s panoply.png "$APPDIR/.DirIcon"

@@ -1,0 +1,37 @@
+id = "podcast-general"
+name = "Podcast (general)"
+target_lufs = -16.0            # stereo
+target_lufs_mono = -19.0       # mono, 3 LU lower
+tolerance_lu = 0.0             # no single source states one for this convention
+true_peak_dbtp = -1.0
+measure = "integrated"
+status = "conflict"
+source_url = "https://auphonic.com/blog/2020/06/09/loudness-normalization-mono-productions/"
+source_quote = "you could use -19 LUFS for mono productions"
+source_date = "2020-06-09"
+last_verified = "2026-10-14"
+notes = "The -16 LUFS stereo and -19 LUFS mono pairing is a community convention, not an AES number. The Auphonic post explains that most devices do not apply a -3 dB offset to dual-mono playback, so the mono target is shifted by -3 LU. AES TD1004.1.15-10 (2015) only recommends a window of -20 to -16 LUFS with a true peak limit of -1.0 dB TP and says nothing about mono; it was superseded by AES TD1008 in 2021, which secondary reports put at -18 LUFS for speech content (primary PDF not retrievable). Apple Podcasts recommends -16 LKFS plus or minus 1 dB for all files. The true peak ceiling of -1 dBTP comes from AES TD1004 and Apple."
+
+[[conflicts]]
+source_url = "https://aes.org/wp-content/uploads/2024/01/AESTD1004_1_15_10.pdf"
+quote = "Target Loudness of the stream not exceed -16 LUFS"
+date = "2015-10-19"
+value = "-16 LUFS maximum, within a -20 to -16 LUFS window, true peak -1.0 dB TP, no mono rule"
+
+[[conflicts]]
+source_url = "https://productionadvice.co.uk/td1008/"
+quote = "the recommended online Distribution Loudness is -18 LUFS"
+date = "2021-10-01"
+value = "-18 LUFS for speech-only and assorted content, per AES TD1008 (secondary report, primary not read)"
+
+[[conflicts]]
+source_url = "https://podcasters.apple.com/support/893-audio-requirements"
+quote = "overall loudness remains around -16 dB LKFS, with a +/- 1 dB tolerance"
+date = "undated"
+value = "-16 LKFS plus or minus 1 dB for all files, no mono distinction"
+
+[[extra_sources]]
+field = "true_peak_dbtp"
+url = "https://aes.org/wp-content/uploads/2024/01/AESTD1004_1_15_10.pdf"
+quote = "maximum peak level not exceed −1.0 dB TP"
+date = "2015-10-19"

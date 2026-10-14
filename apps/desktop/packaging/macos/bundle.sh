@@ -32,6 +32,12 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/modules"
 cp "$BINARY" "$APP/Contents/MacOS/Panoply"
 sed "s/@VERSION@/$VERSION/g" "$HERE/Info.plist" > "$APP/Contents/Info.plist"
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
+# License files and third-party notices travel inside the app (Resources/ is visible in Finder with
+# Show Package Contents). THIRD-PARTY-NOTICES.md is generated: tools/notices/generate.py.
+for f in LICENSE-MIT LICENSE-APACHE THIRD-PARTY-NOTICES.md; do
+  [ -f "$ROOT/$f" ] || { echo "missing $ROOT/$f"; exit 1; }
+  cp "$ROOT/$f" "$APP/Contents/Resources/$f"
+done
 # Community example modules: one folder each, manifest plus the compiled component next to it.
 for m in "$ROOT"/modules/examples-wasm/*/; do
   name="$(basename "$m")"

@@ -1,0 +1,36 @@
+# Video and audio info. Pattern I, inspect. Spec: docs/specs/video-and-audio.md, section 4.33.
+# One probe, a few box headers and 200 packet times: never a decode unless `deep` is asked for.
+accepts = ["video/*", "audio/*", "*.mkv", "*.ts", "*.mts", "*.m2ts", "*.m4a", "*.opus", "*.webm", "*.avi", "*.mov"]
+outputs = []
+
+[module]
+id = "media.info"
+name = "Video and audio info"
+version = "0.1.0"
+pattern = "I"
+summary = "Tell me everything about this video or audio file and what is wrong with it."
+
+[options.json]
+type = "bool"
+default = false
+label = "Copy as JSON"
+help = "Print the report as JSON instead of text."
+
+[options.deep]
+type = "bool"
+default = false
+label = "Measure the loudness"
+help = "Decodes the sound once to report loudness, range, true peak and clipping. Takes a few seconds for a long file; the rest of the report is instant."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the video engine (an LGPL ffmpeg build, about 140 MB) once, the first time a video or audio job runs. Nothing else leaves your device."
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

@@ -1,0 +1,54 @@
+# HDR to SDR. Pattern A. Spec: docs/specs/video-and-audio.md, section 4.28.
+# One pass with a 3D lookup table built by panoply-media (PQ or HLG decode, tone mapping in linear
+# light, BT.2020 to BT.709, BT.709 transfer), applied by ffmpeg's lut3d filter. No libplacebo,
+# zscale or Vulkan needed. The mapping is static, so it never pumps. Dolby Vision profile 5 is refused.
+accepts = ["video/*", "*.mkv", "*.ts", "*.mts", "*.m2ts", "*.webm", "*.mov"]
+outputs = ["video/*"]
+
+[module]
+id = "media.hdr_to_sdr"
+name = "HDR to SDR"
+version = "0.1.0"
+pattern = "A"
+summary = "Fix the washed-out look of an iPhone or HDR video on screens that are not HDR."
+
+[options.curve]
+type = "choice"
+values = ["bt2390", "hable", "mobius"]
+default = "bt2390"
+label = "Tone-map curve"
+help = "How bright highlights are rolled off. BT.2390 is the broadcast recommendation, Hable is filmic, Mobius keeps midtones linear longer."
+
+[options.peak_nits]
+type = "number"
+min = 0
+max = 10000
+default = 0
+label = "Source peak brightness (nits)"
+help = "0 reads it from the file (the brightest the video says it gets), and falls back to 1000."
+
+[options.saturation_protection]
+type = "bool"
+default = true
+label = "Protect saturated colours"
+help = "Colours that the SDR range cannot show are pulled toward gray gently instead of being clipped."
+
+[options.codec]
+type = "choice"
+values = ["h264", "hevc"]
+default = "h264"
+label = "Output codec"
+help = "H.264 plays everywhere. HEVC keeps 10 bits, so gradients stay smooth, but needs a hardware encoder."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the video engine (an LGPL ffmpeg build, about 140 MB) once, the first time a video or audio job runs. Nothing else leaves your device."
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

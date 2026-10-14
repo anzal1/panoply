@@ -34,7 +34,7 @@ New-Item -ItemType Directory -Force -Path $Out, (Join-Path $Out 'state') | Out-N
 $Out = (Resolve-Path $Out).Path
 $prefix = if ($Desktop -eq 'stub') { 'selftest-' } else { '' }
 $mk = Join-Path $Pkg 'scripts/mkarchive.py'
-$licenses = @((Join-Path $Root 'LICENSE-MIT'), (Join-Path $Root 'LICENSE-APACHE'))
+$licenses = @((Join-Path $Root 'LICENSE-MIT'), (Join-Path $Root 'LICENSE-APACHE'), (Join-Path $Root 'THIRD-PARTY-NOTICES.md'))
 
 # SIGNING HOOK: sign "$Stage\panoply.exe" and "$Stage\panoply-desktop.exe" here, before anything is
 # archived or put in the MSI, then sign the .msi once it is built (below).
@@ -57,6 +57,8 @@ New-Item -ItemType Directory -Force -Path $work | Out-Null
 $icon = Join-Path $Root 'apps/desktop/packaging/icons/panoply.ico'
 if (-not (Test-Path $icon)) { $icon = Join-Path $Pkg 'assets/panoply.ico' }
 Copy-Item $icon (Join-Path $work 'panoply.ico')
+# License files and the third-party notices are installed next to the program (see panoply.wxs).
+foreach ($f in 'LICENSE-MIT', 'LICENSE-APACHE', 'THIRD-PARTY-NOTICES.md') { Copy-Item (Join-Path $Root $f) (Join-Path $work $f) }
 
 # The setup dialog needs a license as RTF.
 $text = (Get-Content (Join-Path $Root 'LICENSE-MIT') -Raw) -replace '\\', '\\' -replace '\{', '\{' -replace '\}', '\}'
@@ -90,7 +92,7 @@ if ($SmokeTest) {
 
   # Everything on (the default).
   Invoke-Msi @('/i', "`"$msi`"", '/qn', '/l*v', "`"$log`"")
-  foreach ($f in 'panoply.exe', 'panoply-desktop.exe', 'panoply.ico') {
+  foreach ($f in 'panoply.exe', 'panoply-desktop.exe', 'panoply.ico', 'THIRD-PARTY-NOTICES.md', 'LICENSE-MIT', 'LICENSE-APACHE') {
     if (-not (Test-Path (Join-Path $dir $f))) { throw "missing after install: $f" }
   }
   if (-not (Test-MenuKey)) { throw 'Explorer menu key missing after a default install' }

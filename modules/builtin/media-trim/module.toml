@@ -1,0 +1,50 @@
+# Trim and cut. Pattern C, visual editor (the panel draws the timeline). Spec: docs/specs/video-and-audio.md, sections 4.1 and 5.2.
+# MP4 and MOV are cut by panoply-media's own index code: whole groups of pictures and every audio
+# frame are copied bit for bit and only the frames at a cut that is not on a keyframe are re-encoded.
+# Other containers are a stream copy snapped to keyframes.
+accepts = ["video/*", "audio/*", "*.mkv", "*.ts", "*.mts", "*.m2ts", "*.m4a", "*.opus", "*.webm", "*.avi", "*.mov"]
+outputs = ["video/*", "audio/*"]
+
+[module]
+id = "media.trim"
+name = "Trim video or audio"
+version = "0.1.0"
+pattern = "C"
+summary = "Cut out the parts you do not want, without re-encoding what does not have to be."
+
+[options.keep]
+type = "text"
+label = "Keep"
+help = "The parts to keep, for example 0:12-1:40 or 0:12-1:40, 2:00-2:30. A missing end means to the end, a missing start means from the start."
+
+[options.remove]
+type = "text"
+label = "Remove"
+help = "The parts to cut out instead, for example 0:30-0:45. Everything else is kept."
+
+[options.precision]
+type = "choice"
+values = ["auto", "exact", "keyframes"]
+default = "auto"
+label = "Precision"
+help = "Auto cuts video to the frame (only the frames at the edges are re-encoded) and audio at a codec frame, both without re-encoding the rest. Exact does the same for audio to the sample, which re-encodes it once. Keyframes copies everything and starts each cut at the nearest earlier keyframe."
+
+[options.output]
+type = "choice"
+values = ["one", "each"]
+default = "one"
+label = "Output"
+help = "One file with all the kept parts joined, or one file per part."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the video engine (an LGPL ffmpeg build, about 140 MB) once, the first time a video or audio job runs. Nothing else leaves your device."
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

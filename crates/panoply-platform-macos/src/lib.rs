@@ -48,9 +48,13 @@ mod cf;
 mod decode;
 mod encode;
 mod error;
+pub mod ocr;
 mod props;
 mod raw;
 mod sys;
+mod vision;
+
+pub mod faces;
 
 pub use decode::{
     Decoder, FrameGeometry, Info, MAX_DIMENSION, MAX_PIXELS, MAX_UNTILED_PIXELS, Reduce, Space,
@@ -61,3 +65,6 @@ pub use encode::{
 };
 pub use error::Error;
 pub use props::{PropValue, Properties};
+pub use vision::{
+    ForegroundMask, MAX_VISION_PIXELS, foreground_instance_mask, foreground_mask_available,
+};

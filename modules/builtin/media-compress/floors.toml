@@ -1,0 +1,46 @@
+# Bits per pixel per frame for "Compress video" (docs/specs/video-and-audio.md, section 4.2 and
+# the SIZE rule in 0.1). `floor` is where a clip starts to fall apart (VMAF 80), `knee` is where it
+# looks clean (VMAF 90). Measured with VMAF (libvmaf, BSD) on the corpus clips named below, by
+# `cargo run --release -p panoply-media --example compress_sweep`, as the median over the clips of
+# the bits per pixel where each clip's VMAF curve crosses the level. The tables, the machine and what
+# the numbers mean are in docs/research/media-results.md. Hardware encoders need more bits than
+# software for the same picture, so each is its own row. Panoply never hardcodes these numbers in
+# Rust: edit this file after a new sweep.
+#
+# A row with `estimated_from` was not measured: it borrows another row times `factor`, and the
+# result card is not told otherwise, so treat those as the first things to measure on a machine
+# that has the encoder.
+
+[meta]
+measured = "2026-10-14"
+machine = "Apple M5 Max, macOS, VideoToolbox, SVT-AV1 preset 8 and libvpx-vp9 good cpu-used 4 (software)"
+vmaf_floor = 80.0
+vmaf_knee = 90.0
+corpus = ["vid-bbb-1080-h264", "vid-sintel-720-h264", "vid-bbb-720-hevc", "vid-sintel-trailer-480p"]
+seconds_per_clip = 6
+
+[h264_hardware]
+floor_bpp = 0.031
+knee_bpp = 0.068
+
+[hevc_hardware]
+floor_bpp = 0.022
+knee_bpp = 0.044
+
+[av1_software]
+floor_bpp = 0.008
+knee_bpp = 0.020
+
+[vp9_software]
+floor_bpp = 0.0125
+knee_bpp = 0.030
+
+[h264_software]
+estimated_from = "h264_hardware"
+factor = 1.0
+note = "OpenH264 is not measured here: a pinned engine carries no usable OpenH264 (see crates/panoply-media/engine/README.md)"
+
+[av1_hardware]
+estimated_from = "av1_software"
+factor = 1.5
+note = "no AV1 hardware encoder was available to measure; hardware encoders needed 1.4 to 1.6 times the bits of the best software encoder for H.264 and HEVC in the sweep"
