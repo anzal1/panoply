@@ -8,7 +8,10 @@ use gpui::Window;
 /// Stand-in for the macOS panel handle. Visibility is done with `activate_window` and
 /// `minimize_window`, which GPUI implements on both systems.
 #[derive(Clone, Copy)]
-pub(crate) struct Panel;
+pub(crate) struct Panel {
+    /// The Win32 window handle (0 when unknown, and always 0 off Windows).
+    hwnd: isize,
+}
 
 /// A rectangle, for the dev probes that read the window frame.
 #[derive(Clone, Copy, Debug, Default)]
@@ -30,8 +33,21 @@ pub(crate) struct Rect {
 }
 
 impl Panel {
-    pub(crate) fn of(_window: &Window) -> Option<Panel> {
-        Some(Panel)
+    pub(crate) fn of(window: &Window) -> Option<Panel> {
+        #[cfg(windows)]
+        {
+            use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+            let hwnd = match HasWindowHandle::window_handle(window).map(|h| h.as_raw()) {
+                Ok(RawWindowHandle::Win32(h)) => h.hwnd.get(),
+                _ => 0,
+            };
+            Some(Panel { hwnd })
+        }
+        #[cfg(not(windows))]
+        {
+            let _ = window;
+            Some(Panel { hwnd: 0 })
+        }
     }
     pub(crate) fn setup_bar(self, _radius: f64) {}
     pub(crate) fn set_alpha(self, _a: f64) {}
@@ -54,7 +70,14 @@ impl Panel {
     pub(crate) fn invalidate_shadow(self) {}
     pub(crate) fn set_origin(self, _x: f64, _y: f64) {}
     pub(crate) fn set_motion(self, _scale: f64, _dy: f64) {}
-    pub(crate) fn position(self, _w: f64, _h: f64, _top_frac: f64) {}
+    /// Centre horizontally with the top edge at `top_frac` of the display height, on the display
+    /// under the mouse pointer. Windows only; Linux leaves the window where the compositor put it.
+    pub(crate) fn position(self, w: f64, _h: f64, top_frac: f64) {
+        #[cfg(windows)]
+        win::place(self.hwnd, w, top_frac);
+        #[cfg(not(windows))]
+        let _ = (self.hwnd, w, top_frac);
+    }
     pub(crate) fn wake_a11y(self) {}
     pub(crate) fn blur_view_count(self) -> usize {
         0
@@ -115,9 +138,103 @@ mod win {
         default_scheme: *mut u16,
     }
 
+    #[repr(C)]
+    #[derive(Clone, Copy, Default)]
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+
+    #[repr(C)]
+    #[derive(Clone, Copy, Default)]
+    struct RectI {
+        left: i32,
+        top: i32,
+        right: i32,
+        bottom: i32,
+    }
+
+    #[repr(C)]
+    struct MonitorInfo {
+        cb_size: u32,
+        monitor: RectI,
+        work: RectI,
+        flags: u32,
+    }
+
     #[link(name = "user32")]
     unsafe extern "system" {
         fn SystemParametersInfoW(action: u32, param: u32, pv: *mut c_void, win_ini: u32) -> i32;
+        fn GetCursorPos(p: *mut Point) -> i32;
+        fn MonitorFromPoint(p: Point, flags: u32) -> *mut c_void;
+        fn GetMonitorInfoW(monitor: *mut c_void, info: *mut MonitorInfo) -> i32;
+        fn GetDpiForWindow(hwnd: *mut c_void) -> u32;
+        fn SetWindowPos(
+            hwnd: *mut c_void,
+            after: *mut c_void,
+            x: i32,
+            y: i32,
+            cx: i32,
+            cy: i32,
+            flags: u32,
+        ) -> i32;
+        fn GetSystemMetrics(index: i32) -> i32;
+    }
+
+    const MONITOR_DEFAULTTONEAREST: u32 = 2;
+    const SWP_NOSIZE: u32 = 0x0001;
+    const SWP_NOZORDER: u32 = 0x0004;
+    const SWP_NOACTIVATE: u32 = 0x0010;
+
+    /// Move the window to the horizontal centre of the display under the pointer, with its top
+    /// edge `top_frac` of the way down. `w` is the width in logical points; the window's own DPI
+    /// turns them into pixels. A window that crosses to a display with another scale is placed
+    /// twice, because Windows changes its DPI as it arrives and the first guess used the old one.
+    pub(super) fn place(hwnd: isize, w: f64, top_frac: f64) {
+        if hwnd == 0 {
+            return;
+        }
+        let hwnd = hwnd as *mut c_void;
+        let mut cursor = Point::default();
+        if unsafe { GetCursorPos(&mut cursor) } == 0 {
+            return;
+        }
+        let mon = unsafe { MonitorFromPoint(cursor, MONITOR_DEFAULTTONEAREST) };
+        let mut info = MonitorInfo {
+            cb_size: std::mem::size_of::<MonitorInfo>() as u32,
+            monitor: RectI::default(),
+            work: RectI::default(),
+            flags: 0,
+        };
+        if mon.is_null() || unsafe { GetMonitorInfoW(mon, &mut info) } == 0 {
+            return;
+        }
+        let m = info.monitor;
+        for _ in 0..2 {
+            let dpi = unsafe { GetDpiForWindow(hwnd) };
+            let scale = if dpi == 0 { 1.0 } else { f64::from(dpi) / 96.0 };
+            let pw = (w * scale).round() as i32;
+            let x = m.left + ((m.right - m.left) - pw) / 2;
+            let y = m.top + (f64::from(m.bottom - m.top) * top_frac).round() as i32;
+            unsafe {
+                SetWindowPos(
+                    hwnd,
+                    std::ptr::null_mut(),
+                    x,
+                    y,
+                    0,
+                    0,
+                    SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE,
+                );
+            }
+        }
+    }
+
+    /// Pixels of a small (notification area) icon at the current scale; 16 when unknown.
+    pub(super) fn small_icon_px() -> u32 {
+        const SM_CXSMICON: i32 = 49;
+        let n = unsafe { GetSystemMetrics(SM_CXSMICON) };
+        if n > 0 { n as u32 } else { 16 }
     }
 
     const SPI_GETHIGHCONTRAST: u32 = 0x0042;
@@ -154,6 +271,12 @@ mod win {
         };
         ok != 0 && hc.flags & HCF_HIGHCONTRASTON != 0
     }
+}
+
+/// Pixels of a small icon at the current display scale (the notification-area icon size).
+#[cfg(windows)]
+pub(crate) fn small_icon_px() -> u32 {
+    win::small_icon_px()
 }
 
 /// System Reduce Motion setting. `PANOPLY_REDUCE_MOTION=1` forces it. Windows is asked for the

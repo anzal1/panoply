@@ -95,8 +95,8 @@ The renders in [review/before](review/before) and [review/after](review/after) c
 - **56. macOS 26 also offers dark and tinted icon variants (an .icon bundle from Icon Composer).** A dark variant is drawn (`panoply-macos-dark.svg`, `icon-dark-variant.png`) but not packaged as an .icon bundle.
 - **57. On Windows, Undo deletes the new file for good because the recycle bin is not wired.** Not a design change; noted in `packaging/README.md`.
 - **59. The command bar is on screen at launch on Linux (X11) and never hides.**
-- **60. The command bar does not move to the active display's upper third off macOS.**
-- **61. The Windows process stays alive with no window and no tray icon after the app window closes.**
+- **60. The command bar does not move to the active display's upper third off macOS.** Fixed on Windows: the bar is centred on the display under the pointer, 22% down from its top. Linux still leaves it where the window manager puts it.
+- **61. The Windows process stays alive with no window and no tray icon after the app window closes.** Fixed: Windows shows a notification-area icon (the fan; Open Panoply, Open command bar, Quit) for as long as the app runs, so closing the window leaves a visible, quittable icon. The Windows smoke test checks it.
 - **62. The command bar's corners are black on a GPU-less Windows runner.** Check on hardware.
 - **64. The app polls gsettings every 4 s on Linux.**
 - **65. Linux memory is 180 to 200 MB with software rendering.** Check on hardware.
