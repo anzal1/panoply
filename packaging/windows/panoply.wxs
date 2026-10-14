@@ -4,9 +4,8 @@
     Version      MSI product version, four numeric parts (0.1.0.1)
     ProductCode  GUID, fixed per version and architecture
     BinDir       folder with panoply.exe and panoply-desktop.exe
-    AssetDir     folder with panoply.ico
+    AssetDir     folder with panoply.ico, LICENSE-MIT, LICENSE-APACHE and THIRD-PARTY-NOTICES.md
     LicenseRtf   the license text shown in the setup dialog
-    NoticesFile  optional: THIRD-PARTY-NOTICES.md, installed next to the exes
   Features: Panoply (required), the panoply command on PATH, and the Explorer right-click entry.
   Installs per machine under Program Files. The Explorer entry lives in HKLM\Software\Classes, so on
   Windows 11 it shows under "Show more options" (the classic menu).
@@ -43,13 +42,13 @@
       <Component Id="CliExe">
         <File Id="CliExeFile" Source="$(BinDir)\panoply.exe" KeyPath="yes" />
       </Component>
-      <?ifdef NoticesFile?>
-      <Component Id="NoticesFileComponent">
-        <File Id="NoticesFileFile" Source="$(NoticesFile)" KeyPath="yes" />
-      </Component>
-      <?endif?>
       <Component Id="IconFile">
         <File Id="IconFileFile" Source="$(AssetDir)\panoply.ico" KeyPath="yes" />
+      </Component>
+      <Component Id="LicenseFiles">
+        <File Id="LicenseMitFile" Source="$(AssetDir)\LICENSE-MIT" KeyPath="yes" />
+        <File Id="LicenseApacheFile" Source="$(AssetDir)\LICENSE-APACHE" />
+        <File Id="ThirdPartyNoticesFile" Source="$(AssetDir)\THIRD-PARTY-NOTICES.md" />
       </Component>
     </ComponentGroup>
 

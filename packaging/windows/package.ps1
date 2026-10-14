@@ -59,6 +59,8 @@ New-Item -ItemType Directory -Force -Path $work | Out-Null
 $icon = Join-Path $Root 'apps/desktop/packaging/windows/panoply.ico'
 if (-not (Test-Path $icon)) { $icon = Join-Path $Pkg 'assets/panoply.ico' }
 Copy-Item $icon (Join-Path $work 'panoply.ico')
+# License files and the third-party notices are installed next to the program (see panoply.wxs).
+foreach ($f in 'LICENSE-MIT', 'LICENSE-APACHE', 'THIRD-PARTY-NOTICES.md') { Copy-Item (Join-Path $Root $f) (Join-Path $work $f) }
 
 # The setup dialog needs a license as RTF.
 $text = (Get-Content (Join-Path $Root 'LICENSE-MIT') -Raw) -replace '\\', '\\' -replace '\{', '\{' -replace '\}', '\}'
@@ -72,9 +74,7 @@ $bytes = $md5.ComputeHash([Text.Encoding]::UTF8.GetBytes("panoply|$Arch|$MsiVers
 $productCode = ([guid]::new($bytes)).ToString().ToUpper()
 
 $msi = Join-Path $Out "$appName.msi"
-$wixDefines = @()
-if (Test-Path $notices) { $wixDefines += @('-d', "NoticesFile=$notices") }
-wix build (Join-Path $PSScriptRoot 'panoply.wxs') -arch $Arch -ext WixToolset.UI.wixext -pdbtype none @wixDefines `
+wix build (Join-Path $PSScriptRoot 'panoply.wxs') -arch $Arch -ext WixToolset.UI.wixext -pdbtype none `
   -d "Version=$MsiVersion" -d "ProductCode={$productCode}" -d "BinDir=$Stage" -d "AssetDir=$work" `
   -d "LicenseRtf=$(Join-Path $work 'license.rtf')" -o $msi
 # SIGNING HOOK (MSI): sign $msi here.
@@ -94,7 +94,7 @@ if ($SmokeTest) {
 
   # Everything on (the default).
   Invoke-Msi @('/i', "`"$msi`"", '/qn', '/l*v', "`"$log`"")
-  foreach ($f in 'panoply.exe', 'panoply-desktop.exe', 'panoply.ico') {
+  foreach ($f in 'panoply.exe', 'panoply-desktop.exe', 'panoply.ico', 'THIRD-PARTY-NOTICES.md', 'LICENSE-MIT', 'LICENSE-APACHE') {
     if (-not (Test-Path (Join-Path $dir $f))) { throw "missing after install: $f" }
   }
   if (-not (Test-MenuKey)) { throw 'Explorer menu key missing after a default install' }
