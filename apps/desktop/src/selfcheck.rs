@@ -746,3 +746,266 @@ pub(crate) fn run_idle(hold_secs: u64) {
         .detach();
     });
 }
+
+/// `--selfcheck-frames --out DIR`: the showcase run. The same offscreen windows as `run`, but it
+/// saves the states a README or a launch post wants, in light and dark, as raw RGBA PNGs (no flat
+/// desktop colour under them, so a page can set its own backdrop), and the frame sequence of one
+/// whole job: typing "under 50 kb", the results updating, the run, the result card. Nothing is
+/// shown on screen, and no budget is measured here.
+pub(crate) fn run_frames(out: PathBuf) {
+    let _ = std::fs::create_dir_all(&out);
+    let work = std::env::temp_dir().join(format!("panoply-frames-{}", std::process::id()));
+    let _ = std::fs::create_dir_all(&work);
+    let app = gpui_platform::application().with_assets(Icons);
+    app.run(move |cx: &mut App| {
+        gpui_base::init(cx);
+        cx.set_activation_policy(ActivationPolicy::Accessory);
+        crate::ui::theme::force_appearance(Some(false));
+        platform::set_trash_dir(work.join("trash"));
+        let mut dirs = crate::paths::module_search_dirs();
+        dirs.push(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../modules/examples-wasm"),
+        );
+        let catalog = Arc::new(Catalog::with_dirs(&dirs));
+        let now = crate::units::now_secs();
+        let recents = cx.new(|_| Recents {
+            entries: seeded_recents(now, Path::new("/Users/me/Documents")),
+        });
+        let hub = Hub {
+            catalog,
+            history: History::at(work.join("history.jsonl")),
+            recents,
+        };
+        cx.set_global(hub.clone());
+        let bar_hub = hub.clone();
+        let bar = cx
+            .open_window(bar_window_options(BarMode::Offscreen), move |window, cx| {
+                cx.new(|cx| Bar::new(window, cx, bar_hub, BarMode::Offscreen))
+            })
+            .expect("open the offscreen bar");
+        let app_hub = hub.clone();
+        let app_win = cx
+            .open_window(app_window_options(true), move |window, cx| {
+                cx.new(|cx| AppView::new(window, cx, app_hub))
+            })
+            .expect("open the offscreen app window");
+        let out2 = out.clone();
+        let work2 = work.clone();
+        cx.spawn(async move |cx| {
+            let mut d = Drv {
+                cx,
+                dark: false,
+                update_ms: vec![],
+                draw_ms: vec![],
+                tag: String::new(),
+                slow: vec![],
+            };
+            d.settle(bar).await;
+            d.settle(app_win).await;
+            let raw = |d: &mut Drv, h: WindowHandle<Bar>, name: &str, out: &Path| {
+                d.draw(h);
+                if let Some(Ok(img)) = d.win(h, |window, _| window.render_to_image()) {
+                    let _ = img.save(out.join(name));
+                }
+            };
+            let pdf = work2.join("Lease.pdf");
+            sample_pdf(&pdf, 4_200_000);
+            let sig = work2.join("signature.png");
+            sample_png(&sig, 1200, 480);
+            // A real clip for a job that reports progress (an `ffmpeg` on PATH, as on a Mac that has one).
+            let clip = work2.join("Holiday.mp4");
+            let _ = std::process::Command::new("ffmpeg")
+                .args([
+                    "-v",
+                    "error",
+                    "-y",
+                    "-f",
+                    "lavfi",
+                    "-i",
+                    "testsrc2=size=1920x1080:rate=30",
+                    "-t",
+                    "40",
+                    "-c:v",
+                    "h264_videotoolbox",
+                    "-b:v",
+                    "14M",
+                ])
+                .arg(&clip)
+                .status();
+            let mut tools = 0usize;
+            // One appearance per process, so the dark run starts from the same clean history as the light one.
+            let only = std::env::args().skip_while(|a| a != "--appearance").nth(1);
+            for dark in [false, true] {
+                if only.as_deref().is_some_and(|o| (o == "dark") != dark) {
+                    continue;
+                }
+                let tag = if dark { "dark" } else { "light" };
+                crate::ui::theme::force_appearance(Some(dark));
+                d.dark = dark;
+                d.change(bar, |b, window, cx| {
+                    b.close_panel(window, cx);
+                    b.set_files(Vec::new(), cx);
+                    b.set_query("", window, cx);
+                });
+                d.settle(bar).await;
+                d.settle(app_win).await;
+                tools = hub.catalog.tools().len();
+
+                raw(&mut d, bar, &format!("bar-rest-{tag}.png"), &out2);
+                d.change(bar, |b, _, cx| {
+                    b.set_files(vec![profile_with(&pdf, 4_200_000)], cx)
+                });
+                d.settle(bar).await;
+                raw(&mut d, bar, &format!("bar-pdf-{tag}.png"), &out2);
+
+                // The app window while history is still only the seeded rows.
+                d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+                d.settle(app_win).await;
+                let _ = d
+                    .win(app_win, |window, _| window.render_to_image())
+                    .and_then(|r| r.ok())
+                    .map(|img| img.save(out2.join(format!("app-home-{tag}.png"))));
+                d.change(app_win, |a, _, cx| {
+                    a.go(Route::Category(crate::catalog::Category::Pdf), cx)
+                });
+                d.settle(app_win).await;
+                let _ = d
+                    .win(app_win, |window, _| window.render_to_image())
+                    .and_then(|r| r.ok())
+                    .map(|img| img.save(out2.join(format!("app-pdf-{tag}.png"))));
+                d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+                d.settle(app_win).await;
+
+                // One whole job, typed character by character. Frames are numbered; the light
+                // run's frames are the ones the animated demo is cut from.
+                d.change(bar, |b, window, cx| {
+                    b.set_files(vec![FileProfile::read(&sig)], cx);
+                    b.set_query("", window, cx);
+                });
+                d.settle(bar).await;
+                let phrase = "under 50 kb";
+                let mut n = 0;
+                raw(&mut d, bar, &format!("demo-{tag}-{n:02}.png"), &out2);
+                for end in phrase.char_indices().map(|(i, c)| i + c.len_utf8()) {
+                    n += 1;
+                    let q = phrase[..end].to_string();
+                    d.change(bar, move |b, window, cx| b.set_query(&q, window, cx));
+                    d.settle(bar).await;
+                    raw(&mut d, bar, &format!("demo-{tag}-{n:02}.png"), &out2);
+                }
+                n += 1;
+                raw(&mut d, bar, &format!("bar-words-{tag}.png"), &out2);
+                d.change(bar, |b, window, cx| b.activate(window, cx));
+                d.settle(bar).await;
+                raw(&mut d, bar, &format!("demo-{tag}-{n:02}.png"), &out2);
+                raw(&mut d, bar, &format!("bar-options-{tag}.png"), &out2);
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                if let Some(p) = panel {
+                    d.win(bar, |window, cx| p.update(cx, |p, cx| p.run(window, cx)));
+                }
+                let ran_at = Instant::now();
+                let mut run_n = 0;
+                for _ in 0..400 {
+                    d.cx.background_executor()
+                        .timer(Duration::from_millis(25))
+                        .await;
+                    d.draw(bar);
+                    let done = d
+                        .change(bar, |b, _, cx| {
+                            b.panel
+                                .as_ref()
+                                .map(|p| p.read(cx).is_done())
+                                .unwrap_or(false)
+                        })
+                        .unwrap_or(false);
+                    if !done {
+                        run_n += 1;
+                        raw(&mut d, bar, &format!("run-{tag}-{run_n:02}.png"), &out2);
+                    }
+                    if done || ran_at.elapsed() > Duration::from_secs(20) {
+                        break;
+                    }
+                }
+                d.settle(bar).await;
+                raw(&mut d, bar, &format!("bar-result-{tag}.png"), &out2);
+
+                // A longer job with a progress bar.
+                if clip.exists() {
+                    d.change(bar, |b, window, cx| {
+                        b.close_panel(window, cx);
+                        b.set_files(vec![FileProfile::read(&clip)], cx);
+                        b.set_query("compress video", window, cx);
+                    });
+                    d.settle(bar).await;
+                    d.change(bar, |b, window, cx| b.activate(window, cx));
+                    d.settle(bar).await;
+                    raw(&mut d, bar, &format!("video-options-{tag}.png"), &out2);
+                    let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                    if let Some(p) = panel {
+                        d.win(bar, |window, cx| p.update(cx, |p, cx| p.run(window, cx)));
+                    }
+                    let ran_at = Instant::now();
+                    let mut vn = 0;
+                    for _ in 0..800 {
+                        d.cx.background_executor()
+                            .timer(Duration::from_millis(60))
+                            .await;
+                        d.draw(bar);
+                        let done = d
+                            .change(bar, |b, _, cx| {
+                                b.panel
+                                    .as_ref()
+                                    .map(|p| p.read(cx).is_done() || p.read(cx).failure().is_some())
+                                    .unwrap_or(true)
+                            })
+                            .unwrap_or(true);
+                        if !done {
+                            vn += 1;
+                            raw(&mut d, bar, &format!("vrun-{tag}-{vn:02}.png"), &out2);
+                        }
+                        if done || ran_at.elapsed() > Duration::from_secs(60) {
+                            break;
+                        }
+                    }
+                    d.settle(bar).await;
+                    raw(&mut d, bar, &format!("video-result-{tag}.png"), &out2);
+                }
+
+                // The question before a download: put to the panel the way a job puts it.
+                panoply_core::assets::set_data_dir_override(Some(out2.join("consent-data")));
+                panoply_core::assets::ignore_environment_yes(true);
+                d.change(bar, |b, window, cx| {
+                    b.close_panel(window, cx);
+                    b.set_files(vec![FileProfile::read(&sig)], cx);
+                    b.set_query("remove background", window, cx);
+                });
+                d.settle(bar).await;
+                d.change(bar, |b, window, cx| b.activate(window, cx));
+                d.settle(bar).await;
+                let wanted = panoply_host::assets::find("isnet").map(|e| e.info);
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                let mut _answers = None;
+                if let (Some(p), Some(info)) = (panel.clone(), wanted) {
+                    _answers = d.win(bar, |window, cx| {
+                        p.update(cx, |p, cx| p.preview_consent(info, window, cx))
+                    });
+                }
+                d.settle(bar).await;
+                raw(&mut d, bar, &format!("bar-consent-{tag}.png"), &out2);
+                if let Some(p) = panel {
+                    d.win(bar, |_, cx| {
+                        p.update(cx, |p, cx| p.answer_consent(false, cx))
+                    });
+                }
+                panoply_core::assets::set_data_dir_override(None);
+                panoply_core::assets::ignore_environment_yes(false);
+                let _ = std::fs::remove_dir_all(out2.join("consent-data"));
+            }
+            println!("{{\"tools\": {tools}}}");
+            let _ = std::fs::remove_dir_all(&work2);
+            d.cx.update(|cx| cx.quit());
+        })
+        .detach();
+    });
+}
