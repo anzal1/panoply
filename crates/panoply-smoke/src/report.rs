@@ -138,6 +138,8 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
          corpus tests check that those fail in plain words.\n"
     );
 
+    s.push_str(include_str!("findings.md"));
+
     // Summary: modules x pass or fail.
     let _ = writeln!(s, "## Summary\n");
     let _ = writeln!(
@@ -256,8 +258,9 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
     let _ = writeln!(s, "## Budget exceptions in use\n");
     let _ = writeln!(
         s,
-        "These are written down in DECISIONS.md (\"Exceptions to the budgets\") and on the Budgets line \
-         of the module's spec. The matrix honours only these:\n"
+        "These are written down in DECISIONS.md (\"Exceptions to the budgets\", and \"Exceptions found by \
+         the beta smoke matrix\") and, for the first four, on the Budgets line of the module's spec. The \
+         matrix honours only these. A row that names files covers those files only:\n"
     );
     let _ = writeln!(s, "| Module | Cap | Source |");
     let _ = writeln!(s, "|---|---|---|");
@@ -268,7 +271,20 @@ pub fn markdown(rows: &[Row], h: &Header) -> String {
             (None, true) => "no 100 ms first preview".to_string(),
             (None, false) => String::new(),
         };
-        let _ = writeln!(s, "| `{}` | {} | {} |", e.module, cap, cell(e.source));
+        let who = if e.only_ids.is_empty() {
+            format!("`{}`", e.module)
+        } else {
+            format!(
+                "`{}` on {}",
+                e.module,
+                e.only_ids
+                    .iter()
+                    .map(|i| format!("`{i}`"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        };
+        let _ = writeln!(s, "| {} | {} | {} |", who, cap, cell(e.source));
     }
     let _ = writeln!(s);
     if !used.is_empty() {
