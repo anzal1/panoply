@@ -5,8 +5,12 @@ use std::sync::Arc;
 use crate::Module;
 
 pub mod hash;
+pub mod id;
 pub mod image;
+pub mod media;
+pub mod ocr;
 pub mod pdf;
+pub mod vision;
 
 /// Every built-in module.
 pub fn all() -> Vec<Arc<dyn Module>> {
@@ -17,6 +21,18 @@ pub fn all() -> Vec<Arc<dyn Module>> {
             .map(|m| Arc::new(m) as Arc<dyn Module>),
     );
     for m in pdf::modules() {
+        v.push(Arc::new(m));
+    }
+    for m in media::all() {
+        v.push(Arc::new(m));
+    }
+    for m in id::all() {
+        v.push(Arc::new(m));
+    }
+    for m in ocr::all() {
+        v.push(Arc::new(m));
+    }
+    for m in vision::all() {
         v.push(Arc::new(m));
     }
     v
