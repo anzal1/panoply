@@ -19,3 +19,6 @@ The patch is also kept as a diff in
   `tests/` and `benches/` folders are deleted. Nothing in Panoply builds or runs them, and the
   dev-dependencies pulled a second GPUI, an HTTP client and the unmaintained `rustls-pemfile`
   (RUSTSEC-2025-0134) into the lock file. `Cargo.toml.orig` still shows the upstream manifest.
+
+- `Cargo.toml` sets `test = false` on the library, because its unit tests need dev-dependencies
+  that were removed from this vendored copy.
