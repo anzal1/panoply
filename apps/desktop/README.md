@@ -29,7 +29,7 @@ prototype in `prototypes/shell-test/gpui/kit-variant`.
 | `src/platform/` | Everything that differs per OS. macOS has the full set; Windows and Linux compile the same surface. |
 | `src/selfcheck.rs` | Dev only (`--features snapshot`): the headless run. |
 | `patches/gpui-base/` | GPUI Kit's `gpui-base` 0.7.3 with `patches/gpui-base-grapheme-and-unmark.diff` applied (Apache-2.0). Kept out of the cargo workspace by `exclude` in the root `Cargo.toml`. |
-| `tools/` | `selfcheck.sh` (headless run), `linux-check.sh` (Docker), `gen_icons.mjs` (Lucide icons, ISC), `gen_app_icon.mjs` (the app icon: SVG to .icns, .ico and PNGs). |
+| `tools/` | `selfcheck.sh` (headless run), `linux-check.sh` (Docker), `gen_icons.mjs` (Lucide icons, ISC), `gen_app_icon.mjs` (the app icon: SVG to .icns, .ico and PNGs, and the icon sheet), `readme_assets.py` (the README screens, GIFs and social preview, built from `--selfcheck-frames`). |
 | `packaging/` | macOS bundle script, Linux `.desktop`, the app icon in every format, notes for Windows and Linux. |
 | `screens/` | PNGs rendered offscreen by the headless run, plus `selfcheck-report.json`. |
 
