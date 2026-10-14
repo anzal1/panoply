@@ -16,7 +16,8 @@
 //!
 //! CPU comes from `ps -o cputime`, which has 10 ms resolution, so a 10 s window resolves 0.1%.
 //! "0%" is judged as at most [`IDLE_CPU_MAX_PCT`]. Memory is resident set size from `ps`, plus
-//! `phys_footprint` from `footprint(1)` on macOS.
+//! `phys_footprint` from `footprint(1)` on macOS. Windows has no `ps`; there the same numbers
+//! (processor time and working set) come from `Get-Process` in PowerShell.
 
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
@@ -132,6 +133,7 @@ pub fn parse_footprint(output: &str) -> Option<u64> {
 }
 
 /// CPU seconds and resident bytes for one process, via `ps`. `None` when it has exited.
+#[cfg(not(windows))]
 fn ps(pid: u32) -> Option<(f64, u64)> {
     let out = Command::new("ps")
         .args(["-o", "cputime=,rss=", "-p", &pid.to_string()])
@@ -142,6 +144,35 @@ fn ps(pid: u32) -> Option<(f64, u64)> {
     let cpu = parse_cputime(it.next()?)?;
     let rss_kb: u64 = it.next()?.parse().ok()?;
     Some((cpu, rss_kb * 1024))
+}
+
+/// CPU seconds and working set bytes for one process. Windows has no `ps`, so this asks
+/// PowerShell for the kernel's own counters (`TotalProcessorTime` has 100 ns resolution,
+/// `WorkingSet64` is the resident set). `None` when the process has exited.
+#[cfg(windows)]
+fn ps(pid: u32) -> Option<(f64, u64)> {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    let script = format!(
+        "$p = Get-Process -Id {pid} -ErrorAction SilentlyContinue; \
+         if ($p) {{ '{{0}} {{1}}' -f $p.TotalProcessorTime.Ticks, $p.WorkingSet64 }}"
+    );
+    let out = Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+        .creation_flags(CREATE_NO_WINDOW)
+        .stdin(Stdio::null())
+        .output()
+        .ok()?;
+    parse_windows_sample(&String::from_utf8_lossy(&out.stdout))
+}
+
+/// Parse `<cpu ticks of 100 ns> <working set bytes>`, the line the Windows sampler prints.
+#[cfg(any(windows, test))]
+fn parse_windows_sample(text: &str) -> Option<(f64, u64)> {
+    let mut it = text.split_whitespace();
+    let ticks: u64 = it.next()?.parse().ok()?;
+    let bytes: u64 = it.next()?.parse().ok()?;
+    Some((ticks as f64 / 1e7, bytes))
 }
 
 fn footprint(pid: u32) -> Option<u64> {
@@ -320,10 +351,23 @@ mod tests {
     }
 
     #[test]
+    fn windows_sample_lines() {
+        assert_eq!(
+            parse_windows_sample("1562500 12345678\r\n"),
+            Some((0.15625, 12_345_678))
+        );
+        assert_eq!(parse_windows_sample(""), None);
+        assert_eq!(parse_windows_sample("1 x"), None);
+    }
+
+    #[test]
     fn a_sleeping_process_is_idle() {
         let mut c = if cfg!(windows) {
-            Command::new("powershell")
-                .args(["-NoProfile", "-Command", "Start-Sleep -Seconds 30"])
+            // ping.exe waits on a timer and costs nothing in between, unlike a PowerShell that
+            // is still loading its runtime while the window opens.
+            Command::new("ping")
+                .args(["-n", "30", "127.0.0.1"])
+                .stdout(Stdio::null())
                 .spawn()
                 .unwrap()
         } else {

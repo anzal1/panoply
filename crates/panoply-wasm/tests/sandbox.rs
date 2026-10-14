@@ -29,6 +29,21 @@ fn fixture(name: &str) -> PathBuf {
         .join(name)
 }
 
+/// `cargo`, at low priority where the platform has `nice`. Windows has no `nice`; the copy that
+/// Git for Windows puts on PATH eats the backslashes in the arguments it forwards.
+fn low_priority_cargo() -> Command {
+    #[cfg(unix)]
+    {
+        let mut c = Command::new("nice");
+        c.args(["-n", "15"]).arg(env!("CARGO"));
+        c
+    }
+    #[cfg(not(unix))]
+    {
+        Command::new(env!("CARGO"))
+    }
+}
+
 /// Build a module project once per test process. Low priority and three jobs, to keep the
 /// machine cool.
 fn build(dir: &Path) -> PathBuf {
@@ -36,9 +51,7 @@ fn build(dir: &Path) -> PathBuf {
     let mut done = DONE.lock().unwrap();
     let set = done.get_or_insert_with(HashSet::new);
     if set.insert(dir.to_path_buf()) {
-        let status = Command::new("nice")
-            .args(["-n", "15"])
-            .arg(env!("CARGO"))
+        let status = low_priority_cargo()
             .args([
                 "build",
                 "--release",

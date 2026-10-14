@@ -76,8 +76,14 @@ fn local(files: Vec<std::path::PathBuf>) -> QrOptions {
 async fn the_page_lists_files_and_hides_everything_else() {
     let src = TempDir::new("src");
     std::fs::write(src.join("a.txt"), b"alpha").unwrap();
-    std::fs::write(src.join("b <&>.txt"), b"bravo").unwrap();
-    let share = QrShare::start(local(vec![src.join("a.txt"), src.join("b <&>.txt")]))
+    // Windows forbids `<` and `>` in file names, so there the escaping check uses `&` alone.
+    let (odd, escaped) = if cfg!(windows) {
+        ("b &.txt", "b &amp;.txt")
+    } else {
+        ("b <&>.txt", "b &lt;&amp;&gt;.txt")
+    };
+    std::fs::write(src.join(odd), b"bravo").unwrap();
+    let share = QrShare::start(local(vec![src.join("a.txt"), src.join(odd)]))
         .await
         .unwrap();
     let (_, path) = addr_of(&share);
@@ -89,7 +95,7 @@ async fn the_page_lists_files_and_hides_everything_else() {
     assert_eq!(page.code, 200);
     let text = String::from_utf8(page.body.to_vec()).unwrap();
     assert!(
-        text.contains("a.txt") && text.contains("b &lt;&amp;&gt;.txt"),
+        text.contains("a.txt") && text.contains(escaped),
         "escaped names"
     );
     assert!(!text.contains("<script"), "works without JavaScript");
@@ -281,7 +287,8 @@ async fn zip_of_many_files_and_folders_streams_with_exact_length() {
                 .arg(&zip_path)
                 .output()
                 .unwrap();
-            let text = String::from_utf8_lossy(&out.stdout).to_string();
+            // Python prints CRLF on Windows.
+            let text = String::from_utf8_lossy(&out.stdout).replace("\r\n", "\n");
             assert!(
                 text.starts_with("None\n"),
                 "python zipfile: {text} {}",

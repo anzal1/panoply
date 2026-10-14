@@ -188,11 +188,10 @@ fn a_mixed_file_reads_the_scan_and_leaves_the_text_page_alone() {
     assert_eq!((report.pages, report.read, report.had_text), (2, 1, 1));
     assert!(matches!(report.per_page[0], PageStatus::Read { .. }));
     assert_eq!(report.per_page[1], PageStatus::HadText);
-    assert!(
-        page_text(&out, 0).contains("Invoice 2026-0417"),
-        "{}",
-        page_text(&out, 0)
-    );
+    // Windows.Media.Ocr, the first engine on Windows, reads a hyphen between digits as a dash, so
+    // the comparison treats the dashes alike.
+    let first = page_text(&out, 0).replace(['\u{2013}', '\u{2014}'], "-");
+    assert!(first.contains("Invoice 2026-0417"), "{first}");
     assert!(page_text(&out, 1).contains("Optical character recognition"));
     // Still two pages, and the second page's content is unchanged.
     let d = panoply_pdf::Doc::open(Source::from_bytes(out)).unwrap();
