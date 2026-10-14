@@ -22,7 +22,7 @@ on:
 # A superseded pull request or branch run is cancelled. A push to main is never cancelled by a
 # later push (each gets its own group), so the last green run on main always finishes.
 concurrency:
-  group: ci-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}
+  group: ci-${{ github.ref == 'refs/heads/main' && github.run_id || github.ref }}-${{ inputs.variant }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
@@ -77,7 +77,7 @@ jobs:
   # ------------------------------------------------------------------------------------------------
   fmt:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && inputs.variant == ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -88,7 +88,7 @@ jobs:
 
   clippy:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && inputs.variant == ''
     name: clippy (${{ matrix.os }})
     strategy:
       fail-fast: false
@@ -300,7 +300,7 @@ jobs:
   # ------------------------------------------------------------------------------------------------
   licenses:
     needs: changes
-    if: needs.changes.outputs.deps == 'true'
+    if: needs.changes.outputs.deps == 'true' && inputs.variant == ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -312,7 +312,7 @@ jobs:
   # without hiding the license result. Ignored advisories and their reasons are in deny.toml.
   advisories:
     needs: changes
-    if: needs.changes.outputs.deps == 'true'
+    if: needs.changes.outputs.deps == 'true' && inputs.variant == ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -324,7 +324,7 @@ jobs:
   # parts in tools/notices) changed and the file was not regenerated.
   notices:
     needs: changes
-    if: needs.changes.outputs.notices == 'true'
+    if: needs.changes.outputs.notices == 'true' && inputs.variant == ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -333,7 +333,7 @@ jobs:
 
   conversions:
     needs: changes
-    if: needs.changes.outputs.conversions == 'true'
+    if: needs.changes.outputs.conversions == 'true' && inputs.variant == ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
