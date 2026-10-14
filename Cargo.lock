@@ -2320,9 +2320,9 @@ checksum = "e4eba85ea1d0a966a983acd07deee566e67395d2d96b6fb39e62b5a833f1eb0b"
 
 [[package]]
 name = "global-hotkey"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9247516746aa8e53411a0db9b62b0e24efbcf6a76e0ba73e5a91b512ddabed7"
+checksum = "8c386b0a4a70cb2d39fffd74480f985b6f0bfbcb934b6a6b6b7e630e448f242e"
 dependencies = [
  "crossbeam-channel",
  "keyboard-types",
@@ -5151,7 +5151,7 @@ dependencies = [
  "fax",
  "jpeg-encoder",
  "lopdf",
- "miniz_oxide 0.8.9",
+ "miniz_oxide 0.9.1",
  "panoply-core",
  "pdfium-render",
  "png 0.18.1",
@@ -5159,7 +5159,7 @@ dependencies = [
  "sha2 0.11.1",
  "thiserror 2.0.21",
  "toml 1.1.8+spec-1.1.0",
- "weezl 0.1.12",
+ "weezl 0.2.1",
  "zune-core",
  "zune-jpeg",
 ]
@@ -5182,7 +5182,7 @@ dependencies = [
  "clap",
  "crc32fast",
  "fs4",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "http-body-util",
  "hyper",
  "hyper-util",
@@ -5218,7 +5218,7 @@ name = "panoply-vision"
 version = "0.1.0"
 dependencies = [
  "fast_image_resize",
- "miniz_oxide 0.8.9",
+ "miniz_oxide 0.9.1",
  "ort",
  "panoply-core",
  "panoply-image",
@@ -6942,7 +6942,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",
