@@ -144,6 +144,8 @@ jobs:
           "DEVDRIVE_LETTER=$letter" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           Write-Host "dev drive ready in $($sw.Elapsed.TotalSeconds) s"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          clean: ${{ !contains(inputs.variant, 'ddw') }}
       - name: Dev Drive at target
         if: runner.os == 'Windows' && contains(inputs.variant, 'ddt')
         shell: pwsh
