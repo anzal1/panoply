@@ -6,6 +6,11 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["pdf", "image", "file-converter", "privacy", "cli"]
+categories = ["command-line-utilities", "multimedia"]
 
 [[bin]]
 name = "panoply"

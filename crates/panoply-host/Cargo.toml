@@ -6,6 +6,11 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["modules", "sandbox", "capabilities", "registry"]
+categories = ["development-tools", "command-line-utilities"]
 
 [dependencies]
 panoply-core.workspace = true

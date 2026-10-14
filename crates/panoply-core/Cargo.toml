@@ -6,6 +6,11 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["file-type", "sniffing", "naming", "jobs"]
+categories = ["filesystem", "data-structures"]
 
 [dependencies]
 serde.workspace = true

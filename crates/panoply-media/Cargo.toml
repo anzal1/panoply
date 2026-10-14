@@ -6,6 +6,11 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["video", "audio", "ffmpeg", "transcode"]
+categories = ["multimedia::video", "multimedia::audio"]
 
 [dependencies]
 panoply-core.workspace = true

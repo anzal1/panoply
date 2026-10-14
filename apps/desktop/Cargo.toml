@@ -6,6 +6,11 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["desktop-app","gpui","pdf","image","privacy"]
+categories = ["gui","multimedia"]
 
 [lib]
 name = "panoply_desktop"
