@@ -32,19 +32,6 @@ pub fn corpus(rel: &str) -> Option<PathBuf> {
     }
 }
 
-/// A HEIC corpus file, or `None` where this system cannot decode HEIC. HEIC decodes through the
-/// operating system and only macOS has that wired; elsewhere every module refuses it with a plain
-/// message (covered in the panoply-image corpus tests), so a vision test that needs the pixels of
-/// a HEIC has nothing to check there.
-pub fn heic_corpus(rel: &str) -> Option<PathBuf> {
-    if cfg!(target_os = "macos") {
-        corpus(rel)
-    } else {
-        eprintln!("skipping: {rel} needs HEIC decoding, which is macOS only for now");
-        None
-    }
-}
-
 /// True when this model can be used now: it is on disk, or the network may fetch it. A run
 /// with `PANOPLY_OFFLINE=1` and no cached model skips the test instead of failing it.
 pub fn have(model: &'static Model) -> bool {

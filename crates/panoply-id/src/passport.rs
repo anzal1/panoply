@@ -471,26 +471,36 @@ fn mean_luma(img: &Image, r: (f64, f64, f64, f64), keep: impl Fn(u32, u32) -> bo
     (n > 0).then(|| sum / n as f64)
 }
 
-/// Sharpness of the face: the Laplacian variance of the face box brought to a fixed 160 px width,
-/// so the number does not depend on how big the face is in the frame (a tight crop of a soft photo
-/// must not score higher than a wide crop of a sharp one). A face with fewer than 160 px is kept
-/// at its own size: an enlarged face reads as soft, which it is.
-fn face_sharpness(img: &Image, r: (f64, f64, f64, f64)) -> f64 {
-    let (x0, y0) = (r.0.max(0.0) as u32, r.1.max(0.0) as u32);
+/// The square of the face that sharpness is read on, from the landmarks every engine gives (both
+/// eyes and the mouth) and nothing else: centred between the eye line and the mouth line, with a
+/// side of 2.2 eye distances. A detector's face box is not used because engines draw it
+/// differently (Apple Vision and YuNet disagree on how much hair, forehead and background it
+/// takes in, which moved the number by a third on the same photo); the eyes and mouth land in
+/// nearly the same place on both. The region is brought to a fixed 160 px square, so the number
+/// also does not depend on how big the face is in the frame (a tight crop of a soft photo must
+/// not score higher than a wide crop of a sharp one). A region with fewer than 160 px is kept at
+/// its own size: an enlarged face reads as soft, which it is.
+fn face_sharpness(img: &Image, eye_l: (f64, f64), eye_r: (f64, f64), mouth: (f64, f64)) -> f64 {
+    const SIDE_PER_EYE_DIST: f64 = 2.2;
+    const TARGET: u32 = 160;
+    let eye_dist = face::dist(eye_l, eye_r);
+    let eyes = ((eye_l.0 + eye_r.0) / 2.0, (eye_l.1 + eye_r.1) / 2.0);
+    let (cx, cy) = ((eyes.0 + mouth.0) / 2.0, (eyes.1 + mouth.1) / 2.0);
+    let half = eye_dist * SIDE_PER_EYE_DIST / 2.0;
+    let (x0, y0) = ((cx - half).max(0.0) as u32, (cy - half).max(0.0) as u32);
     let (x1, y1) = (
-        (r.2.min(f64::from(img.width))) as u32,
-        (r.3.min(f64::from(img.height))) as u32,
+        ((cx + half).min(f64::from(img.width))) as u32,
+        ((cy + half).min(f64::from(img.height))) as u32,
     );
     if x1 <= x0 + 8 || y1 <= y0 + 8 {
         return 0.0;
     }
     let crop = img.crop(x0, y0, x1 - x0, y1 - y0);
-    let target = 160u32;
-    let crop = if crop.width > target {
-        let h = ((f64::from(crop.height) * f64::from(target) / f64::from(crop.width)).round()
+    let crop = if crop.width > TARGET {
+        let h = ((f64::from(crop.height) * f64::from(TARGET) / f64::from(crop.width)).round()
             as u32)
             .max(8);
-        panoply_image::ops::kb::resample_image(&crop, target, h).unwrap_or(crop)
+        panoply_image::ops::kb::resample_image(&crop, TARGET, h).unwrap_or(crop)
     } else {
         crop
     };
@@ -967,7 +977,7 @@ pub fn render(pre: &Prepared, rule: &Rule, p: &Params, w: u32, h: u32) -> Result
 
     // Sharpness on the face of the final picture.
     {
-        let lv = face_sharpness(&fg, face_box);
+        let lv = face_sharpness(&fg, eyes_out.0, eyes_out.1, eyes_out.2);
         let st = if lv >= SHARP_PASS {
             Status::Pass
         } else if lv >= SHARP_WARN {
@@ -1016,7 +1026,11 @@ pub fn render(pre: &Prepared, rule: &Rule, p: &Params, w: u32, h: u32) -> Result
     Ok(Made { image: fg, report })
 }
 
-/// Sharpness limits for the Laplacian variance of the face (see `tests/passport.rs`).
+/// Sharpness limits for the Laplacian variance of the eye and mouth region (see
+/// `sharpness_numbers_separate_real_portraits_from_a_blur` in `tests/faces.rs`, which runs the
+/// seven corpus portraits on every engine). Measured: the portraits score 136 to 285 on Apple
+/// Vision and 125 to 355 on YuNet; a heavy blur of one of them scores 9 and 3. A pass at 100
+/// sits 20 percent under the softest real portrait on either engine.
 pub const SHARP_PASS: f64 = 100.0;
 /// Below this a photo is called blurry.
 pub const SHARP_WARN: f64 = 40.0;

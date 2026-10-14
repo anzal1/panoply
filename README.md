@@ -20,7 +20,7 @@ Download the file for your system from the [releases page](https://github.com/an
 The beta is not code signed, so your system asks you to confirm the first start. The steps are below.
 Check a download with `SHA256SUMS` from the same page.
 
-**macOS (Apple silicon and Intel).** Open `Panoply-<version>-macos-universal.dmg` and drag Panoply to
+**macOS (Apple silicon and Intel).** Open `Panoply-<version>-macos-arm64.dmg` (Apple silicon) or `Panoply-<version>-macos-x64.dmg` (Intel) and drag Panoply to
 Applications. Then:
 
 1. Double-click Panoply. macOS says it cannot check the app for malware. Click Done.

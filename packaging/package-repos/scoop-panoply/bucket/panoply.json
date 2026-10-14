@@ -1,0 +1,45 @@
+{
+    "version": "0.1.0-beta",
+    "description": "Every file tool in one fast app, running on your own computer. Desktop app and the panoply command line tool.",
+    "homepage": "https://github.com/anzal1/panoply",
+    "license": "MIT|Apache-2.0",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-windows-x64.zip",
+            "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "extract_dir": "Panoply-0.1.0-beta-windows-x64"
+        },
+        "arm64": {
+            "url": "https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-windows-arm64.zip",
+            "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "extract_dir": "Panoply-0.1.0-beta-windows-arm64"
+        }
+    },
+    "bin": [
+        "panoply.exe",
+        "panoply-desktop.exe"
+    ],
+    "shortcuts": [
+        [
+            "panoply-desktop.exe",
+            "Panoply"
+        ]
+    ],
+    "checkver": "github",
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/anzal1/panoply/releases/download/v$version/Panoply-$version-windows-x64.zip",
+                "extract_dir": "Panoply-$version-windows-x64"
+            },
+            "arm64": {
+                "url": "https://github.com/anzal1/panoply/releases/download/v$version/Panoply-$version-windows-arm64.zip",
+                "extract_dir": "Panoply-$version-windows-arm64"
+            }
+        },
+        "hash": {
+            "url": "$baseurl/SHA256SUMS",
+            "regex": "$sha256\\s+$basename"
+        }
+    }
+}

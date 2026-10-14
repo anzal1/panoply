@@ -1,0 +1,53 @@
+# Flatpak manifest skeleton for Flathub. Filled by packaging/scripts/render_manifests.py.
+# Not built in CI yet. To finish it for a Flathub submission:
+#   1. generate cargo-sources.json from Cargo.lock with flatpak-cargo-generator.py
+#      (github.com/flatpak/flatpak-builder-tools), commit it next to this file;
+#   2. build and run it locally: flatpak-builder --user --install --force-clean build io.github.anzal1.Panoply.yml
+#   3. bundle pdfium (see the TODO below) so the sandbox needs no network;
+#   4. follow https://docs.flathub.org/docs/for-app-authors/submission
+app-id: io.github.anzal1.Panoply
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+command: panoply-desktop
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  # Files come in through the file chooser portal and drag and drop; no blanket filesystem access.
+  # Add --filesystem=home only if a Flathub reviewer or real use shows the portal is not enough.
+  # Panoply does not use the network while it works. It fetches pdfium once on first use; until
+  # pdfium is bundled (TODO below) the app needs --share=network for that single download.
+  # - --share=network
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+  env:
+    CARGO_HOME: /run/build/panoply/cargo
+  build-args:
+    - --share=network   # remove once cargo-sources.json is in place and builds offline
+
+modules:
+  # TODO: a pdfium module here, from github.com/bblanchon/pdfium-binaries at the release pinned in
+  # crates/panoply-pdf/src/pdfium.rs (archive source with its sha256), installed to
+  # /app/lib/pdfium, with PANOPLY_PDFIUM_LIB set in finish-args via --env=.
+  - name: panoply
+    buildsystem: simple
+    build-commands:
+      - cargo build --release --locked -p panoply-desktop -p panoply-cli
+      - install -Dm755 target/release/panoply-desktop /app/bin/panoply-desktop
+      - install -Dm755 target/release/panoply /app/bin/panoply
+      - install -Dm644 apps/desktop/packaging/linux/panoply.desktop /app/share/applications/io.github.anzal1.Panoply.desktop
+      - install -Dm644 apps/desktop/packaging/linux/icons/hicolor/512x512/apps/panoply.png /app/share/icons/hicolor/512x512/apps/io.github.anzal1.Panoply.png
+      - install -Dm644 packaging/flatpak/io.github.anzal1.Panoply.metainfo.xml /app/share/metainfo/io.github.anzal1.Panoply.metainfo.xml
+      - sed -i 's/^Icon=panoply$/Icon=io.github.anzal1.Panoply/' /app/share/applications/io.github.anzal1.Panoply.desktop
+    sources:
+      - type: git
+        url: https://github.com/@REPO@.git
+        tag: v@VERSION@
+        commit: @COMMIT@
+      # - cargo-sources.json
