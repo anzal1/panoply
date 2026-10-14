@@ -1,6 +1,6 @@
 # Known limitations
 
-This is the v0.1.0 beta. It does 30 jobs well and leaves others out on purpose. This page says which, so
+This is the v0.1.0 beta. It does 31 tools well and leaves others out on purpose. This page says which, so
 you do not have to find out by trying. Items move off this page as they ship (see the
 [changelog](../CHANGELOG.md)).
 
