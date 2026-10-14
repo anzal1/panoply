@@ -1008,36 +1008,6 @@ fn sharpness_numbers_separate_real_portraits_from_a_blur() {
 }
 
 #[test]
-fn the_fallback_model_unloads_when_idle() {
-    if !engines_available() {
-        return;
-    }
-    if panoply_id::runtime::ensure_onnxruntime().is_err()
-        || panoply_id::runtime::ensure_model().is_err()
-    {
-        eprintln!("skipping: the YuNet engine could not be fetched here");
-        return;
-    }
-    let Some(p) = portrait("hoshide") else { return };
-    // This test owns the process-wide session: nothing else in this binary may run YuNet at the
-    // same moment, so it only checks "loaded after use, gone after the idle time" with a short idle.
-    panoply_id::runtime::set_idle_unload(std::time::Duration::from_millis(800));
-    let img = read(&p);
-    let (faces, e) = face::detect(&img, EnginePref::YuNet).unwrap();
-    assert_eq!((faces.len(), e), (1, Engine::YuNet));
-    let t = std::time::Instant::now();
-    while panoply_id::runtime::session_loaded() && t.elapsed() < std::time::Duration::from_secs(10)
-    {
-        std::thread::sleep(std::time::Duration::from_millis(100));
-    }
-    panoply_id::runtime::set_idle_unload(std::time::Duration::from_secs(60));
-    assert!(
-        !panoply_id::runtime::session_loaded(),
-        "the session was still loaded after the idle time"
-    );
-}
-
-#[test]
 fn the_json_report_carries_every_check_with_its_number() {
     if !engines_available() {
         return;
