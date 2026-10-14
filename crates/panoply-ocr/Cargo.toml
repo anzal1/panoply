@@ -36,6 +36,7 @@ windows = { version = "0.62", features = [
     "Graphics_Imaging",
     "Media_Ocr",
     "Storage_Streams",
+    "Win32_System_Com",
     "Win32_System_WinRT",
 ] }
 
@@ -43,7 +44,7 @@ windows = { version = "0.62", features = [
 serde_json.workspace = true
 
 # Not the workspace lints: `unsafe` is denied here instead of forbidden, because the Windows OCR
-# engine has exactly one unsafe call (RoInitialize), allowed on that function with a SAFETY note.
+# engine has two small unsafe calls (RoInitialize and CoIncrementMTAUsage), allowed on that function with a SAFETY note.
 [lints.rust]
 unsafe_code = "deny"
 missing_docs = "warn"

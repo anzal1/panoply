@@ -6,7 +6,7 @@ marking releases that are still finding their edges.
 
 ## v0.1.0-beta (2026-10-14)
 
-The first public beta. 30 tools, one desktop app for macOS, Windows and Linux, and the same tools as a
+The first public beta. 31 tools, one desktop app for macOS, Windows and Linux, and the same tools as a
 command line. Builds are not code signed. See [KNOWN-LIMITATIONS.md](docs/KNOWN-LIMITATIONS.md) for the
 first-open steps and for what is not here yet.
 

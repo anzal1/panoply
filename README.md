@@ -14,22 +14,21 @@
   <img alt="Platforms: macOS, Windows, Linux" src="https://img.shields.io/badge/platforms-macOS%20%7C%20Windows%20%7C%20Linux-3a3f4b?style=flat-square&labelColor=24272f">
 </p>
 
-<table align="center">
-  <tr>
-    <td align="center" valign="top" width="240">
-      <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-macos-arm64.dmg"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-2D6CDF?style=for-the-badge&logo=apple&logoColor=white"></a>
-      <br><sub><a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-macos-arm64.dmg">Apple silicon</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-macos-x64.dmg">Intel</a></sub>
-    </td>
-    <td align="center" valign="top" width="240">
-      <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-windows-x64.msi"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows-2D6CDF?style=for-the-badge&logo=windows&logoColor=white"></a>
-      <br><sub><a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-windows-x64.msi">x64</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-windows-arm64.msi">arm64</a></sub>
-    </td>
-    <td align="center" valign="top" width="240">
-      <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-linux-x64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux-2D6CDF?style=for-the-badge&logo=linux&logoColor=white"></a>
-      <br><sub><a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-linux-x64.AppImage">x64</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-linux-arm64.AppImage">arm64</a></sub>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-macos-arm64.dmg"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-2D6CDF?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-windows-x64.msi"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows-2D6CDF?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-linux-x64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux-2D6CDF?style=for-the-badge&logo=linux&logoColor=white"></a>
+</p>
+
+<p align="center">
+  <sub>
+    macOS: <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-macos-arm64.dmg">Apple silicon</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-macos-x64.dmg">Intel</a>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Windows: <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-windows-x64.msi">x64</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-windows-arm64.msi">arm64</a>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Linux: <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-linux-x64.AppImage">x64</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.0-beta/Panoply-0.1.0-beta-linux-arm64.AppImage">arm64</a>
+  </sub>
+</p>
 
 <p align="center"><sub>v0.1.0 beta &middot; <a href="https://github.com/anzal1/panoply/releases/tag/v0.1.0-beta">all downloads and SHA256SUMS</a> &middot; <a href="CHANGELOG.md">changelog</a></sub></p>
 
@@ -47,87 +46,40 @@
 - **Say what you want.** Drop a file, type "make this under 50 kb", press Return.
 - **Nothing is overwritten.** Every result is a new file next to the original, and Undo removes it.
 
-## How it feels
-
-<table>
-  <tr>
-    <td width="33%" valign="top">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screens/bar-words-dark.png">
-        <img alt="The command bar with signature.png dropped and the words under 50 kb typed. Compress image is the best match, with the target already filled in." src="docs/assets/screens/bar-words-light.png">
-      </picture>
-      <br><b>Say it in plain words</b>
-      <br><sub>"Under 50 kb" becomes a size target. The bar shows what it understood before it runs.</sub>
-    </td>
-    <td width="33%" valign="top">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screens/bar-running-dark.png">
-        <img alt="A video compression at 50 percent, with a Cancel button." src="docs/assets/screens/bar-running-light.png">
-      </picture>
-      <br><b>Watch it work</b>
-      <br><sub>Jobs run off the interface thread, show real progress and cancel at once.</sub>
-    </td>
-    <td width="33%" valign="top">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screens/bar-result-dark.png">
-        <img alt="A result card: 67 KB to 43 KB, 35 percent smaller, with Show in folder, Open, Then and Undo." src="docs/assets/screens/bar-result-light.png">
-      </picture>
-      <br><b>See what changed</b>
-      <br><sub>Before and after numbers, the new file's name, and Undo.</sub>
-    </td>
-  </tr>
-</table>
-
 ## What is in it
 
 <table>
   <tr>
-    <td width="50%" valign="top">
-      <b>PDF</b> &nbsp;<sub>6 tools</sub><br>
-      Merge, split, organize pages, compress to a quality or a size, images to PDF, PDF to images.<br><br>
-      A 300 MB PDF compresses to 137 MB in 5 seconds, using 11 MB of memory.
-    </td>
-    <td width="50%" valign="top">
-      <b>Images</b> &nbsp;<sub>9 tools</sub><br>
-      Convert, compress, resize, strip metadata. Remove a background, erase an object, remove a watermark from your own pictures, upscale 4x.<br><br>
-      Compress holds picture similarity at 0.97 and made 13 test photos 44.8% smaller.
-    </td>
+    <td width="120" valign="top"><b>PDF</b><br><sub>6 tools</sub></td>
+    <td valign="top">Merge, split, organize pages, compress to a quality or a size, images to PDF, PDF to images.<br><b>A 300 MB PDF compresses to 137 MB in 5 seconds, using 11 MB of memory.</b></td>
   </tr>
   <tr>
-    <td valign="top">
-      <b>ID and forms</b> &nbsp;<sub>3 tools, 15 exam presets</sub><br>
-      Passport and visa photos, print sheets, a signature cleaner, and resize to an exact size in KB for a form or an exam portal.<br><br>
-      840 test cases across the presets, none outside the published size window.
-    </td>
-    <td valign="top">
-      <b>Video and audio</b> &nbsp;<sub>10 tools</sub><br>
-      Convert, trim, compress to a size or an upload limit, extract audio, normalize loudness, stereo to mono, HDR to SDR, repair, inspect, edit streams.<br><br>
-      A 4.6 GB, 73 minute video trims at keyframes in 0.96 seconds, using 73 MB of memory.
-    </td>
+    <td width="120" valign="top"><b>Images</b><br><sub>9 tools</sub></td>
+    <td valign="top">Convert, compress, resize, strip metadata. Remove a background, erase an object, remove a watermark from your own pictures, upscale 4x.<br><b>Compress holds picture similarity at 0.97 and made 13 test photos 44.8% smaller.</b></td>
   </tr>
   <tr>
-    <td valign="top">
-      <b>Text from images</b> &nbsp;<sub>2 tools</sub><br>
-      Copy the text out of a picture, or turn a scanned PDF into a searchable one. Apple Vision on macOS, on-device models for English, Latin and Devanagari scripts elsewhere.<br><br>
-      English reads at under 0.2% character error. Hindi reads at about 2%.
-    </td>
-    <td valign="top">
-      <b>Share</b><br>
-      Send and receive files with LocalSend apps on your own network, or make a QR link for a device with no app. From the command line today.<br><br>
-      Only addresses on your own network are accepted.
-    </td>
+    <td width="120" valign="top"><b>ID and forms</b><br><sub>3 tools, 15 exam presets</sub></td>
+    <td valign="top">Passport and visa photos, print sheets, a signature cleaner, and resize to an exact size in KB for a form or an exam portal.<br><b>840 test cases across the presets, none outside the published size window.</b></td>
   </tr>
   <tr>
-    <td valign="top">
-      <b>Command bar</b><br>
-      Opens from a hotkey anywhere: <kbd>Option</kbd> <kbd>Space</kbd> on macOS, <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Space</kbd> on Windows and Linux. Searches every tool, takes dropped files and understands plain requests.<br><br>
-      31 tools, one keystroke away.
-    </td>
-    <td valign="top">
-      <b>For developers and agents</b><br>
-      Every tool is also a command: <code>panoply run image.compress photo.jpg</code>. A community tool is a manifest plus a WebAssembly file that runs in a sandbox with no network.<br><br>
-      498 jobs over real files through the app's own path, 0 failures.
-    </td>
+    <td width="120" valign="top"><b>Video and audio</b><br><sub>10 tools</sub></td>
+    <td valign="top">Convert, trim, compress to a size or an upload limit, extract audio, normalize loudness, stereo to mono, HDR to SDR, repair, inspect, edit streams.<br><b>A 4.6 GB, 73 minute video trims at keyframes in 0.96 seconds, using 73 MB of memory.</b></td>
+  </tr>
+  <tr>
+    <td width="120" valign="top"><b>Text from images</b><br><sub>2 tools</sub></td>
+    <td valign="top">Copy the text out of a picture, or turn a scanned PDF into a searchable one. Apple Vision on macOS, on-device models for English, Latin and Devanagari scripts elsewhere.<br><b>English reads at under 0.2% character error. Hindi reads at about 2%.</b></td>
+  </tr>
+  <tr>
+    <td width="120" valign="top"><b>Share</b></td>
+    <td valign="top">Send and receive files with LocalSend apps on your own network, or make a QR link for a device with no app. From the command line today.<br><b>Only addresses on your own network are accepted.</b></td>
+  </tr>
+  <tr>
+    <td width="120" valign="top"><b>Command bar</b></td>
+    <td valign="top">Opens from a hotkey anywhere: <kbd>Option</kbd> <kbd>Space</kbd> on macOS, <kbd>Ctrl</kbd> <kbd>Alt</kbd> <kbd>Space</kbd> on Windows and Linux. Searches every tool, takes dropped files and understands plain requests.<br><b>31 tools, one keystroke away.</b></td>
+  </tr>
+  <tr>
+    <td width="120" valign="top"><b>For developers and agents</b></td>
+    <td valign="top">Every tool is also a command: <code>panoply run image.compress photo.jpg</code>. A community tool is a manifest plus a WebAssembly file that runs in a sandbox with no network.<br><b>498 jobs over real files through the app's own path, 0 failures.</b></td>
   </tr>
 </table>
 
@@ -136,7 +88,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screens/app-home-dark.png">
-    <img alt="The Panoply app window: categories on the left, a drop area, quick actions and recent jobs." src="docs/assets/screens/app-home-light.png" width="760">
+    <img alt="The Panoply app window: categories on the left, a drop area, quick actions and recent jobs." src="docs/assets/screens/app-home-light.png">
   </picture>
   <br><sub>The app window, for when you want to browse. Same tools, same panels.</sub>
 </p>
@@ -152,7 +104,7 @@ Your files are read and written on your own machine. There is no account, no sig
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screens/bar-consent-dark.png">
-    <img alt="The consent sheet: Download the IS-Net background model? It shows what it is for, 44 MB once, from huggingface.co, MIT license, with Not now and Download buttons." src="docs/assets/screens/bar-consent-light.png" width="620">
+    <img alt="The consent sheet: Download the IS-Net background model? It shows what it is for, 44 MB once, from huggingface.co, MIT license, with Not now and Download buttons." src="docs/assets/screens/bar-consent-light.png" width="720">
   </picture>
 </p>
 

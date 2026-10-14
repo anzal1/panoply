@@ -245,36 +245,29 @@ mod tests {
 
     #[test]
     fn plain_names_count_from_one() {
-        let taken = ["/d/a.jpg", "/d/a (1).jpg"];
-        let p = pick_name(
-            Path::new("/d/a.heic"),
-            Path::new("/d"),
-            &NameSpec::Plain,
-            "jpg",
-            |c| taken.contains(&c.to_str().unwrap()),
-        );
-        assert_eq!(p, PathBuf::from("/d/a (2).jpg"));
-        let p = pick_name(
-            Path::new("/d/a.heic"),
-            Path::new("/d"),
-            &NameSpec::Plain,
-            "png",
-            |_| false,
-        );
-        assert_eq!(p, PathBuf::from("/d/a.png"));
+        // Built with `join`, so the expected paths use the platform's own separator.
+        let d = Path::new("/d");
+        let taken = [d.join("a.jpg"), d.join("a (1).jpg")];
+        let p = pick_name(&d.join("a.heic"), d, &NameSpec::Plain, "jpg", |c| {
+            taken.iter().any(|t| t == c)
+        });
+        assert_eq!(p, d.join("a (2).jpg"));
+        let p = pick_name(&d.join("a.heic"), d, &NameSpec::Plain, "png", |_| false);
+        assert_eq!(p, d.join("a.png"));
     }
 
     #[test]
     fn labels_count_from_two() {
-        let taken = ["/d/a (compressed).jpg"];
+        let d = Path::new("/d");
+        let taken = [d.join("a (compressed).jpg")];
         let p = pick_name(
-            Path::new("/d/a.jpg"),
-            Path::new("/d"),
+            &d.join("a.jpg"),
+            d,
             &NameSpec::Label("compressed".into()),
             "jpg",
-            |c| taken.contains(&c.to_str().unwrap()),
+            |c| taken.iter().any(|t| t == c),
         );
-        assert_eq!(p, PathBuf::from("/d/a (compressed 2).jpg"));
+        assert_eq!(p, d.join("a (compressed 2).jpg"));
     }
 
     #[test]

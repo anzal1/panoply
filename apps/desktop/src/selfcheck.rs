@@ -769,8 +769,12 @@ pub(crate) fn run_frames(out: PathBuf) {
         );
         let catalog = Arc::new(Catalog::with_dirs(&dirs));
         let now = crate::units::now_secs();
+        // Two recent jobs, so the list ends above the footer and no row is cut by it.
         let recents = cx.new(|_| Recents {
-            entries: seeded_recents(now, Path::new("/Users/me/Documents")),
+            entries: seeded_recents(now, Path::new("/Users/me/Documents"))
+                .into_iter()
+                .take(2)
+                .collect(),
         });
         let hub = Hub {
             catalog,
@@ -813,26 +817,14 @@ pub(crate) fn run_frames(out: PathBuf) {
             sample_pdf(&pdf, 4_200_000);
             let sig = work2.join("signature.png");
             sample_png(&sig, 1200, 480);
-            // A real clip for a job that reports progress (an `ffmpeg` on PATH, as on a Mac that has one).
-            let clip = work2.join("Holiday.mp4");
-            let _ = std::process::Command::new("ffmpeg")
-                .args([
-                    "-v",
-                    "error",
-                    "-y",
-                    "-f",
-                    "lavfi",
-                    "-i",
-                    "testsrc2=size=1920x1080:rate=30",
-                    "-t",
-                    "40",
-                    "-c:v",
-                    "h264_videotoolbox",
-                    "-b:v",
-                    "14M",
-                ])
-                .arg(&clip)
-                .status();
+            // A batch of pictures, so a job that reports progress file by file has a progress bar.
+            let batch: Vec<PathBuf> = (1..=14)
+                .map(|n| {
+                    let p = work2.join(format!("Trip {n:02}.png"));
+                    sample_png(&p, 1800 + n * 24, 1200 + n * 16);
+                    p
+                })
+                .collect();
             let mut tools = 0usize;
             // One appearance per process, so the dark run starts from the same clean history as the light one.
             let only = std::env::args().skip_while(|a| a != "--appearance").nth(1);
@@ -930,46 +922,41 @@ pub(crate) fn run_frames(out: PathBuf) {
                 d.settle(bar).await;
                 raw(&mut d, bar, &format!("bar-result-{tag}.png"), &out2);
 
-                // A longer job with a progress bar.
-                if clip.exists() {
-                    d.change(bar, |b, window, cx| {
-                        b.close_panel(window, cx);
-                        b.set_files(vec![FileProfile::read(&clip)], cx);
-                        b.set_query("compress video", window, cx);
-                    });
-                    d.settle(bar).await;
-                    d.change(bar, |b, window, cx| b.activate(window, cx));
-                    d.settle(bar).await;
-                    raw(&mut d, bar, &format!("video-options-{tag}.png"), &out2);
-                    let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
-                    if let Some(p) = panel {
-                        d.win(bar, |window, cx| p.update(cx, |p, cx| p.run(window, cx)));
+                // A longer job with a progress bar: a batch, file by file.
+                d.change(bar, |b, window, cx| {
+                    b.close_panel(window, cx);
+                    b.set_files(batch.iter().map(|p| FileProfile::read(p)).collect(), cx);
+                    b.set_query("compress", window, cx);
+                });
+                d.settle(bar).await;
+                d.change(bar, |b, window, cx| b.activate(window, cx));
+                d.settle(bar).await;
+                let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+                if let Some(p) = panel {
+                    d.win(bar, |window, cx| p.update(cx, |p, cx| p.run(window, cx)));
+                }
+                let ran_at = Instant::now();
+                let mut vn = 0;
+                for _ in 0..800 {
+                    d.cx.background_executor()
+                        .timer(Duration::from_millis(60))
+                        .await;
+                    d.draw(bar);
+                    let done = d
+                        .change(bar, |b, _, cx| {
+                            b.panel
+                                .as_ref()
+                                .map(|p| p.read(cx).is_done() || p.read(cx).failure().is_some())
+                                .unwrap_or(true)
+                        })
+                        .unwrap_or(true);
+                    if !done {
+                        vn += 1;
+                        raw(&mut d, bar, &format!("vrun-{tag}-{vn:02}.png"), &out2);
                     }
-                    let ran_at = Instant::now();
-                    let mut vn = 0;
-                    for _ in 0..800 {
-                        d.cx.background_executor()
-                            .timer(Duration::from_millis(60))
-                            .await;
-                        d.draw(bar);
-                        let done = d
-                            .change(bar, |b, _, cx| {
-                                b.panel
-                                    .as_ref()
-                                    .map(|p| p.read(cx).is_done() || p.read(cx).failure().is_some())
-                                    .unwrap_or(true)
-                            })
-                            .unwrap_or(true);
-                        if !done {
-                            vn += 1;
-                            raw(&mut d, bar, &format!("vrun-{tag}-{vn:02}.png"), &out2);
-                        }
-                        if done || ran_at.elapsed() > Duration::from_secs(60) {
-                            break;
-                        }
+                    if done || ran_at.elapsed() > Duration::from_secs(60) {
+                        break;
                     }
-                    d.settle(bar).await;
-                    raw(&mut d, bar, &format!("video-result-{tag}.png"), &out2);
                 }
 
                 // The question before a download: put to the panel the way a job puts it.

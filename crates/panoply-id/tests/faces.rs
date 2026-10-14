@@ -345,6 +345,47 @@ fn rotated_copy(
     path
 }
 
+/// How far a straightened picture may still read as tilted, on every engine and every OS.
+const TILT_LIMIT_DEG: f64 = 2.0;
+
+/// True when the YuNet engine can run here (on macOS too, where the default is Apple Vision).
+fn yunet_available() -> bool {
+    let ok = panoply_id::runtime::ensure_onnxruntime().is_ok()
+        && panoply_id::runtime::ensure_model().is_ok();
+    if !ok && std::env::var_os("PANOPLY_REQUIRE_ENGINES").is_some() {
+        panic!("the face engine could not be fetched and PANOPLY_REQUIRE_ENGINES is set");
+    }
+    if !ok {
+        eprintln!("skipping: the YuNet engine is not available here");
+    }
+    ok
+}
+
+/// Turn a portrait by `degrees`, straighten it with the passport tool on `engine` (`None` is the
+/// default ladder) and return how tilted the result still reads, with the first pass's card line.
+fn tilt_after_fix(degrees: f64, engine: Option<&str>) -> Option<(f64, String)> {
+    let p = portrait("thomas")?;
+    let scratch = Scratch::new("tilt");
+    let tilted = rotated_copy(&p, degrees, scratch.path(), "tilted.jpg");
+    let out_dir = Scratch::new("tilt-out");
+    let mut opts = json!({"country": "US", "fix_tilt": true});
+    if let Some(e) = engine {
+        opts["engine"] = json!(e);
+    }
+    let (out, notes) = run(
+        Op::PassportPhoto,
+        std::slice::from_ref(&tilted),
+        opts,
+        out_dir.path(),
+    )
+    .unwrap();
+    let line = notes.iter().find(|n| n.contains("Head tilt")).unwrap();
+    let pref = EnginePref::from_opt(engine);
+    let (faces, _) = face::detect(&read(&out[0]), pref).unwrap();
+    assert_eq!(faces.len(), 1);
+    Some((faces[0].roll_deg(), line.clone()))
+}
+
 #[test]
 fn a_tilted_head_is_straightened_and_says_so() {
     if !engines_available() {
@@ -370,8 +411,8 @@ fn a_tilted_head_is_straightened_and_says_so() {
     let (faces, _) = face::detect(&img, EnginePref::Auto).unwrap();
     assert_eq!(faces.len(), 1);
     assert!(
-        faces[0].roll_deg().abs() < 2.0,
-        "still tilted {:.1} degrees",
+        faces[0].roll_deg().abs() < TILT_LIMIT_DEG,
+        "still tilted {:.1} degrees (limit {TILT_LIMIT_DEG}); the first pass said: {tilt_line}",
         faces[0].roll_deg()
     );
     // Without the fix the photo is reported as it is: 11 degrees is past a 5 degree rule.
@@ -385,6 +426,68 @@ fn a_tilted_head_is_straightened_and_says_so() {
     let tilt_line = notes.iter().find(|n| n.contains("Head tilt")).unwrap();
     assert!(tilt_line.starts_with("tilted.jpg: fail"), "{tilt_line}");
     assert!(tilt_line.contains("can be fixed"), "{tilt_line}");
+}
+
+/// The engine every OS has: YuNet reads a turned head as less turned than it is, so this is the
+/// regression test for the iterative re-read (`yunet::refine`). On macOS it forces YuNet, where
+/// the default engine is Apple Vision, so the Mac covers the same code the other two run.
+#[test]
+fn yunet_straightens_tilts_both_ways() {
+    if !yunet_available() {
+        return;
+    }
+    for deg in [-15.0, -11.0, -5.0, 0.0, 5.0, 11.0, 15.0] {
+        let Some((roll, line)) = tilt_after_fix(deg, Some("yunet")) else {
+            return;
+        };
+        eprintln!("yunet {deg:+.0} degrees: straightened reads {roll:+.2}; {line}");
+        assert!(
+            roll.abs() < TILT_LIMIT_DEG,
+            "{deg} degrees: still tilted {roll:.1} (limit {TILT_LIMIT_DEG}); {line}"
+        );
+    }
+}
+
+/// The same angles on the default engine ladder (Apple Vision on macOS, YuNet elsewhere).
+#[test]
+fn the_default_engine_straightens_tilts_both_ways() {
+    if !engines_available() {
+        return;
+    }
+    for deg in [-15.0, -5.0, 0.0, 5.0, 15.0] {
+        let Some((roll, line)) = tilt_after_fix(deg, None) else {
+            return;
+        };
+        eprintln!("default {deg:+.0} degrees: straightened reads {roll:+.2}; {line}");
+        assert!(
+            roll.abs() < TILT_LIMIT_DEG,
+            "{deg} degrees: still tilted {roll:.1} (limit {TILT_LIMIT_DEG}); {line}"
+        );
+    }
+}
+
+/// A picture turned by a known angle must read as turned by about that much, whatever the face:
+/// the change in the reading, not the reading, is what the tilt fix relies on.
+#[test]
+fn yunet_follows_a_known_turn_on_every_portrait() {
+    if !yunet_available() {
+        return;
+    }
+    let scratch = Scratch::new("turn");
+    for name in PORTRAITS {
+        let Some(p) = portrait(name) else { return };
+        let base = face::detect(&read(&p), EnginePref::YuNet).unwrap().0[0].roll_deg();
+        for deg in [-15.0, 15.0] {
+            let turned = rotated_copy(&p, deg, scratch.path(), "t.jpg");
+            let (f, _) = face::detect(&read(&turned), EnginePref::YuNet).unwrap();
+            // The test helper turns the picture so the roll changes by -deg.
+            let change = f[0].roll_deg() - base;
+            assert!(
+                (change + deg).abs() < 4.0,
+                "{name}: turned {deg}, reading changed by {change:.1}"
+            );
+        }
+    }
 }
 
 #[test]

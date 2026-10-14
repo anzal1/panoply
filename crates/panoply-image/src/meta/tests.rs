@@ -125,7 +125,8 @@ fn corpus_files() -> Vec<(String, Vec<u8>)> {
                     .strip_prefix(corpus_dir())
                     .unwrap_or(&p)
                     .to_string_lossy()
-                    .to_string();
+                    // Names are corpus-relative with `/`, whatever the platform separator is.
+                    .replace('\\', "/");
                 out.push((rel, b));
             }
         }

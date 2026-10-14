@@ -192,6 +192,9 @@ pub struct QrShare {
     url: String,
     state: Arc<State>,
     closed: watch::Receiver<Option<QrOutcome>>,
+    /// The server task, taken by the first `wait` so the process only goes on once the last
+    /// response has been written out.
+    server: tokio::sync::Mutex<Option<tokio::task::JoinHandle<()>>>,
     lan: bool,
 }
 
@@ -266,7 +269,7 @@ impl QrShare {
         });
 
         let handler_state = state.clone();
-        tokio::spawn(http::serve(
+        let server = tokio::spawn(http::serve(
             listener,
             tls,
             move |req, peer| route(handler_state.clone(), req, peer),
@@ -285,6 +288,7 @@ impl QrShare {
             url,
             state,
             closed: closed_rx,
+            server: tokio::sync::Mutex::new(Some(server)),
             lan,
         })
     }
@@ -323,10 +327,17 @@ impl QrShare {
     /// Wait until the share closes and say why.
     pub async fn wait(&self) -> QrOutcome {
         let mut rx = self.closed.clone();
-        match rx.wait_for(|v| v.is_some()).await {
+        let outcome = match rx.wait_for(|v| v.is_some()).await {
             Ok(v) => v.expect("wait_for returned a closed value"),
             Err(_) => QrOutcome::Revoked,
+        };
+        // The share closes the moment the last chunk is queued, which can be before it has
+        // reached the socket. Let the connections finish so the last download is whole.
+        if let Some(server) = self.server.lock().await.take() {
+            let _ =
+                tokio::time::timeout(http::DRAIN_TIMEOUT + Duration::from_secs(1), server).await;
         }
+        outcome
     }
 }
 

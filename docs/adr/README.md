@@ -10,5 +10,5 @@ Each record is short: context, decision, consequences. New decisions get the nex
 - [0006. LocalSend v2 protocol for sharing](0006-localsend-protocol.md)
 - [0007. Modules declare their UI; community modules run in a WASM sandbox](0007-declared-modules-wasm.md)
 - [0008. The conversion graph is generated data](0008-conversion-graph-as-data.md)
-- [0009. Release order: CLI and MCP, then Mac, then Android, Windows, iOS, Linux](0009-platform-order.md)
+- [0009. Release order: all three desktops together, then Android, then iOS](0009-platform-order.md)
 - [0010. Version 1 scope: waves 1 and 2](0010-v1-scope.md)

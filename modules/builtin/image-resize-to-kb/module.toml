@@ -8,7 +8,7 @@ id = "image.resize_to_kb"
 name = "Resize to exact KB"
 version = "0.1.0"
 pattern = "B"
-summary = "Make this photo an exact pixel size and a file size inside a window, for a form or portal."
+summary = "Fit a photo to the exact pixels and KB a form or exam portal asks for."
 
 [options.preset]
 type = "text"

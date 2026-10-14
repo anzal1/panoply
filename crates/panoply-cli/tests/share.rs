@@ -63,34 +63,52 @@ fn expect(rx: &mpsc::Receiver<String>, prefix: &str) -> String {
 fn send_and_receive_between_two_processes() {
     let work = temp("sr");
     let inbox = work.join("inbox");
-    let port = free_port();
     std::fs::write(work.join("hello.txt"), "hello from the cli").unwrap();
     std::fs::create_dir_all(work.join("tree/sub")).unwrap();
     std::fs::write(work.join("tree/sub/deep.txt"), "deep").unwrap();
 
-    let mut rx = bin()
-        .args([
-            "share",
-            "receive",
-            "--yes",
-            "--no-discovery",
-            "--bind",
-            "127.0.0.1",
-        ])
-        .args(["--port", &port.to_string(), "--alias", "CliReceiver"])
-        .arg("--data-dir")
-        .arg(work.join("rx-data"))
-        .arg("--dir")
-        .arg(&inbox)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .stdin(Stdio::null())
-        .spawn()
-        .unwrap();
-    let stdout = lines_of(rx.stdout.take().unwrap());
-    let stderr = lines_of(rx.stderr.take().unwrap());
-    let _guard = Guard(rx);
-    expect(&stderr, "Receiving as \"CliReceiver\"");
+    // A free port is looked up and then handed to the child, and another test's process can take
+    // it in between. Try a few times; only the "cannot listen" answer is retried.
+    let mut started = None;
+    for _ in 0..5 {
+        let port = free_port();
+        let mut rx = bin()
+            .args([
+                "share",
+                "receive",
+                "--yes",
+                "--no-discovery",
+                "--bind",
+                "127.0.0.1",
+            ])
+            .args(["--port", &port.to_string(), "--alias", "CliReceiver"])
+            .arg("--data-dir")
+            .arg(work.join("rx-data"))
+            .arg("--dir")
+            .arg(&inbox)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .stdin(Stdio::null())
+            .spawn()
+            .unwrap();
+        let stdout = lines_of(rx.stdout.take().unwrap());
+        let stderr = lines_of(rx.stderr.take().unwrap());
+        let guard = Guard(rx);
+        match stderr.recv_timeout(Duration::from_secs(20)) {
+            Ok(l) if l.starts_with("cannot listen") => continue,
+            Ok(l) if l.starts_with("Receiving as \"CliReceiver\"") => {
+                started = Some((port, stdout, stderr, guard));
+                break;
+            }
+            Ok(_) => {
+                expect(&stderr, "Receiving as \"CliReceiver\"");
+                started = Some((port, stdout, stderr, guard));
+                break;
+            }
+            Err(_) => panic!("the receiver printed nothing"),
+        }
+    }
+    let (port, stdout, _stderr, _guard) = started.expect("no free port for the receiver");
 
     let out = bin()
         .args(["share", "send", &format!("127.0.0.1:{port}")])

@@ -162,9 +162,14 @@ mod tests {
         let bytes = std::fs::read(&out[0]).unwrap();
         assert_eq!(&bytes[..4], b"PK\x03\x04");
         // Structure check with the system unzip when it exists.
+        // The file name alone, from its own folder: the output path is canonical, and on Windows
+        // that is a `\\?\` verbatim path that Info-ZIP's unzip cannot open. Drop the prefix.
+        let folder = out[0].parent().unwrap().to_string_lossy().into_owned();
+        let folder = folder.trim_start_matches(r"\\?\");
         if let Ok(o) = std::process::Command::new("unzip")
             .arg("-t")
-            .arg(&out[0])
+            .arg(out[0].file_name().unwrap())
+            .current_dir(folder)
             .output()
         {
             assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stdout));

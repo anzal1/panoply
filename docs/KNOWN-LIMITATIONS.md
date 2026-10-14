@@ -1,6 +1,6 @@
 # Known limitations
 
-This is the v0.1.0 beta. It does 30 jobs well and leaves others out on purpose. This page says which, so
+This is the v0.1.0 beta. It does 31 tools well and leaves others out on purpose. This page says which, so
 you do not have to find out by trying. Items move off this page as they ship (see the
 [changelog](../CHANGELOG.md)).
 
@@ -92,6 +92,11 @@ More about the gaps:
 - **Windows and Linux testing.** The test suite runs on all three systems in CI. The system-specific
   engines (Windows OCR, DirectML, the hardware video encoder argument sets, VA-API) have had much less
   hands-on use than the macOS ones. Expect rough edges and please report them.
+- **Head tilt off macOS.** The passport photo tool straightens a tilted head from the eye line that the
+  face model reports. Apple Vision reads it within a degree or two. YuNet, the model used on Windows and Linux,
+  reads it less exactly, and the reading varies with the processor: a photo turned by 11 degrees came back as
+  tilted 11 degrees on one machine and 4.4 on another, so the straightened result can stay several degrees off.
+  The tool reports the tilt it measured before the fix, so check the result by eye.
 - **Intel Macs.** There is no ONNX Runtime download for macOS on Intel. Image AI that needs a model, and
   the OCR fallbacks, need `PANOPLY_ORT_LIB` pointed at an ONNX Runtime 1.28.3 library. Apple Vision
   covers Latin text and background removal without it.

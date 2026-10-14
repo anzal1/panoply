@@ -7,7 +7,7 @@ id = "id.signature_cleaner"
 name = "Signature cleaner"
 version = "0.1.0"
 pattern = "D"
-summary = "Turn the photo of my signature into a clean transparent PNG at the size the form wants."
+summary = "Turn a photo of your signature into a clean transparent PNG."
 
 [options.ink]
 type = "choice"
