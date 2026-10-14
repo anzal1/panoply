@@ -21,14 +21,14 @@ type = "choice"
 values = ["natural", "given"]
 default = "natural"
 label = "Order"
-help = "Natural puts photo2 before photo10. Given keeps the order the files were chosen in."
+help = "Natural puts photo2 before photo10."
 
 [options.page_size]
 type = "choice"
 values = ["auto", "a4", "letter", "image"]
 default = "auto"
 label = "Page size"
-help = "Auto is A4 or Letter by your region. Image makes each page as big as its picture."
+help = "Auto is A4 or Letter by your region."
 
 [options.margin]
 type = "number"

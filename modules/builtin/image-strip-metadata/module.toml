@@ -14,7 +14,7 @@ type = "choice"
 values = ["gps", "private", "everything"]
 default = "private"
 label = "Remove"
-help = "Location only; location, serial numbers, owner, thumbnails and maker notes; or everything except orientation and color profile."
+help = "Location only, private details, or all."
 
 [capabilities]
 files = "chosen"

@@ -18,14 +18,14 @@ label = "Ink color"
 [options.preset]
 type = "text"
 label = "Exam or portal preset"
-help = "A preset id such as ssc-signature. Sets the pixel size, the size window and whether the form wants a white JPG."
+help = "A preset id such as ssc-signature."
 
 [options.width]
 type = "number"
 min = 8
 max = 6000
 label = "Width (px)"
-help = "Both width and height, or neither. Neither keeps the cleaned signature's own size."
+help = "Both width and height, or neither."
 
 [options.height]
 type = "number"
@@ -37,20 +37,20 @@ label = "Height (px)"
 type = "choice"
 values = ["transparent", "white"]
 label = "Background"
-help = "Transparent PNG by default, or a white JPG. A preset that asks for JPG uses white."
+help = "Transparent PNG by default, or a white JPG."
 
 [options.thickness]
 type = "choice"
 values = ["auto", "off"]
 default = "auto"
 label = "Thin strokes"
-help = "Auto thickens strokes that would fade to grey when the signature is made small."
+help = "Auto thickens thin strokes at small sizes."
 
 [options.remove_lines]
 type = "bool"
 default = false
 label = "Remove ruled lines"
-help = "Off by default: lines are found and reported, and taken out only when you ask. Strokes that cross a line stay."
+help = "Off by default, lines are only reported."
 
 [options.kb_basis]
 type = "choice"

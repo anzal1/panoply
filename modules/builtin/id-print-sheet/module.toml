@@ -12,17 +12,17 @@ summary = "Put several copies of this photo on one sheet for the print shop, at 
 [options.paper]
 type = "text"
 label = "Paper"
-help = "Left out, 4x6 in the US, Canada and India and A4 elsewhere. 4x6, 5x7, 6x8, a4, a5, a6 or letter."
+help = "For example 4x6, 5x7, a4 or letter."
 
 [options.size]
 type = "text"
 label = "Photo size"
-help = "Millimetres as 35x45, or 3.5x4.5cm, or 1.5x2in. Left out, the size comes from rule, else from the photo's own resolution tag. It is never guessed."
+help = "For example 35x45, 3.5x4.5cm or 1.5x2in."
 
 [options.rule]
 type = "text"
 label = "Take the size from a rule"
-help = "A country or rule id such as in-passport, us-visa or UK."
+help = "A country or rule id such as in-passport."
 
 [options.document]
 type = "choice"
@@ -34,7 +34,7 @@ type = "number"
 min = 1
 max = 500
 label = "Copies"
-help = "Left out, as many as fit. With several photos, each gets the same number."
+help = "Left out, as many as fit."
 
 [options.cut_marks]
 type = "bool"
@@ -46,7 +46,7 @@ help = "Thin corner ticks to cut along."
 type = "bool"
 default = true
 label = "Turn photos to fit more"
-help = "A photo may be turned a quarter turn to pack more on the sheet. It is never stretched."
+help = "A photo may be turned to fit more."
 
 [options.margin]
 type = "number"
@@ -74,4 +74,4 @@ type = "choice"
 values = ["jpg", "pdf", "png"]
 default = "jpg"
 label = "Format"
-help = "PDF has a page of the paper's exact size, for shops that add their own margins."
+help = "PDF pages match the paper's exact size."

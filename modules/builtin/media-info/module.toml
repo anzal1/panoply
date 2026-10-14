@@ -20,7 +20,7 @@ help = "Print the report as JSON instead of text."
 type = "bool"
 default = false
 label = "Measure the loudness"
-help = "Decodes the sound once to report loudness, range, true peak and clipping. Takes a few seconds for a long file; the rest of the report is instant."
+help = "Reports loudness, peak and clipping."
 
 [capabilities]
 files = "chosen"

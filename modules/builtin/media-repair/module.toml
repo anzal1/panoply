@@ -15,14 +15,14 @@ summary = "This video will not play: find out why and fix it."
 [options.reference]
 type = "file"
 label = "Reference file"
-help = "A working video from the same camera or app. When the index is missing it supplies the video settings and the frame rate; choose it as a second file too."
+help = "A working video from the same camera or app."
 
 [options.method]
 type = "choice"
 values = ["auto", "remux", "rebuild"]
 default = "auto"
 label = "Method"
-help = "Auto picks from the diagnosis. Remux re-reads every stream and writes a fresh file. Rebuild forces a rebuild of the index from the media data."
+help = "Auto picks from the diagnosis."
 
 [capabilities]
 files = "chosen"

@@ -16,7 +16,7 @@ type = "choice"
 values = ["auto", "downmix", "left", "right", "swap", "split", "merge", "mono_to_stereo"]
 default = "auto"
 label = "Action"
-help = "Auto looks at the channels first and says what it found (a silent side, channels out of phase, or an ordinary mix). Merge takes exactly two mono files, left first."
+help = "Auto checks the channels first."
 
 [capabilities]
 files = "chosen"

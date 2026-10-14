@@ -39,7 +39,7 @@ type = "choice"
 values = ["1000", "1024", "both"]
 default = "both"
 label = "What counts as 1 KB"
-help = "Some portals count 1 KB as 1000 bytes. Both keeps the result inside the limit under either reading."
+help = "Some portals use 1000 bytes, some 1024."
 
 [capabilities]
 files = "chosen"

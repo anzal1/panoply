@@ -15,20 +15,20 @@ summary = "Copy the text out of this picture."
 type = "text"
 default = "auto"
 label = "Languages"
-help = "auto, or a list such as hi,en. English, French, German, Spanish, Hindi, Marathi, Bengali, Arabic, Russian, Chinese, Japanese, Korean and more."
+help = "auto, or a list such as hi,en."
 
 [options.format]
 type = "choice"
 values = ["text", "markdown"]
 default = "text"
 label = "Format"
-help = "Plain text in reading order, or Markdown with headings and lists."
+help = "Plain text, or Markdown with headings."
 
 [options.keep_line_breaks]
 type = "bool"
 default = false
 label = "Keep line breaks"
-help = "One line of text per line of the picture, instead of joining lines into paragraphs."
+help = "One line of text per line of the picture."
 
 [options.copy]
 type = "bool"
@@ -40,7 +40,7 @@ help = "Put the text on the clipboard."
 type = "bool"
 default = false
 label = "Save as a file"
-help = "Also write name.txt (or name.md) next to the picture."
+help = "Also writes a text file next to the picture."
 
 [capabilities]
 files = "chosen"

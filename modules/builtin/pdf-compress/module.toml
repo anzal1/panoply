@@ -15,14 +15,14 @@ type = "choice"
 values = ["smallest", "quality"]
 default = "smallest"
 label = "Target"
-help = "Smallest that still looks good, or a fixed quality level. Set under_mb to aim for a size instead."
+help = "Smallest that looks good, or a fixed quality."
 
 [options.under_mb]
 type = "number"
 min = 0.01
 max = 100000
 label = "Under (MB)"
-help = "Make the file no bigger than this many megabytes, at the best quality that fits. Takes the place of the target."
+help = "At most this many megabytes."
 
 [options.quality]
 type = "number"
@@ -30,7 +30,7 @@ default = 75
 min = 1
 max = 100
 label = "Quality"
-help = "JPEG quality for images when the target is quality."
+help = "JPEG quality, when the target is quality."
 
 [options.grayscale]
 type = "bool"
@@ -44,7 +44,7 @@ default = 0
 min = 0
 max = 1200
 label = "Highest picture resolution (DPI)"
-help = "0 chooses by the target: 150 for the smallest file, more for higher quality."
+help = "0 chooses by target, 150 for the smallest."
 
 [options.strip_metadata]
 type = "bool"
@@ -61,7 +61,7 @@ label = "Remove embedded files"
 type = "bool"
 default = false
 label = "Remove form data"
-help = "Removes the form and everything typed into it, including the visible field values."
+help = "Removes the form and what was typed in."
 
 [capabilities]
 files = "chosen"

@@ -14,14 +14,14 @@ type = "choice"
 values = ["jpg", "png", "webp", "avif", "heic", "tiff", "bmp", "gif"]
 default = "jpg"
 label = "Convert to"
-help = "The format of the new file. HEIC and the best AVIF use the operating system encoder."
+help = "The format of the new file."
 
 [options.quality]
 type = "number"
 min = 1
 max = 100
 label = "Quality"
-help = "For JPG, WebP, AVIF and HEIC. Left empty, each format uses its own default (JPG 85, WebP 80, AVIF 60, HEIC 80)."
+help = "Left empty, each format uses its own default."
 
 [options.lossless]
 type = "bool"
@@ -33,27 +33,27 @@ help = "Only for WebP. Bigger files, no quality loss."
 type = "text"
 default = "#ffffff"
 label = "Background for transparency"
-help = "Used when the new format has no transparency, such as JPG."
+help = "Used for formats with no transparency."
 
 [options.keep_metadata]
 type = "bool"
 default = true
 label = "Keep metadata"
-help = "Keep camera details, date and GPS location where the new format can carry them. The result card lists what was kept. Turn off for files you share."
+help = "Keeps camera details, date and GPS location."
 
 [options.color_profile]
 type = "choice"
 values = ["keep", "srgb"]
 default = "keep"
 label = "Color profile"
-help = "Keep a wide gamut profile such as Display P3, or convert to sRGB for the web."
+help = "Keep a wide gamut, or convert to sRGB."
 
 [options.animation]
 type = "choice"
 values = ["ask", "first"]
 default = "ask"
 label = "Animated files"
-help = "Animated GIF, WebP and AVIF: stop and ask, or use the first frame."
+help = "Stop and ask, or use the first frame."
 
 [capabilities]
 files = "chosen"

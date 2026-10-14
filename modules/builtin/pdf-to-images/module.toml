@@ -35,7 +35,7 @@ help = "Used for JPG only."
 [options.pages]
 type = "text"
 label = "Pages"
-help = "Which pages, for example 1-3, 7, 9-. Leave empty for every page."
+help = "For example 1-3, 7, 9-. Empty means all."
 
 [options.zip]
 type = "bool"
@@ -45,7 +45,7 @@ label = "Put the pictures in a ZIP"
 [options.password]
 type = "text"
 label = "Password"
-help = "Only to open a password-protected PDF. Nothing is saved."
+help = "Only to open a protected PDF."
 
 [capabilities]
 files = "chosen"
