@@ -70,7 +70,7 @@ $bytes = $md5.ComputeHash([Text.Encoding]::UTF8.GetBytes("panoply|$Arch|$MsiVers
 $productCode = ([guid]::new($bytes)).ToString().ToUpper()
 
 $msi = Join-Path $Out "$appName.msi"
-wix build (Join-Path $PSScriptRoot 'panoply.wxs') -arch $Arch -ext WixToolset.UI.wixext `
+wix build (Join-Path $PSScriptRoot 'panoply.wxs') -arch $Arch -ext WixToolset.UI.wixext -pdbtype none `
   -d "Version=$MsiVersion" -d "ProductCode={$productCode}" -d "BinDir=$Stage" -d "AssetDir=$work" `
   -d "LicenseRtf=$(Join-Path $work 'license.rtf')" -o $msi
 # SIGNING HOOK (MSI): sign $msi here.
