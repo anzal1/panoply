@@ -2,29 +2,10 @@
 
 use std::path::PathBuf;
 
-/// The per-user data folder. `PANOPLY_DATA_DIR` overrides it (tests and portable installs).
+/// The per-user data folder. `PANOPLY_DATA_DIR` overrides it (tests and portable installs). The
+/// consent choices live here too, so the app, the CLI and the tests agree on one place.
 pub fn data_dir() -> PathBuf {
-    if let Some(p) = std::env::var_os("PANOPLY_DATA_DIR") {
-        return PathBuf::from(p);
-    }
-    let home = || {
-        std::env::var_os("HOME")
-            .map(PathBuf::from)
-            .unwrap_or_default()
-    };
-    if cfg!(target_os = "macos") {
-        home().join("Library/Application Support/Panoply")
-    } else if cfg!(target_os = "windows") {
-        std::env::var_os("APPDATA")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| home().join("AppData/Roaming"))
-            .join("Panoply")
-    } else {
-        std::env::var_os("XDG_DATA_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| home().join(".local/share"))
-            .join("panoply")
-    }
+    panoply_core::assets::data_dir()
 }
 
 /// Where the user drops community modules: one folder per module with its `module.toml`.

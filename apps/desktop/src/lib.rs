@@ -4,6 +4,7 @@
 //! The GPUI views in `ui` draw it, and nothing in them is specific to any module.
 
 pub mod catalog;
+pub mod downloads;
 pub mod estimate;
 pub mod form;
 pub mod fuzzy;

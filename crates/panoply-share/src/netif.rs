@@ -38,6 +38,21 @@ impl Lan {
     }
 }
 
+/// True for an address on this computer or its local network: loopback, RFC 1918 private,
+/// link-local, and for IPv6 the unique-local and link-local ranges. Everything else is the
+/// internet, and sharing never connects to it or accepts a connection from it
+/// (docs/PRIVACY.md).
+pub fn is_local_addr(ip: std::net::IpAddr) -> bool {
+    use std::net::IpAddr;
+    match ip {
+        IpAddr::V4(v4) => v4.is_loopback() || v4.is_private() || v4.is_link_local(),
+        IpAddr::V6(v6) => match v6.to_ipv4_mapped() {
+            Some(v4) => is_local_addr(IpAddr::V4(v4)),
+            None => v6.is_loopback() || v6.is_unique_local() || v6.is_unicast_link_local(),
+        },
+    }
+}
+
 /// True for RFC 1918 addresses.
 pub fn is_private(ip: Ipv4Addr) -> bool {
     ip.is_private()
@@ -97,6 +112,35 @@ pub fn lan_interfaces() -> Vec<Lan> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_local_addresses_count_as_local() {
+        use std::net::IpAddr;
+        let ok = |a: &str| is_local_addr(a.parse::<IpAddr>().unwrap());
+        for a in [
+            "127.0.0.1",
+            "10.1.2.3",
+            "172.16.0.9",
+            "192.168.1.20",
+            "169.254.3.4",
+            "::1",
+            "fe80::1",
+            "fd12:3456::1",
+            "::ffff:192.168.0.5",
+        ] {
+            assert!(ok(a), "{a} is local");
+        }
+        for a in [
+            "8.8.8.8",
+            "93.184.216.34",
+            "100.64.0.1",
+            "172.32.0.1",
+            "2001:4860:4860::8888",
+            "::ffff:8.8.8.8",
+        ] {
+            assert!(!ok(a), "{a} is not local");
+        }
+    }
 
     #[test]
     fn scan_hosts_cover_the_slash_24() {

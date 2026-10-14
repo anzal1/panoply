@@ -24,7 +24,9 @@ use super::widgets::{
 use crate::catalog::Tool;
 use crate::form::{Control, Field, Form, display, number};
 use crate::history::Entry;
-use crate::jobs::{self, Done, Failure, JobMsg, JobReport, JobRequest, RunningJob, UndoReport};
+use crate::jobs::{
+    self, ConsentReply, Done, Failure, JobMsg, JobReport, JobRequest, RunningJob, UndoReport,
+};
 use crate::profile::{FileProfile, expand_paths};
 use crate::units::{format_bytes, now_secs, size_input_text};
 
@@ -50,6 +52,13 @@ enum Phase {
         fraction: f32,
         label: String,
     },
+    /// The job is paused until the person says whether a model or engine may be downloaded.
+    Consent {
+        info: panoply_core::assets::AssetInfo,
+        reply: ConsentReply,
+        /// Where the progress bar was, so a yes goes back to it.
+        started: Instant,
+    },
     Done {
         report: Box<JobReport>,
         done: Done,
@@ -72,6 +81,9 @@ pub(crate) struct ToolPanel {
     est_token: u64,
     phase: Phase,
     job: Option<RunningJob>,
+    /// True when the person answered Not now to a download, so the job that stops because of it
+    /// goes back to the options quietly instead of showing a failure.
+    declined: bool,
     _subs: Vec<Subscription>,
 }
 
@@ -188,6 +200,7 @@ impl ToolPanel {
             estimate: None,
             est_token: 0,
             phase: Phase::Options,
+            declined: false,
             job: None,
             _subs: subs,
         };
@@ -460,6 +473,7 @@ impl ToolPanel {
             let _ = tx.unbounded_send(m);
         });
         self.job = Some(job);
+        self.declined = false;
         self.phase = Phase::Running {
             started: Instant::now(),
             fraction: 0.0,
@@ -492,8 +506,44 @@ impl ToolPanel {
         .detach();
     }
 
+    /// The consent sheet's two answers. Download lets the job go on; Not now stops it with
+    /// nothing fetched and nothing written.
+    fn answer_consent(&mut self, yes: bool, cx: &mut Context<Self>) {
+        let Phase::Consent {
+            reply, started, ..
+        } = &self.phase
+        else {
+            return;
+        };
+        reply.answer(yes);
+        self.declined = !yes;
+        self.phase = Phase::Running {
+            started: *started,
+            fraction: 0.0,
+            label: if yes {
+                "Downloading".into()
+            } else {
+                "Stopping".into()
+            },
+        };
+        cx.notify();
+    }
+
     fn on_msg(&mut self, msg: JobMsg, window: &mut Window, cx: &mut Context<Self>) {
         match msg {
+            JobMsg::NeedsConsent { info, reply } => {
+                let started = match &self.phase {
+                    Phase::Running { started, .. } => *started,
+                    _ => Instant::now(),
+                };
+                self.phase = Phase::Consent {
+                    info,
+                    reply,
+                    started,
+                };
+                self.focus_default(window, cx);
+                cx.notify();
+            }
             JobMsg::Progress { fraction, label } => {
                 if let Phase::Running {
                     fraction: f,
@@ -531,7 +581,7 @@ impl ToolPanel {
                         cx.emit(PanelEvent::Ran);
                     }
                     Err(f) => {
-                        if f.cancelled {
+                        if f.cancelled || std::mem::take(&mut self.declined) {
                             self.phase = Phase::Options;
                         } else {
                             self.phase = Phase::Failed(f);
@@ -633,6 +683,11 @@ impl ToolPanel {
                     self.cancel();
                 }
             }
+            Phase::Consent { .. } => match k {
+                "enter" => self.answer_consent(true, cx),
+                "escape" => self.answer_consent(false, cx),
+                _ => {}
+            },
             Phase::Done { .. } => match k {
                 "enter" if m.platform => self.chain(cx),
                 "enter" => self.open_first(cx),
@@ -1247,6 +1302,32 @@ impl ToolPanel {
                 )
                 .into_any_element(),
             ),
+            Phase::Consent { .. } => (
+                "Return downloads it. Esc says not now.".into(),
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap(px(10.))
+                    .child(button(
+                        "consent-no",
+                        "Not now",
+                        ButtonKind::Secondary,
+                        None,
+                        t,
+                        cx.listener(|p, _, _, cx| p.answer_consent(false, cx)),
+                    ))
+                    .child(button(
+                        "consent-yes",
+                        "Download",
+                        ButtonKind::Primary,
+                        None,
+                        t,
+                        cx.listener(|p, _, _, cx| p.answer_consent(true, cx)),
+                    ))
+                    .child(keycap("\u{21B5}", false, t))
+                    .into_any_element(),
+            ),
             Phase::Done { done, undone, .. } => {
                 let has_out = !done.outputs.is_empty();
                 let undone_now = undone.is_some();
@@ -1411,6 +1492,99 @@ impl ToolPanel {
                     )),
                 )
             })
+            .into_any_element()
+    }
+
+    /// The consent sheet: what would be downloaded, how big, from where, under which license,
+    /// and the promise that no file leaves the computer. Nothing starts until Download.
+    fn consent_body(&self, t: Theme) -> AnyElement {
+        let Phase::Consent { info, .. } = &self.phase else {
+            return div().into_any_element();
+        };
+        let row = |label: &str, value: String| {
+            div()
+                .flex()
+                .flex_row()
+                .gap(px(12.))
+                .child(
+                    div()
+                        .flex_none()
+                        .w(px(84.))
+                        .text_size(px(13.))
+                        .text_color(t.ink3)
+                        .child(label.to_string()),
+                )
+                .child(
+                    div()
+                        .flex_1()
+                        .min_w_0()
+                        .text_size(px(13.))
+                        .line_height(px(18.))
+                        .text_color(t.ink)
+                        .child(value),
+                )
+        };
+        div()
+            .id("consent-sheet")
+            .role(Role::Alert)
+            .aria_label(format!(
+                "Download the {}? {} from {}.",
+                info.name,
+                info.size_label(),
+                info.source
+            ))
+            .flex()
+            .flex_col()
+            .flex_1()
+            .items_center()
+            .justify_center()
+            .px(px(40.))
+            .child(
+                div()
+                    .flex()
+                    .flex_col()
+                    .gap(px(14.))
+                    .w_full()
+                    .max_w(px(440.))
+                    .child(icon("triangle-alert", 22., t.warn))
+                    .child(
+                        div()
+                            .text_size(px(16.))
+                            .line_height(px(22.))
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .text_color(t.ink)
+                            .child(format!("Download the {}?", info.name)),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(13.))
+                            .line_height(px(18.))
+                            .text_color(t.ink2)
+                            .child(format!(
+                                "{} needs it to work. It is fetched once and kept on this computer.",
+                                self.tool.name
+                            )),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .gap(px(6.))
+                            .child(row("What for", info.purpose.clone()))
+                            .child(row("Size", format!("{}, once", info.size_label())))
+                            .child(row("From", info.source.clone()))
+                            .child(row("License", info.license.clone())),
+                    )
+                    .child(
+                        div()
+                            .text_size(px(12.5))
+                            .line_height(px(17.))
+                            .text_color(t.ink3)
+                            .child(
+                                "None of your files are sent anywhere. You can remove it later from Modules.",
+                            ),
+                    ),
+            )
             .into_any_element()
     }
 
@@ -1595,6 +1769,7 @@ impl Render for ToolPanel {
         let body = match &self.phase {
             Phase::Options => self.options_body(t, cx),
             Phase::Running { .. } => self.running_body(t),
+            Phase::Consent { .. } => self.consent_body(t),
             Phase::Done { .. } => self.done_body(t),
             Phase::Failed(_) => self.failed_body(t),
         };

@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use panoply_core::assets::{Answer, AssetInfo, Asker};
 use panoply_core::{CancelToken, JobEvent, JobSpec};
 use panoply_host::{ModuleError, Registry};
 use serde_json::Value;
@@ -32,9 +33,29 @@ pub struct JobRequest {
     pub out_dir: Option<PathBuf>,
 }
 
+/// How the UI answers a consent question: Download (true) or Not now (false). The job waits for
+/// it, so nothing is fetched and nothing is written until the person decides.
+#[derive(Debug, Clone)]
+pub struct ConsentReply(std::sync::mpsc::Sender<bool>);
+
+impl ConsentReply {
+    /// Answer the question. A job that was cancelled meanwhile ignores a late answer.
+    pub fn answer(&self, yes: bool) {
+        let _ = self.0.send(yes);
+    }
+}
+
 /// A message from the worker.
 #[derive(Debug, Clone)]
 pub enum JobMsg {
+    /// The job needs a model or engine that was not allowed yet. Show the consent sheet and
+    /// answer through `reply`. The job is paused until then.
+    NeedsConsent {
+        /// What would be downloaded: name, size, source, license, purpose.
+        info: AssetInfo,
+        /// Where the answer goes.
+        reply: ConsentReply,
+    },
     /// Work is moving.
     Progress {
         /// 0.0 to 1.0.
@@ -147,6 +168,43 @@ pub struct RunningJob {
     pub cancel: CancelToken,
 }
 
+type Notify = Arc<dyn Fn(JobMsg) + Send + Sync>;
+
+thread_local! {
+    /// The running job's way to reach the UI and its cancel flag, set on its worker thread.
+    static JOB_CONTEXT: std::cell::RefCell<Option<(Notify, CancelToken)>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// Asks through the UI from a job's worker thread.
+struct SheetAsker;
+
+impl Asker for SheetAsker {
+    fn ask(&self, info: &AssetInfo) -> Answer {
+        let Some((notify, cancel)) = JOB_CONTEXT.with(|c| c.borrow().clone()) else {
+            // Not a UI job: nobody to ask, so nothing is downloaded.
+            return Answer::No;
+        };
+        let (tx, rx) = std::sync::mpsc::channel();
+        notify(JobMsg::NeedsConsent {
+            info: info.clone(),
+            reply: ConsentReply(tx),
+        });
+        loop {
+            if cancel.is_cancelled() {
+                return Answer::No;
+            }
+            match rx.recv_timeout(Duration::from_millis(100)) {
+                Ok(true) => return Answer::Yes,
+                Ok(false) | Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+                    return Answer::No;
+                }
+                Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {}
+            }
+        }
+    }
+}
+
 /// Run a job on a new worker thread. `on_msg` is called from that thread, so it must only hand
 /// the message to the UI (a channel), never touch UI state.
 pub fn spawn(
@@ -157,13 +215,18 @@ pub fn spawn(
     let cancel = CancelToken::new();
     let token = cancel.clone();
     let on_msg = Arc::new(on_msg);
+    // Downloads are asked about in the panel, before anything is fetched (docs/PRIVACY.md).
+    panoply_core::assets::set_asker(Some(Arc::new(SheetAsker)));
     std::thread::Builder::new()
         .name("panoply-job".into())
         .spawn(move || {
+            let notify: Notify = on_msg.clone();
+            JOB_CONTEXT.with(|c| *c.borrow_mut() = Some((notify, token.clone())));
             let sink = on_msg.clone();
             let report = run_blocking(&registry, request, token, move |fraction, label| {
                 sink(JobMsg::Progress { fraction, label });
             });
+            JOB_CONTEXT.with(|c| *c.borrow_mut() = None);
             on_msg(JobMsg::Finished(Box::new(report)));
         })
         .expect("spawn job thread");
