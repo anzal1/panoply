@@ -2,13 +2,12 @@ name: Release
 
 # Push a tag like v0.1.0-beta.1 to build every artifact on macOS, Windows and Linux and collect them
 # in a DRAFT GitHub release (nothing is public until you click Publish). Free: public-repo runners only.
+# Releases are unsigned for now; signing steps are present but skip cleanly (packaging/signing/APPLE.md).
 # Manual runs (Actions > Release > Run workflow) build everything and keep the files as workflow
 # artifacts but never create a release. Packaging details: packaging/README.md.
 on:
   push:
     tags: ["v*"]
-    # DRYRUN-BRANCH-TRIGGER: remove these two lines before merging.
-    branches: ["ci/release-dryrun"]
   workflow_dispatch:
 
 concurrency:
@@ -321,16 +320,21 @@ jobs:
           Draft of $TAG. Review, then publish.
 
           **Install**
-          - macOS: the \`.dmg\` or \`.zip\`, or \`brew install --cask panoply\` once the tap is live
-          - Windows: the \`.msi\`, or \`winget install anzal1.Panoply\` or \`scoop install panoply\` once listed
+          - macOS: the \`.dmg\` or \`.zip\` (one universal build for Apple Silicon and Intel), or
+            \`brew install --cask anzal1/panoply/panoply\` once the tap is live
+          - Windows: the \`.msi\` or \`.zip\`, or \`scoop bucket add panoply https://github.com/anzal1/scoop-panoply\`
+            then \`scoop install panoply\` once the bucket is live
           - Linux: the \`.AppImage\` or the \`.tar.gz\` (run \`install.sh\` inside)
           - Command line only: the \`panoply-cli-*\` archives
 
           **Verify a download:** \`sha256sum -c SHA256SUMS --ignore-missing\`, or
           \`gh attestation verify <file> --repo $GITHUB_REPOSITORY\` to check it was built by this repository's workflow.
 
-          **Signing:** builds are not Apple-notarized or Authenticode-signed unless this release says so.
-          macOS and Windows will warn on first launch; see the README for the one-time steps.
+          **This beta is unsigned on purpose** (no Apple Developer account, no Windows certificate yet), so
+          macOS and Windows warn on first launch:
+          - macOS: open System Settings > Privacy & Security and choose Open Anyway, or run
+            \`xattr -dr com.apple.quarantine /Applications/Panoply.app\` once.
+          - Windows: on the SmartScreen page choose More info, then Run anyway. winget and Scoop installs avoid most of this.
           NOTES
           existing="$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate \
             --jq ".[] | select(.tag_name == \"$TAG\") | [.id, .draft] | @tsv")"

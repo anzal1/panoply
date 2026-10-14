@@ -13,7 +13,7 @@ and state/windows-ARCH.env with the MSI ProductCode (the winget manifest needs i
 
 Needs the WiX v4 tool (`dotnet tool install --global wix --version 4.0.5`) and its UI extension
 (`wix extension add -g WixToolset.UI.wixext/4.0.5`) for the MSI. Code signing slots in at the
-"SIGNING HOOK" comment; see packaging/signing/SIGNPATH.md.
+"SIGNING HOOK" comments (nothing signs yet; releases are unsigned).
 #>
 param(
   [Parameter(Mandatory)][string]$Version,
@@ -35,8 +35,10 @@ $Out = (Resolve-Path $Out).Path
 $prefix = if ($Desktop -eq 'stub') { 'selftest-' } else { '' }
 $mk = Join-Path $Pkg 'scripts/mkarchive.py'
 $licenses = @((Join-Path $Root 'LICENSE-MIT'), (Join-Path $Root 'LICENSE-APACHE'))
+$notices = Join-Path $Root 'THIRD-PARTY-NOTICES.md'
+if (Test-Path $notices) { $licenses += $notices }
 
-# SIGNING HOOK: sign "$Stage\panoply.exe" and "$Stage\panoply-desktop.exe" here, before anything is
+# SIGNING HOOK (unused while releases are unsigned): sign "$Stage\panoply.exe" and "$Stage\panoply-desktop.exe" here, before anything is
 # archived or put in the MSI, then sign the .msi once it is built (below).
 
 # ---- zips ----------------------------------------------------------------------------------------
@@ -54,7 +56,7 @@ $work = Join-Path ([IO.Path]::GetTempPath()) "panoply-msi-$Arch"
 Remove-Item -Recurse -Force $work -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $work | Out-Null
 
-$icon = Join-Path $Root 'apps/desktop/packaging/icons/panoply.ico'
+$icon = Join-Path $Root 'apps/desktop/packaging/windows/panoply.ico'
 if (-not (Test-Path $icon)) { $icon = Join-Path $Pkg 'assets/panoply.ico' }
 Copy-Item $icon (Join-Path $work 'panoply.ico')
 
@@ -70,7 +72,9 @@ $bytes = $md5.ComputeHash([Text.Encoding]::UTF8.GetBytes("panoply|$Arch|$MsiVers
 $productCode = ([guid]::new($bytes)).ToString().ToUpper()
 
 $msi = Join-Path $Out "$appName.msi"
-wix build (Join-Path $PSScriptRoot 'panoply.wxs') -arch $Arch -ext WixToolset.UI.wixext -pdbtype none `
+$wixDefines = @()
+if (Test-Path $notices) { $wixDefines += @('-d', "NoticesFile=$notices") }
+wix build (Join-Path $PSScriptRoot 'panoply.wxs') -arch $Arch -ext WixToolset.UI.wixext -pdbtype none @wixDefines `
   -d "Version=$MsiVersion" -d "ProductCode={$productCode}" -d "BinDir=$Stage" -d "AssetDir=$work" `
   -d "LicenseRtf=$(Join-Path $work 'license.rtf')" -o $msi
 # SIGNING HOOK (MSI): sign $msi here.

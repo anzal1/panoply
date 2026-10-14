@@ -1,5 +1,6 @@
 # Homebrew cask for Panoply. Filled by .github/workflows/release.yml from packaging/scripts/render_manifests.py.
-# Lives in the tap repository (anzal1/homebrew-tap, Casks/panoply.rb): `brew install --cask anzal1/tap/panoply`.
+# Lives in the tap repository anzal1/homebrew-panoply (Casks/panoply.rb):
+#   brew install --cask anzal1/panoply/panoply
 cask "panoply" do
   version "@VERSION@"
   sha256 "@SHA256_MACOS_ZIP@"

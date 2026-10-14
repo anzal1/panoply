@@ -51,25 +51,34 @@ esac
 
 # ---- CLI ------------------------------------------------------------------------------------------
 CLI_NAME="panoply-cli-$VERSION-linux-$ARCH"
+EXTRA=()
+[ -f "$ROOT/THIRD-PARTY-NOTICES.md" ] && EXTRA+=("$ROOT/THIRD-PARTY-NOTICES.md")
 $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
-  "$STAGE/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md"
+  "$STAGE/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md" ${EXTRA[@]+"${EXTRA[@]}"}
 [ "$DESKTOP" = none ] && exit 0
 
 if [ "$DESKTOP" = stub ]; then cp "$STAGE/panoply" "$STAGE/panoply-desktop"; fi
 chmod +x "$STAGE/panoply" "$STAGE/panoply-desktop"
 DESKTOP_FILE="$ROOT/apps/desktop/packaging/linux/panoply.desktop"
 [ -f "$DESKTOP_FILE" ] || DESKTOP_FILE="$PKG/linux/panoply.desktop"
-ICON="$ROOT/apps/desktop/packaging/icons/panoply-512.png"
-[ -f "$ICON" ] || ICON="$PKG/assets/panoply-512.png"
+# The app's own icons (a hicolor tree) when present, else the placeholder.
+ICONS_DIR="$ROOT/apps/desktop/packaging/linux/icons/hicolor"
+ICON="$ICONS_DIR/512x512/apps/panoply.png"
+if [ -d "$ICONS_DIR" ] && [ -f "$ICON" ]; then
+  ICON_SPEC="$ICONS_DIR=share/icons/hicolor"
+else
+  ICON="$PKG/assets/panoply-512.png"
+  ICON_SPEC="$ICON=share/icons/hicolor/512x512/apps/panoply.png"
+fi
 
 # ---- tarball --------------------------------------------------------------------------------------
 APP_NAME="${PREFIX}Panoply-$VERSION-linux-$ARCH"
 $PY "$HERE/mkarchive.py" "$OUT/$APP_NAME.tar.gz" "$APP_NAME" \
   "$STAGE/panoply=bin/panoply" "$STAGE/panoply-desktop=bin/panoply-desktop" \
   "$DESKTOP_FILE=share/applications/panoply.desktop" \
-  "$ICON=share/icons/hicolor/512x512/apps/panoply.png" \
+  "$ICON_SPEC" \
   "$PKG/linux/install.sh=install.sh" \
-  "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md"
+  "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md" ${EXTRA[@]+"${EXTRA[@]}"}
 
 # ---- AppImage -------------------------------------------------------------------------------------
 TOOLS="$WORK/tools"; mkdir -p "$TOOLS"
@@ -86,6 +95,8 @@ chmod +x "$TOOLS/appimagetool"
 APPDIR="$WORK/Panoply.AppDir"
 mkdir -p "$APPDIR/usr/bin"
 cp "$STAGE/panoply" "$STAGE/panoply-desktop" "$APPDIR/usr/bin/"
+mkdir -p "$APPDIR/usr/share/doc/panoply"
+cp "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" ${EXTRA[@]+"${EXTRA[@]}"} "$APPDIR/usr/share/doc/panoply/"
 cp "$DESKTOP_FILE" "$APPDIR/panoply.desktop"
 cp "$ICON" "$APPDIR/panoply.png"
 ln -s panoply.png "$APPDIR/.DirIcon"

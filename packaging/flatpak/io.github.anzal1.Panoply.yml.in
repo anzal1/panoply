@@ -41,8 +41,8 @@ modules:
       - cargo build --release --locked -p panoply-desktop -p panoply-cli
       - install -Dm755 target/release/panoply-desktop /app/bin/panoply-desktop
       - install -Dm755 target/release/panoply /app/bin/panoply
-      - install -Dm644 packaging/linux/panoply.desktop /app/share/applications/io.github.anzal1.Panoply.desktop
-      - install -Dm644 packaging/assets/panoply-512.png /app/share/icons/hicolor/512x512/apps/io.github.anzal1.Panoply.png
+      - install -Dm644 apps/desktop/packaging/linux/panoply.desktop /app/share/applications/io.github.anzal1.Panoply.desktop
+      - install -Dm644 apps/desktop/packaging/linux/icons/hicolor/512x512/apps/panoply.png /app/share/icons/hicolor/512x512/apps/io.github.anzal1.Panoply.png
       - install -Dm644 packaging/flatpak/io.github.anzal1.Panoply.metainfo.xml /app/share/metainfo/io.github.anzal1.Panoply.metainfo.xml
       - sed -i 's/^Icon=panoply$/Icon=io.github.anzal1.Panoply/' /app/share/applications/io.github.anzal1.Panoply.desktop
     sources:

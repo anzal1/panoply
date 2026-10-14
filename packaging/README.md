@@ -58,11 +58,12 @@ not build, the release fails (by design: a release must not silently drop the ap
 
 ## Signing
 
-Nothing is required to produce a release; every signing step skips cleanly when its secrets are absent.
+Releases are unsigned for now (no Apple Developer account, no Windows certificate). Nothing is required to
+produce one; every signing step skips cleanly when its secrets are absent, and the release notes and the
+Homebrew cask tell users how to get past the first-launch warnings.
 
 - macOS: set the six `APPLE_*` repository secrets, see `signing/APPLE.md`.
-- Windows: the free route is SignPath Foundation, see `signing/SIGNPATH.md` (application text, what it
-  needs, and the workflow wiring; `package.ps1` has two `SIGNING HOOK` markers).
+- Windows: not signed. `package.ps1` has two `SIGNING HOOK` markers where a signing step would go.
 - Linux: none needed. Every release file carries a GitHub build provenance attestation:
   `gh attestation verify FILE --repo anzal1/panoply`.
 
@@ -72,11 +73,20 @@ Nothing is required to produce a release; every signing step skips cleanly when 
 
 | Channel | Template | Goes to | Notes |
 |---|---|---|---|
-| Homebrew cask | `homebrew/panoply.rb.in` | a tap repo, `anzal1/homebrew-tap`, `Casks/panoply.rb` | links the CLI as `panoply`; adds an "Open Anyway" caveat until notarized |
-| Scoop | `scoop/panoply.json.in` | a bucket repo, or the Extras bucket later | `autoupdate` is set; the SHA256SUMS regex is read from each release |
+| Homebrew cask | `homebrew/panoply.rb.in` | tap repo `anzal1/homebrew-panoply`, `Casks/panoply.rb` | links the CLI as `panoply`; carries the unsigned-app caveat until notarized |
+| Scoop | `scoop/panoply.json.in` | bucket repo `anzal1/scoop-panoply`, `bucket/panoply.json` | `autoupdate` is set; the SHA256SUMS regex is read from each release |
 | winget | `winget/*.yaml.in` | PR to microsoft/winget-pkgs, `manifests/a/anzal1/Panoply/V/` (or `wingetcreate`) | uses the MSI and its ProductCode. The identifier `anzal1.Panoply` is permanent once accepted: change it in the three templates first if a project or org name should own it |
 | Flatpak | `flatpak/*.in` | Flathub submission | a skeleton: needs `cargo-sources.json`, a bundled pdfium, screenshots, a local build. Not built in CI yet |
 | AppImage | built by the workflow | the release | relies on the host's windowing, graphics, GTK3 (file dialogs) and ALSA libraries, which desktop distributions ship; bundling them is a later step |
+
+### The package repos (prepared, not created yet)
+
+`package-repos/homebrew-panoply/` and `package-repos/scoop-panoply/` are the starting contents of the two
+repositories. To go live: create `anzal1/homebrew-panoply` and `anzal1/scoop-panoply` (public), push those folders
+as their first commit, create a fine-grained token with Contents read and write on those two repos, and store it
+as the secret `PACKAGE_REPOS_TOKEN` here. After that `.github/workflows/update-package-repos.yml` updates both
+repos from the release assets whenever a release is published (and skips with a notice while the secret is absent).
+Set the repository variable `PANOPLY_MACOS_NOTARIZED=1` once macOS builds are notarized, to drop the caveat.
 
 Template placeholders are `@NAME@` (see the docstring in `scripts/render_manifests.py`). An asset
 missing from a release leaves a zero hash and a visible workflow warning.
@@ -91,7 +101,8 @@ packaging/
   macos/         entitlements.plist for the hardened runtime
   linux/         panoply.desktop, install.sh (tarball installer)
   homebrew/ scoop/ winget/ flatpak/   manifest templates
-  signing/       SIGNPATH.md, APPLE.md
+  signing/       APPLE.md (checklist for when the Apple Developer account exists)
+  package-repos/ the two package repos to create: homebrew-panoply (cask) and scoop-panoply (bucket)
 ```
 
 Icons: the scripts use `apps/desktop/packaging/icons/panoply-512.png` and `panoply.ico` when the

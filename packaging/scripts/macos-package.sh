@@ -102,8 +102,10 @@ if [ "$NOTARIZE" = 1 ]; then
   notarize "$WORK/panoply-cli.zip"
 fi
 CLI_NAME="panoply-cli-$VERSION-macos-universal"
+EXTRA=()
+[ -f "$ROOT/THIRD-PARTY-NOTICES.md" ] && EXTRA+=("$ROOT/THIRD-PARTY-NOTICES.md")
 $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
-  "$WORK/cli/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md"
+  "$WORK/cli/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md" ${EXTRA[@]+"${EXTRA[@]}"}
 
 [ "$DESKTOP" = none ] && exit 0
 
@@ -128,6 +130,9 @@ else
 </dict></plist>
 PLIST
 fi
+for f in LICENSE-MIT LICENSE-APACHE THIRD-PARTY-NOTICES.md; do
+  [ -f "$ROOT/$f" ] && [ ! -f "$APPW/Contents/Resources/$f" ] && cp "$ROOT/$f" "$APPW/Contents/Resources/$f"
+done
 # The command line tool rides inside the app so `brew install --cask panoply` can link it. Its name
 # differs from the app executable (`Panoply`) because macOS volumes are usually case-insensitive.
 cp "$WORK/cli/panoply" "$APPW/Contents/MacOS/panoply-cli"
