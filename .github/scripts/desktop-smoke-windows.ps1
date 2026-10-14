@@ -34,6 +34,40 @@ public static class W {
 "@
 [void][W]::SetProcessDPIAware()
 
+Add-Type @"
+using System; using System.Collections.Generic; using System.Runtime.InteropServices;
+public static class Disp {
+  [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Ansi)]
+  public struct DEVMODE {
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst=32)] public string dmDeviceName;
+    public short dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra; public int dmFields;
+    public int dmPositionX, dmPositionY, dmDisplayOrientation, dmDisplayFixedOutput;
+    public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
+    [MarshalAs(UnmanagedType.ByValTStr, SizeConst=32)] public string dmFormName;
+    public short dmLogPixels; public int dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags, dmDisplayFrequency;
+    public int dmICMMethod, dmICMIntent, dmMediaType, dmDitherType, dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
+  }
+  [DllImport("user32.dll", CharSet=CharSet.Ansi)] public static extern bool EnumDisplaySettings(string dev, int mode, ref DEVMODE dm);
+  [DllImport("user32.dll", CharSet=CharSet.Ansi)] public static extern int ChangeDisplaySettings(ref DEVMODE dm, int flags);
+  public static List<string> Modes() {
+    var l = new List<string>(); var dm = new DEVMODE(); dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
+    for (int i = 0; EnumDisplaySettings(null, i, ref dm); i++) l.Add(dm.dmPelsWidth + "x" + dm.dmPelsHeight);
+    return l;
+  }
+  public static int Set(int w, int h) {
+    var dm = new DEVMODE(); dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
+    EnumDisplaySettings(null, -1, ref dm); dm.dmPelsWidth = w; dm.dmPelsHeight = h; dm.dmFields = 0x80000 | 0x100000;
+    return ChangeDisplaySettings(ref dm, 0);
+  }
+}
+"@
+$modes = @([Disp]::Modes() | Sort-Object -Unique)
+$want = if ($env:SMOKE_RES) { $env:SMOKE_RES } else { '1920x1080' }
+$resResult = $null
+if ($modes -contains $want) { $wh = $want.Split('x'); $resResult = [Disp]::Set([int]$wh[0], [int]$wh[1]); Start-Sleep -Seconds 3 }
+# Get the runner's own console windows out of the way of the screenshots.
+(New-Object -ComObject Shell.Application).MinimizeAll(); Start-Sleep -Seconds 1
+
 function Shot([string]$Name, $Rect) {
   $sw = [W]::GetSystemMetrics(0); $sh = [W]::GetSystemMetrics(1)
   $bmp = New-Object System.Drawing.Bitmap $sw, $sh
@@ -91,6 +125,7 @@ $zipHash = if ($zexe) { (Get-FileHash $zexe.FullName -Algorithm SHA256).Hash } e
 
 $screen = @{ width = [W]::GetSystemMetrics(0); height = [W]::GetSystemMetrics(1) }
 $report = [ordered]@{
+  display_modes = $modes; resolution_change_result = $resResult
   os = (Get-CimInstance Win32_OperatingSystem).Caption; screen = $screen
   msi = (Split-Path $msi -Leaf); exe_sha256 = $installed; zip_exe_matches_msi_exe = ($installed -eq $zipHash)
   runs = @()

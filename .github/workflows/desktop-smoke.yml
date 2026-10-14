@@ -20,6 +20,10 @@ on:
         description: "Release tag to test (empty: the latest prerelease)"
         type: string
         default: ""
+      run_id:
+        description: "Instead of a release: the id of a Release workflow run whose artifacts to test (a manual run of Release from a branch)"
+        type: string
+        default: ""
   push:
     tags: ["v*"]
 
@@ -30,6 +34,7 @@ concurrency:
 # Write is only needed to see a draft release while a tag is being released. Nothing is written.
 permissions:
   contents: write
+  actions: read
 
 env:
   GH_TOKEN: ${{ github.token }}
@@ -46,8 +51,10 @@ jobs:
         shell: bash
         env:
           INPUT_TAG: ${{ inputs.tag }}
+          INPUT_RUN: ${{ inputs.run_id }}
         run: |
           set -euo pipefail
+          if [ -n "$INPUT_RUN" ]; then echo "tag=" >> "$GITHUB_OUTPUT"; echo "Testing the artifacts of run $INPUT_RUN" | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; fi
           tag="$INPUT_TAG"
           if [ -z "$tag" ] && [ "$GITHUB_REF_TYPE" = tag ]; then tag="$GITHUB_REF_NAME"; fi
           if [ -z "$tag" ]; then
@@ -75,11 +82,17 @@ jobs:
         shell: bash
         env:
           TAG: ${{ needs.resolve.outputs.tag }}
+          RUN_ID: ${{ inputs.run_id }}
         run: |
           set -euo pipefail
           mkdir -p dl
-          gh release download "$TAG" --dir dl --pattern '*-windows-x64.msi' --pattern '*-windows-x64.zip' --pattern SHA256SUMS
-          (cd dl && sha256sum -c SHA256SUMS --ignore-missing)
+          if [ -n "$RUN_ID" ]; then
+            gh run download "$RUN_ID" --name pkg-windows-x64 --dir dl
+            rm -f dl/*selftest* dl/panoply-cli-*
+          else
+            gh release download "$TAG" --dir dl --pattern '*-windows-x64.msi' --pattern '*-windows-x64.zip' --pattern SHA256SUMS
+            (cd dl && sha256sum -c SHA256SUMS --ignore-missing)
+          fi
           ls -l dl
       - name: Install, launch, screenshot, close
         shell: powershell
@@ -100,11 +113,17 @@ jobs:
       - name: Download the release files
         env:
           TAG: ${{ needs.resolve.outputs.tag }}
+          RUN_ID: ${{ inputs.run_id }}
         run: |
           set -euo pipefail
           mkdir -p dl
-          gh release download "$TAG" --dir dl --pattern '*-linux-x64.AppImage' --pattern SHA256SUMS
-          (cd dl && sha256sum -c SHA256SUMS --ignore-missing)
+          if [ -n "$RUN_ID" ]; then
+            gh run download "$RUN_ID" --name pkg-linux-x64 --dir dl
+            rm -f dl/panoply-cli-* dl/*.tar.gz
+          else
+            gh release download "$TAG" --dir dl --pattern '*-linux-x64.AppImage' --pattern SHA256SUMS
+            (cd dl && sha256sum -c SHA256SUMS --ignore-missing)
+          fi
           ls -l dl
       - name: Desktop packages
         run: |
@@ -113,8 +132,6 @@ jobs:
             imagemagick dbus-x11 libvulkan1 mesa-vulkan-drivers vulkan-tools libxkbcommon-x11-0 libxcb-xkb1 \
             fontconfig strace fonts-dejavu-core fonts-noto-core fonts-noto-color-emoji fonts-cantarell
       - name: Launch, screenshot, close
-        env:
-          SMOKE_STRACE: "1"
         run: bash ./.github/scripts/desktop-smoke-linux.sh dl out
       - uses: actions/upload-artifact@v4
         if: always()
