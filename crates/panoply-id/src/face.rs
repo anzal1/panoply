@@ -10,7 +10,9 @@
 
 use panoply_image::error::{ImageError, Result};
 use panoply_image::ops::kb::resample_image;
-use panoply_image::types::{Image, Samples};
+use panoply_image::types::Image;
+#[cfg(target_os = "macos")]
+use panoply_image::types::Samples;
 
 use crate::yunet;
 
