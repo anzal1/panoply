@@ -21,7 +21,10 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   the user's own folder `~/Library/Application Support/Panoply/modules/`.
 - Release builds use the workspace profile (fat LTO). For a quick bundle while developing, build with
   `CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16` and pass `--binary`.
-- Still to do: an app icon (`.icns`), notarization (`xcrun notarytool submit` with the Developer ID
+- The icon is `macos/Panoply.icns`, copied into `Contents/Resources` and named by `CFBundleIconFile`. Its source is
+  `icon/panoply-macos.svg` (824 of 1024 on the macOS grid, shadow baked in); `tools/gen_app_icon.mjs` regenerates every
+  raster (needs `resvg`).
+- Still to do: notarization (`xcrun notarytool submit` with the Developer ID
   signature, then `stapler staple`), the Finder and share extensions (small Swift targets, Phase 2 later).
 
 ## Linux (compiles in Docker; not driven by hand yet)
@@ -31,7 +34,8 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   `apps/desktop/tools/linux-check.sh [check|clippy|test]` runs them in Docker (colima is enough).
 - `linux/panoply.desktop` is the launcher and file handler (`Exec=panoply-desktop %F` takes files from
   "Open with"). Install to `/usr/share/applications/` with the binary in `/usr/bin/` and an icon named
-  `panoply`.
+  `panoply`. The icon files are in `linux/icons/hicolor/` (16 to 512 px PNG and a scalable SVG): copy that folder
+  into `/usr/share/icons/` and run `gtk-update-icon-cache`.
 - Channels: Flatpak (Flathub) and AppImage. The Flatpak needs `--socket=wayland --socket=fallback-x11
   --device=dri --filesystem=home` (or the file chooser portal only, which is the cleaner choice) and the
   `org.freedesktop.Platform` runtime. No signing is needed.
@@ -45,6 +49,10 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   Wayland), hide and show of the bar, Reduce Motion (read from GNOME gsettings), IME on the search field.
 
 ## Windows (compile target only so far)
+
+- The icon is `windows/panoply.ico` (16, 24, 32, 48, 64, 128 and 256 px). The installer and the Start menu shortcut use
+  it. Embedding it in the `.exe` itself (so Explorer and the taskbar show it without a shortcut) needs a build script
+  with a resource compiler (the `winresource` crate); that is not wired yet.
 
 - Build with MSVC: `cargo build --release -p panoply-desktop`. GPUI uses DirectX through its Windows
   platform crate. No extra system packages are needed.
