@@ -11,8 +11,8 @@
 # Output in --out: panoply-cli-V-linux-ARCH.tar.gz, Panoply-V-linux-ARCH.tar.gz, Panoply-V-linux-ARCH.AppImage.
 #
 # The AppImage is built with appimagetool (MIT) and the type2 runtime (MIT), both pinned by checksum.
-# It relies on the host for the graphics and windowing libraries (libxkbcommon, libvulkan, fontconfig,
-# Wayland or X11), which every desktop distribution has; bundling them is a later step.
+# It relies on the host for the graphics, windowing and toolkit libraries (libxkbcommon, libvulkan,
+# fontconfig, Wayland or X11, GTK3, ALSA), which desktop distributions have; bundling them is a later step.
 # Linux needs no code signing.
 set -euo pipefail
 

@@ -6,7 +6,8 @@ platform caveats) are in `apps/desktop/packaging/README.md`.
 
 ## Cutting a release
 
-1. Bump `version` under `[workspace.package]` in `Cargo.toml` and merge it.
+1. Bump `version` under `[workspace.package]` in `Cargo.toml`, commit a current `Cargo.lock` (builds use
+   `cargo build --locked` and fail on a stale lock) and merge.
 2. `git tag v0.1.0-beta.1 && git push origin v0.1.0-beta.1` (the tag minus `v` must start with the
    Cargo version; tags containing `-test` are exempt, used for dry runs).
 3. `.github/workflows/release.yml` builds, packages, and creates a **draft** release. Review it, edit
@@ -75,7 +76,7 @@ Nothing is required to produce a release; every signing step skips cleanly when 
 | Scoop | `scoop/panoply.json.in` | a bucket repo, or the Extras bucket later | `autoupdate` is set; the SHA256SUMS regex is read from each release |
 | winget | `winget/*.yaml.in` | PR to microsoft/winget-pkgs, `manifests/a/anzal1/Panoply/V/` (or `wingetcreate`) | uses the MSI and its ProductCode. The identifier `anzal1.Panoply` is permanent once accepted: change it in the three templates first if a project or org name should own it |
 | Flatpak | `flatpak/*.in` | Flathub submission | a skeleton: needs `cargo-sources.json`, a bundled pdfium, screenshots, a local build. Not built in CI yet |
-| AppImage | built by the workflow | the release | relies on the host's windowing and graphics libraries; bundling them is a later step |
+| AppImage | built by the workflow | the release | relies on the host's windowing, graphics, GTK3 (file dialogs) and ALSA libraries, which desktop distributions ship; bundling them is a later step |
 
 Template placeholders are `@NAME@` (see the docstring in `scripts/render_manifests.py`). An asset
 missing from a release leaves a zero hash and a visible workflow warning.

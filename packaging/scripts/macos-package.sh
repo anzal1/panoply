@@ -110,6 +110,7 @@ $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
 # ---- Panoply.app ----------------------------------------------------------------------------------
 APPW="$WORK/Panoply.app"
 if [ "$DESKTOP" = real ]; then
+  chmod +x "$STAGE/panoply-desktop"   # artifacts lose the executable bit in transit
   "$ROOT/apps/desktop/packaging/macos/bundle.sh" --binary "$STAGE/panoply-desktop" --sign -
   ditto "$ROOT/apps/desktop/dist/Panoply.app" "$APPW"
 else
