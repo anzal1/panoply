@@ -114,3 +114,35 @@ opt-level = 3
 # do per-pixel work (mask refinement, tiling, blending), so they are optimized in dev builds too.
 [profile.dev.package.panoply-vision]
 opt-level = 3
+
+# CI only (cargo ... --profile ci, see .github/workflows/ci.yml). The dev profile with no debug info
+# (smaller objects, much faster links, a smaller build cache to restore), no incremental state (every
+# CI build starts from a restored cache, so incremental data is dead weight) and debug info stripped
+# from the std rlibs that get linked in. Optimization levels are repeated from the dev profile above
+# on purpose: package overrides are per profile and are not inherited. Keep the two lists in step.
+[profile.ci]
+inherits = "dev"
+debug = false
+incremental = false
+strip = "debuginfo"
+
+[profile.ci.package."*"]
+opt-level = 2
+
+[profile.ci.package.panoply-pdf]
+opt-level = 3
+
+[profile.ci.package.panoply-image]
+opt-level = 3
+
+[profile.ci.package.panoply-media]
+opt-level = 3
+
+[profile.ci.package.panoply-ocr]
+opt-level = 3
+
+[profile.ci.package.panoply-id]
+opt-level = 3
+
+[profile.ci.package.panoply-vision]
+opt-level = 3

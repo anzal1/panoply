@@ -1,0 +1,88 @@
+name: CI experiment
+on:
+  push:
+    branches: ["polish/**"]
+env:
+  CARGO_TERM_COLOR: never
+  CARGO_INCREMENTAL: "0"
+  PANOPLY_YES: "1"
+jobs:
+  exp:
+    name: exp ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux, os: ubuntu-latest }
+          - { name: macos, os: macos-latest }
+          - { name: windows, os: windows-latest }
+          - { name: windows-dev, os: windows-latest, devdrive: true }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Dev Drive
+        if: matrix.devdrive
+        shell: pwsh
+        run: |
+          $v = New-VHD -Path C:/dev_drive.vhdx -SizeBytes 30GB -Dynamic | Mount-VHD -Passthru | Initialize-Disk -Passthru | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -DevDrive -Confirm:$false -Force
+          $d = "$($v.DriveLetter):"
+          New-Item -ItemType Directory -Force "$d/cargo","$d/target","$d/tmp" | Out-Null
+          "CARGO_HOME=$d/cargo" >> $env:GITHUB_ENV
+          "CARGO_TARGET_DIR=$d/target" >> $env:GITHUB_ENV
+          "TEMP=$d/tmp" >> $env:GITHUB_ENV
+          "TMP=$d/tmp" >> $env:GITHUB_ENV
+          Get-Volume | Format-Table
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-wasip2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          shared-key: exp-${{ matrix.name }}
+      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+        with:
+          tool: nextest
+      - name: Linux system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends \
+            pkg-config cmake clang libclang-dev libxkbcommon-dev libxkbcommon-x11-dev libwayland-dev \
+            libx11-dev libx11-xcb-dev libxcb1-dev libxcb-xkb-dev libxcb-render0-dev libxcb-shape0-dev \
+            libxcb-xfixes0-dev libfontconfig-dev libfreetype-dev libssl-dev libasound2-dev libvulkan-dev \
+            libdbus-1-dev libgtk-3-dev
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tests/corpus/cache
+          key: corpus-${{ runner.os }}-${{ hashFiles('tests/corpus/*.toml', 'tests/corpus/*.py') }}
+      - name: Corpus
+        shell: bash
+        run: |
+          python -m pip install --quiet pillow
+          python -I tests/corpus/fetch.py --kind pdf,image
+          python tests/corpus/generate.py --kind pdf,image || echo "some generated files need local tools"
+      - name: Build tests (timings)
+        shell: bash
+        run: cargo test --workspace --exclude gpui-base --no-run --profile ci --timings
+      - name: nextest
+        shell: bash
+        env:
+          PANOPLY_DATA_DIR: ${{ runner.temp }}/panoply-data
+        run: cargo nextest run --workspace --exclude gpui-base --profile ci --cargo-profile ci --no-fail-fast
+      - name: Engines size
+        if: always()
+        shell: bash
+        run: du -sh ~/.cache/panoply "$HOME/Library/Caches/Panoply" "$LOCALAPPDATA/Panoply" 2>/dev/null || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: exp-${{ matrix.name }}
+          path: |
+            target/cargo-timings/cargo-timing.html
+            target/nextest/ci/junit.xml
+            ${{ env.CARGO_TARGET_DIR }}/cargo-timings/cargo-timing.html
+            ${{ env.CARGO_TARGET_DIR }}/nextest/ci/junit.xml
+          if-no-files-found: warn
