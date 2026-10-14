@@ -7,9 +7,8 @@ mod common;
 use common::*;
 use panoply_id::face::{self, Engine, EnginePref};
 use panoply_id::modules::Op;
-use panoply_id::passport::{self, Params, Status};
+use panoply_id::passport::{self, Status};
 use panoply_id::rules;
-use panoply_image::ops::FsIo;
 use panoply_image::types::{Image, Samples};
 use serde_json::json;
 
@@ -66,6 +65,8 @@ fn the_head_proportions_the_estimate_uses_match_what_is_measured() {
     // Calibration: with the system's jaw line and subject mask, measure where the chin and the
     // top of the head sit in eye-to-mouth distances, and check the constants used when only five
     // landmarks are available (YuNet) agree.
+    use panoply_id::passport::Params;
+    use panoply_image::ops::FsIo;
     let rule = rules::find("US", None).unwrap();
     let (mut crowns, mut chins) = (Vec::new(), Vec::new());
     for name in PORTRAITS {
