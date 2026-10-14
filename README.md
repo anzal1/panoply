@@ -62,7 +62,7 @@
     <td width="33%" valign="top">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset="docs/assets/screens/bar-running-dark.png">
-        <img alt="A video compression at 50 percent, with a Cancel button." src="docs/assets/screens/bar-running-light.png">
+        <img alt="A batch of pictures compressing at 57 percent, with a Cancel button." src="docs/assets/screens/bar-running-light.png">
       </picture>
       <br><b>Watch it work</b>
       <br><sub>Jobs run off the interface thread, show real progress and cancel at once.</sub>
