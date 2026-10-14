@@ -166,6 +166,11 @@ pub fn ensure_runtime(io: &dyn VisionIo) -> Result<PathBuf> {
     if let Some(p) = runtime_path() {
         return Ok(p);
     }
+    let _turn = fetch::install_lock();
+    // Another thread may have installed it while this one waited.
+    if let Some(p) = runtime_path() {
+        return Ok(p);
+    }
     if !io.network_allowed() {
         return Err(engine_err(format!(
             "Panoply needs the ONNX Runtime ({}, once) for this and downloads are not allowed for this job. Allow the download and try again.",

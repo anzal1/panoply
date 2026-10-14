@@ -263,7 +263,22 @@ fn curl(url: &str, out: &Path) -> Result<()> {
     }
 }
 
+/// Held while something is downloaded and installed. The scratch names are built from the
+/// process id, so two threads fetching the same file (a batch of jobs, or parallel tests) would
+/// delete each other's download. Taking turns also means the second one finds the first one's
+/// install and does not download again.
+fn install_lock() -> std::sync::MutexGuard<'static, ()> {
+    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    LOCK.lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 fn download_to(url: &str, expected: &str, final_path: &Path) -> Result<()> {
+    let _turn = install_lock();
+    // Another thread may have installed it while this one waited.
+    if sha256_file(final_path).is_ok_and(|h| h == expected) {
+        return Ok(());
+    }
     let dir = final_path.parent().unwrap_or(Path::new("."));
     std::fs::create_dir_all(dir)
         .map_err(|e| engine_err(format!("Could not create {}: {e}", dir.display())))?;
@@ -359,6 +374,11 @@ pub fn ensure_ort(fetch: &mut Fetch<'_>) -> Result<PathBuf> {
     })?;
     let dir = cache_dir().join(format!("onnxruntime-{ORT_VERSION}"));
     let lib = dir.join(Path::new(pin.member).file_name().unwrap_or_default());
+    if lib.is_file() {
+        return Ok(lib);
+    }
+    let _turn = install_lock();
+    // Another thread may have installed it while this one waited.
     if lib.is_file() {
         return Ok(lib);
     }

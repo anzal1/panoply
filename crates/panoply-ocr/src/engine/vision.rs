@@ -3,7 +3,7 @@
 
 use crate::error::{OcrError, Result};
 use crate::lang::Lang;
-use crate::types::{EngineKind, Line, OcrImage, OcrPage, Rect, Word};
+use crate::types::{OcrImage, OcrPage};
 
 /// True when Apple Vision can run here.
 pub fn available() -> bool {
@@ -46,6 +46,7 @@ pub fn languages() -> Vec<Lang> {
 /// Read one image with Vision in accurate mode.
 #[cfg(target_os = "macos")]
 pub fn recognize(img: &OcrImage, langs: &[Lang]) -> Result<OcrPage> {
+    use crate::types::{EngineKind, Line, Rect, Word};
     use panoply_platform_macos::ocr;
     let tags: Vec<&str> = langs.iter().filter_map(Lang::vision).collect();
     let req = ocr::Request {

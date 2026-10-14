@@ -61,6 +61,16 @@ pub fn host_of(url: &str) -> &str {
         .unwrap_or(url)
 }
 
+/// Held while a model or the runtime is downloaded and installed. The scratch folder is named
+/// after the process, so two threads installing the same thing (a batch of jobs, or parallel
+/// tests) would share one folder and delete each other's download. Taking turns also means the
+/// second one finds the first one's install and does not download again.
+pub fn install_lock() -> std::sync::MutexGuard<'static, ()> {
+    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    LOCK.lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 /// Download `url` to `dest` with curl. Watches the file grow so progress and cancel work.
 /// `size` is the pinned size in bytes, used for the progress fraction only.
 pub fn download(url: &str, dest: &Path, size: u64, io: &dyn VisionIo, label: &str) -> Result<()> {

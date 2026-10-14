@@ -268,6 +268,16 @@ pub fn ensure_at(io: &dyn VisionIo, model: &'static Model, dir: &Path) -> Result
 }
 
 fn install(io: &dyn VisionIo, model: &'static Model, dir: &Path) -> Result<()> {
+    let _turn = fetch::install_lock();
+    // Another thread may have installed it while this one waited.
+    if present(model, dir)
+        && model
+            .files
+            .iter()
+            .all(|f| sha256_file(&dir.join(f.name)).is_ok_and(|h| h == f.sha256))
+    {
+        return Ok(());
+    }
     let parent = dir
         .parent()
         .ok_or_else(|| engine_err("The model folder has no parent folder."))?;

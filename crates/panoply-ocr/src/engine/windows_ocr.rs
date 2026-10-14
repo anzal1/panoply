@@ -51,6 +51,7 @@ mod imp {
         OcrError::Engine(format!("Windows OCR failed while {what} ({e})."))
     }
 
+    #[allow(unsafe_code)]
     fn init() {
         // Already initialized (on this thread, with either apartment model) is fine.
         // SAFETY: RoInitialize has no preconditions; a repeated or conflicting call returns an
