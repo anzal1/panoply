@@ -5151,7 +5151,7 @@ dependencies = [
  "fax",
  "jpeg-encoder",
  "lopdf",
- "miniz_oxide 0.8.9",
+ "miniz_oxide 0.9.1",
  "panoply-core",
  "pdfium-render",
  "png 0.18.1",
@@ -5218,7 +5218,7 @@ name = "panoply-vision"
 version = "0.1.0"
 dependencies = [
  "fast_image_resize",
- "miniz_oxide 0.8.9",
+ "miniz_oxide 0.9.1",
  "ort",
  "panoply-core",
  "panoply-image",

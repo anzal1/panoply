@@ -33,7 +33,7 @@ wasmtime-wasi = { version = "49", default-features = false, features = ["p2"] }
 # checksum-pinned download, never linked or committed. lopdf only repairs damaged files.
 pdfium-render = { version = "0.9", default-features = false, features = ["pdfium_7881", "thread_safe"] }
 lopdf = { version = "0.45", default-features = false }
-miniz_oxide = "0.8"
+miniz_oxide = "0.9"
 zune-jpeg = "0.5"
 zune-core = "0.5"
 jpeg-encoder = "0.7"
