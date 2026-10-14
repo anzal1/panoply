@@ -86,7 +86,7 @@ if ($SmokeTest) {
     if ($p.ExitCode -ne 0) { Get-Content $log -Tail 80; throw "msiexec $($msiArgs -join ' ') exited $($p.ExitCode)" }
   }
   function Test-MenuKey { Test-Path -LiteralPath 'HKLM:\SOFTWARE\Classes\*\shell\Panoply\command' }
-  function Test-OnPath { ([Environment]::GetEnvironmentVariable('Path', 'Machine') -split ';') -contains $dir }
+  function Test-OnPath { (([Environment]::GetEnvironmentVariable('Path', 'Machine') -split ';') | ForEach-Object { $_.TrimEnd('\') }) -contains $dir }
 
   # Everything on (the default).
   Invoke-Msi @('/i', "`"$msi`"", '/qn', '/l*v', "`"$log`"")
