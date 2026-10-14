@@ -17,10 +17,24 @@ paid one it replaces, so the bar for merging is high and written down.
 You need the Rust toolchain pinned in `rust-toolchain.toml` (rustup installs it for you) and Python 3.
 
 ```sh
-# Format, lint, test. These are the same checks CI runs.
+# Before every push: format, lint and test what you changed (and the crates that depend on it).
+tools/preflight.sh
+```
+
+`tools/preflight.sh` is a local replica of the CI checks (see [docs/CI.md](docs/CI.md)): `cargo fmt --check`,
+clippy with `-D warnings` and the tests through cargo-nextest, limited to the crates changed since
+`origin/main` plus every crate that depends on them, and the whole workspace when `Cargo.lock`, a root
+`Cargo.toml` or a workflow changed. It runs at low priority, builds into a `.noindex` folder (see the macOS
+tip below) and prints the time it took, usually 1 to 3 minutes on a warm build folder. `--all` runs the
+whole workspace, `--heavy` adds the slowest corpus and model tests that CI runs on Linux, `--plan` only
+prints what would run. It needs [cargo-nextest](https://nexte.st) (`cargo install cargo-nextest --locked`).
+
+The same checks by hand:
+
+```sh
 cargo fmt --all --check
 cargo clippy --workspace --exclude gpui-base --all-targets -- -D warnings
-cargo test --workspace --exclude gpui-base --no-fail-fast
+cargo nextest run --workspace --exclude gpui-base --no-fail-fast
 
 # Test corpus: files are fetched or generated on demand, and only the manifests are committed.
 pip install pillow
@@ -36,7 +50,7 @@ Notes:
   touch your own data folder.
 - Tests that use a corpus file skip when it is not on disk. Run the fetch step above to run them all.
 - The first build compiles the PDF, image and media engines and takes a while. Later builds are incremental.
-- Run `cargo test -p <crate>` while you work and the whole workspace before you push.
+- Run `cargo nextest run -p <crate>` while you work and `tools/preflight.sh` before you push.
 - A change to `Cargo.lock` needs `THIRD-PARTY-NOTICES.md` regenerated (see Notices below).
 
 **macOS tip: keep Spotlight out of your build folder.** Spotlight indexes a `target` folder and burns CPU

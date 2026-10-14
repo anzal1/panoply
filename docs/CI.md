@@ -49,6 +49,7 @@ The linker is not changed: Rust has linked with `lld` on Linux since 1.90, so `m
 
 ## Changing CI
 
+* Run `tools/preflight.sh` before every push: the same fmt, clippy and nextest checks, for the crates you changed and the crates that depend on them.
 * Run `python3 -I tools/ci/changes.py --files < list.txt` to see which jobs a list of changed files would need.
 * Run `python3 -I tools/ci/check_docs.py` before pushing documentation.
 * Actions are pinned to a commit SHA with the version in a comment, like `release.yml`. Dependabot proposes updates monthly.

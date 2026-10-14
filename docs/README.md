@@ -33,6 +33,7 @@ Everything about the project, in the order most people need it. The front page i
 | [DECISIONS.md](DECISIONS.md) | Merges, splits, cuts, deferrals and the budget exceptions, with the reason for each |
 | [adr/](adr/) | The ten architecture decision records |
 | [../CONTRIBUTING.md](../CONTRIBUTING.md) | The rules a change follows before it merges |
+| [CI.md](CI.md) | What CI runs, which tests run on which OS, and why it is fast; `tools/preflight.sh` is the local replica |
 | [../apps/desktop/README.md](../apps/desktop/README.md) | The desktop app: layout, checks and how the screenshots are rendered offscreen |
 | [../apps/desktop/packaging/README.md](../apps/desktop/packaging/README.md) | Bundling and the Linux build libraries |
 
