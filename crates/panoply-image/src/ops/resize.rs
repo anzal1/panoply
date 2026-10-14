@@ -159,6 +159,10 @@ fn resize_one(
             | Format::Gif
     ) {
         target_format
+    } else if !info.has_alpha && matches!(src_info.format, Format::Jp2 | Format::Jxl | Format::Raw)
+    {
+        // A photo in a format Panoply cannot write: a JPEG, not a PNG several times its size.
+        Format::Jpeg
     } else {
         Format::Png
     };

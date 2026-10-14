@@ -173,6 +173,23 @@ pub struct AudioWish {
     pub channels: Option<u32>,
 }
 
+/// The bit rate for sound written again in its own lossy codec (Normalize, Stereo to mono): the
+/// original's, and a smaller channel count takes its share. Raising a 7 kb/s speech recording to
+/// 64 kb/s, or a mono result to the stereo rate, only makes the file bigger for no gain.
+pub fn same_codec_bitrate(source_bps: u64, src_ch: u32, out_ch: u32, target: ACodec) -> u64 {
+    let kept = if out_ch < src_ch {
+        source_bps * u64::from(out_ch) / u64::from(src_ch.max(1))
+    } else {
+        source_bps
+    };
+    let floor = match target {
+        ACodec::Opus => 8_000,
+        ACodec::Mp3 | ACodec::Vorbis => 32_000,
+        _ => 24_000,
+    };
+    kept.max(floor)
+}
+
 /// Decide how `s` goes into `fmt`.
 pub fn plan_audio(
     engine: &Engine,
@@ -210,13 +227,17 @@ pub fn plan_audio(
     if src_lossy && !target.is_lossy() {
         notes.push("The sound was already lossy, so converting it to a lossless format gains nothing and the file is larger.".into());
     } else if src_lossy && target.is_lossy() {
-        notes.push("Both formats are lossy, so there is a small quality loss. The bit rate was kept at or above the original's.".into());
+        notes.push("Both formats are lossy, so there is a small quality loss. The bit rate was kept at the original's, or above it when the codec changes.".into());
     }
     // Bit rate: never below what a lossy source had, never above the format's useful range.
+    let same_codec = ACodec::from_name(&s.codec) == Some(target);
     let bitrate = wish.bitrate.or_else(|| {
         let b = s.bit_rate?;
         if !src_lossy {
             return None;
+        }
+        if same_codec {
+            return Some(same_codec_bitrate(b, src_ch, out_ch, target));
         }
         Some(match target {
             ACodec::Mp3 => b.clamp(128_000, 320_000),
@@ -388,6 +409,17 @@ pub fn pick_tracks<'a>(profile: &'a Profile, track: &str) -> Result<Vec<&'a Stre
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn writing_a_sound_again_in_its_codec_never_raises_its_rate() {
+        // A 7 kb/s Opus recording stays at the floor Opus allows, not 64 kb/s.
+        assert_eq!(same_codec_bitrate(7_000, 1, 1, ACodec::Opus), 8_000);
+        // Stereo to mono takes half of the rate, and the rate is kept when nothing changes.
+        assert_eq!(same_codec_bitrate(128_000, 2, 1, ACodec::Aac), 64_000);
+        assert_eq!(same_codec_bitrate(128_000, 2, 2, ACodec::Aac), 128_000);
+        // Vorbis and MP3 cannot go below a rate their encoders accept.
+        assert_eq!(same_codec_bitrate(24_000, 2, 1, ACodec::Vorbis), 32_000);
+    }
 
     #[test]
     fn formats_know_what_they_can_copy() {

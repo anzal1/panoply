@@ -80,9 +80,14 @@ fn one(job: &mut Job, input: &Path, opts: &Opts) -> Result<()> {
     if drop.is_empty() && extract.is_empty() && default.is_empty() && langs.is_empty() {
         // The table: one line per stream with its size, chapters and attachments.
         job.note(format!(
-            "{}: {} streams. Say what to do with drop, extract, default or language.",
+            "{}: {} {}. Say what to do with drop, extract, default or language.",
             name_of(&input),
-            p.streams.len()
+            p.streams.len(),
+            if p.streams.len() == 1 {
+                "stream"
+            } else {
+                "streams"
+            }
         ));
         for s in &p.streams {
             job.note(format!("  stream {}: {}", s.index, info_line(s)));

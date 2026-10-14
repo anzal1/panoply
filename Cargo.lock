@@ -5201,6 +5201,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "panoply-smoke"
+version = "0.1.0"
+dependencies = [
+ "panoply-bench",
+ "panoply-core",
+ "panoply-desktop",
+ "panoply-host",
+ "panoply-manifest",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "panoply-vision"
 version = "0.1.0"
 dependencies = [

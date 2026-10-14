@@ -409,6 +409,37 @@ impl Drop for TempPdf {
     }
 }
 
+/// True for the two picture formats a PDF page can carry as they are.
+fn is_pdf_picture(bytes: &[u8]) -> bool {
+    bytes.starts_with(&[0xFF, 0xD8]) || bytes.starts_with(b"\x89PNG\r\n\x1a\n")
+}
+
+/// A picture file of any format the image pipeline reads, as an upright sRGB PNG with any
+/// transparency flattened onto white (what the reader sees is what the engine reads).
+fn as_png(file: File, path: &Path) -> Result<Vec<u8>, String> {
+    let ext = path.extension().and_then(|e| e.to_str());
+    let p = panoply_image::preview::preview(file, ext, panoply_ocr::input::MAX_SIDE, false)
+        .map_err(|e| e.to_string())?;
+    let mut rgb = Vec::with_capacity(p.width as usize * p.height as usize * 3);
+    for px in p.rgba.as_chunks::<4>().0 {
+        let a = u32::from(px[3]);
+        for &c in &px[..3] {
+            rgb.push(((u32::from(c) * a + 255 * (255 - a) + 127) / 255) as u8);
+        }
+    }
+    let mut out = Vec::new();
+    let mut enc = png::Encoder::new(&mut out, p.width, p.height);
+    enc.set_color(png::ColorType::Rgb);
+    enc.set_depth(png::BitDepth::Eight);
+    enc.set_compression(png::Compression::Fast);
+    let sorry =
+        |e: png::EncodingError| format!("This picture could not be prepared for reading: {e}.");
+    let mut w = enc.write_header().map_err(sorry)?;
+    w.write_image_data(&rgb).map_err(sorry)?;
+    w.finish().map_err(sorry)?;
+    Ok(out)
+}
+
 fn picture_pdf(ctx: &RunContext, path: &Path) -> Result<TempPdf, ModuleError> {
     let tmp = std::env::temp_dir().join(format!(
         "panoply-ocr-{}-{}.pdf",
@@ -442,6 +473,13 @@ fn picture_pdf(ctx: &RunContext, path: &Path) -> Result<TempPdf, ModuleError> {
             let mut bytes = Vec::new();
             f.read_to_end(&mut bytes)
                 .map_err(panoply_pdf::PdfError::from)?;
+            // A PDF page holds a JPEG or a PNG. Any other picture the OCR can read (HEIC,
+            // AVIF, WebP, GIF, TIFF, camera RAW) is drawn once and kept as a PNG.
+            if !is_pdf_picture(&bytes) {
+                drop(bytes);
+                let again = ctx.guard.open_read(path).map_err(plain)?;
+                bytes = as_png(again, path).map_err(panoply_pdf::PdfError::BadInput)?;
+            }
             Ok((file_name(path), bytes))
         },
         &panoply_pdf::images_in::ImageOptions {
@@ -554,6 +592,41 @@ mod tests {
             .map(|e| e.unwrap().file_name())
             .collect();
         assert_eq!(names.len(), 1, "nothing but the picture: {names:?}");
+        std::fs::remove_dir_all(&d).unwrap();
+    }
+
+    /// A 2 x 2 24-bit BMP: red, green, blue, white.
+    fn tiny_bmp() -> Vec<u8> {
+        let mut b = Vec::new();
+        b.extend_from_slice(b"BM");
+        b.extend_from_slice(&(54u32 + 16).to_le_bytes());
+        b.extend_from_slice(&[0; 4]);
+        b.extend_from_slice(&54u32.to_le_bytes());
+        b.extend_from_slice(&40u32.to_le_bytes());
+        b.extend_from_slice(&2i32.to_le_bytes());
+        b.extend_from_slice(&2i32.to_le_bytes());
+        b.extend_from_slice(&1u16.to_le_bytes());
+        b.extend_from_slice(&24u16.to_le_bytes());
+        b.extend_from_slice(&[0; 24]);
+        // Rows are bottom up, BGR, padded to 4 bytes.
+        b.extend_from_slice(&[255, 0, 0, 0, 255, 0, 0, 0]);
+        b.extend_from_slice(&[0, 0, 255, 255, 255, 255, 0, 0]);
+        b
+    }
+
+    #[test]
+    fn a_picture_a_pdf_cannot_hold_is_kept_as_a_png_for_reading() {
+        let d = scratch("as-png");
+        let bmp = d.join("pic.bmp");
+        std::fs::write(&bmp, tiny_bmp()).unwrap();
+        assert!(!is_pdf_picture(&std::fs::read(&bmp).unwrap()));
+        let png = as_png(File::open(&bmp).unwrap(), &bmp).unwrap();
+        assert!(is_pdf_picture(&png), "the result is a PNG");
+        let dec = png::Decoder::new(std::io::Cursor::new(&png));
+        let mut r = dec.read_info().unwrap();
+        let mut buf = vec![0; r.output_buffer_size().unwrap()];
+        let info = r.next_frame(&mut buf).unwrap();
+        assert_eq!((info.width, info.height), (2, 2));
         std::fs::remove_dir_all(&d).unwrap();
     }
 

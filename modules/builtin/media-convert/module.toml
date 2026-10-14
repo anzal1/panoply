@@ -15,9 +15,8 @@ summary = "Turn this video or audio file into MP4, MOV, MKV, WebM, MP3, M4A, WAV
 [options.to]
 type = "choice"
 values = ["mp4", "mov", "mkv", "webm", "avi", "hevc", "av1", "mp3", "m4a", "aac", "wav", "flac", "ogg", "opus"]
-default = "mp4"
 label = "Convert to"
-help = "A container (mp4, mov, mkv, webm, avi), a video codec (hevc, av1 in an mp4) or an audio format. Streams are copied when the target can hold them, so a container change takes seconds and loses nothing."
+help = "Left empty, video becomes MP4 and sound becomes M4A. A container (mp4, mov, mkv, webm, avi), a video codec (hevc, av1 in an mp4) or an audio format. Streams are copied when the target can hold them, so a container change takes seconds and loses nothing."
 
 [options.track]
 type = "text"

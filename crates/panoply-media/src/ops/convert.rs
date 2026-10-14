@@ -19,7 +19,8 @@ use super::{Args, Job, change_text, per_stream, with_name};
 
 /// Run `media.convert`.
 pub fn run(io: &dyn Io, inputs: &[PathBuf], opts: &Opts) -> Result<Vec<PathBuf>> {
-    let to = opts.text("to", "mp4").to_string();
+    // Empty means the person did not choose: the file decides (video stays video, sound stays sound).
+    let to = opts.text("to", "").to_string();
     let mut job = Job::new(io)?;
     let n = inputs.len();
     for (i, input) in inputs.iter().enumerate() {
@@ -32,6 +33,13 @@ pub fn run(io: &dyn Io, inputs: &[PathBuf], opts: &Opts) -> Result<Vec<PathBuf>>
 fn convert_one(job: &mut Job, input: &Path, to: &str, opts: &Opts) -> Result<()> {
     let input = job.input(input)?;
     let profile = job.probe(&input)?;
+    let to = if !to.is_empty() {
+        to
+    } else if profile.has_video() {
+        "mp4"
+    } else {
+        "m4a"
+    };
     if let Some(fmt) = AudioFormat::from_name(to) {
         return convert_to_audio(job, &input, &profile, fmt, opts);
     }

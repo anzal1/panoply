@@ -1,6 +1,6 @@
 # Compress (image). Pattern B. Spec: docs/specs/id-and-image.md 3.2 and 3.3 (format shootout).
 accepts = ["image/*"]
-outputs = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/tiff", "image/gif"]
+outputs = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/heif", "image/tiff", "image/gif"]
 
 [module]
 id = "image.compress"

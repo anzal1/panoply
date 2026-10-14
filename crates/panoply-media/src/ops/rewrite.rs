@@ -30,6 +30,7 @@ fn container_for(ext: &str) -> Option<(&'static str, &'static str, bool)> {
         "wav" => ("wav", "wav", true),
         "flac" => ("flac", "flac", true),
         "ogg" => ("ogg", "ogg", true),
+        "ogv" => ("ogv", "ogg", false),
         "opus" => ("opus", "opus", true),
         "mka" => ("mka", "matroska", true),
         "mp4" => ("mp4", "mp4", false),
@@ -52,6 +53,20 @@ fn family(codec: &str) -> AudioFormat {
     }
 }
 
+/// The stream with the bit rate to keep. Ogg and some other containers state none per stream, or
+/// a nominal one far above what the file really spends (a Vorbis file that says 112 kb/s and
+/// takes 59). A file that is only one sound track has the real rate in its size and length, and
+/// writing it again at the stated rate made a 395 KB file 555 KB, at the encoder's default 740 KB.
+fn with_rate(s: &Stream, profile: &Profile) -> Stream {
+    let mut s = s.clone();
+    let only_sound = profile.of(Kind::Audio).count() == 1 && !profile.has_video();
+    if only_sound && let Some(d) = profile.duration.filter(|d| *d > 1.0 && d.is_finite()) {
+        let real = (profile.size as f64 * 8.0 / d) as u64;
+        s.bit_rate = Some(s.bit_rate.map_or(real, |stated| stated.min(real)));
+    }
+    s
+}
+
 /// The plan for one track that is re-encoded in a container that may restrict the codec.
 fn plan_for(job: &Job, s: &Stream, t: &Treatment, container_ext: &str) -> Result<AudioPlan> {
     let mut fmt = family(&s.codec);
@@ -65,13 +80,20 @@ fn plan_for(job: &Job, s: &Stream, t: &Treatment, container_ext: &str) -> Result
         fmt = AudioFormat::Opus;
         extra = Some("This engine has no Vorbis encoder, so the sound was written as Opus, which Ogg files hold as well.".to_string());
     }
+    // Opus standing in for Vorbis keeps the sound's own rate, with a smaller channel count taking
+    // its share (a stereo file written as mono must not come out bigger).
+    let src_ch = s.channels.max(1);
+    let bitrate = extra.as_ref().and(s.bit_rate).map(|b| {
+        let out_ch = t.channels.map_or(src_ch, |c| c.min(src_ch));
+        audio::same_codec_bitrate(b, src_ch, out_ch, ACodec::Opus)
+    });
     let mut plan = audio::plan_audio(
         &job.engine,
         s,
         fmt,
         &AudioWish {
             force_encode: true,
-            bitrate: None,
+            bitrate,
             channels: t.channels,
         },
     )?;
@@ -103,6 +125,11 @@ pub fn rewrite_audio(
     let in_ext = ext_of(input);
     let (ext, muxer, audio_only) = match container_for(&in_ext) {
         Some((e, m, a)) => (e.to_string(), m, a),
+        None if profile.has_video() => {
+            // A video container with no writer here (AVI, TS, MPEG, WMV, FLV): Matroska holds
+            // whatever is inside, and the picture is copied untouched.
+            ("mkv".into(), "matroska", false)
+        }
         None => {
             // A format with no writer here: lossless stays lossless in FLAC, the rest becomes M4A.
             let lossless = profile
@@ -152,7 +179,7 @@ pub fn rewrite_audio(
                 a.kv("-map", format!("0:{}", s.index));
                 match treat(s) {
                     Some(t) => {
-                        let plan = plan_for(job, s, &t, &ext)?;
+                        let plan = plan_for(job, &with_rate(s, profile), &t, &ext)?;
                         a.all(per_stream(&plan.args, 'a', oa));
                         if let Some(f) = &t.filter {
                             a.kv(&format!("-filter:a:{oa}"), f);
@@ -236,4 +263,33 @@ pub fn describe(plans: &[(u32, AudioPlan)]) -> String {
 /// True when the codec is lossy and so is re-encoded once by this pass.
 pub fn reencodes_lossy(s: &Stream) -> bool {
     is_lossy_audio(&s.codec) && ACodec::from_name(&s.codec).is_some()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::probe::parse_profile;
+
+    #[test]
+    fn a_sound_with_no_stated_rate_keeps_the_rate_of_its_file() {
+        let profile = parse_profile(
+            Path::new("a.ogg"),
+            br#"{"streams":[{"index":0,"codec_type":"audio","codec_name":"vorbis","channels":2,"sample_rate":"44100"}],"format":{"format_name":"ogg","duration":"100.0","size":"400000"}}"#,
+            400_000,
+        )
+        .unwrap();
+        let s = &profile.streams[0];
+        assert_eq!(s.bit_rate, None);
+        assert_eq!(with_rate(s, &profile).bit_rate, Some(32_000));
+        // A stated rate above what the file spends gives way to the real one.
+        let mut stated = s.clone();
+        stated.bit_rate = Some(112_000);
+        assert_eq!(with_rate(&stated, &profile).bit_rate, Some(32_000));
+    }
+
+    #[test]
+    fn ogg_video_keeps_its_container_and_sound_only_ogg_stays_sound_only() {
+        assert_eq!(container_for("ogv"), Some(("ogv", "ogg", false)));
+        assert_eq!(container_for("ogg"), Some(("ogg", "ogg", true)));
+    }
 }

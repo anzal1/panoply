@@ -1,6 +1,7 @@
 //! Getting pixels to read: picture files and PDF pages.
 
 use std::fs::File;
+use std::io::{Seek, SeekFrom};
 
 use panoply_core::CancelToken;
 
@@ -10,13 +11,49 @@ use crate::types::OcrImage;
 /// Longest side of a picture handed to an engine. Bigger pictures are reduced on the way in.
 pub const MAX_SIDE: u32 = 8192;
 
+/// Most pixels of a picture handed to an engine, and of a page drawn for reading. Six million is
+/// A4 at about 250 dpi, where 10 point text is 35 pixels tall and reads as well as at 300 dpi.
+/// Apple Vision's memory grows by about 20 MB per million pixels on top of 156 MB (measured on a
+/// 31 MP photograph: 660 MB at full size, 346 MB at 9 MP), so this keeps a job inside the 300 MB
+/// budget.
+pub const MAX_PIXELS: usize = 6_000_000;
+
 /// Read a picture file as an upright (EXIF orientation applied), sRGB, 8 bit image, with any
 /// transparency flattened onto white.
-pub fn load_image(file: File, ext_hint: Option<&str>) -> Result<OcrImage> {
-    let p = panoply_image::preview::preview(file, ext_hint, MAX_SIDE, false)
+pub fn load_image(mut file: File, ext_hint: Option<&str>) -> Result<OcrImage> {
+    let side = reading_side(&file, ext_hint);
+    file.seek(SeekFrom::Start(0))
+        .map_err(|e| OcrError::BadInput(e.to_string()))?;
+    let p = panoply_image::preview::preview(file, ext_hint, side, false)
         .map_err(|e| OcrError::BadInput(e.to_string()))?;
     OcrImage::from_rgba(p.width, p.height, &p.rgba)
         .ok_or_else(|| OcrError::BadInput("This picture could not be read as pixels.".into()))
+}
+
+/// The longest side to read a picture at: [`MAX_SIDE`], or less when the picture has more than
+/// [`MAX_PIXELS`]. A file whose header cannot be read here is left to the reader, which says why.
+fn reading_side(file: &File, ext_hint: Option<&str>) -> u32 {
+    let Ok(probe) = file.try_clone() else {
+        return MAX_SIDE;
+    };
+    let Ok(reader) = panoply_image::decode::open(
+        panoply_image::decode::Input::File(probe),
+        ext_hint,
+        &panoply_image::decode::OpenOpts::default(),
+    ) else {
+        return MAX_SIDE;
+    };
+    let info = reader.info();
+    side_for(info.full_width, info.full_height)
+}
+
+fn side_for(width: u32, height: u32) -> u32 {
+    let px = f64::from(width) * f64::from(height);
+    if px <= MAX_PIXELS as f64 {
+        return MAX_SIDE;
+    }
+    let k = (MAX_PIXELS as f64 / px).sqrt();
+    ((f64::from(width.max(height)) * k).floor() as u32).clamp(16, MAX_SIDE)
 }
 
 /// A PDF opened for drawing pages to read.
@@ -113,5 +150,22 @@ impl PageSource {
         let img = OcrImage::gray(w as u32, h as u32, gray)
             .ok_or_else(|| OcrError::Engine("The page could not be drawn for reading.".into()))?;
         Ok((img, w as f32 / pw))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_page_sized_picture_is_read_whole_and_a_huge_one_is_brought_down() {
+        // A4 at 200 dpi, and a 4 MP photo, are read as they are.
+        assert_eq!(side_for(1654, 2339), MAX_SIDE);
+        assert_eq!(side_for(2400, 1700), MAX_SIDE);
+        // A 31 megapixel panorama comes down to the pixel cap, keeping its shape.
+        let side = side_for(9000, 3500);
+        let (w, h) = (f64::from(side), f64::from(side) * 3500.0 / 9000.0);
+        assert!(w * h <= MAX_PIXELS as f64 * 1.001, "{w} x {h}");
+        assert!(side > 3000, "{side}");
     }
 }
