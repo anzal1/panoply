@@ -49,7 +49,7 @@
 
     <!-- The panoply command on PATH -->
     <ComponentGroup Id="PathFiles" Directory="INSTALLFOLDER">
-      <Component Id="PathEntry">
+      <Component Id="PathEntry" Guid="BB3159FA-7DB5-4C58-8861-78A0F44E7E1F">
         <CreateFolder />
         <Environment Id="PanoplyPath" Name="PATH" Value="[INSTALLFOLDER]" Part="last" Action="set"
                      System="yes" Permanent="no" />
