@@ -1,0 +1,706 @@
+//! Dev only (feature `snapshot`): the headless run. It opens the real windows at x = -20000, never
+//! ordered front and never key, drives them with the same calls a person's input makes, saves PNGs
+//! of what GPUI rendered, and measures the budgets. Nothing is ever shown on screen.
+//!
+//! Frames are produced by calling `Window::draw` (layout and paint) and `render_to_image`; nothing
+//! is presented. The timings are therefore the CPU side of a frame, which is what the 4 ms rule
+//! on the UI thread is about.
+
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+
+use gpui::*;
+use serde_json::{Value, json};
+
+use crate::catalog::Catalog;
+use crate::history::{Entry, History};
+use crate::platform::{self, Panel};
+use crate::profile::FileProfile;
+use crate::ui::app::{AppView, Route};
+use crate::ui::bar::{Bar, BarMode};
+use crate::ui::icons::Icons;
+use crate::ui::live::{app_window_options, bar_window_options};
+use crate::ui::{Hub, Recents};
+
+struct Drv<'a> {
+    cx: &'a mut AsyncApp,
+    dark: bool,
+    update_ms: Vec<f64>,
+    draw_ms: Vec<f64>,
+    /// What the next frames are of, so a slow one can be named.
+    tag: String,
+    slow: Vec<(String, f64)>,
+}
+
+/// The render has no backdrop blur, so review PNGs are composited over a flat desktop colour
+/// (the wireframes' blue grey, or a dark grey) to read like the real thing.
+fn flatten(img: &image::RgbaImage, dark: bool) -> image::RgbaImage {
+    let bg = if dark {
+        image::Rgba([52, 56, 66, 255])
+    } else {
+        image::Rgba([201, 208, 219, 255])
+    };
+    let mut out = image::RgbaImage::from_pixel(img.width(), img.height(), bg);
+    image::imageops::overlay(&mut out, img, 0, 0);
+    out
+}
+
+fn percentile(v: &[f64], p: f64) -> f64 {
+    if v.is_empty() {
+        return 0.0;
+    }
+    let mut s = v.to_vec();
+    s.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    s[(((p / 100.0) * s.len() as f64).ceil() as usize).clamp(1, s.len()) - 1]
+}
+
+impl Drv<'_> {
+    fn win<V: 'static, R>(
+        &mut self,
+        h: WindowHandle<V>,
+        f: impl FnOnce(&mut Window, &mut App) -> R,
+    ) -> Option<R> {
+        let any: AnyWindowHandle = h.into();
+        self.cx
+            .update_window(any, |_, window, cx| f(window, cx))
+            .ok()
+    }
+
+    /// A state change on the UI thread, timed.
+    fn change<V: 'static + Render, R>(
+        &mut self,
+        h: WindowHandle<V>,
+        f: impl FnOnce(&mut V, &mut Window, &mut Context<V>) -> R,
+    ) -> Option<R> {
+        let t = Instant::now();
+        let r = h.update(self.cx, f).ok();
+        self.update_ms.push(t.elapsed().as_secs_f64() * 1000.0);
+        r
+    }
+
+    /// One frame: layout and paint, nothing presented. Timed.
+    fn draw<V: 'static>(&mut self, h: WindowHandle<V>) -> f64 {
+        let t = Instant::now();
+        let _ = self.win(h, |window, cx| window.draw(cx).clear(cx));
+        let ms = t.elapsed().as_secs_f64() * 1000.0;
+        self.draw_ms.push(ms);
+        if ms > 4.0 {
+            self.slow.push((self.tag.clone(), ms));
+        }
+        ms
+    }
+
+    async fn settle<V: 'static>(&mut self, h: WindowHandle<V>) {
+        for _ in 0..3 {
+            self.cx
+                .background_executor()
+                .timer(Duration::from_millis(25))
+                .await;
+            self.draw(h);
+        }
+    }
+
+    fn png<V: 'static>(&mut self, h: WindowHandle<V>, path: &Path) -> String {
+        self.draw(h);
+        let dark = self.dark;
+        match self.win(h, |window, _| window.render_to_image()) {
+            Some(Ok(img)) => match flatten(&img, dark).save(path) {
+                Ok(()) => format!("{} ({}x{})", path.display(), img.width(), img.height()),
+                Err(e) => format!("save failed: {e}"),
+            },
+            Some(Err(e)) => format!("render failed: {e}"),
+            None => "no window".to_string(),
+        }
+    }
+
+    fn a11y<V: 'static>(&mut self, h: WindowHandle<V>) -> Value {
+        let _ = self.win(h, |window, _| Panel::of(window).map(|p| p.wake_a11y()));
+        self.draw(h);
+        self.draw(h);
+        let tree = self
+            .win(h, |window, _| window.debug_a11y_tree_json())
+            .flatten();
+        tree.and_then(|t| serde_json::from_str(&t).ok())
+            .unwrap_or(Value::Null)
+    }
+}
+
+/// Roles that a person or a screen reader acts on, and so must have a label.
+const ACTIONABLE: &[&str] = &[
+    "Button",
+    "RadioButton",
+    "Switch",
+    "TextInput",
+    "SearchInput",
+    "ListBoxOption",
+    "DisclosureTriangle",
+    "Link",
+];
+
+/// Check a GPUI accessibility tree: every actionable node has a role and a non-empty label.
+fn check_a11y(state: &str, tree: &Value) -> Value {
+    let mut actionable = 0;
+    let mut offenders = Vec::new();
+    let mut roles: std::collections::BTreeMap<String, usize> = Default::default();
+    if let Some(nodes) = tree["nodes"].as_object() {
+        for (id, n) in nodes {
+            let a = &n["aria"];
+            let role = a["role"].as_str().unwrap_or("").to_string();
+            if role.is_empty() {
+                continue;
+            }
+            *roles.entry(role.clone()).or_default() += 1;
+            if ACTIONABLE.contains(&role.as_str()) {
+                actionable += 1;
+                let label = a["label"].as_str().unwrap_or("");
+                if label.trim().is_empty() {
+                    offenders.push(json!({"id": id, "role": role}));
+                }
+            }
+        }
+    }
+    json!({"state": state, "actionable": actionable, "unlabelled": offenders, "roles": roles, "pass": offenders.is_empty() && actionable > 0})
+}
+
+fn sample_pdf(path: &Path, bytes: usize) {
+    let mut v = b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n".to_vec();
+    v.resize(bytes, b' ');
+    let _ = std::fs::write(path, v);
+}
+
+/// A smooth picture (compresses well) so "under 50 KB" is reachable.
+fn sample_png(path: &Path, w: u32, h: u32) {
+    let mut data = Vec::with_capacity((w * h * 3) as usize);
+    for y in 0..h {
+        for x in 0..w {
+            let fx = x as f32 / w as f32;
+            let fy = y as f32 / h as f32;
+            let r = (128.0 + 120.0 * (fx * 6.0).sin() * (fy * 3.0).cos()) as u8;
+            let g = (255.0 * fx) as u8;
+            let b = (255.0 * (1.0 - fy)) as u8;
+            data.extend_from_slice(&[r, g, b]);
+        }
+    }
+    if let Ok(file) = std::fs::File::create(path) {
+        let mut enc = png::Encoder::new(file, w, h);
+        enc.set_color(png::ColorType::Rgb);
+        enc.set_depth(png::BitDepth::Eight);
+        if let Ok(mut wr) = enc.write_header() {
+            let _ = wr.write_image_data(&data);
+        }
+    }
+}
+
+fn profile_with(path: &Path, bytes: u64) -> FileProfile {
+    let mut p = FileProfile::read(path);
+    p.bytes = bytes;
+    p
+}
+
+fn seeded_recents(now: u64, home: &Path) -> Vec<Entry> {
+    let e = |ago: u64, id: &str, name: &str, input: &str, head: &str| Entry {
+        at: now - ago,
+        tool_id: id.into(),
+        tool_name: name.into(),
+        inputs: vec![home.join(input)],
+        options: Value::Null,
+        outputs: vec![],
+        headline: head.into(),
+    };
+    vec![
+        e(
+            120,
+            "image.resize_to_kb",
+            "Resize to exact KB",
+            "signature.jpg",
+            "312 KB to 47 KB, 85% smaller",
+        ),
+        e(
+            1500,
+            "pdf.compress",
+            "Compress PDF",
+            "Lease.pdf",
+            "4.2 MB to 880 KB, 79% smaller",
+        ),
+        e(
+            7200,
+            "pdf.merge",
+            "Merge PDF",
+            "Invoices",
+            "3 files, 2.1 MB",
+        ),
+        e(
+            90_000,
+            "image.convert",
+            "Convert image",
+            "IMG_2041.heic",
+            "3.1 MB to 1.4 MB, 55% smaller",
+        ),
+    ]
+}
+
+/// A file of the kind a tool takes, for the open-time measurement.
+fn sample_for(manifest: &panoply_manifest::Manifest, dir: &Path) -> Option<PathBuf> {
+    let a = manifest.accepts.first()?;
+    let (name, bytes): (&str, Vec<u8>) = if a.contains("pdf") {
+        ("budget.pdf", b"%PDF-1.4\n%%EOF\n".to_vec())
+    } else if a.starts_with("image") {
+        sample_png(&dir.join("budget.png"), 64, 48);
+        return Some(dir.join("budget.png"));
+    } else {
+        ("budget.txt", b"hello\n".to_vec())
+    };
+    let p = dir.join(name);
+    std::fs::write(&p, bytes).ok()?;
+    Some(p)
+}
+
+/// Entry point for `panoply-desktop --selfcheck`.
+pub(crate) fn run(out: PathBuf) {
+    let _ = std::fs::create_dir_all(&out);
+    let work = std::env::temp_dir().join(format!("panoply-selfcheck-{}", std::process::id()));
+    let _ = std::fs::create_dir_all(&work);
+    let started = Instant::now();
+    let app = gpui_platform::application().with_assets(Icons);
+    app.run(move |cx: &mut App| {
+        gpui_base::init(cx);
+        cx.set_activation_policy(ActivationPolicy::Accessory);
+        crate::ui::theme::force_appearance(Some(false));
+        platform::set_trash_dir(work.join("trash"));
+        let t_catalog = Instant::now();
+        // The community example modules are loaded too, as they are in a debug build or a bundle.
+        let mut dirs = crate::paths::module_search_dirs();
+        dirs.push(std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../modules/examples-wasm"));
+        let catalog = Arc::new(Catalog::with_dirs(&dirs));
+        let catalog_ms = t_catalog.elapsed().as_secs_f64() * 1000.0;
+        let now = crate::units::now_secs();
+        let recents = cx.new(|_| Recents { entries: seeded_recents(now, Path::new("/Users/me/Documents")) });
+        let hub = Hub { catalog, history: History::at(work.join("history.jsonl")), recents };
+        cx.set_global(hub.clone());
+        let bar_hub = hub.clone();
+        let bar = cx
+            .open_window(bar_window_options(BarMode::Offscreen), move |window, cx| {
+                cx.new(|cx| Bar::new(window, cx, bar_hub, BarMode::Offscreen))
+            })
+            .expect("open the offscreen bar");
+        let app_hub = hub.clone();
+        let app_win = cx
+            .open_window(app_window_options(true), move |window, cx| cx.new(|cx| AppView::new(window, cx, app_hub)))
+            .expect("open the offscreen app window");
+        let out2 = out.clone();
+        let work2 = work.clone();
+        cx.spawn(async move |cx| {
+            let mut d = Drv { cx, dark: false, update_ms: vec![], draw_ms: vec![], tag: String::new(), slow: vec![] };
+            let mut log: Vec<String> = Vec::new();
+            d.tag = "first frames".into();
+            let first = d.draw(bar);
+            let first_app = d.draw(app_win);
+            d.settle(bar).await;
+            d.settle(app_win).await;
+            d.update_ms.clear();
+            d.draw_ms.clear();
+            let png = |name: &str| out2.join(name);
+
+            // ---- the bar ----
+            log.push(d.png(bar, &png("01-bar-at-rest.png")));
+            let pdf = work2.join("Lease.pdf");
+            sample_pdf(&pdf, 4_200_000);
+            d.tag = "bar with a dropped PDF".into();
+            d.change(bar, |b, _, cx| b.set_files(vec![profile_with(&pdf, 4_200_000)], cx));
+            d.settle(bar).await;
+            log.push(d.png(bar, &png("02-bar-pdf-dropped.png")));
+
+            d.tag = "bar plain words".into();
+            let sig = work2.join("signature.png");
+            sample_png(&sig, 1200, 480);
+            let sig_bytes = std::fs::metadata(&sig).map(|m| m.len()).unwrap_or(0);
+            d.change(bar, |b, window, cx| {
+                b.set_files(vec![FileProfile::read(&sig)], cx);
+                b.set_query("make this under 50 kb", window, cx);
+            });
+            d.settle(bar).await;
+            log.push(d.png(bar, &png("03-bar-plain-words.png")));
+
+            d.tag = "bar convert rows".into();
+            d.change(bar, |b, window, cx| {
+                b.set_files(Vec::new(), cx);
+                b.set_query("heic to jpg", window, cx);
+            });
+            d.settle(bar).await;
+            log.push(d.png(bar, &png("04-bar-convert.png")));
+            d.change(bar, |b, window, cx| b.set_query("docx to jpg", window, cx));
+            d.settle(bar).await;
+            log.push(d.png(bar, &png("05-bar-convert-route.png")));
+
+            // ---- the panel in the bar: options, estimate, run, result ----
+            d.change(bar, |b, window, cx| {
+                b.set_query("", window, cx);
+                b.set_files(vec![FileProfile::read(&sig)], cx);
+                b.set_query("under 50 kb", window, cx);
+            });
+            d.settle(bar).await;
+            d.tag = "bar tool panel options".into();
+            let t0 = Instant::now();
+            d.change(bar, |b, window, cx| b.activate(window, cx));
+            let open_draw = d.draw(bar);
+            let open_total = t0.elapsed().as_secs_f64() * 1000.0;
+            d.settle(bar).await;
+            log.push(d.png(bar, &png("06-panel-options.png")));
+
+            // Run it for real and watch the worker.
+            d.tag = "bar panel running and result".into();
+            let ran_at = Instant::now();
+            let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+            if let Some(p) = panel {
+                d.win(bar, |window, cx| p.update(cx, |p, cx| p.run(window, cx)));
+            }
+            let mut saw_running = false;
+            let mut run_frames = 0;
+            for _ in 0..400 {
+                d.cx.background_executor().timer(Duration::from_millis(25)).await;
+                d.draw(bar);
+                run_frames += 1;
+                let (done, failed) = d
+                    .change(bar, |b, _, cx| {
+                        b.panel.as_ref().map(|p| (p.read(cx).is_done(), p.read(cx).failure().is_some())).unwrap_or((false, false))
+                    })
+                    .unwrap_or((false, false));
+                if !done && !failed && !saw_running && ran_at.elapsed() > Duration::from_millis(350) {
+                    saw_running = true;
+                    log.push(d.png(bar, &png("07-panel-running.png")));
+                }
+                if done || failed {
+                    break;
+                }
+            }
+            let run_ms = ran_at.elapsed().as_secs_f64() * 1000.0;
+            d.settle(bar).await;
+            log.push(d.png(bar, &png("08-panel-result.png")));
+            let headline = d.change(bar, |b, _, cx| b.panel.as_ref().and_then(|p| p.read(cx).result_headline())).flatten();
+            let outputs = d.change(bar, |b, _, cx| b.panel.as_ref().map(|p| p.read(cx).outputs())).flatten().unwrap_or_default();
+            // Undo: the new file goes to the Trash (a temp-dir file, so the real Trash gets one file at most).
+            let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+            if let Some(p) = panel {
+                d.win(bar, |_, cx| p.update(cx, |p, cx| p.undo(cx)));
+            }
+            for _ in 0..40 {
+                d.cx.background_executor().timer(Duration::from_millis(25)).await;
+                d.draw(bar);
+            }
+            let undone = outputs.iter().all(|o| !o.exists());
+            log.push(d.png(bar, &png("09-panel-undone.png")));
+
+            // A failure in plain words: a PDF that is not a PDF.
+            d.tag = "bar panel failure".into();
+            let junk = work2.join("Scan.pdf");
+            let mut junk_bytes = b"%PDF-1.7\nthis is not a pdf at all\n".to_vec();
+            junk_bytes.resize(600_000, b' ');
+            let _ = std::fs::write(&junk, junk_bytes);
+            d.change(bar, |b, window, cx| {
+                b.close_panel(window, cx);
+                b.set_files(vec![FileProfile::read(&junk)], cx);
+            });
+            d.settle(bar).await;
+            d.change(bar, |b, window, cx| b.activate(window, cx));
+            d.settle(bar).await;
+            let panel = d.change(bar, |b, _, _| b.panel.clone()).flatten();
+            if let Some(p) = panel {
+                d.win(bar, |window, cx| p.update(cx, |p, cx| p.run(window, cx)));
+            }
+            for _ in 0..200 {
+                d.cx.background_executor().timer(Duration::from_millis(25)).await;
+                d.draw(bar);
+                if d.change(bar, |b, _, cx| b.panel.as_ref().is_some_and(|p| p.read(cx).failure().is_some())).unwrap_or(false) {
+                    break;
+                }
+            }
+            d.settle(bar).await;
+            log.push(d.png(bar, &png("10-panel-failed.png")));
+            let failure = d
+                .change(bar, |b, _, cx| b.panel.as_ref().and_then(|p| p.read(cx).failure().cloned()))
+                .flatten()
+                .map(|f| json!({"message": f.message, "next_step": f.next_step}));
+
+            // ---- an instant transform (pattern A) runs the moment Return is pressed ----
+            d.tag = "bar instant transform".into();
+            d.change(bar, |b, window, cx| {
+                b.close_panel(window, cx);
+                b.set_files(vec![FileProfile::read(&sig)], cx);
+                b.set_query("jpg", window, cx);
+            });
+            d.settle(bar).await;
+            let instant_t = Instant::now();
+            d.change(bar, |b, window, cx| b.activate(window, cx));
+            let mut instant_headline = None;
+            for _ in 0..200 {
+                d.cx.background_executor().timer(Duration::from_millis(25)).await;
+                d.draw(bar);
+                instant_headline = d.change(bar, |b, _, cx| b.panel.as_ref().and_then(|p| p.read(cx).result_headline())).flatten();
+                if instant_headline.is_some() {
+                    break;
+                }
+            }
+            let instant_ms = instant_t.elapsed().as_secs_f64() * 1000.0;
+            d.settle(bar).await;
+            log.push(d.png(bar, &png("11-bar-instant-transform-result.png")));
+            // "Then...": Command+Return on the result card sends the new file to the bar as the next input.
+            let ks = Keystroke::parse("cmd-enter").expect("keystroke");
+            d.win(bar, move |window, cx| window.dispatch_keystroke(ks, cx));
+            d.settle(bar).await;
+            let chained = d
+                .change(bar, |b, _, _| (b.panel.is_none(), b.files.iter().map(|f| f.name.clone()).collect::<Vec<_>>()))
+                .unwrap_or_default();
+
+            // ---- the grapheme patch on GPUI Kit's input: Backspace removes a whole Indic conjunct cluster ----
+            d.tag = "bar text input".into();
+            d.change(bar, |b, window, cx| {
+                b.close_panel(window, cx);
+                b.set_files(Vec::new(), cx);
+                b.set_query("", window, cx);
+                b.set_query("\u{0915}\u{094D}\u{0937}\u{0947}\u{0924}\u{094D}\u{0930}", window, cx);
+            });
+            d.draw(bar);
+            let ks = Keystroke::parse("backspace").expect("keystroke");
+            d.win(bar, move |window, cx| window.dispatch_keystroke(ks, cx));
+            d.settle(bar).await;
+            let after_backspace = d.change(bar, |b, _, _| b.query.clone()).unwrap_or_default();
+            // Stock GPUI Kit leaves "\u{0915}\u{094D}\u{0937}\u{0947}\u{0924}\u{094D}" (one code point gone); the patch removes the whole cluster.
+            let grapheme_ok = after_backspace == "\u{0915}\u{094D}\u{0937}\u{0947}";
+
+            // ---- accessibility of the bar in three states ----
+            d.change(bar, |b, window, cx| {
+                b.close_panel(window, cx);
+                b.set_files(Vec::new(), cx);
+                b.set_query("", window, cx);
+            });
+            d.settle(bar).await;
+            let a_bar = d.a11y(bar);
+            let _ = std::fs::write(out2.join("a11y-bar.json"), serde_json::to_string_pretty(&a_bar).unwrap_or_default());
+            let c_bar = check_a11y("bar at rest", &a_bar);
+            d.change(bar, |b, window, cx| {
+                b.set_files(vec![FileProfile::read(&sig)], cx);
+                b.set_query("under 50 kb", window, cx);
+                b.activate(window, cx);
+            });
+            d.settle(bar).await;
+            let a_panel = d.a11y(bar);
+            let c_panel = check_a11y("bar with a tool panel", &a_panel);
+            let _ = std::fs::write(out2.join("a11y-panel.json"), serde_json::to_string_pretty(&a_panel).unwrap_or_default());
+
+            d.tag = "app window".into();
+            // ---- the app window ----
+            d.change(bar, |b, window, cx| b.close_panel(window, cx));
+            d.settle(app_win).await;
+            log.push(d.png(app_win, &png("12-app-home.png")));
+            let a_app = d.a11y(app_win);
+            let c_app = check_a11y("app window home", &a_app);
+            d.change(app_win, |a, _, cx| a.go(Route::Category(crate::catalog::Category::Pdf), cx));
+            d.settle(app_win).await;
+            log.push(d.png(app_win, &png("13-app-category-pdf.png")));
+            d.change(app_win, |a, _, cx| a.go(Route::Modules, cx));
+            d.settle(app_win).await;
+            log.push(d.png(app_win, &png("14-app-modules.png")));
+            d.change(app_win, |a, _, cx| a.go(Route::History, cx));
+            d.settle(app_win).await;
+            let c_hist = check_a11y("app window history", &d.a11y(app_win));
+            let rz = hub.catalog.index_of("image.resize_to_kb").unwrap_or(0);
+            let sigp = vec![FileProfile::read(&sig)];
+            let t_app = Instant::now();
+            d.change(app_win, |a, window, cx| {
+                a.open_tool(rz, sigp, vec![("max_kb".to_string(), json!(50))], false, window, cx)
+            });
+            d.draw(app_win);
+            let app_open_ms = t_app.elapsed().as_secs_f64() * 1000.0;
+            d.settle(app_win).await;
+            log.push(d.png(app_win, &png("15-app-tool-panel.png")));
+            let c_app_panel = check_a11y("app window tool panel", &d.a11y(app_win));
+            d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+            d.settle(app_win).await;
+
+            // ---- dark ----
+            d.dark = true;
+            crate::ui::theme::force_appearance(Some(true));
+            d.settle(bar).await;
+            d.settle(app_win).await;
+            log.push(d.png(bar, &png("16-bar-at-rest-dark.png")));
+            log.push(d.png(app_win, &png("17-app-home-dark.png")));
+            d.dark = false;
+            crate::ui::theme::force_appearance(Some(false));
+
+            d.tag = "panel open sweep".into();
+            // ---- budgets: panel open time for every tool that takes a file ----
+            let mut opens = Vec::new();
+            for (i, tool) in hub.catalog.tools().iter().enumerate() {
+                let files = sample_for(&tool.manifest, &work2).map(|p| vec![FileProfile::read(&p)]).unwrap_or_default();
+                let t = Instant::now();
+                d.change(bar, |b, window, cx| b.open_tool(i, files, Vec::new(), false, window, cx));
+                let draw_ms = d.draw(bar);
+                let total = t.elapsed().as_secs_f64() * 1000.0;
+                opens.push(json!({"tool": tool.id, "options": tool.manifest.options.len(), "open_and_first_frame_ms": total, "frame_ms": draw_ms}));
+                d.change(bar, |b, window, cx| b.close_panel(window, cx));
+                d.settle(bar).await;
+            }
+            let open_max = opens.iter().filter_map(|o| o["open_and_first_frame_ms"].as_f64()).fold(0.0, f64::max);
+
+            // ---- budgets: typing in the bar ----
+            let mut keystroke = Vec::new();
+            let mut q = String::new();
+            for ch in "compress pdf".chars() {
+                q.push(ch);
+                let qq = q.clone();
+                let t = Instant::now();
+                d.change(bar, |b, window, cx| b.set_query(&qq, window, cx));
+                d.draw(bar);
+                keystroke.push(t.elapsed().as_secs_f64() * 1000.0);
+            }
+            d.change(bar, |b, window, cx| b.set_query("", window, cx));
+            d.settle(bar).await;
+
+            // ---- budgets: idle memory and CPU, with both windows alive and every state visited ----
+            let _ = d.change(bar, |b, window, cx| {
+                b.close_panel(window, cx);
+                b.set_files(Vec::new(), cx);
+            });
+            d.settle(bar).await;
+            d.cx.background_executor().timer(Duration::from_secs(3)).await;
+            let rss_before = platform::proc::rss_mb();
+            let cpu0 = platform::proc::cpu_seconds();
+            let w0 = Instant::now();
+            d.cx.background_executor().timer(Duration::from_secs(8)).await;
+            let cpu1 = platform::proc::cpu_seconds();
+            let idle_s = w0.elapsed().as_secs_f64();
+            let idle_cpu_pct = (cpu1 - cpu0) / idle_s * 100.0;
+            let rss = platform::proc::rss_mb();
+
+            let slow: Vec<Value> = d.slow.iter().map(|(t, ms)| json!({"state": t, "ms": ms})).collect();
+            let ui_update_max = d.update_ms.iter().cloned().fold(0.0, f64::max);
+            let ui_draw_max = d.draw_ms.iter().cloned().fold(0.0, f64::max);
+            let report = json!({
+                "build": if cfg!(debug_assertions) { "debug" } else { "release" },
+                "note": "Windows were never shown. A frame here is Window::draw (layout and paint on the UI thread); nothing is presented, so GPU time is not included.",
+                "startup": {
+                    "catalog_load_ms": catalog_ms,
+                    "process_to_scenarios_ms": started.elapsed().as_secs_f64() * 1000.0,
+                    "first_frame_bar_ms": first,
+                    "first_frame_app_ms": first_app,
+                    "tools": hub.catalog.tools().len(),
+                    "community_modules": hub.catalog.tools().iter().filter(|t| matches!(t.source, crate::catalog::Source::Community(_))).count(),
+                },
+                "flow": {
+                    "bar_panel_open_then_first_frame_ms": open_total,
+                    "bar_panel_first_frame_ms": open_draw,
+                    "app_panel_open_then_first_frame_ms": app_open_ms,
+                    "run_wall_ms": run_ms,
+                    "frames_drawn_while_running": run_frames,
+                    "saw_running_state": saw_running,
+                    "result_headline": headline,
+                    "input_bytes": sig_bytes,
+                    "outputs": outputs.iter().map(|p| p.display().to_string()).collect::<Vec<_>>(),
+                    "undo_trashed_outputs": undone,
+                    "then_chain": {"panel_closed": chained.0, "files_on_bar": chained.1},
+                    "grapheme_patch_backspace_removes_whole_cluster": grapheme_ok,
+                    "text_after_backspace": after_backspace,
+                    "instant_transform_png_to_jpg": {"headline": instant_headline, "return_to_result_ms": instant_ms},
+                    "failure": failure,
+                },
+                "budgets": {
+                    "panel_open_ms_every_tool": opens,
+                    "panel_open_max_ms": open_max,
+                    "panel_open_limit_ms": 50,
+                    "keystroke_to_frame_ms": {"p50": percentile(&keystroke, 50.0), "p95": percentile(&keystroke, 95.0), "max": keystroke.iter().cloned().fold(0.0, f64::max)},
+                    "ui_state_change_ms": {"p50": percentile(&d.update_ms, 50.0), "p95": percentile(&d.update_ms, 95.0), "max": ui_update_max, "samples": d.update_ms.len()},
+                    "ui_frame_ms": {"p50": percentile(&d.draw_ms, 50.0), "p95": percentile(&d.draw_ms, 95.0), "max": ui_draw_max, "samples": d.draw_ms.len()},
+                    "ui_task_limit_ms": 4,
+                    "frames_over_4ms": slow,
+                    "idle_rss_mb_before_sampling": rss_before,
+                    "idle_rss_mb": rss,
+                    "idle_rss_limit_mb": 100,
+                    "idle_cpu_percent": idle_cpu_pct,
+                    "idle_sample_seconds": idle_s,
+                },
+                "accessibility": [c_bar, c_panel, c_app, c_hist, c_app_panel],
+                "screens": log,
+            });
+            let text = serde_json::to_string_pretty(&report).unwrap_or_default();
+            let _ = std::fs::write(out2.join("selfcheck-report.json"), &text);
+            println!("{text}");
+            let _ = std::fs::remove_dir_all(&work2);
+            d.cx.update(|cx| cx.quit());
+        })
+        .detach();
+    });
+}
+
+/// `--selfcheck-idle [--hold N]`: a fresh process with both windows created and drawn once, nothing
+/// else. Prints its pid so `footprint` can be pointed at it, holds for N seconds, then reports
+/// resident memory and the CPU used while idle. This is the number the idle budget is about.
+pub(crate) fn run_idle(hold_secs: u64) {
+    let app = gpui_platform::application().with_assets(Icons);
+    app.run(move |cx: &mut App| {
+        gpui_base::init(cx);
+        cx.set_activation_policy(ActivationPolicy::Accessory);
+        crate::ui::theme::force_appearance(Some(false));
+        let t = Instant::now();
+        let catalog = Arc::new(Catalog::load());
+        let recents = cx.new(|_| Recents {
+            entries: Vec::new(),
+        });
+        let hub = Hub {
+            catalog,
+            history: History::at(std::env::temp_dir().join("panoply-idle-history.jsonl")),
+            recents,
+        };
+        cx.set_global(hub.clone());
+        let bar_hub = hub.clone();
+        let bar = cx
+            .open_window(bar_window_options(BarMode::Offscreen), move |window, cx| {
+                cx.new(|cx| Bar::new(window, cx, bar_hub, BarMode::Offscreen))
+            })
+            .expect("open the offscreen bar");
+        let app_hub = hub.clone();
+        let app_win = cx
+            .open_window(app_window_options(true), move |window, cx| {
+                cx.new(|cx| AppView::new(window, cx, app_hub))
+            })
+            .expect("open the offscreen app window");
+        cx.spawn(async move |cx| {
+            let mut d = Drv {
+                cx,
+                dark: false,
+                update_ms: vec![],
+                draw_ms: vec![],
+                tag: String::new(),
+                slow: vec![],
+            };
+            d.draw(bar);
+            d.draw(app_win);
+            d.settle(bar).await;
+            d.settle(app_win).await;
+            let ready_ms = t.elapsed().as_secs_f64() * 1000.0;
+            println!("pid {}", std::process::id());
+            let hold = hold_secs.max(10);
+            d.cx.background_executor()
+                .timer(Duration::from_secs(hold - 8))
+                .await;
+            let cpu0 = platform::proc::cpu_seconds();
+            let w0 = Instant::now();
+            d.cx.background_executor()
+                .timer(Duration::from_secs(8))
+                .await;
+            let pct = (platform::proc::cpu_seconds() - cpu0) / w0.elapsed().as_secs_f64() * 100.0;
+            let report = json!({
+                "what": "fresh process, bar and app window created and drawn once, nothing else",
+                "ready_ms_from_app_run": ready_ms,
+                "rss_mb": platform::proc::rss_mb(),
+                "idle_cpu_percent": pct,
+            });
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&report).unwrap_or_default()
+            );
+            d.cx.update(|cx| cx.quit());
+        })
+        .detach();
+    });
+}

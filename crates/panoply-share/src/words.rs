@@ -1,0 +1,31 @@
+//! 256 short, distinct words for the check code two devices compare by eye.
+
+/// The word list. Index with one byte.
+pub const WORDS: [&str; 256] = [
+    "acorn", "actor", "adobe", "agate", "alder", "amber", "anchor", "apple", "apron", "arbor",
+    "atlas", "aspen", "badge", "bagel", "baker", "banjo", "barn", "basil", "beacon", "beech",
+    "berry", "birch", "bison", "blaze", "bloom", "boat", "bolt", "bonus", "bramble", "brass",
+    "bread", "brick", "bridge", "brook", "brush", "cabin", "cactus", "cairn", "camel", "candle",
+    "canoe", "canyon", "cargo", "cedar", "chalk", "charm", "cherry", "chime", "cider", "cliff",
+    "clock", "cloud", "clover", "cobalt", "comet", "coral", "cotton", "crane", "creek", "crest",
+    "crown", "cypress", "daisy", "delta", "denim", "desert", "dingo", "dock", "dolphin", "dove",
+    "dragon", "drum", "dune", "eagle", "ember", "emerald", "falcon", "fern", "ferry", "fiddle",
+    "field", "finch", "flame", "flint", "flute", "forest", "fossil", "fox", "frost", "garden",
+    "garnet", "geyser", "ginger", "glacier", "globe", "granite", "grove", "guitar", "harbor",
+    "hazel", "heron", "hill", "honey", "horizon", "hound", "iceberg", "igloo", "indigo", "iris",
+    "island", "ivory", "jade", "jaguar", "jasmine", "jelly", "jewel", "juniper", "kayak", "kettle",
+    "kite", "koala", "lagoon", "lake", "lantern", "lark", "laurel", "lemon", "lily", "linen",
+    "lotus", "lunar", "maple", "marble", "meadow", "melon", "mint", "mirror", "moss", "mango",
+    "nectar", "nickel", "north", "nutmeg", "oak", "oasis", "ocean", "olive", "onyx", "orbit",
+    "orchid", "otter", "oyster", "paddle", "palm", "panda", "pebble", "pepper", "pine", "planet",
+    "plum", "polar", "pond", "poppy", "prairie", "quartz", "quail", "quill", "rabbit", "raven",
+    "reef", "ribbon", "ridge", "river", "robin", "rocket", "rose", "saddle", "saffron", "sage",
+    "sailor", "salmon", "sandal", "sapphire", "scarlet", "shell", "silver", "sketch", "slate",
+    "sloop", "smoke", "spark", "spruce", "stone", "storm", "summit", "sunset", "swan", "thistle",
+    "thunder", "tiger", "timber", "topaz", "tulip", "tundra", "valley", "velvet", "violet",
+    "walnut", "wave", "willow", "window", "winter", "wolf", "yarrow", "yonder", "zebra", "zephyr",
+    "zinc", "comma", "copper", "cricket", "dawn", "dusk", "echo", "ivy", "lilac", "mocha",
+    "nimbus", "pearl", "pixel", "plaza", "ruby", "spice", "tango", "tidal", "vapor", "vine",
+    "wheat", "amble", "arrow", "bamboo", "breeze", "cinder", "clam", "dahlia", "ferret", "fjord",
+    "gale", "gull", "haze", "hum", "jolly", "lava", "lynx", "marsh", "mesa",
+];
