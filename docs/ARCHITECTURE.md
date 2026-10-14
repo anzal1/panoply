@@ -58,12 +58,24 @@ bar, the app window, the right-click menu, the share sheet, the CLI and MCP.
 | `crates/panoply-host` | Module trait, registry, capability guard, built-in modules |
 | `crates/panoply-wasm` | Community module runtime: wasmtime, the WIT interface (`wit/module.wit`), sandbox limits |
 | `crates/panoply-convert` | Conversion graph loader and router |
+| `crates/panoply-pdf` | PDF engine: merge, split, organize, images to PDF, PDF to images, compress, the searchable-PDF text layer |
+| `crates/panoply-image` | Image engine: the decode, color and resample pipeline behind convert, compress, resize, resize to exact KB and strip metadata |
+| `crates/panoply-media` | Video and audio engine: convert, trim, compress, extract audio, normalize, mono, HDR to SDR, repair, inspect, streams |
+| `crates/panoply-vision` | Image AI on small ONNX models, OS engines first: remove background, erase, remove watermark, upscale |
+| `crates/panoply-ocr` | OCR engine ladder (OS engine, then PP-OCRv5, then Tesseract) with word boxes |
+| `crates/panoply-id` | Passport and visa photo, print sheet and signature cleaner |
+| `crates/panoply-share` | LocalSend v2 send and receive, and the QR browser page |
+| `crates/panoply-platform-macos` | ImageIO, CoreImage and Vision behind a safe API: HEIC, HEIF, AVIF, camera RAW, system OCR and cutouts |
+| `crates/panoply-smoke` | The smoke matrix: every module over real corpus files through the path the desktop app takes |
+| `crates/panoply-bench` | The budget harness: start time, first preview, CPU and peak memory per module |
 | `crates/panoply-cli` | The `panoply` command |
-| `crates/panoply-mcp` | MCP tool definitions generated from manifests |
-| `crates/panoply-ffi` | Bindings for the native apps (Phase 2) |
+| `crates/panoply-mcp` | MCP tool definitions generated from manifests (the transport is not served yet) |
+| `crates/panoply-ffi` | UniFFI bindings for the Android and iOS apps (not started) |
 | `conversions/formats.py` | Source of truth for formats and converters; generates `docs/CONVERSIONS.md` and `crates/panoply-convert/data/graph.json` |
 | `modules/` | Module manifests: built-in examples, `template-rust/` (start here to write a module), `examples-wasm/` (finished community modules) |
-| `apps/` | Native apps per platform (Mac first) |
+| `apps/desktop` | The GPUI desktop app for macOS, Windows and Linux, built directly on the Rust core |
+| `packaging/`, `tools/` | Release scripts and package manifests, maintenance scripts |
+| `tests/corpus/` | The real files the engines and the smoke matrix are measured on |
 | `docs/` | Vision, architecture, flows, modules, decisions, plan, specs, research |
 | `prototypes/` | Kill-test code that informed decisions (not shipped) |
 
@@ -169,6 +181,9 @@ opinion.
 - **Measured baseline.** In the shell kill test (`prototypes/shell-test`) the
   GPUI bar idled at 33 MB with a 152 to 190 ms cold start, next to SwiftUI at
   30 MB and 182 ms.
+- **Measured on the beta.** The smoke matrix ran every module over real files
+  through the app's own path: 498 jobs, 0 failures
+  ([research/beta-smoke.md](research/beta-smoke.md)).
 
 ## 8. Sharing between devices
 
@@ -201,11 +216,16 @@ opinion.
 
 ## 11. Platforms
 
+The three desktops launched together in v0.1.0-beta (2026-10-14), then Android,
+then iOS ([ADR 0001](adr/0001-native-ui-per-platform.md) and
+[ADR 0009](adr/0009-platform-order.md)).
+
 | Platform | UI | Status |
 |---|---|---|
-| macOS | GPUI (one desktop app), native Swift only for Finder and share extensions | Phase 2 |
-| Android | Jetpack Compose | after Mac launch |
-| Windows | the same GPUI desktop app | after Android |
-| iOS | SwiftUI | after Windows |
-| Linux | the same GPUI desktop app | with Windows |
-| CLI and MCP | Rust, all desktops | first public drop (Phase 1) |
+| macOS | GPUI (one desktop app), native Swift only for Finder and share extensions | Released in v0.1.0-beta. The most tested system |
+| Windows | the same GPUI desktop app | Released in v0.1.0-beta |
+| Linux | the same GPUI desktop app | Released in v0.1.0-beta |
+| CLI | Rust, all desktops | Released in v0.1.0-beta |
+| MCP server | Rust, all desktops | Tool definitions exist, the transport is not shipped yet |
+| Android | Jetpack Compose | Next |
+| iOS | SwiftUI | After Android |

@@ -7,6 +7,9 @@
 > 30 (PDF to Word, edit text, redact, transcribe, text to speech, find,
 > clipboard) follows in weekly updates. The phases below are the full scope,
 > no longer a serial schedule.
+>
+> **Shipped 2026-10-14:** v0.1.0-beta, with its first tools on macOS, Windows and Linux
+> and the same tools as the `panoply` command line, two weeks ahead of that date.
 
 Built from VISION.md, FLOWS.md, MODULES.md, DECISIONS.md and specs/. Weeks are
 rough. Every phase ends on a gate: a measured check that must pass before the
@@ -63,10 +66,11 @@ utility, lowest memory, butter smooth.
   video and audio stream-copy tools (convert, trim, extract audio, repair);
   archives; metadata view and strip.
 
-**Release: Panoply CLI and MCP, public alpha (week 6)**
+**Release: Panoply CLI (shipped inside v0.1.0-beta; the MCP transport follows)**
 
-The first public drop is for developers and AI agents: one binary, every wave
-1 module, local, MCP server included. It builds the GitHub audience before the
+The first public drop was planned for developers and AI agents: one binary,
+every wave 1 module, local, MCP server included. The CLI shipped with the
+desktop app, and the MCP server follows. It builds the GitHub audience before the
 app launches, in the fastest-growing open-source category (agent file tools).
 
 **Gate:** every wave 1 module passes its budget and quality bar in CI on Mac,
