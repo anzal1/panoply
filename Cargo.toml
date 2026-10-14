@@ -1,9 +1,9 @@
 [workspace]
 resolver = "3"
-members = ["crates/*"]
+members = ["crates/*", "apps/desktop"]
 # Module projects (templates, examples, kill-test output) are standalone Cargo projects that
 # build for wasm32-wasip2, so they stay out of the host workspace.
-exclude = ["modules", "crates/panoply-wasm/tests/fixtures"]
+exclude = ["modules", "crates/panoply-wasm/tests/fixtures", "apps/desktop/patches/gpui-base"]
 
 [workspace.package]
 version = "0.0.1"

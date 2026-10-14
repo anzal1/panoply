@@ -1,0 +1,60 @@
+[package]
+name = "panoply-desktop"
+description = "The Panoply desktop app: command bar and app window, one GPUI app for macOS, Windows and Linux"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lib]
+name = "panoply_desktop"
+path = "src/lib.rs"
+
+[[bin]]
+name = "panoply-desktop"
+path = "src/main.rs"
+
+[features]
+# Dev only: offscreen render to PNG and the headless self check (`panoply-desktop --selfcheck`).
+# Never part of a shipping build.
+snapshot = ["gpui/test-support", "gpui_platform/test-support", "dep:image", "dep:png"]
+
+[dependencies]
+panoply-core.workspace = true
+panoply-manifest.workspace = true
+panoply-convert.workspace = true
+panoply-host.workspace = true
+panoply-wasm.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+# GPUI from the crates.io snapshot that GPUI Kit pins (ADR 0001 amendment). The kit's `gpui-base`
+# input is vendored in patches/gpui-base with our grapheme patch applied (patches/*.diff).
+gpui = { package = "gpui-pre", version = "=0.3.9" }
+gpui_platform = { package = "gpui-pre-platform", version = "=0.3.9", features = ["font-kit", "runtime_shaders"] }
+gpui-base = { path = "patches/gpui-base" }
+global-hotkey = "0.7"
+futures = "0.3"
+anyhow = "1"
+image = { version = "0.25", default-features = false, features = ["png"], optional = true }
+png = { workspace = true, optional = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+raw-window-handle = "0.6"
+
+[dev-dependencies]
+png.workspace = true
+
+# Everything inherited from the workspace except `unsafe_code`: the AppKit window helpers in
+# src/platform/ need Objective-C messages. Unsafe is denied everywhere else in this crate.
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }

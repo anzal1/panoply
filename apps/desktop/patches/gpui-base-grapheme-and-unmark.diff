@@ -1,0 +1,63 @@
+--- orig/src/input/base/state.rs	2026-10-13 23:38:51
++++ patched/src/input/base/state.rs	2026-10-13 23:38:51
+@@ -3530,13 +3530,40 @@
+         }
+     }
+ 
++    /// Snap `offset` to an extended grapheme cluster boundary of its line (backward or forward).
++    /// Caret, selection and delete previously moved one code point at a time, which splits Indic conjuncts
++    /// (क्ष is क + halant + ष), combining accents and emoji sequences.
++    fn grapheme_snap(&self, offset: usize, forward: bool) -> usize {
++        let row = self.text.offset_to_point(offset).row;
++        let start = self.text.line_start_offset(row);
++        let end = self.text.line_end_offset(row);
++        if offset <= start || offset >= end {
++            return offset;
++        }
++        let line = self.text.slice(start..end).to_string();
++        let rel = offset - start;
++        let mut cursor = GraphemeCursor::new(rel, line.len(), true);
++        match cursor.is_boundary(&line, 0) {
++            Ok(false) => {
++                let found = if forward { cursor.next_boundary(&line, 0) } else { cursor.prev_boundary(&line, 0) };
++                match found {
++                    Ok(Some(b)) => start + b,
++                    _ => offset,
++                }
++            }
++            _ => offset,
++        }
++    }
++
+     pub(super) fn previous_boundary(&self, offset: usize) -> usize {
+         let offset = self.cursor_boundary(offset.saturating_sub(1), Bias::Left);
++        let offset = self.grapheme_snap(offset, false);
+         self.clamp_offset_to_visible_backward(offset)
+     }
+ 
+     pub(super) fn next_boundary(&self, offset: usize) -> usize {
+         let offset = self.cursor_boundary(offset.saturating_add(1), Bias::Right);
++        let offset = self.grapheme_snap(offset, true);
+         self.clamp_offset_to_visible_forward(offset)
+     }
+ 
+@@ -4125,9 +4152,17 @@
+             .map(|range| self.range_to_utf16(&range.into()))
+     }
+ 
+-    fn unmark_text(&mut self, _window: &mut Window, _cx: &mut Context<Self>) {
+-        self.ime_marked_range = None;
++    fn unmark_text(&mut self, _window: &mut Window, cx: &mut Context<Self>) {
++        // Committing composed text through `unmarkText` (no `insertText`) used to leave observers stale:
++        // no repaint and no Change event, although the text became final.
++        let was_marked = self.ime_marked_range.take().is_some();
+         self.undo_manager.commit_transaction();
++        if was_marked {
++            if self.emit_events {
++                cx.emit(InputEvent::Change);
++            }
++            cx.notify();
++        }
+     }
+ 
+     /// Replace text in range.
