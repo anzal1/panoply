@@ -6,7 +6,7 @@ DL="$(cd "$1" && pwd)"; mkdir -p "$2"; OUT="$(cd "$2" && pwd)"
 APPIMAGE="$(ls "$DL"/*.AppImage | head -1)"; chmod +x "$APPIMAGE"
 
 export DISPLAY=:99
-Xvfb :99 -screen 0 1920x1080x24 -dpi 96 >"$OUT/xvfb.log" 2>&1 &
+Xvfb :99 -screen 0 1920x1080x24 -dpi 96 +extension Composite >"$OUT/xvfb.log" 2>&1 &
 sleep 2
 eval "$(dbus-launch --sh-syntax)"
 openbox >"$OUT/openbox.log" 2>&1 &
@@ -24,7 +24,12 @@ runs=()
 pid_of() { pgrep -x panoply-desktop | head -1; }
 window_id() { xdotool search --onlyvisible --name '^Panoply$' 2>/dev/null | head -1; }
 
-for scenario in default; do
+for scenario in default compositor; do
+  if [ "$scenario" = compositor ]; then
+    picom --backend xrender >"$OUT/picom.log" 2>&1 &
+    sleep 3
+  fi
+  P="linux-$scenario"
   rm -rf "$HOME/.local/share/panoply/"*window* 2>/dev/null || true
   if [ -n "${SMOKE_STRACE:-}" ]; then
     strace -f -tt -s 200 -e trace=connect,execve,openat,write -o "$OUT/strace.txt" "$APPIMAGE" >"$OUT/stdout.txt" 2>"$OUT/stderr.txt" &
@@ -51,24 +56,25 @@ for scenario in default; do
     geom="$(xdotool getwindowgeometry "$wid" | tr '\n' ' ')"
     frame="$(xprop -id "$wid" _NET_FRAME_EXTENTS 2>/dev/null)"
     motif="$(xprop -id "$wid" _MOTIF_WM_HINTS 2>/dev/null)"
-    xprop -id "$wid" >"$OUT/xprop-app-window.txt" 2>&1 || true
+    xprop -id "$wid" >"$OUT/xprop-app-window-$scenario.txt" 2>&1 || true
   fi
-  xwininfo -root -tree >"$OUT/xwininfo-tree.txt" 2>&1 || true
-  wmctrl -lG >"$OUT/wmctrl.txt" 2>&1 || true
+  xwininfo -root -tree >"$OUT/xwininfo-tree-$scenario.txt" 2>&1 || true
+  wmctrl -lG >"$OUT/wmctrl-$scenario.txt" 2>&1 || true
   [ -n "$pid" ] && rss=$(ps -o rss= -p "$pid" | tr -d ' ')
   mem_mb=$(( ${rss:-0} / 1024 ))
-  import -window root "$OUT/linux-app-screen.png"
-  if [ -n "$wid" ]; then import -window "$wid" "$OUT/linux-app-window.png" 2>/dev/null || true; fi
+  import -window root "$OUT/$P-app.png"
+  if [ -n "$wid" ]; then import -window "$wid" "$OUT/$P-app-window.png" 2>/dev/null || true; fi
 
   # The command bar, through the global hotkey.
   xdotool key --clearmodifiers ctrl+alt+space
   sleep 2
-  import -window root "$OUT/linux-bar-screen.png"
-  wmctrl -lG >"$OUT/wmctrl-after-hotkey.txt" 2>&1 || true
-  xwininfo -root -tree >"$OUT/xwininfo-tree-after-hotkey.txt" 2>&1 || true
+  import -window root "$OUT/$P-bar-after-hotkey.png"
+  wmctrl -lG >"$OUT/wmctrl-after-hotkey-$scenario.txt" 2>&1 || true
+  xwininfo -root -tree >"$OUT/xwininfo-tree-after-hotkey-$scenario.txt" 2>&1 || true
   alive_after_hotkey=false; [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && alive_after_hotkey=true
   xdotool key --clearmodifiers ctrl+alt+space
-  sleep 1
+  sleep 2
+  import -window root "$OUT/$P-after-second-hotkey.png"
 
   # Close the window through the window manager, like the close button.
   exited=false; code=""
