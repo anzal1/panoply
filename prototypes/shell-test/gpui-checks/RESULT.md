@@ -117,9 +117,9 @@ Build and launch (low priority, one time):
 
 ```sh
 pkill -f Arsenal.app/Contents/MacOS 2>/dev/null   # the original build holds the same port and hotkey
-cd /Users/anzalhussainabidi/personal/panoply/prototypes/shell-test/gpui/kit-variant
+cd prototypes/shell-test/gpui/kit-variant
 ./build.sh                                         # nice 19, -j2, a few minutes cold
-open -g /Users/anzalhussainabidi/personal/panoply/prototypes/shell-test/gpui/kit-variant/ArsenalKit.app
+open -g prototypes/shell-test/gpui/kit-variant/ArsenalKit.app
 # quit afterwards:  pkill -f ArsenalKit.app/Contents/MacOS
 ```
 

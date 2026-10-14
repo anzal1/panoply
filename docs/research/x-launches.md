@@ -66,7 +66,7 @@ Offline mode, P2P share, collaborative whiteboard, scan to PDF, GST invoice gene
 
 ## C) Tasks from B that are NOT in MODULES.md
 
-Checked against /Users/anzalhussainabidi/personal/panoply/MODULES.md (read first). Items already present, such as merge, split, OCR, redact, compress to size, subtitles, vocal remover, stems, noise removal, boomerang, favicon, GIF tools, extract frames, contact sheet and Ask your PDF, are excluded.
+Checked against docs/MODULES.md (read first). Items already present, such as merge, split, OCR, redact, compress to size, subtitles, vocal remover, stems, noise removal, boomerang, favicon, GIF tools, extract frames, contact sheet and Ask your PDF, are excluded.
 
 Clear gaps (no equivalent line in the catalogue):
 1. Stereo to mono (audio).

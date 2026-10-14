@@ -1,11 +1,11 @@
-# Arsenal command bar: Tauri 2 build
+# Panoply command bar prototype: Tauri 2 build
 
 Tauri 2.12 shell, plain TypeScript + vanilla DOM frontend built with Vite. Spec: `../SPEC.md`.
 
 ## Build
 
 ```sh
-cd /Users/anzalhussainabidi/personal/arsenal/shell-test/tauri
+cd prototypes/shell-test/tauri
 source ~/.nvm/nvm.sh            # Node 24
 npm install
 CARGO_BUILD_JOBS=4 nice -n 10 npx tauri build --bundles app
@@ -17,7 +17,7 @@ CARGO_BUILD_JOBS=4 nice -n 10 npx tauri build --bundles app
 Built app:
 
 ```
-/Users/anzalhussainabidi/personal/arsenal/shell-test/tauri/src-tauri/target/release/bundle/macos/Arsenal.app
+prototypes/shell-test/tauri/src-tauri/target/release/bundle/macos/Arsenal.app
 ```
 
 ## Run

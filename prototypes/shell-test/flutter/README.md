@@ -1,4 +1,4 @@
-# Arsenal command bar, Flutter build
+# Panoply command bar prototype, Flutter build
 
 Flutter 3.47.7 (Impeller, Metal), macOS 26. Zero plugins: the window, material,
 hotkey and file drops are a small Swift Runner (`macos/Runner`), the only Dart

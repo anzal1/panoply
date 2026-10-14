@@ -1,4 +1,4 @@
-# Arsenal command bar, SwiftUI reference build
+# Panoply command bar prototype, SwiftUI reference build
 
 Native macOS 26 build: SwiftUI content hosted in an `NSPanel`, backed by Liquid Glass
 (`NSGlassEffectView`, regular style, corner radius 20). Accessory app (`LSUIElement`), no Dock icon.
@@ -6,17 +6,17 @@ Native macOS 26 build: SwiftUI content hosted in an `NSPanel`, backed by Liquid 
 ## Build
 
 ```sh
-cd /Users/anzalhussainabidi/personal/arsenal/shell-test/swiftui
+cd prototypes/shell-test/swiftui
 ./build.sh        # nice -n 10 swift build -c release, wraps and ad-hoc signs Arsenal.app
 ```
 
-Output: `/Users/anzalhussainabidi/personal/arsenal/shell-test/swiftui/Arsenal.app`
+Output: `prototypes/shell-test/swiftui/Arsenal.app`
 (`shared/utilities.json` is copied into `Contents/Resources` and loaded at startup).
 
 ## Run
 
 ```sh
-open /Users/anzalhussainabidi/personal/arsenal/shell-test/swiftui/Arsenal.app
+open prototypes/shell-test/swiftui/Arsenal.app
 ```
 
 Hotkey: Control+Option+1 (Carbon `RegisterEventHotKey`, no permissions).

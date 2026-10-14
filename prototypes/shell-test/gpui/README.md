@@ -1,4 +1,4 @@
-# Arsenal command bar: GPUI build
+# Panoply command bar prototype: GPUI build
 
 GPUI (Zed's UI framework) build of the shell kill test. Plain GPUI, no component kit. Spec: `../SPEC.md`.
 Standalone Cargo project (empty `[workspace]` table), not part of the Panoply workspace.
@@ -14,11 +14,11 @@ Standalone Cargo project (empty `[workspace]` table), not part of the Panoply wo
 ## Build
 
 ```sh
-cd /Users/anzalhussainabidi/personal/panoply/prototypes/shell-test/gpui
+cd prototypes/shell-test/gpui
 ./build.sh        # nice -n 15 cargo build --release -j3, wraps and ad-hoc signs Arsenal.app
 ```
 
-Output: `/Users/anzalhussainabidi/personal/panoply/prototypes/shell-test/gpui/Arsenal.app` (LSUIElement accessory app, 6.1 MB;
+Output: `prototypes/shell-test/gpui/Arsenal.app` (LSUIElement accessory app, 6.1 MB;
 `shared/utilities.json` is copied into `Contents/Resources` and loaded at startup).
 Clean build: about 70 s wall at `-j3` after the git dependencies are fetched.
 
@@ -27,7 +27,7 @@ Clean build: about 70 s wall at `-j3` after the git dependencies are fetched.
 ## Run
 
 ```sh
-open -g /Users/anzalhussainabidi/personal/panoply/prototypes/shell-test/gpui/Arsenal.app
+open -g prototypes/shell-test/gpui/Arsenal.app
 pkill -f Arsenal.app/Contents/MacOS     # quit
 ```
 
