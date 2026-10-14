@@ -32,8 +32,15 @@ for scenario in default; do
     "$APPIMAGE" >"$OUT/stdout.txt" 2>"$OUT/stderr.txt" &
   fi
   launcher=$!
-  sleep 12
-  ps -eo pid,ppid,stat,rss,etime,args | grep -i panoply | grep -v grep >"$OUT/ps.txt" || true
+  # Poll for the window instead of a fixed sleep, and record how long it took.
+  t0=$(date +%s.%N); shown=""
+  for i in $(seq 1 120); do
+    shown="$(window_id || true)"; [ -n "$shown" ] && break
+    sleep 0.5
+    [ "$i" = 24 ] && ps -eo pid,ppid,stat,rss,etime,args | grep -i panoply | grep -v grep >"$OUT/ps.txt"
+  done
+  t_window=$(python3 -c "print(round($(date +%s.%N)-$t0,1))")
+  sleep 3
   [ -n "$(pid_of || true)" ] && { cat "/proc/$(pid_of)/status" >"$OUT/proc-status.txt"; ls -l "/proc/$(pid_of)/fd" >"$OUT/proc-fd.txt" 2>&1; for t in /proc/$(pid_of)/task/*; do echo "$(cat $t/comm) $(cat $t/wchan 2>/dev/null)"; done >"$OUT/proc-threads.txt"; }
   pid="$(pid_of || true)"
   alive=false; [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && alive=true
@@ -72,15 +79,15 @@ for scenario in default; do
   done
   if $exited; then wait "$launcher"; code=$?; else pkill -x panoply-desktop || true; wait "$launcher" 2>/dev/null || true; fi
 
-  [ "$alive" = true ] || failed+=("process not alive after 12 s")
+  [ "$alive" = true ] || failed+=("process not alive after the window wait")
   [ -n "$wid" ] || failed+=("no visible window titled Panoply")
   if $exited && [ "$code" != 0 ]; then failed+=("exit code $code after close"); fi
-  runs+=("$(python3 -I - "$scenario" "$alive" "$wid" "$title" "$geom" "$frame" "$motif" "$mem_mb" "$alive_after_hotkey" "$exited" "$code" <<'PY'
+  runs+=("$(python3 -I - "$scenario" "$alive" "$wid" "$title" "$geom" "$frame" "$motif" "$mem_mb" "$alive_after_hotkey" "$exited" "$code" "$t_window" <<'PY'
 import json, sys
-k = ["scenario","alive","window_id","title","geometry","frame_extents","motif_hints","memory_mb","alive_after_hotkey","exited_after_close","exit_code"]
+k = ["scenario","alive","window_id","title","geometry","frame_extents","motif_hints","memory_mb","alive_after_hotkey","exited_after_close","exit_code","seconds_to_window"]
 d = dict(zip(k, sys.argv[1:]))
 for b in ("alive","alive_after_hotkey","exited_after_close"): d[b] = d[b] == "true"
-d["memory_mb"] = int(d["memory_mb"])
+d["memory_mb"] = int(d["memory_mb"]); d["seconds_to_window"] = float(d["seconds_to_window"])
 print(json.dumps(d))
 PY
 )")
