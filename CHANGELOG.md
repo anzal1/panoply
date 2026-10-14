@@ -4,6 +4,29 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
+## v0.1.1-beta (2026-10-14)
+
+A new look, and fixes for Windows and Linux.
+
+### Changed
+
+- **New icon.** Three tool cards fanned from one pivot, drawn on the macOS 26 icon grid with hand-tuned small
+  sizes, plus Windows and Linux sets.
+- **Desktop app redesign.** One design system across every screen: a single type ramp, an 8 pt spacing
+  grid, quieter selection, visible focus rings, a full menu bar with standard shortcuts, a settings window,
+  and a window that remembers its size and place. Choices that do not fit one row open as a pop-up menu, and
+  every hint fits on one line.
+
+### Fixed
+
+- **Windows.** Reading text from images no longer crashes when worker threads come and go. A QR share no
+  longer ends before the other device has the whole file.
+- **Passport photo.** Head tilt is measured on a level, face-sized crop, so turned heads straighten properly
+  on Windows and Linux too, within 2 degrees.
+- **Tool names.** Summaries that the command bar and panel header cut off are shorter, and the AI image
+  tools say up front that they download a model once, after you say yes.
+- **Security.** rustls updated to clear four advisories.
+
 ## v0.1.0-beta (2026-10-14)
 
 The first public beta. 31 tools, one desktop app for macOS, Windows and Linux, and the same tools as a
