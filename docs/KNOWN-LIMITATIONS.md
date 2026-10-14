@@ -80,7 +80,7 @@ No signature check applies. Make the AppImage executable (`chmod +x`) and run it
 | Remove background | Apple Vision first, IS-Net as a fallback | IS-Net | IS-Net |
 | Faces for passport photos | Apple Vision | YuNet model, downloaded once | YuNet model, downloaded once |
 | OCR | Apple Vision, then PP-OCRv5 and Tesseract | PP-OCRv5 and Tesseract | PP-OCRv5 and Tesseract |
-| Undo | New file to the Trash | New file deleted | New file to the Trash |
+| Undo | New file to the Trash | New file to the Recycle Bin | New file to the Trash |
 | Global hotkey | Option+Space | Ctrl+Alt+Space | Ctrl+Alt+Space on X11 |
 
 More about the gaps:

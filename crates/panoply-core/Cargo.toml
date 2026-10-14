@@ -1,6 +1,6 @@
 [package]
 name = "panoply-core"
-description = "File sniffing, output naming, cancellation, job types and budgets for Panoply"
+description = "File sniffing, output naming, cancellation, trash, job types and budgets for Panoply"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -18,5 +18,28 @@ serde_json.workspace = true
 thiserror.workspace = true
 infer.workspace = true
 
-[lints]
-workspace = true
+# Moving a file to the trash is an operating system call on every platform, so these are the only
+# platform dependencies in this crate. Each is already in the dependency tree through another crate.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSFileManager", "NSURL", "NSString", "NSError"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_UI_Shell",
+] }
+
+# Not the workspace lints: `unsafe` is denied here instead of forbidden, because the trash module
+# needs a few OS calls on Linux (the user id and the local time) and the Windows shell. Each one is
+# allowed on its own function with a SAFETY note. Everything else in the crate stays safe.
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }

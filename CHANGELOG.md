@@ -6,7 +6,13 @@ marking releases that are still finding their edges.
 
 ## Unreleased
 
-Icon: the fan now opens narrower, so all three tool cards read at every size.
+### Changed
+
+- Icon: the fan now opens narrower, so all three tool cards read at every size.
+
+### Fixed
+
+- Undo moves the result to the Recycle Bin on Windows and the trash on Linux, never a permanent delete.
 
 ## v0.1.1-beta (2026-10-14)
 

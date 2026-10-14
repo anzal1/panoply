@@ -34,15 +34,19 @@ pub(crate) fn set_trash_dir(dir: std::path::PathBuf) {
     let _ = TRASH_OVERRIDE.set(dir);
 }
 
-/// Move a file to the Trash, or to the override folder when one is set.
-pub(crate) fn trash(path: &std::path::Path) -> std::io::Result<()> {
+/// Move a file to the Trash (the Recycle Bin on Windows), or to the override folder when one is set.
+/// Never deletes for good: when the system cannot take the file, the error says why and the file stays.
+pub(crate) fn trash(path: &std::path::Path) -> Result<(), panoply_core::TrashError> {
     match TRASH_OVERRIDE.get() {
         Some(dir) => {
             let name = path
                 .file_name()
-                .ok_or_else(|| std::io::Error::other("no file name"))?;
+                .ok_or_else(|| panoply_core::TrashError::Failed {
+                    why: "it has no name".into(),
+                })?;
             std::fs::rename(path, dir.join(name))
+                .map_err(|e| panoply_core::TrashError::Failed { why: e.to_string() })
         }
-        None => os_trash(path),
+        None => panoply_core::move_to_trash(path),
     }
 }
