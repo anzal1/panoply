@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>Panoply</string>
+  <key>CFBundleDisplayName</key><string>Panoply</string>
+  <key>CFBundleIdentifier</key><string>dev.panoply.desktop</string>
+  <key>CFBundleExecutable</key><string>Panoply</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>@VERSION@</string>
+  <key>CFBundleVersion</key><string>@VERSION@</string>
+  <key>LSMinimumSystemVersion</key><string>14.0</string>
+  <!-- A normal app with a Dock icon and an app window. The command bar still opens from the global hotkey. -->
+  <key>LSUIElement</key><false/>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSPrincipalClass</key><string>NSApplication</string>
+  <key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
+  <!-- Files and folders dropped on the Dock icon, or sent with Open With, arrive as file URLs. -->
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key><string>Any file</string>
+      <key>CFBundleTypeRole</key><string>Viewer</string>
+      <key>LSHandlerRank</key><string>Alternate</string>
+      <key>LSItemContentTypes</key>
+      <array><string>public.data</string><string>public.folder</string></array>
+    </dict>
+  </array>
+</dict>
+</plist>

@@ -1,0 +1,345 @@
+{
+  "root": "ac",
+  "gpui_focus": "l",
+  "active_descendant_focus": null,
+  "frame": {
+    "rendered_at": "2026-10-14T13:38:14.338+05:30",
+    "frame_number": 7,
+    "window_title": null,
+    "node_count": 29,
+    "tab_stop_count": 4,
+    "viewport_size": {
+      "width": 720.0,
+      "height": 460.0
+    },
+    "scale_factor": 2.0
+  },
+  "nodes": {
+    "a": {
+      "accesskit_id": "336288425992239980",
+      "aria": {
+        "role": "Button",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Back to all tools"
+      }
+    },
+    "b": {
+      "accesskit_id": "3743925997490624160",
+      "aria": {
+        "role": "Heading",
+        "label": "Compress image"
+      }
+    },
+    "c": {
+      "accesskit_id": "6682219324797064942",
+      "aria": {
+        "role": "Button",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Remove signature.png"
+      }
+    },
+    "d": {
+      "accesskit_id": "1200548286522203053",
+      "children": [
+        "c"
+      ],
+      "aria": {
+        "role": "ListItem",
+        "label": "signature.png, 67 KB"
+      }
+    },
+    "e": {
+      "accesskit_id": "2805250918349831238",
+      "children": [
+        "d"
+      ],
+      "aria": {
+        "role": "List",
+        "label": "Files"
+      }
+    },
+    "f": {
+      "accesskit_id": "3359777626358855644",
+      "aria": {
+        "role": "Button",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Add files"
+      }
+    },
+    "g": {
+      "accesskit_id": "5294379627785441912",
+      "aria": {
+        "role": "Status",
+        "label": "Estimate: 67 KB to at most 50 KB"
+      }
+    },
+    "h": {
+      "accesskit_id": "4687160334822272483",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "smallest",
+        "selected": false
+      }
+    },
+    "i": {
+      "accesskit_id": "10639899455117427993",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "under size",
+        "selected": true
+      }
+    },
+    "j": {
+      "accesskit_id": "11877138016119251315",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "quality",
+        "selected": false
+      }
+    },
+    "k": {
+      "accesskit_id": "12052644521324127099",
+      "children": [
+        "h",
+        "i",
+        "j"
+      ],
+      "aria": {
+        "role": "RadioGroup",
+        "on_action": [
+          "Focus"
+        ],
+        "label": "Target"
+      }
+    },
+    "l": {
+      "accesskit_id": "17959051855651212363",
+      "aria": {
+        "role": "TextInput",
+        "on_action": [
+          "Focus"
+        ],
+        "label": "Stay under",
+        "value": "50kb"
+      }
+    },
+    "m": {
+      "accesskit_id": "1077561068552470765",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "keep",
+        "selected": true
+      }
+    },
+    "n": {
+      "accesskit_id": "444449016859328665",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "smallest",
+        "selected": false
+      }
+    },
+    "o": {
+      "accesskit_id": "5313174739965075953",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "jpg",
+        "selected": false
+      }
+    },
+    "p": {
+      "accesskit_id": "9628287957571403889",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "png",
+        "selected": false
+      }
+    },
+    "q": {
+      "accesskit_id": "5622446476350837083",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "webp",
+        "selected": false
+      }
+    },
+    "r": {
+      "accesskit_id": "10599258590532648343",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "avif",
+        "selected": false
+      }
+    },
+    "s": {
+      "accesskit_id": "4248601961753670162",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "heic",
+        "selected": false
+      }
+    },
+    "t": {
+      "accesskit_id": "11894591372541921410",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "tiff",
+        "selected": false
+      }
+    },
+    "u": {
+      "accesskit_id": "18273798824558586220",
+      "aria": {
+        "role": "RadioButton",
+        "on_action": [
+          "Click"
+        ],
+        "label": "gif",
+        "selected": false
+      }
+    },
+    "v": {
+      "accesskit_id": "3031616399621081064",
+      "children": [
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u"
+      ],
+      "aria": {
+        "role": "RadioGroup",
+        "on_action": [
+          "Focus"
+        ],
+        "label": "Format"
+      }
+    },
+    "w": {
+      "accesskit_id": "17961975279279064601",
+      "aria": {
+        "role": "TextInput",
+        "on_action": [
+          "Focus"
+        ],
+        "label": "Quality",
+        "value": ""
+      }
+    },
+    "x": {
+      "accesskit_id": "13753193719494376632",
+      "aria": {
+        "role": "Button",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Decrease Quality"
+      }
+    },
+    "y": {
+      "accesskit_id": "10354381890616881355",
+      "aria": {
+        "role": "Button",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Increase Quality"
+      }
+    },
+    "z": {
+      "accesskit_id": "14292020819031363232",
+      "aria": {
+        "role": "DisclosureTriangle",
+        "on_action": [
+          "Click"
+        ],
+        "label": "More options",
+        "expanded": false
+      }
+    },
+    "aa": {
+      "accesskit_id": "14990629464739613947",
+      "children": [
+        "k",
+        "l",
+        "v",
+        "w",
+        "x",
+        "y",
+        "z"
+      ],
+      "aria": {
+        "role": "Group",
+        "label": "Options"
+      }
+    },
+    "ab": {
+      "accesskit_id": "296438570668819543",
+      "aria": {
+        "role": "Button",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Run"
+      }
+    },
+    "ac": {
+      "accesskit_id": "0",
+      "children": [
+        "a",
+        "b",
+        "e",
+        "f",
+        "g",
+        "aa",
+        "ab"
+      ],
+      "aria": {
+        "role": "Window"
+      }
+    }
+  }
+}

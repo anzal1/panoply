@@ -1,0 +1,177 @@
+{
+  "root": "l",
+  "gpui_focus": "a",
+  "active_descendant_focus": null,
+  "frame": {
+    "rendered_at": "2026-10-14T13:38:14.248+05:30",
+    "frame_number": 2,
+    "window_title": null,
+    "node_count": 12,
+    "tab_stop_count": 1,
+    "viewport_size": {
+      "width": 720.0,
+      "height": 460.0
+    },
+    "scale_factor": 2.0
+  },
+  "nodes": {
+    "a": {
+      "accesskit_id": "5178879556993197155",
+      "aria": {
+        "role": "SearchInput",
+        "on_action": [
+          "Focus"
+        ],
+        "label": "Search tools and files",
+        "value": "",
+        "placeholder": "Search 24 tools and your files, or drop anything"
+      }
+    },
+    "b": {
+      "accesskit_id": "9382442457763142434",
+      "aria": {
+        "role": "ListBoxOption",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Convert image",
+        "description": "Turn this image into another format and keep its colors, orientation and details.",
+        "selected": true,
+        "position_in_set": 1,
+        "size_of_set": 7
+      }
+    },
+    "c": {
+      "accesskit_id": "3093599503312793870",
+      "aria": {
+        "role": "ListBoxOption",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Compress image",
+        "description": "Make this image smaller without it looking worse, or fit it under a size.",
+        "selected": false,
+        "position_in_set": 2,
+        "size_of_set": 7
+      }
+    },
+    "d": {
+      "accesskit_id": "15251500622571996921",
+      "aria": {
+        "role": "ListBoxOption",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Compress PDF",
+        "description": "Make this PDF small enough to email or upload.",
+        "selected": false,
+        "position_in_set": 3,
+        "size_of_set": 7
+      }
+    },
+    "e": {
+      "accesskit_id": "8962657668188757221",
+      "aria": {
+        "role": "ListBoxOption",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Resize image",
+        "description": "Make this image an exact size, a percentage, or fit a longest side.",
+        "selected": false,
+        "position_in_set": 4,
+        "size_of_set": 7
+      }
+    },
+    "f": {
+      "accesskit_id": "2673814713738408657",
+      "aria": {
+        "role": "ListBoxOption",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Convert image",
+        "description": "signature.png",
+        "selected": false,
+        "position_in_set": 5,
+        "size_of_set": 7
+      }
+    },
+    "g": {
+      "accesskit_id": "14831715832997611708",
+      "aria": {
+        "role": "ListBoxOption",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Compress image",
+        "description": "signature.png",
+        "selected": false,
+        "position_in_set": 6,
+        "size_of_set": 7
+      }
+    },
+    "h": {
+      "accesskit_id": "8542872878547263144",
+      "aria": {
+        "role": "ListBoxOption",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Resize to exact KB",
+        "description": "signature.jpg",
+        "selected": false,
+        "position_in_set": 7,
+        "size_of_set": 7
+      }
+    },
+    "i": {
+      "accesskit_id": "11915988910063973261",
+      "children": [
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h"
+      ],
+      "aria": {
+        "role": "ListBox",
+        "label": "Tools"
+      }
+    },
+    "j": {
+      "accesskit_id": "7771679990154659489",
+      "aria": {
+        "role": "Button",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Open"
+      }
+    },
+    "k": {
+      "accesskit_id": "1482837035704310925",
+      "aria": {
+        "role": "Button",
+        "on_action": [
+          "Click"
+        ],
+        "label": "Actions"
+      }
+    },
+    "l": {
+      "accesskit_id": "0",
+      "children": [
+        "a",
+        "i",
+        "j",
+        "k"
+      ],
+      "aria": {
+        "role": "Window"
+      }
+    }
+  }
+}

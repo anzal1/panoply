@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Panoply
+GenericName=File tools
+Comment=Every file tool in one fast app. Everything runs on this computer.
+Exec=panoply-desktop %F
+Icon=panoply
+Terminal=false
+Categories=Utility;
+MimeType=application/pdf;image/jpeg;image/png;image/webp;image/heic;image/gif;audio/mpeg;video/mp4;text/plain;inode/directory;
+StartupWMClass=panoply-desktop
