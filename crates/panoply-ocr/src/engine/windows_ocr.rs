@@ -44,6 +44,7 @@ mod imp {
     use windows::Graphics::Imaging::{BitmapAlphaMode, BitmapPixelFormat, SoftwareBitmap};
     use windows::Media::Ocr::OcrEngine;
     use windows::Storage::Streams::DataWriter;
+    use windows::Win32::System::Com::CoIncrementMTAUsage;
     use windows::Win32::System::WinRT::{RO_INIT_MULTITHREADED, RoInitialize};
     use windows::core::HSTRING;
 
@@ -53,6 +54,19 @@ mod imp {
 
     #[allow(unsafe_code)]
     fn init() {
+        // The windows crate caches the activation factories it creates in statics. Those point
+        // into the multithreaded apartment, which Windows tears down when the last thread that
+        // initialized it exits; a later thread would then call through a dead pointer and crash
+        // the process. Asking for the apartment to stay alive until the process ends keeps the
+        // cached factories valid for every thread, whenever it starts.
+        static MTA: std::sync::Once = std::sync::Once::new();
+        MTA.call_once(|| {
+            // SAFETY: CoIncrementMTAUsage has no preconditions. The cookie is deliberately never
+            // released: the apartment lives as long as the process.
+            unsafe {
+                let _ = CoIncrementMTAUsage();
+            }
+        });
         // Already initialized (on this thread, with either apartment model) is fine.
         // SAFETY: RoInitialize has no preconditions; a repeated or conflicting call returns an
         // error code that is ignored on purpose.
