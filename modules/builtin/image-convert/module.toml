@@ -1,6 +1,6 @@
 # Convert (image). Pattern A. Spec: docs/specs/id-and-image.md 3.1.
 accepts = ["image/*"]
-outputs = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/tiff", "image/bmp", "image/gif"]
+outputs = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/heic", "image/heif", "image/tiff", "image/bmp", "image/gif"]
 
 [module]
 id = "image.convert"

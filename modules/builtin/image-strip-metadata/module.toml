@@ -1,6 +1,6 @@
 # Strip metadata. Pattern I (inspect with fixes). Spec: docs/specs/id-and-image.md 3.17.
 accepts = ["image/*"]
-outputs = ["image/jpeg", "image/png", "image/webp", "image/tiff", "image/heic", "image/avif"]
+outputs = ["image/jpeg", "image/png", "image/webp", "image/tiff", "image/heic", "image/heif", "image/avif", "image/x-canon-cr2"]
 
 [module]
 id = "image.strip_metadata"
