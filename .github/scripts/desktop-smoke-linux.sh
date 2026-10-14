@@ -26,9 +26,15 @@ window_id() { xdotool search --onlyvisible --name '^Panoply$' 2>/dev/null | head
 
 for scenario in default; do
   rm -rf "$HOME/.local/share/panoply/"*window* 2>/dev/null || true
-  "$APPIMAGE" >"$OUT/stdout.txt" 2>"$OUT/stderr.txt" &
+  if [ -n "${SMOKE_STRACE:-}" ]; then
+    strace -f -tt -s 200 -e trace=connect,execve,openat,write -o "$OUT/strace.txt" "$APPIMAGE" >"$OUT/stdout.txt" 2>"$OUT/stderr.txt" &
+  else
+    "$APPIMAGE" >"$OUT/stdout.txt" 2>"$OUT/stderr.txt" &
+  fi
   launcher=$!
   sleep 12
+  ps -eo pid,ppid,stat,rss,etime,args | grep -i panoply | grep -v grep >"$OUT/ps.txt" || true
+  [ -n "$(pid_of || true)" ] && { cat "/proc/$(pid_of)/status" >"$OUT/proc-status.txt"; ls -l "/proc/$(pid_of)/fd" >"$OUT/proc-fd.txt" 2>&1; for t in /proc/$(pid_of)/task/*; do echo "$(cat $t/comm) $(cat $t/wchan 2>/dev/null)"; done >"$OUT/proc-threads.txt"; }
   pid="$(pid_of || true)"
   alive=false; [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && alive=true
   wid="$(window_id || true)"

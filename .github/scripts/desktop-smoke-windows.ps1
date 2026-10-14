@@ -110,14 +110,14 @@ foreach ($theme in 'light', 'dark') {
   Start-Sleep -Seconds 10
   $proc.Refresh()
   $run.alive = -not $proc.HasExited
-  if ($proc.HasExited) { $run.exit_code_early = $proc.ExitCode; $failed += "$theme: app exited early with code $($proc.ExitCode)" }
+  if ($proc.HasExited) { $run.exit_code_early = $proc.ExitCode; $failed += "${theme}: app exited early with code $($proc.ExitCode)" }
   else {
     $wins = @(Windows-Of $proc.Id)
     $run.windows = $wins
     $main = $wins | Where-Object { $_.visible -and $_.w -gt 300 } | Select-Object -First 1
     $run.window_found = [bool]$main
     if ($main) { $run.title = $main.title; $run.window_rect = "$($main.x),$($main.y) $($main.w)x$($main.h)" }
-    else { $failed += "$theme: no visible window" }
+    else { $failed += "${theme}: no visible window" }
     Shot "windows-$theme-app" $main
     $proc.Refresh()
     $run.memory_mb = [Math]::Round($proc.WorkingSet64 / 1MB, 1)
@@ -144,7 +144,7 @@ foreach ($theme in 'light', 'dark') {
       $run.note = 'still running 15 s after the window was closed (the hidden command bar keeps the process alive)'
       Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
     }
-    if ($run.exited_after_close -and $run.exit_code -ne 0) { $failed += "$theme: exit code $($run.exit_code) after close" }
+    if ($run.exited_after_close -and $run.exit_code -ne 0) { $failed += "${theme}: exit code $($run.exit_code) after close" }
   }
   if (Test-Path "$Out\stderr-$theme.txt") { $run.stderr = (Get-Content "$Out\stderr-$theme.txt" -Raw) }
   $report.runs += [pscustomobject]$run

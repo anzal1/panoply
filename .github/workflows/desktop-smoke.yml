@@ -111,8 +111,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils x11-xserver-utils xdotool wmctrl \
             imagemagick dbus-x11 libvulkan1 mesa-vulkan-drivers vulkan-tools libxkbcommon-x11-0 libxcb-xkb1 \
-            fontconfig fonts-dejavu-core fonts-noto-core fonts-noto-color-emoji fonts-cantarell
+            fontconfig strace fonts-dejavu-core fonts-noto-core fonts-noto-color-emoji fonts-cantarell
       - name: Launch, screenshot, close
+        env:
+          SMOKE_STRACE: "1"
         run: bash ./.github/scripts/desktop-smoke-linux.sh dl out
       - uses: actions/upload-artifact@v4
         if: always()
