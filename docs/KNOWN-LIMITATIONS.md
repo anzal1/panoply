@@ -95,8 +95,7 @@ More about the gaps:
 - **Head tilt on Windows.** The passport photo tool straightens a tilted head from the eye line that the
   YuNet face model reports. On the Windows test machine YuNet reads a photo turned by 11 degrees as tilted 4.4
   degrees, so the straightened result can stay several degrees off, where Linux and the Apple Vision engine on
-  macOS bring it level. The tool still reports the tilt it measured, and the passport checks catch a head that is
-  still too tilted. The test that checks the fix is skipped on Windows until the cause is found (the same model
+  macOS bring it level. The tool reports the tilt it measured before the fix, so check the result by eye. The test that checks the fix is skipped on Windows until the cause is found (the same model
   and the same pixels give a different answer there).
 - **Intel Macs.** There is no ONNX Runtime download for macOS on Intel. Image AI that needs a model, and
   the OCR fallbacks, need `PANOPLY_ORT_LIB` pointed at an ONNX Runtime 1.28.3 library. Apple Vision
