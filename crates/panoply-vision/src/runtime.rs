@@ -130,6 +130,18 @@ pub fn runtime_path() -> Option<PathBuf> {
         .find(|p| p.is_file())
 }
 
+fn asset(pin: &OrtPin) -> panoply_core::assets::AssetInfo {
+    panoply_core::assets::onnxruntime(ORT_VERSION, pin.size)
+}
+
+/// The ONNX Runtime as a listing entry: both folders it may have been cached in.
+pub fn entry() -> Option<panoply_core::assets::Entry> {
+    ort_pin().map(|pin| panoply_core::assets::Entry {
+        info: asset(pin),
+        paths: runtime_dirs().to_vec(),
+    })
+}
+
 /// The download size of the pinned runtime for this platform, when there is one.
 pub fn pinned_size() -> Option<u64> {
     ort_pin().map(|p| p.size)
@@ -177,6 +189,8 @@ pub fn ensure_runtime(io: &dyn VisionIo) -> Result<PathBuf> {
             mb(pin.size)
         )));
     }
+    // Nothing is fetched until the person has said yes to this item (docs/PRIVACY.md).
+    panoply_core::assets::authorize(&asset(pin)).map_err(|e| engine_err(e.to_string()))?;
     let dir = engines_dir().join(format!("onnxruntime-{ORT_VERSION}"));
     let lib = dir.join(lib_name(pin));
     let label = format!(
@@ -254,8 +268,13 @@ pub fn ensure_runtime(io: &dyn VisionIo) -> Result<PathBuf> {
 static INIT: OnceLock<std::result::Result<(), String>> = OnceLock::new();
 
 fn init_runtime(io: &dyn VisionIo) -> Result<()> {
+    if let Some(r) = INIT.get() {
+        return r.clone().map_err(ImageError::Unsupported);
+    }
+    // Finding or fetching the library is outside the cell: a download the person declined is
+    // asked about again on the next job, instead of being remembered as a failure.
+    let lib = ensure_runtime(io)?;
     let r = INIT.get_or_init(|| {
-        let lib = ensure_runtime(io).map_err(|e| e.to_string())?;
         let builder = ort::init_from(&lib).map_err(|e| {
             format!(
                 "The ONNX Runtime at {} could not be loaded: {e}",

@@ -45,8 +45,33 @@ pub(super) fn ensure_pinned(io: &dyn Io) -> Result<Option<(PathBuf, PathBuf, Opt
             pin.size as f64 / 1e6
         )));
     }
+    // Nothing is fetched until the person has said yes to this item (docs/PRIVACY.md).
+    panoply_core::assets::authorize(&asset(pin)).map_err(|e| engine_err(e.to_string()))?;
     install(pin, &dir, io)?;
     Ok(Some((ffmpeg, ffprobe, None)))
+}
+
+/// What the consent sheet and the `models` list say about the video engine.
+pub(super) fn asset(pin: &Pin) -> panoply_core::assets::AssetInfo {
+    use panoply_core::assets::{AssetInfo, AssetKind};
+    AssetInfo {
+        id: "ffmpeg".into(),
+        name: "video engine (FFmpeg, LGPL build)".into(),
+        kind: AssetKind::Engine,
+        size: pin.size,
+        source: "github.com".into(),
+        license: "LGPL-3.0-or-later".into(),
+        purpose: "reads and writes video and audio files".into(),
+    }
+}
+
+/// The video engine as a listing entry, when this platform has a pinned build.
+pub(super) fn entry() -> Option<panoply_core::assets::Entry> {
+    let pin = pins::for_this_platform()?;
+    Some(panoply_core::assets::Entry {
+        info: asset(pin),
+        paths: vec![engines_dir().join(pin.tag)],
+    })
 }
 
 fn install(pin: &Pin, dir: &Path, io: &dyn Io) -> Result<()> {

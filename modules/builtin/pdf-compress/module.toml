@@ -65,7 +65,8 @@ help = "Removes the form and everything typed into it, including the visible fie
 
 [capabilities]
 files = "chosen"
-network = false
+network = true
+network_reason = "Downloads the PDF engine (pdfium, about 4 MB) once, only when a file holds JPEG 2000 or JBIG2 pictures that nothing else can read. Your files never leave the computer."
 
 [surfaces]
 bar = true

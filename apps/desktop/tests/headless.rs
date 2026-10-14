@@ -53,6 +53,25 @@ fn the_headless_run_meets_the_functional_bars() {
         "failures name a next step"
     );
 
+    // A tool that needs a download asks first, names what it is, writes nothing while it asks,
+    // and Not now tells the job no with nothing recorded.
+    let consent = &flow["consent"];
+    assert!(
+        consent["asked_before_starting"]["size"].is_string(),
+        "{consent}"
+    );
+    assert!(
+        consent["asked_before_starting"]["source"].is_string(),
+        "{consent}"
+    );
+    assert!(
+        consent["asked_before_starting"]["license"].is_string(),
+        "{consent}"
+    );
+    assert_eq!(consent["nothing_written_while_asking"], true, "{consent}");
+    assert_eq!(consent["not_now_tells_the_job_no"], true, "{consent}");
+    assert_eq!(consent["not_now_recorded_nothing"], true, "{consent}");
+
     // Budgets that do not depend on a release build.
     let b = &report["budgets"];
     assert!(b["panel_open_max_ms"].as_f64().unwrap() < 50.0, "{b}");

@@ -50,7 +50,12 @@ jobs:
           python tests/corpus/generate.py --kind pdf,image || echo "some generated files need local tools; their tests skip"
       # Corpus tests run on every file that is present; set PANOPLY_REQUIRE_CORPUS=1
       # once generate.py builds every generated file on all three OSes.
+      # Tests that need a model or engine download it. Panoply asks before any download, so the
+      # test run says yes the way `--yes` does (each yes is recorded in a throwaway data folder).
       - run: cargo test --workspace --exclude gpui-base --no-fail-fast
+        env:
+          PANOPLY_YES: "1"
+          PANOPLY_DATA_DIR: ${{ runner.temp }}/panoply-data
 
   licenses:
     runs-on: ubuntu-latest

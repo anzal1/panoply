@@ -99,6 +99,12 @@ pub fn engines_dir() -> PathBuf {
     }
 }
 
+/// The downloadable parts of the video engine for this platform: empty where the engine is an
+/// ffmpeg found on `PATH` (macOS today), one entry where a pinned build exists.
+pub fn assets() -> Vec<panoply_core::assets::Entry> {
+    fetch::entry().into_iter().collect()
+}
+
 fn exe(name: &str) -> String {
     if cfg!(windows) {
         format!("{name}.exe")

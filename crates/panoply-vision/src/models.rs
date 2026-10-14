@@ -143,6 +143,33 @@ pub static ESRGAN: Model = Model {
     env: "PANOPLY_MODEL_ESRGAN",
 };
 
+/// What the consent sheet and the `models` list say about a model. The consent id is the short
+/// name `panoply models` uses (`isnet`, `migan`, `esrgan`).
+pub fn asset(model: &Model) -> panoply_core::assets::AssetInfo {
+    use panoply_core::assets::{AssetInfo, AssetKind};
+    let (id, purpose) = match model.id {
+        "isnet-general-int8" => (
+            "isnet",
+            "removes backgrounds where the system has no subject finder",
+        ),
+        "migan-512-places2" => ("migan", "fills in what you erase and removes watermarks"),
+        _ => ("esrgan", "makes pictures 2 or 4 times bigger"),
+    };
+    AssetInfo {
+        id: id.into(),
+        name: model
+            .name
+            .strip_prefix("the ")
+            .unwrap_or(model.name)
+            .to_string(),
+        kind: AssetKind::Model,
+        size: model.size,
+        source: host_of(model.url).to_string(),
+        license: model.license.into(),
+        purpose: purpose.into(),
+    }
+}
+
 /// Every model, for listings.
 pub fn all() -> [&'static Model; 3] {
     [&ISNET, &MIGAN, &ESRGAN]
@@ -254,6 +281,8 @@ pub fn ensure_at(io: &dyn VisionIo, model: &'static Model, dir: &Path) -> Result
             mb(model.size)
         )));
     }
+    // Nothing is fetched until the person has said yes to this item (docs/PRIVACY.md).
+    panoply_core::assets::authorize(&asset(model)).map_err(|e| engine_err(e.to_string()))?;
     install(io, model, dir)?;
     if dir == model_dir(model) {
         mark_verified(model.id);

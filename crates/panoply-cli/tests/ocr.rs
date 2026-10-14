@@ -22,7 +22,9 @@ fn picture() -> PathBuf {
 }
 
 fn offline(stderr: &str) -> bool {
-    stderr.contains("download") || stderr.contains("network")
+    // Only the failures that mean "the engine files are not here and could not be had" (no
+    // network, or nobody allowed the download), never the network notice every run prints.
+    stderr.contains("could not download") || stderr.contains("has not been allowed")
 }
 
 #[test]

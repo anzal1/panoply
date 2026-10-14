@@ -49,7 +49,8 @@ help = "Only to open a password-protected PDF. Nothing is saved."
 
 [capabilities]
 files = "chosen"
-network = false
+network = true
+network_reason = "Downloads the PDF engine (pdfium, about 4 MB) once, the first time pages have to be drawn. Your files never leave the computer."
 
 [surfaces]
 bar = true

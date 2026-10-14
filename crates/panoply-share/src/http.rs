@@ -157,6 +157,11 @@ pub async fn serve<F, Fut>(
                 return;
             }
         };
+        // Sharing is for the local network only: a peer on the internet is dropped unanswered.
+        if !crate::netif::is_local_addr(peer.ip()) {
+            drop(tcp);
+            continue;
+        }
         let Ok(permit) = limit.clone().try_acquire_owned() else {
             drop(tcp);
             continue;
@@ -225,6 +230,13 @@ pub async fn connect(
     expected_fp: Option<&str>,
     timeout: Duration,
 ) -> Result<Conn> {
+    // Sharing never reaches the internet, whatever address was announced or typed.
+    if !crate::netif::is_local_addr(addr.ip()) {
+        return Err(crate::error::Error::Input(format!(
+            "{} is not on your local network. Panoply only shares with devices on the same network.",
+            addr.ip()
+        )));
+    }
     let tcp = tokio::time::timeout(timeout, TcpStream::connect(addr)).await??;
     let _ = tcp.set_nodelay(true);
     let host = addr.to_string();

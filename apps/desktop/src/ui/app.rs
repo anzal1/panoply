@@ -50,6 +50,10 @@ pub(crate) struct AppView {
     pub(crate) panel: Option<Entity<ToolPanel>>,
     _panel_sub: Option<Subscription>,
     drag_active: bool,
+    /// The downloadable models and engines, read from disk when the Modules page opens.
+    downloads: Vec<crate::downloads::Row>,
+    /// The last thing Remove did, in words.
+    downloads_note: Option<String>,
     _subs: Vec<Subscription>,
 }
 
@@ -90,6 +94,8 @@ impl AppView {
             panel: None,
             _panel_sub: None,
             drag_active: false,
+            downloads: Vec::new(),
+            downloads_note: None,
             _subs: vec![search_sub, recents_sub, appearance],
         }
     }
@@ -116,6 +122,19 @@ impl AppView {
         self.panel = None;
         self._panel_sub = None;
         self.route = route;
+        if route == Route::Modules {
+            // Reading the disk once on arrival keeps drawing free.
+            self.downloads = crate::downloads::rows();
+            self.downloads_note = None;
+        }
+        cx.notify();
+    }
+
+    fn remove_download(&mut self, id: &str, cx: &mut Context<Self>) {
+        self.downloads_note = Some(match crate::downloads::remove(id) {
+            Ok(line) | Err(line) => line,
+        });
+        self.downloads = crate::downloads::rows();
         cx.notify();
     }
 
@@ -1051,11 +1070,99 @@ impl AppView {
             })
             .collect();
         let list = self.row_list(rows, t, cx);
+        let downloads = self.downloads_section(t, cx);
         self.page("Modules", Some(format!("{} installed, {} from the community. Every module runs with only the files you choose.", tools.len(), community)), t)
             .id("modules-page")
             .overflow_y_scroll()
             .child(list)
+            .child(downloads)
             .children(notes.into_iter().map(|n| div().text_size(px(12.)).text_color(t.warn).child(format!("Could not load: {n}"))))
+            .into_any_element()
+    }
+
+    /// The models and engines Panoply downloaded or may download: size, source, license and a
+    /// Remove button for each one that is on this computer.
+    fn downloads_section(&mut self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
+        let rows = self.downloads.clone();
+        let on_disk = rows.iter().filter(|r| r.installed).count();
+        let items: Vec<AnyElement> = rows
+            .into_iter()
+            .map(|r| {
+                let id = r.id.clone();
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .gap(px(12.))
+                    .py(px(8.))
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .flex_1()
+                            .min_w_0()
+                            .gap(px(2.))
+                            .child(
+                                div()
+                                    .text_size(px(13.5))
+                                    .font_weight(FontWeight::MEDIUM)
+                                    .text_color(t.ink)
+                                    .child(r.name.clone()),
+                            )
+                            .child(
+                                div()
+                                    .text_size(px(12.))
+                                    .line_height(px(16.))
+                                    .text_color(t.ink3)
+                                    .child(format!("{}, {}", r.purpose, r.origin)),
+                            ),
+                    )
+                    .child(
+                        div()
+                            .flex_none()
+                            .text_size(px(12.5))
+                            .text_color(t.ink2)
+                            .child(r.size_text.clone()),
+                    )
+                    .when(r.installed, |d| {
+                        d.child(super::widgets::button(
+                            SharedString::from(format!("remove-{id}")),
+                            "Remove",
+                            super::widgets::ButtonKind::Secondary,
+                            None,
+                            t,
+                            cx.listener(move |app, _, _, cx| app.remove_download(&id, cx)),
+                        ))
+                    })
+                    .into_any_element()
+            })
+            .collect();
+        div()
+            .id("downloads")
+            .flex()
+            .flex_col()
+            .gap(px(6.))
+            .mt(px(10.))
+            .child(
+                div()
+                    .text_size(px(15.))
+                    .font_weight(FontWeight::SEMIBOLD)
+                    .text_color(t.ink)
+                    .child("Downloaded models and engines"),
+            )
+            .child(
+                div()
+                    .text_size(px(13.))
+                    .line_height(px(18.))
+                    .text_color(t.ink3)
+                    .child(format!(
+                        "Each one is downloaded once, only after you allow it, and used offline. {on_disk} on this computer. Removing one frees the space; Panoply asks again the next time it is needed."
+                    )),
+            )
+            .when_some(self.downloads_note.clone(), |d, n| {
+                d.child(div().text_size(px(12.5)).text_color(t.ink2).child(n))
+            })
+            .children(items)
             .into_any_element()
     }
 

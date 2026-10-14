@@ -180,7 +180,31 @@ pub fn ensure_library() -> Result<PathBuf> {
     Ok(lib)
 }
 
+/// What the consent sheet and the `models` list say about the PDF engine on this platform.
+pub fn asset() -> panoply_core::assets::AssetInfo {
+    use panoply_core::assets::{AssetInfo, AssetKind};
+    AssetInfo {
+        id: "pdfium".into(),
+        name: format!("PDF engine ({VERSION})"),
+        kind: AssetKind::Engine,
+        size: pin().map_or(0, |p| p.size),
+        source: "github.com".into(),
+        license: "BSD-3-Clause AND Apache-2.0".into(),
+        purpose: "draws PDF pages for previews, images and scans".into(),
+    }
+}
+
+/// The PDF engine as a listing entry: where it is kept once downloaded.
+pub fn entry() -> panoply_core::assets::Entry {
+    panoply_core::assets::Entry {
+        info: asset(),
+        paths: vec![lib_dir()],
+    }
+}
+
 fn download(pin: &Pin, lib: &Path) -> Result<()> {
+    // Nothing is fetched until the person has said yes to this item (docs/PRIVACY.md).
+    panoply_core::assets::authorize(&asset()).map_err(|e| engine_err(e.to_string()))?;
     let dir = lib_dir();
     std::fs::create_dir_all(&dir)
         .map_err(|e| engine_err(format!("Could not create {}: {e}", dir.display())))?;
@@ -270,25 +294,28 @@ pub fn lock() -> std::sync::MutexGuard<'static, ()> {
     LOCK.lock().unwrap_or_else(|p| p.into_inner())
 }
 
-static ENGINE: OnceLock<std::result::Result<Pdfium, String>> = OnceLock::new();
+static ENGINE: OnceLock<Pdfium> = OnceLock::new();
+static LOAD: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 /// The loaded pdfium engine. The first call finds (and if needed downloads) the library and
-/// binds to it. Later calls are free.
+/// binds to it. Later calls are free. Only a success is kept: a refused or failed download is
+/// asked about again on the next job, not remembered as a failure for the whole run.
 pub fn engine() -> Result<&'static Pdfium> {
-    let r = ENGINE.get_or_init(|| {
-        let lib = ensure_library().map_err(|e| e.to_string())?;
-        let bindings = Pdfium::bind_to_library(&lib).map_err(|e| {
-            format!(
-                "The PDF engine at {} could not be loaded: {e}",
-                lib.display()
-            )
-        })?;
-        Ok(Pdfium::new(bindings))
-    });
-    match r {
-        Ok(p) => Ok(p),
-        Err(msg) => Err(PdfError::Engine(msg.clone())),
+    if let Some(p) = ENGINE.get() {
+        return Ok(p);
     }
+    let _one_at_a_time = LOAD.lock().unwrap_or_else(|p| p.into_inner());
+    if let Some(p) = ENGINE.get() {
+        return Ok(p);
+    }
+    let lib = ensure_library()?;
+    let bindings = Pdfium::bind_to_library(&lib).map_err(|e| {
+        PdfError::Engine(format!(
+            "The PDF engine at {} could not be loaded: {e}",
+            lib.display()
+        ))
+    })?;
+    Ok(ENGINE.get_or_init(|| Pdfium::new(bindings)))
 }
 
 #[cfg(test)]
