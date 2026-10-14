@@ -23,9 +23,9 @@ apps/desktop/packaging/macos/bundle.sh --sign "Developer ID Application: Name (T
   `CARGO_PROFILE_RELEASE_LTO=false CARGO_PROFILE_RELEASE_CODEGEN_UNITS=16` and pass `--binary`.
 - The icon is `macos/Panoply.icns` (16, 32, 128, 256 and 512 px, each as an @1x and @2x pair), copied into
   `Contents/Resources` and named by `CFBundleIconFile`. The source is `icon/panoply-macos.svg`: a continuous-corner
-  squircle body of 824 of 1024 px on the macOS grid, a light plate, and the Fan mark (three rounded cards spread from one hinge, the front one
-  in the accent blue with a plate-coloured stroke and a rivet on its bottom edge) with a contact shadow and a hairline top highlight on each card, and the
-  soft body shadow baked in. 16, 32 and 64 px use their own pixel-grid drawings
+  squircle body of 824 of 1024 px on the macOS grid, a light plate, and the Fan mark (three equal rounded cards fanned 20 degrees either side from one pivot, the front one
+  in the accent blue and the two behind it mid graphite) with a contact shadow and a hairline top highlight on each card, and the
+  soft body shadow baked in. 16 to 64 px use their own pixel-grid drawings
   (`icon/panoply-macos-<size>.svg`). `icon/panoply-macos-dark.svg` is a dark-plate variant kept for reference.
   `tools/gen_app_icon.mjs` regenerates every icon file, the flat layers in `icon/fan-layers/` that the app UI embeds, the README brand
   assets in `docs/assets/` and `docs/design/icon-sheet.png` (needs `resvg`).

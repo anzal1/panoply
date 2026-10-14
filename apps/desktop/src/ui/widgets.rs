@@ -554,21 +554,21 @@ pub(crate) fn caption(text: &str, t: Theme) -> Div {
         .child(text.to_string())
 }
 
-/// The Panoply mark, the fan: two cards behind a blue one, fanned from one pivot. `size` is the
-/// side of the box it is drawn in; `plate` is the colour under it, used for the ring around the
-/// front card and the rivet. Under 20 pt there are two cards, the ring starts at 24 pt and the
-/// rivet at 32 pt, as in the icon's small drawings. The same five layers the icon is drawn from.
+/// The Panoply mark, the fan: two graphite cards behind a blue one, fanned from one pivot. `size` is
+/// the side of the box it is drawn in; `plate` is the colour under it, used for the faint seam
+/// around the front card below 40 pt. Under 20 pt there are two cards, as in the icon's small
+/// drawings. The same layers the icon is drawn from.
 pub(crate) fn brand_mark(size: f32, plate: Hsla, t: Theme) -> impl IntoElement {
     let blue = super::theme::rgb8((45, 108, 223), 1.0);
     let (left, right) = if t.dark {
         (
-            super::theme::rgb8((230, 232, 238), 1.0),
-            super::theme::rgb8((174, 179, 191), 1.0),
+            super::theme::rgb8((128, 134, 149), 1.0),
+            super::theme::rgb8((150, 155, 169), 1.0),
         )
     } else {
         (
-            super::theme::rgb8((35, 38, 45), 1.0),
-            super::theme::rgb8((58, 62, 71), 1.0),
+            super::theme::rgb8((114, 120, 132), 1.0),
+            super::theme::rgb8((128, 134, 146), 1.0),
         )
     };
     let layer =
@@ -579,9 +579,8 @@ pub(crate) fn brand_mark(size: f32, plate: Hsla, t: Theme) -> impl IntoElement {
         .size(px(size))
         .child(layer("fan-left", left))
         .when(size >= 20.0, |d| d.child(layer("fan-right", right)))
-        .when(size >= 24.0, |d| d.child(layer("fan-stroke", plate)))
+        .when(size < 40.0, |d| d.child(layer("fan-seam", plate.opacity(0.5))))
         .child(layer("fan-front", blue))
-        .when(size >= 32.0, |d| d.child(layer("fan-rivet", plate)))
 }
 
 /// The icon for a file, from what its bytes say it is.

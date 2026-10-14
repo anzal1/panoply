@@ -4,8 +4,8 @@
 //
 //   node apps/desktop/tools/gen_app_icon.mjs [--resvg PATH] [--no-sheet]
 //
-// The mark is the Fan (see icon_art.mjs): three tall rounded cards fanned from one pivot, the front
-// card in the accent blue (#2D6CDF) with a plate-coloured stroke around it and a rivet at the pivot.
+// The mark is the Fan (see icon_art.mjs): three equal tall rounded cards fanned from one pivot, the
+// front card in the accent blue (#2D6CDF) and the two behind it a calm mid graphite.
 // The drawings live in icon_art.mjs, one per platform:
 //
 //   macOS    panoply-macos.svg (1024 canvas, 824 squircle body, baked shadow), panoply-macos-dark.svg
@@ -55,6 +55,7 @@ writeFileSync(join(iconDir, "panoply-macos-dark.svg"), art.macMaster(true));
 
 // ---- Shared flat geometry for the app UI ----
 mkdirSync(join(iconDir, "fan-layers"), { recursive: true });
+for (const old of ["front-stroke.svg", "rivet.svg"]) rmSync(join(iconDir, "fan-layers", old), { force: true });
 for (const [name, svg] of Object.entries(art.fanLayers())) writeFileSync(join(iconDir, "fan-layers", name), svg);
 
 // ---- README brand assets ----

@@ -4,6 +4,10 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
+## Unreleased
+
+Icon: the fan now opens narrower, so all three tool cards read at every size.
+
 ## v0.1.1-beta (2026-10-14)
 
 A new look, and fixes for Windows and Linux.

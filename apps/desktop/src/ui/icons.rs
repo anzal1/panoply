@@ -9,8 +9,8 @@ use crate::icons_gen::ICONS;
 /// Glyphs outside the generated Lucide set: the pop-up chevrons, and the Windows caption buttons
 /// (10 by 10, 1 px strokes, as Fluent draws them).
 const EXTRA: &[(&str, &str)] = &[
-    // The five layers of the fan mark, drawn by the icon tool: the two back cards, the ring around
-    // the front card, the front card and the rivet. Each is one colour (set from the theme).
+    // The four layers of the fan mark, drawn by the icon tool: the two back cards, the seam around
+    // the front card and the front card. Each is one colour (set from the theme).
     (
         "fan-left",
         include_str!("../../packaging/icon/fan-layers/left.svg"),
@@ -20,16 +20,12 @@ const EXTRA: &[(&str, &str)] = &[
         include_str!("../../packaging/icon/fan-layers/right.svg"),
     ),
     (
-        "fan-stroke",
-        include_str!("../../packaging/icon/fan-layers/front-stroke.svg"),
+        "fan-seam",
+        include_str!("../../packaging/icon/fan-layers/front-seam.svg"),
     ),
     (
         "fan-front",
         include_str!("../../packaging/icon/fan-layers/front.svg"),
-    ),
-    (
-        "fan-rivet",
-        include_str!("../../packaging/icon/fan-layers/rivet.svg"),
     ),
     // Lucide (ISC), drawn the way the generated set draws its icons.
     (
