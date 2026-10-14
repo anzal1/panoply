@@ -5220,6 +5220,7 @@ dependencies = [
  "raw-window-handle",
  "serde",
  "serde_json",
+ "x11rb",
 ]
 
 [[package]]

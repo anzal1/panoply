@@ -22,6 +22,8 @@ failed=()
 runs=()
 
 pid_of() { pgrep -x panoply-desktop | head -1; }
+# The command bar is a 720x460 pop-up the window manager does not manage, so it shows up in the window tree.
+bar_mapped() { xwininfo -root -tree 2>/dev/null | grep -c ' 720x460+' || true; }
 window_id() { xdotool search --onlyvisible --name '^Panoply$' 2>/dev/null | head -1; }
 
 for scenario in default; do
@@ -58,17 +60,29 @@ for scenario in default; do
   [ -n "$pid" ] && rss=$(ps -o rss= -p "$pid" | tr -d ' ')
   mem_mb=$(( ${rss:-0} / 1024 ))
   import -window root "$OUT/linux-app-screen.png"
+  bar_at_start=$(bar_mapped)
   if [ -n "$wid" ]; then import -window "$wid" "$OUT/linux-app-window.png" 2>/dev/null || true; fi
 
-  # The command bar, through the global hotkey.
+  # The command bar, through the global hotkey: it must show, then hide on Escape, then show and hide
+  # again with the hotkey itself.
   xdotool key --clearmodifiers ctrl+alt+space
   sleep 2
   import -window root "$OUT/linux-bar-screen.png"
+  bar_after_hotkey=$(bar_mapped)
   wmctrl -lG >"$OUT/wmctrl-after-hotkey.txt" 2>&1 || true
   xwininfo -root -tree >"$OUT/xwininfo-tree-after-hotkey.txt" 2>&1 || true
   alive_after_hotkey=false; [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && alive_after_hotkey=true
+  xdotool key --clearmodifiers Escape
+  sleep 1
+  import -window root "$OUT/linux-bar-after-escape.png"
+  bar_after_escape=$(bar_mapped)
+  xdotool key --clearmodifiers ctrl+alt+space
+  sleep 2
+  bar_second_show=$(bar_mapped)
   xdotool key --clearmodifiers ctrl+alt+space
   sleep 1
+  import -window root "$OUT/linux-bar-after-toggle.png"
+  bar_after_toggle=$(bar_mapped)
 
   # Close the window through the window manager, like the close button.
   exited=false; code=""
@@ -81,13 +95,19 @@ for scenario in default; do
 
   [ "$alive" = true ] || failed+=("process not alive after the window wait")
   [ -n "$wid" ] || failed+=("no visible window titled Panoply")
+  [ "${bar_at_start:-0}" = 0 ] || failed+=("command bar on screen before the hotkey")
+  [ "${bar_after_hotkey:-0}" != 0 ] || failed+=("command bar did not show on the hotkey")
+  [ "${bar_after_escape:-0}" = 0 ] || failed+=("command bar still on screen after Escape")
+  [ "${bar_second_show:-0}" != 0 ] || failed+=("command bar did not show on the second hotkey")
+  [ "${bar_after_toggle:-0}" = 0 ] || failed+=("command bar still on screen after the hotkey toggled it off")
   if $exited && [ "$code" != 0 ]; then failed+=("exit code $code after close"); fi
-  runs+=("$(python3 -I - "$scenario" "$alive" "$wid" "$title" "$geom" "$frame" "$motif" "$mem_mb" "$alive_after_hotkey" "$exited" "$code" "$t_window" <<'PY'
+  runs+=("$(python3 -I - "$scenario" "$alive" "$wid" "$title" "$geom" "$frame" "$motif" "$mem_mb" "$alive_after_hotkey" "$exited" "$code" "$t_window" "$bar_at_start" "$bar_after_hotkey" "$bar_after_escape" "$bar_second_show" "$bar_after_toggle" <<'PY'
 import json, sys
-k = ["scenario","alive","window_id","title","geometry","frame_extents","motif_hints","memory_mb","alive_after_hotkey","exited_after_close","exit_code","seconds_to_window"]
+k = ["scenario","alive","window_id","title","geometry","frame_extents","motif_hints","memory_mb","alive_after_hotkey","exited_after_close","exit_code","seconds_to_window","bar_at_start","bar_after_hotkey","bar_after_escape","bar_second_show","bar_after_toggle"]
 d = dict(zip(k, sys.argv[1:]))
 for b in ("alive","alive_after_hotkey","exited_after_close"): d[b] = d[b] == "true"
 d["memory_mb"] = int(d["memory_mb"]); d["seconds_to_window"] = float(d["seconds_to_window"])
+for b in ("bar_at_start","bar_after_hotkey","bar_after_escape","bar_second_show","bar_after_toggle"): d[b] = int(d[b])
 print(json.dumps(d))
 PY
 )")

@@ -47,11 +47,53 @@ actions!(
     ]
 );
 
-/// The command bar's window, so the View menu and the hotkey can show it.
-#[derive(Clone)]
-struct BarSlot(WindowHandle<Bar>);
+/// The command bar's window, so the View menu and the hotkey can show it. macOS and Windows keep
+/// one hidden window for the life of the app; on Linux the window exists only while the bar is up
+/// (X11 maps every window at creation and cannot hide a pop-up), so this is empty in between.
+#[derive(Clone, Default)]
+struct BarSlot(Rc<RefCell<Option<WindowHandle<Bar>>>>);
 
 impl Global for BarSlot {}
+
+/// Show the bar if it is hidden, hide it if it is up. On Linux a closed bar is created here.
+fn toggle_bar(cx: &mut App) {
+    let slot = cx.global::<BarSlot>().clone();
+    let existing = *slot.0.borrow();
+    let toggled = existing.is_some_and(|h| {
+        h.update(cx, |bar, window, cx| bar.toggle(window, cx))
+            .is_ok()
+    });
+    #[cfg(target_os = "linux")]
+    if toggled {
+        return;
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = toggled;
+    #[cfg(target_os = "linux")]
+    {
+        let hub = cx.global::<Hub>().clone();
+        let mut opts = bar_window_options(BarMode::Live);
+        if let Some(d) = cx.primary_display() {
+            let b = d.bounds();
+            opts.window_bounds = Some(WindowBounds::Windowed(Bounds {
+                origin: point(
+                    b.origin.x + (b.size.width - px(WIDTH)) / 2.0,
+                    b.origin.y + b.size.height * 0.22,
+                ),
+                size: size(px(WIDTH), px(HEIGHT)),
+            }));
+        }
+        match cx.open_window(opts, move |window, cx| {
+            cx.new(|cx| Bar::new(window, cx, hub, BarMode::Live))
+        }) {
+            Ok(h) => {
+                *slot.0.borrow_mut() = Some(h);
+                let _ = h.update(cx, |bar, window, cx| bar.show(window, cx));
+            }
+            Err(e) => eprintln!("could not open the command bar: {e}"),
+        }
+    }
+}
 
 const HELP_URL: &str = "https://github.com/anzal1/panoply/blob/main/docs/README.md";
 const ISSUES_URL: &str = "https://github.com/anzal1/panoply/issues/new";
@@ -280,8 +322,7 @@ fn register_actions(cx: &mut App) {
     cx.on_action(|_: &OpenHelp, cx| cx.open_url(HELP_URL));
     cx.on_action(|_: &ReportIssue, cx| cx.open_url(ISSUES_URL));
     cx.on_action(|_: &ShowBar, cx| {
-        let bar = cx.global::<BarSlot>().0;
-        let _ = bar.update(cx, |bar, window, cx| bar.toggle(window, cx));
+        toggle_bar(cx);
     });
     cx.set_menus(menus());
 }
@@ -411,15 +452,19 @@ pub(crate) fn run(args: Vec<String>) {
 
         register_actions(cx);
 
-        // The command bar is created now, hidden, so showing it later is instant.
-        let bar_hub = hub.clone();
-        let bar = cx
-            .open_window(bar_window_options(BarMode::Live), move |window, cx| {
-                cx.new(|cx| Bar::new(window, cx, bar_hub, BarMode::Live))
-            })
-            .expect("open the command bar window");
-
-        cx.set_global(BarSlot(bar));
+        cx.set_global(BarSlot::default());
+        // The command bar is created now, hidden, so showing it later is instant. Not on Linux: X11
+        // would put it on screen from the first frame, so there it is created by the first hotkey.
+        #[cfg(not(target_os = "linux"))]
+        {
+            let bar_hub = hub.clone();
+            let bar = cx
+                .open_window(bar_window_options(BarMode::Live), move |window, cx| {
+                    cx.new(|cx| Bar::new(window, cx, bar_hub, BarMode::Live))
+                })
+                .expect("open the command bar window");
+            *cx.global::<BarSlot>().0.borrow_mut() = Some(bar);
+        }
         if !background {
             open_app_window(cx, start_files);
         }
@@ -448,7 +493,7 @@ pub(crate) fn run(args: Vec<String>) {
         .detach();
         cx.spawn(async move |cx| {
             while rx.next().await.is_some() {
-                let _ = bar.update(cx, |bar, window, cx| bar.toggle(window, cx));
+                cx.update(toggle_bar);
             }
         })
         .detach();
