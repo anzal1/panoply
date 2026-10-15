@@ -37,20 +37,19 @@ const FLAGS: libc::c_int = libc::O_RDONLY | libc::O_DIRECTORY | libc::O_CLOEXEC;
 impl DirFd {
     /// Open `path`, relative to `parent` when given and when the name lookup is all that is needed.
     pub fn open(path: &Path, parent: Option<&DirFd>) -> io::Result<DirFd> {
-        if let (Some(p), Some(name)) = (parent, path.file_name()) {
-            if let Ok(c) = CString::new(name.as_bytes()) {
-                // SAFETY: `p` is open, `c` is NUL-terminated; O_NOFOLLOW refuses a folder swapped for a link.
-                let fd =
-                    unsafe { libc::openat(p.fd.as_raw_fd(), c.as_ptr(), FLAGS | libc::O_NOFOLLOW) };
-                if fd >= 0 {
-                    return Ok(Self::wrap(fd));
-                }
-                let err = io::Error::last_os_error();
-                if err.raw_os_error() != Some(libc::EMFILE)
-                    && err.raw_os_error() != Some(libc::ENFILE)
-                {
-                    return Err(err);
-                }
+        if let (Some(p), Some(name)) = (parent, path.file_name())
+            && let Ok(c) = CString::new(name.as_bytes())
+        {
+            // SAFETY: `p` is open, `c` is NUL-terminated; O_NOFOLLOW refuses a folder swapped for a link.
+            let fd =
+                unsafe { libc::openat(p.fd.as_raw_fd(), c.as_ptr(), FLAGS | libc::O_NOFOLLOW) };
+            if fd >= 0 {
+                return Ok(Self::wrap(fd));
+            }
+            let err = io::Error::last_os_error();
+            if err.raw_os_error() != Some(libc::EMFILE) && err.raw_os_error() != Some(libc::ENFILE)
+            {
+                return Err(err);
             }
         }
         let c = CString::new(path.as_os_str().as_bytes())
@@ -96,11 +95,11 @@ pub(crate) fn raise_limit() {
                 rlim_max: 0,
             };
             if libc::getrlimit(libc::RLIMIT_NOFILE, &mut lim) == 0 {
-                let want = (KEEP_MAX as u64 * 2 + 256).min(lim.rlim_max as u64);
+                let want = (KEEP_MAX as libc::rlim_t * 2 + 256).min(lim.rlim_max);
                 #[cfg(target_os = "macos")]
                 let want = want.min(10240);
-                if (lim.rlim_cur as u64) < want {
-                    lim.rlim_cur = want as libc::rlim_t;
+                if lim.rlim_cur < want {
+                    lim.rlim_cur = want;
                     let _ = libc::setrlimit(libc::RLIMIT_NOFILE, &lim);
                 }
             }
