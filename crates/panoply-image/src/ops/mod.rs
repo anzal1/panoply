@@ -113,8 +113,9 @@ impl Io for FsIo {
                 Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
                 Err(e) => {
                     return Err(ImageError::Io(format!(
-                        "Could not write {} ({e}). Check the folder and the free space, then try again.",
-                        path.display()
+                        "Could not write {}: {}. Check the folder and the free space, then try again.",
+                        path.display(),
+                        panoply_core::naming::plain_io(&e)
                     )));
                 }
             }

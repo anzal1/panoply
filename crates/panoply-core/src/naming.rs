@@ -122,3 +122,44 @@ mod tests {
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }
+
+/// What an operating system file error means for a person, without the system's own wording
+/// ("No space left on device (os error 28)"). Used wherever a read or write fails.
+pub fn plain_io(e: &std::io::Error) -> String {
+    use std::io::ErrorKind as K;
+    match e.kind() {
+        K::StorageFull => "the disk is full".into(),
+        K::PermissionDenied => "Panoply does not have permission to write there".into(),
+        K::ReadOnlyFilesystem => "the disk is read-only".into(),
+        K::NotFound => "the folder is not there any more".into(),
+        K::QuotaExceeded => "the disk quota is used up".into(),
+        _ => {
+            // Drop the "(os error N)" tail the standard library adds.
+            let t = e.to_string();
+            match t.rfind(" (os error") {
+                Some(i) => t[..i].to_string(),
+                None => t,
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod plain_io_tests {
+    use super::plain_io;
+    use std::io::{Error, ErrorKind};
+
+    #[test]
+    fn system_wording_and_codes_never_reach_a_person() {
+        assert_eq!(
+            plain_io(&Error::from(ErrorKind::StorageFull)),
+            "the disk is full"
+        );
+        assert_eq!(
+            plain_io(&Error::from_raw_os_error(13)),
+            "Panoply does not have permission to write there"
+        );
+        let other = plain_io(&Error::from_raw_os_error(5));
+        assert!(!other.contains("os error"), "{other}");
+    }
+}
