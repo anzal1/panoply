@@ -40,6 +40,12 @@ carries its own print rules (black on white, page size, no split code blocks or 
 4. `cargo build --release --target wasm32-wasip2` (about 20 s cold, 317 KB).
 5. `panoply run` on `tests/fixtures/notes.markdown`, then printed to PDF from a headless browser to check the print rules.
 
+Time: all three community plugins (this one, `markdown-to-html`, `qr-code`), from an empty folder to
+a commit with READMEs, tests and a CI job, took about 10 minutes of wall time for an AI agent
+working only from `modules/template-rust/README.md`. That includes downloading the crates and
+two rounds of fixes found by running the real thing. A person new to Rust should plan for an
+afternoon.
+
 ## Tests
 
 ```

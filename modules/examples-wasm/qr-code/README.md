@@ -45,6 +45,12 @@ a Wi-Fi sign-in (`WIFI:T:WPA;S:name;P:password;;`), a contact card (a whole file
 5. `panoply run` on `tests/fixtures/links.txt`, then decoded the PNGs and SVG with the macOS
    barcode reader (Vision) to prove a phone can read them.
 
+Time: all three community plugins (this one, `markdown-to-html`, `qr-code`), from an empty folder to
+a commit with READMEs, tests and a CI job, took about 10 minutes of wall time for an AI agent
+working only from `modules/template-rust/README.md`. That includes downloading the crates and
+two rounds of fixes found by running the real thing. A person new to Rust should plan for an
+afternoon.
+
 ## Tests
 
 ```
