@@ -52,6 +52,7 @@ libc = "0.2"
 # (MIT OR Apache-2.0; it only pulls in muda, crossbeam-channel and windows-sys).
 [target.'cfg(windows)'.dependencies]
 tray-icon = { version = "0.25", default-features = false }
+raw-window-handle = "0.6"
 
 # gpui-pre-linux ships with both display backends off unless asked (its `default` is dropped by
 # gpui-pre-platform). Without these two the Linux build has no X11 and no Wayland: the process starts,
