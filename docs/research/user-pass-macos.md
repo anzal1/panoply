@@ -22,7 +22,7 @@ Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polis
 | | Found | Fixed on this branch | Open |
 |---|---:|---:|---:|
 | P0 | 0 | 0 | 0 |
-| P1 | 13 | 9 | 4 |
+| P1 | 14 | 10 | 4 |
 | P2 | 32 | 11 | 21 |
 
 No P0: nothing crashed, hung, lost an original or left a half-written file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
@@ -146,6 +146,14 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 - **Expected.** The tool, with the number or the country as a hint.
 - **Happened.** "No tools match ..." for all six (and "resize 800", "under 2mb" aside). `passport` alone worked. The matcher needed every typed word to be in a tool's name or summary, so one extra word (a country, a size, a level, a time range) cancelled the match, and the services named in presets (WhatsApp, Discord, Gmail) were not searchable at all.
 - **Fix.** `from_query` in `apps/desktop/src/search.rs`: when nothing matches every word, match on the words that name something (not numbers, not "to") when more than half are found; service names from the `preset` option are searched. A request Panoply cannot do (`pdf to word`) still answers "No tools match". Test `a_name_with_a_country_a_size_or_a_level_next_to_it_still_finds_the_tool`.
+
+### UP-46 The command bar flashes "No tools match" while "under 50 kb" is being typed (fixed)
+
+- **Tool.** Command bar, the way most people ask for a size.
+- **Steps.** Type `under 50 kb` one key at a time, with and without a picture on the bar.
+- **Expected.** The list stays put while the sentence is unfinished, and only says "No tools match" for a query that cannot become a match.
+- **Happened.** `und`, `under` and `under 5` match no tool by themselves, so the empty state ("No tools match") flashed between keystrokes, and on the first letters the best match changed with each key, so the four rows jumped about.
+- **Fix.** `search::Typing` in `apps/desktop/src/search.rs`, used by the command bar and by Home: while a query is plainly unfinished (`intent::is_unfinished`: only qualifier words, numbers, sizes or a trailing `to`, or a prefix of one) and the last answer had rows, that answer stays. A typo (`under 50 kbx`) or nonsense gets the empty state at once. Queries of one or two letters keep the catalog's order, so each letter only removes rows and never reorders them. Test `typing_under_50_kb_never_flashes_no_tools_and_never_reorders` feeds `under 50 kb` and `make this under 50 kb` key by key, with and without a file.
 
 ---
 
