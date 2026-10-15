@@ -10,13 +10,20 @@ How it was done, so it can be repeated:
 
 Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polish.
 
+## Speed and memory against FLOWS.md
+
+- **UI thread.** In the 49 app scenarios the slowest single frame while a job ran was 4.39 ms (Passport photo, the 4 ms line is 4.0); the other 48 stayed under 3.9 ms. A tool panel is drawn the first time in 0.9 to 3.0 ms, 8.5 ms for the first panel opened in a fresh process.
+- **Jobs.** 170 CLI jobs. Most tools are far inside the budgets: hash of a 300 MB PDF 1.0 s (faster than `shasum`, 2.7 s), PDF split of a 3,000 page file 0.07 s, Compress PDF of a 300 MB file 5.4 s at 17 MB, 3 hour FLAC to MP3 7.2 s at 17 MB, normalize of the same file 7.3 s at 24 MB, a 400 megapixel PNG compressed at 23 MB, passport photo 0.4 to 1.0 s.
+- **Over 300 MB.** HEVC/HEIF photos through ImageIO 825 MB to 834 MB (33 MP, documented), camera RAW 624 MB (documented), OCR with Arabic, Hebrew or Hindi 383 to 521 MB (documented up to 550 MB), video compress 0.5 to 3.6 GB (UP-10, not documented for hardware encoders).
+- **Slow.** Compress PDF with `--under 1mb` on a 228 page scan 25.9 s; PDF to images of 3,000 pages at 36 DPI 14.8 s; OCR of a 42 page Arabic book 7.4 s.
+
 ## Counts
 
 | | Found | Fixed on this branch | Open |
 |---|---:|---:|---:|
 | P0 | 0 | 0 | 0 |
 | P1 | 12 | 6 | 6 |
-| P2 | 29 | 6 | 23 |
+| P2 | 30 | 9 | 21 |
 
 No P0: nothing crashed, hung, lost an original or wrote a half-finished file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
 
@@ -110,7 +117,7 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 - **Tool.** Compress video, default (VideoToolbox HEVC).
 - **Steps.** `/usr/bin/time -l panoply run media.compress 4k-hevc-5s.mp4`.
 - **Expected.** FLOWS.md: "constant for video and audio regardless of length (streamed)", and KNOWN-LIMITATIONS lists about 1.3 GB for software AV1 at 1080p as the worst case.
-- **Happened.** Resident set 3,579 MB (ffmpeg child process; the 1080p clips measured 0.5 to 0.9 GB). A person on a 8 GB Mac would feel it.
+- **Happened.** Resident set 3,579 MB (ffmpeg child process). The 1080p clips measured 861 MB (10 s H.264), 886 MB (10 s WebM), 914 MB (portrait phone clip) and 1,081 MB (10-bit HDR HEVC, 5 s); 720p clips 0.2 to 0.5 GB. KNOWN-LIMITATIONS lists only software AV1 (about 1.3 GB at 1080p) as a heavy case, so the default hardware path is heavier than the page says. A person on an 8 GB Mac would feel it.
 - **Direction.** Cap the decode and encode queues (`-threads`, `-extra_hw_frames`, fewer in-flight frames) and re-measure; add a 4K clip to the beta smoke budget table.
 
 ### UP-11 The "Compress image" similarity floor lets smooth gradients block (open)
@@ -151,10 +158,10 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 | UP-23 | Resize to exact KB | With no size or limits set it re-encodes the picture and writes `jemison (3200x4000, 1665KB).jpg`, a copy that is the same size. It should ask for a limit. | Open |
 | UP-24 | Resize to exact KB | Anchor "top" is ignored when the shape differs by more than 15% (it pads instead); the card says why, but the option stays selectable. | Open |
 | UP-25 | Strip metadata | "Private" (the default) removes exactly what "GPS" removes (location) and keeps camera make, model, software and date. The name promises more. | Open |
-| UP-26 | Images and PDF | A file reached through a symlink gets its result next to the real file, not next to the link the person chose. Found by accident: a run through symlinks wrote results into the corpus cache. | Open |
+| UP-26 | Images and PDF | A file reached through a symlink gets its result next to the real file, not next to the link the person chose. Found by accident: a run through symlinks wrote results into the corpus cache. | Fixed in `CapabilityGuard::output_dir_for` (test `a_result_goes_beside_the_link_the_person_chose_not_beside_its_target`) |
 | UP-27 | CLI | `panoply run image.compress` with no file exits 0 and prints nothing. | Fixed |
 | UP-28 | CLI | `panoply run nope.tool` says "This module could not be loaded: Could not read nope.tool ... (os error 2). Reinstall the module". It is a typo, not a broken install. | Fixed |
-| UP-29 | Home, command bar | The search box says "Search 31 tools and files" and "your files". There is no file search yet (it is on the launch gate), so a person who types a file name finds nothing. Say "tools" until the index ships. | Open |
+| UP-29 | Home, command bar | The search box said "Search 31 tools and files" and "your files". There is no file search yet (it is on the launch gate), so a person who types a file name finds nothing. | Fixed (says "tools") |
 | UP-30 | CLI | When stderr is not a terminal every percent is a new line (`28% Encoding`, `29% Encoding`, ...). 40 lines for one picture. Print progress only on a terminal, or one line per ten percent. | Fixed (one line per ten percent or step) |
 | UP-31 | Compress PDF | "Under 1 MB" on a scan took 26 s and finished at 1.9 MB with similarity 0.865 (the floor elsewhere is 0.97). It says it could not reach the size; it could say it stopped at a quality it does not recommend. | Open |
 | UP-32 | Trim | A 4 second cut at "auto" precision re-encodes all 240 frames ("0 frames copied untouched"), so it is not lossless. The card says so. | Open |
@@ -162,10 +169,11 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 | UP-34 | Convert audio | A truncated MP3 converts to a WAV 18 s long from 30 s. The card warns ("Heads up"), which is good; it comes first but is not styled as a warning. | Open |
 | UP-35 | Compress image | A tiny file ("already well compressed, 69 bytes against 69, nothing was written") is correct, but exits 0 with no output, so a batch script cannot tell it from a success. | Open |
 | UP-36 | Settings | Every row looks like a control (Appearance, Reduce Motion, Network) and none can be changed; the page is a status list. A person looking for a dark-mode switch finds none. | Open |
-| UP-37 | Find, Nearby | The empty pages say "comes in a later phase". "Phase" is the plan's word, not the person's; Nearby also says sharing is not here while `panoply share` works. | Open |
+| UP-37 | Find, Nearby | The empty pages said "comes in a later phase". "Phase" is the plan's word, not the person's; Nearby said sharing is not here while `panoply share` works. | Fixed (says not in the app yet, and names the command) |
 | UP-39 | Erase object, Remove watermark | A 500 by 400 pixel fill (on a 2400 by 3000 picture) shows a hard rectangular seam and stretched texture; the fill model works at 512 and the area is scaled up. Small areas on plain backgrounds are fine. | Open |
 | UP-40 | Remove background | A small piece of the old background survives in the gap between the arm and the torso (white and orange, lower left of the cutout). Edges, hair and the flag patch are otherwise clean. | Open |
 | UP-41 | Upscale | 4x is far better than bicubic but the skin is smooth and painterly and the flag's stars melt into a pattern. Fine for a profile picture, not for a print. The card does not say it is a model's guess. | Open |
+| UP-42 | Modules | Network tools show a "Network" pill and the words "Uses the network" in the same row; the pill adds nothing and the page is crowded on a narrow window. | Open |
 
 ---
 
