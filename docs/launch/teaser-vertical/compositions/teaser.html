@@ -47,13 +47,14 @@
     /* ---------------------------------------------------------------- the drop */
     #tv-g-blue { background: #2d6cdf; }
     #tv-hot .hl { font-size: 190px; }
-    .tv-kc { position: absolute; top: 662px; height: 104px; width: 250px; border-radius: 26px; display: grid; place-items: center; font-weight: 600; font-size: 48px; letter-spacing: -0.02em; color: #fff; background: rgba(255,255,255,.16); border: 2px solid rgba(255,255,255,.42); box-shadow: 0 18px 40px rgba(8,24,70,.28); }
-    #tv-kc1 { left: 120px; } #tv-kc2 { left: 394px; }
-    #tv-bar { position: absolute; left: 120px; top: 822px; width: 840px; height: 537px; border-radius: 23.3px; overflow: hidden; background: #f2f3f6; box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 36px 90px rgba(8,24,70,.5); }
-    #tv-bar img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-    #tv-chipslice { position: absolute; inset: 0; }
-    #tv-chipslice .clipper { position: absolute; inset: 0; clip-path: inset(1.5% 1.2% 88.9% 69.6% round 16px); }
-    #tv-strip { position: absolute; left: 120px; top: 1400px; width: 840px; font-size: 64px; font-weight: 600; letter-spacing: -0.03em; white-space: nowrap; color: #fff; }
+    #tv-keys1, #tv-keys2 { position: absolute; left: 120px; top: 662px; display: flex; gap: 20px; }
+    .tv-key { height: 104px; border-radius: 26px; display: flex; align-items: center; justify-content: center; gap: 14px; font-weight: 600; font-size: 48px; letter-spacing: -0.02em; color: #fff; background: rgba(255,255,255,.16); border: 2px solid rgba(255,255,255,.42); box-shadow: 0 18px 40px rgba(8,24,70,.28); }
+    .tv-key svg { width: 52px; height: 52px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    #tv-bar { position: absolute; left: 120px; top: 822px; width: 840px; height: 365px; border-radius: 23.3px; overflow: hidden; background: #f2f3f6; box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 36px 90px rgba(8,24,70,.5); }
+    #tv-bar img { position: absolute; left: 0; top: 0; width: 840px; height: 537px; display: block; }
+    #tv-chipslice { position: absolute; left: 0; top: 0; width: 840px; height: 537px; }
+    #tv-chipslice .clipper { position: absolute; left: 0; top: 0; width: 840px; height: 537px; clip-path: inset(1.5% 1.2% 88.9% 69.6% round 16px); }
+    #tv-strip { position: absolute; left: 120px; top: 1316px; width: 840px; font-size: 64px; font-weight: 600; letter-spacing: -0.03em; white-space: nowrap; color: #fff; }
     #tv-strip em { font-style: normal; opacity: .7; }
     #tv-pct-wrap .hl { font-size: 190px; }
 
@@ -65,8 +66,8 @@
     .tv-chip .on { position: absolute; inset: -2px; border-radius: 999px; background: #fff; color: #1d1d1f; display: flex; align-items: center; gap: 10px; padding: 0 16px; opacity: 0; }
     .tv-chip .on i { background: var(--k); }
     #tv-board { position: absolute; left: 120px; top: 512px; width: 840px; }
-    #tv-fade { position: absolute; left: 0; top: 1380px; width: 1080px; height: 540px; background: linear-gradient(180deg, rgba(45,108,223,0) 0px, #2d6cdf 160px, #2d6cdf 540px); }
-    .tv-tc { position: absolute; width: 408px; height: 116px; border-radius: 30px; background: #fff; border: 2px solid rgba(0,0,0,.07); box-shadow: 0 14px 34px rgba(8,24,70,.2); display: flex; align-items: center; gap: 16px; padding: 0 20px 0 22px; color: #1d1d1f; }
+    #tv-fade { position: absolute; left: 0; top: 1320px; width: 1080px; height: 600px; background: linear-gradient(180deg, rgba(45,108,223,0) 0px, #2d6cdf 160px, #2d6cdf 600px); }
+    .tv-tc { position: absolute; width: 408px; height: 110px; border-radius: 30px; background: #fff; border: 2px solid rgba(0,0,0,.07); box-shadow: 0 14px 34px rgba(8,24,70,.2); display: flex; align-items: center; gap: 16px; padding: 0 20px 0 22px; color: #1d1d1f; }
     .tv-tc .tic { position: relative; width: 64px; height: 64px; border-radius: 18px; flex: none; background: #eceef1; }
     .tv-tc .tic .lit { position: absolute; inset: 0; border-radius: 18px; display: grid; place-items: center; opacity: 0; background: color-mix(in srgb, var(--k) 16%, white); }
     .tv-tc .tic .base { position: absolute; inset: 0; display: grid; place-items: center; }
@@ -86,17 +87,21 @@
     #tv-folder .ffront .tv-fansvg { position: absolute; left: 28px; top: 28px; width: 84px; height: 84px; }
     .tv-fchip { position: absolute; left: 10px; width: 340px; height: 76px; border-radius: 22px; background: #fff; color: #1d1d1f; display: flex; align-items: center; gap: 16px; padding: 0 22px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 30px; font-weight: 500; box-shadow: 0 10px 26px rgba(8,24,70,.2); white-space: nowrap; }
     .tv-fchip u { width: 30px; height: 38px; border-radius: 6px; display: block; flex: none; background: #2d6cdf; opacity: .85; }
-    #tv-mod { position: absolute; left: 90px; top: 800px; width: 900px; height: 559px; border-radius: 9.5px; overflow: hidden; background: #fafafb; box-shadow: 0 0 0 1px rgba(255,255,255,.4), 0 36px 90px rgba(8,24,70,.45); }
-    #tv-mod .native { position: absolute; left: 0; top: 0; width: 2320px; height: 1440px; transform-origin: 0 0; }
-    #tv-mod .native img { position: absolute; inset: 0; width: 2320px; height: 1440px; display: block; }
-    #tv-mod .cover { position: absolute; background: #fafafb; opacity: 0; }
-    #tv-mod .newd { position: absolute; font-family: -apple-system, "SF Pro Text", "Geist", system-ui, sans-serif; font-size: 25px; font-weight: 400; color: #54545b; opacity: 0; line-height: 1; letter-spacing: 0; white-space: nowrap; }
-    #tv-call { position: absolute; left: 120px; top: 1400px; width: 840px; height: 100px; border-radius: 30px; background: #fff; color: #1d1d1f; display: flex; align-items: center; padding: 0 34px; font-size: 40px; font-weight: 600; letter-spacing: -0.025em; white-space: nowrap; box-shadow: 0 14px 34px rgba(8,24,70,.22); }
-    #tv-call b { font-weight: 700; color: #2d6cdf; }
+    #tv-mod { position: absolute; left: 120px; top: 790px; width: 840px; height: 690px; border-radius: 28px; background: #f6f7f9; box-shadow: 0 0 0 1.5px rgba(255,255,255,.4), 0 36px 90px rgba(8,24,70,.45); font-family: "Geist", system-ui, sans-serif; color: #1d1d1f; }
+    #tv-mod .mt { position: absolute; left: 28px; top: 28px; font-size: 40px; font-weight: 700; letter-spacing: -0.03em; line-height: 48px; }
+    #tv-mod .mh { position: absolute; left: 28px; top: 84px; width: 784px; font-size: 34px; font-weight: 500; line-height: 44px; letter-spacing: -0.015em; color: #54545b; }
+    #tv-mod .mh b { font-weight: 700; color: #1d1d1f; }
+    #tv-mod .mrow { position: absolute; left: 28px; width: 784px; height: 112px; border-radius: 20px; background: #fff; border: 2px solid rgba(0,0,0,.06); display: flex; align-items: center; gap: 18px; padding: 0 20px; }
+    #tv-mod .mtile { width: 64px; height: 64px; border-radius: 18px; flex: none; display: grid; place-items: center; background: color-mix(in srgb, var(--k) 16%, white); }
+    #tv-mod .mtile svg { width: 34px; height: 34px; fill: none; stroke: var(--k); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    #tv-mod .mx { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+    #tv-mod .mn { font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 42px; }
+    #tv-mod .mi { font-size: 34px; font-weight: 500; letter-spacing: -0.02em; line-height: 38px; color: #5b5b63; white-space: nowrap; }
+    #tv-mod .mslot { position: absolute; left: 28px; width: 784px; height: 112px; border-radius: 20px; border: 3px dashed rgba(0,0,0,.2); }
 
     /* ---------------------------------------------------------------- wall */
     #tv-wall .hl { font-size: 160px; }
-    #tv-slots { position: absolute; left: 120px; top: 744px; width: 840px; }
+    #tv-slots { position: absolute; left: 120px; top: 640px; width: 840px; }
     .tv-slot { position: absolute; width: 408px; height: 180px; border-radius: 30px; }
     .tv-slot.dash { border: 3px dashed rgba(255,255,255,.6); display: grid; place-items: center; font-size: 34px; font-weight: 600; letter-spacing: -0.015em; color: rgba(255,255,255,.88); }
     .tv-slot.full { background: #fff; color: #1d1d1f; padding: 20px 26px; box-shadow: 0 14px 34px rgba(8,24,70,.2); }
@@ -145,15 +150,20 @@
     <div id="tv-drop" class="layer">
       <div id="tv-hot"><div class="hl"><span class="ln">One</span><span class="ln">hotkey.</span></div></div>
       <div id="tv-pct-wrap"><div class="hl"><span class="ln"><span id="tv-pct">0</span>%</span><span class="ln">smaller.</span></div></div>
-      <div class="tv-kc" id="tv-kc1">Option</div>
-      <div class="tv-kc" id="tv-kc2">Space</div>
+      <div id="tv-keys1">
+        <div class="tv-key" style="width:116px"><svg viewBox="0 0 24 24"><path d="M3 6h5.5l7 12H21M14 6h7"/></svg></div>
+        <div class="tv-key" style="width:250px">Space</div>
+      </div>
+      <div id="tv-keys2">
+        <div class="tv-key" id="tv-retkey" style="width:330px"><svg viewBox="0 0 24 24"><path d="M20 5v7a2 2 0 0 1-2 2H5M9 10l-4 4 4 4"/></svg>Return</div>
+      </div>
       <div id="tv-bar">
         <img id="tv-rest" src="assets/captures/bar-rest-light.png" alt="">
         <div id="tv-chipslice"><div class="clipper"><img src="assets/captures/demo-light-00.png" alt=""></div></div>
         <div id="tv-typed"></div>
         <img id="tv-result" src="assets/captures/bar-result-light.png" alt="" style="opacity:0">
       </div>
-      <div id="tv-strip"><span id="tv-r-from"></span> <em>to</em> <span id="tv-r-to"></span></div>
+      <div id="tv-strip"><span id="tv-r-from"></span>&nbsp;<em>to</em>&nbsp;<span id="tv-r-to"></span></div>
     </div>
 
     <!-- 12.55 to 17.5: 31 tools -->
@@ -169,23 +179,24 @@
       <div id="tv-plug-h" class="hl"><span class="ln">Anyone</span><span class="ln">can add</span><span class="ln">a tool.</span></div>
       <div id="tv-fan"></div>
       <div id="tv-mod">
-        <div class="native" id="tv-mod-native">
-          <img src="assets/captures/app-modules-light.png" alt="">
-          <div class="cover" id="tv-cov1" style="left:500px;top:148px;width:1048px;height:50px"></div>
-          <div class="newd" id="tv-nd1" style="left:513px;top:159px">32 installed. Every module runs with only the files you choose.</div>
-        </div>
+        <div class="mt">Modules</div>
+        <div class="mh"><b id="tv-hc">31</b> installed. Every module runs with only the files you choose.</div>
+        <div class="mrow" id="tv-mr0" style="top:186px"><span class="mtile" style="--k:#1a84f3"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><span class="mx"><span class="mn">Hash files</span><span class="mi">files.hash · Chosen files only</span></span></div>
+        <div class="mrow" id="tv-mr1" style="top:308px"><span class="mtile" style="--k:#ff9f0a"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.7 1.8-2.4 3-2.4s2.4.7 3 2.4M14.5 10h4M14.5 14h3"/></svg></span><span class="mx"><span class="mn">Print sheet</span><span class="mi">id.print_sheet · Chosen files only</span></span></div>
+        <div class="mrow" id="tv-mr2" style="top:430px"><span class="mtile" style="--k:#ff9f0a"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.7 1.8-2.4 3-2.4s2.4.7 3 2.4M14.5 10h4M14.5 14h3"/></svg></span><span class="mx"><span class="mn">Signature cleaner</span><span class="mi">id.signature_cleaner · Chosen files only</span></span></div>
+        <div class="mslot" id="tv-mslot" style="top:552px"></div>
+        <div class="mrow" id="tv-mr3" style="top:552px"><span class="mtile" style="--k:#2d6cdf"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/></svg></span><span class="mx"><span class="mn">Word count</span><span class="mi">text.word_count · Chosen files only</span></span></div>
       </div>
       <div id="tv-folder">
         <div class="fback"></div><div class="ftab"></div>
         <div id="tv-fchips" data-layout-ignore></div>
         <div class="ffront"><div class="tv-fansvg" id="tv-fanmini"></div></div>
       </div>
-      <div id="tv-call"><b id="tv-ci">31</b>&nbsp;installed</div>
     </div>
 
     <!-- 24 to 28: the wall of example slots -->
     <div id="tv-wall" class="layer">
-      <div id="tv-wall-h" class="hl"><span class="ln">Add yours</span><span class="ln">in an</span><span class="ln">afternoon.</span></div>
+      <div id="tv-wall-h" class="hl"><span class="ln">Add your</span><span class="ln">own.</span></div>
       <div id="tv-slots"></div>
     </div>
 
@@ -300,7 +311,7 @@
     for (let n = 0; mixed.length < tools.tools.length; n++) CATS.forEach(c => { if (byCat[c][n]) mixed.push(byCat[c][n]); });
     const cards = mixed.map((t, i) => {
       const col = i % 2, row = Math.floor(i / 2);
-      const el = html(`<div class="tv-tc" style="left:${col * 432}px;top:${row * 140}px;--k:${COL[t.category]}"><span class="tic"><span class="base"><svg viewBox="0 0 24 24">${IC[t.category]}</svg></span><span class="lit"><svg viewBox="0 0 24 24">${IC[t.category]}</svg></span></span><span class="tn">${t.name}</span></div>`);
+      const el = html(`<div class="tv-tc" style="left:${col * 432}px;top:${row * 132}px;--k:${COL[t.category]}"><span class="tic"><span class="base"><svg viewBox="0 0 24 24">${IC[t.category]}</svg></span><span class="lit"><svg viewBox="0 0 24 24">${IC[t.category]}</svg></span></span><span class="tn">${t.name}</span></div>`);
       $("tv-board").appendChild(el);
       return { el, col, row, cat: t.category, lit: el.querySelector(".lit") };
     });
@@ -340,13 +351,13 @@
     })();
 
     /* stacked scenes share slots in time; mark the intentional layering for the layout audit */
-    document.querySelectorAll("#tv-words .w, #tv-stop span, #tv-hot .ln, #tv-pct-wrap span, #tv-tools-h span, #tv-chips .tv-chip, #tv-plug-h .ln, #tv-wall-h .ln, #tv-stack .t span, #tv-end > div, #tv-call, #tv-strip, #tv-slots .tv-slot, #tv-board .tv-tc, .tv-kc").forEach(n => { n.setAttribute("data-layout-allow-overlap", ""); n.setAttribute("data-layout-allow-occlusion", ""); });
+    document.querySelectorAll("#tv-words .w, #tv-stop span, #tv-hot .ln, #tv-pct-wrap span, #tv-tools-h span, #tv-chips .tv-chip, #tv-plug-h .ln, #tv-wall-h .ln, #tv-stack .t span, #tv-end > div, #tv-strip, #tv-slots .tv-slot, #tv-board .tv-tc, #tv-mod div, #tv-mod span, .tv-key").forEach(n => { n.setAttribute("data-layout-allow-overlap", ""); n.setAttribute("data-layout-allow-occlusion", ""); });
     document.querySelectorAll("#root .layer, #tv-end, #tv-board, #tv-bar, #tv-mod, #tv-folder").forEach(n => n.setAttribute("data-layout-allow-overflow", ""));
 
     /* ------------------------------------------------------------ timeline */
-    gsap.set("#tv-mod-native", { scale: 900 / 2320, transformOrigin: "0 0" });
+    gsap.set("#tv-bar", { transformOrigin: "50% 0%" });
     const tl = gsap.timeline({ paused: true });
-    const EO = "expo.out", PI = "power3.in";
+    const EO = "expo.out";
     /* entrance: transform on its own expo.out tween (0.3 to 0.45 s), opacity on its own power1.out 0.25 s tween, both start ON the beat */
     const en = (sel, b, o = {}) => {
       const t = at(b), from = { y: o.y === undefined ? 40 : o.y }, to = { y: 0, duration: o.d || 0.4, ease: EO, stagger: o.s || 0 };
@@ -355,49 +366,50 @@
       tl.fromTo(sel, from, to, t);
       tl.fromTo(sel, { opacity: 0 }, { opacity: o.to === undefined ? 1 : o.to, duration: 0.25, ease: "power1.out", stagger: o.s || 0 }, t);
     };
-    const ex = (sel, b, o = {}) => tl.to(sel, { opacity: 0, y: o.y === undefined ? -24 : o.y, duration: o.d || 0.2, ease: PI, overwrite: "auto" }, at(b));
+    /* ONE TRANSITION RULE: the outgoing content fades to 0 in 0.15 s (power1.in), ENDING on the beat; the next thing starts on that same beat */
+    const out = (sel, endBeat, d = 0.15) => tl.to(sel, { opacity: 0, duration: d, ease: "power1.in", overwrite: "auto" }, at(endBeat) - d);
     const wipe = (sel, b, d = 0.45) => tl.fromTo(sel, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: d, ease: EO }, at(b));
 
-    /* camera drift, one slow scale per scene layer */
+    /* camera drift, one slow scale per scene layer (the tool grid holds still from beat 15 to the cut) */
     const drift = (sel, b0, b1, s0 = 1, s1 = 1.03) => tl.fromTo(sel, { scale: s0 }, { scale: s1, duration: at(b1) - at(b0), ease: "none" }, at(b0));
     drift("#tv-cold", 0, 8, 1, 1.04);
-    drift("#tv-drop", 8, 13.7, 1, 1.03);
-    drift("#tv-tools", 13.75, 18, 1, 1.02);
+    drift("#tv-drop", 8, 13.75, 1, 1.03);
     drift("#tv-plug", 18, 24, 1, 1.03);
     drift("#tv-wall", 24, 28, 1, 1.03);
     drift("#tv-stack", 28, 32.5, 1, 1.02);
     drift("#tv-end", 32.5, 36.5, 1, 1.02);
 
-    /* ---- beats 0 to 4.4: the upload chaos, the four words on 0, 1, 2, 3 */
+    /* ---- beats 0 to 4.39: the upload chaos, the four words on 0, 1, 2, 3 (frame 0 already full: "Upload." at full opacity, eight windows up) */
     order.forEach((wi, n) => {
       const w = wins[wi];
-      if (n < 4) return;
-      const slot = Math.min(7, Math.floor((n - 4) / 2.125));
+      if (n < 8) return;
+      const slot = Math.min(7, Math.floor((n - 8) / 1.625));
       const b = 0.5 + slot * 0.5;
       tl.fromTo(w.el, { y: 60, scale: w.sc * 1.05, rotation: w.rot }, { y: 0, scale: w.sc, rotation: w.rot, duration: 0.45, ease: EO }, at(b));
       tl.fromTo(w.el, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, at(b));
     });
     tl.fromTo("#tv-w1", { y: 28 }, { y: 0, duration: 0.45, ease: EO }, 0);
-    tl.fromTo("#tv-w1", { opacity: 0.6 }, { opacity: 0.8, duration: 0.25, ease: "power1.out" }, 0);
-    [["#tv-w2", 1, 0.85], ["#tv-w3", 2, 0.92], ["#tv-w4", 3, 1]].forEach(([sel, b, o]) => {
+    [["#tv-w2", 1], ["#tv-w3", 2], ["#tv-w4", 3]].forEach(([sel, b]) => {
       tl.fromTo(sel, { y: 50 }, { y: 0, duration: 0.45, ease: EO }, at(b));
-      tl.fromTo(sel, { opacity: 0 }, { opacity: o, duration: 0.25, ease: "power1.out" }, at(b));
+      tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, at(b));
     });
 
-    /* ---- beats 4.39 to 7.92: the STOP. the wall holds, the scrim deepens, one line glides in */
-    ex("#tv-words", 4.39, { d: 0.26, y: -20 });
-    tl.fromTo("#tv-deep", { opacity: 0 }, { opacity: 0.82, duration: 0.5, ease: "power2.out" }, at(4.39));
+    /* ---- beats 4.39 to 7.92: the STOP. the words are gone on 4.39, the scrim only deepens, one line glides in */
+    out("#tv-words", 4.39);
+    tl.fromTo("#tv-deep", { opacity: 0 }, { opacity: 0.92, duration: at(7.92) - at(4.39), ease: "power2.out" }, at(4.39));
     tl.fromTo("#tv-stop span", { y: 44 }, { y: 0, duration: 0.45, ease: EO, stagger: 0.07 }, at(5.0));
     tl.fromTo("#tv-stop span", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out", stagger: 0.07 }, at(5.0));
+    out("#tv-stop", 8.0);
 
-    /* ---- beat 8 THE DROP: the ground wipes bottom to top, keycaps down, the real bar opens (opacity, y, scale; no clip) */
+    /* ---- beat 8 THE DROP: the ground wipes bottom to top, keycaps down, the real bar opens */
     wipe("#tv-bluescene", 8.0, 0.45);
     en("#tv-hot .hl", 8.0, { y: 56, d: 0.45 });
-    en(".tv-kc", 8.0, { y: -28, d: 0.4, s: 0.06 });
+    en("#tv-keys1", 8.0, { y: -28, d: 0.4 });
     en("#tv-bar", 8.0, { y: 40, d: 0.45, sc: 0.97 });
 
-    /* ---- beat 9 (HIT .76): a file chip lands on the bar (a slice of the real capture) */
-    en("#tv-chipslice", 9.0, { y: -26, d: 0.3 });
+    /* ---- beat 9 (HIT .76): the file chip lands visibly ON 3.70 s (a 0.2 s move that ends on the beat and holds) */
+    tl.fromTo("#tv-chipslice", { y: -30 }, { y: 0, duration: 0.2, ease: "power2.out" }, at(9) - 0.2);
+    tl.fromTo("#tv-chipslice", { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "power1.out" }, at(9) - 0.2);
 
     /* ---- beats 9.25 to 11.75: "under 50 kb" typed on 16ths from the real frames, all eleven */
     for (let k = 1; k <= 11; k++) {
@@ -406,60 +418,60 @@
     }
     tl.set("#tv-rest", { opacity: 0 }, at(9.25));
     tl.set("#tv-chipslice", { opacity: 0 }, at(9.25));
+    /* a slow push toward the query, easing out on Return, then a drift (the bar reads at phone size) */
+    tl.fromTo("#tv-bar", { scale: 1 }, { scale: 1.24, duration: at(12) - at(9), ease: "power1.out", immediateRender: false }, at(9));
+    tl.to("#tv-bar", { scale: 1.255, duration: at(13.75) - at(12), ease: "none" }, at(12));
 
-    /* ---- beat 12 (HIT .85): Return. A hard swap to the result card, 35 percent counts up and rests until beat 13.4 */
-    ex("#tv-hot, .tv-kc", 11.3, { d: 0.2, y: -20 });
+    /* ---- beat 12 (HIT .85): the Return keycap lands on 11.75 and presses on 12, "One hotkey." stays until 12, then a hard swap to the result */
+    out("#tv-keys1", 11.75);
+    en("#tv-keys2", 11.75, { y: 14, d: 0.3 });
+    tl.to("#tv-retkey", { backgroundColor: "rgba(255,255,255,1)", color: "#2d6cdf", borderColor: "rgba(255,255,255,1)", duration: 0.1, ease: "none" }, at(12));
+    out("#tv-hot", 12.0);
     tl.set("#tv-t11", { opacity: 0 }, at(12));
     tl.set("#tv-result", { opacity: 1 }, at(12));
     en("#tv-pct-wrap", 12, { y: 56, d: 0.4 });
     tl.fromTo("#tv-pct", { textContent: 0 }, { textContent: RESULT.pct, snap: { textContent: 1 }, duration: 0.12, ease: "power1.out" }, at(12));
     en("#tv-strip", 12, { y: 24, d: 0.4 });
 
-    /* ---- beat 13.4: the bar shrinks away, overlapping the first tool cards by 0.1 s */
-    tl.to("#tv-bar", { scale: 0.9, y: -40, duration: 0.25, ease: PI }, at(13.4));
-    tl.to("#tv-bar", { opacity: 0, duration: 0.2, ease: PI }, at(13.45));
-    tl.to("#tv-pct-wrap, #tv-strip", { opacity: 0, y: -20, duration: 0.25, ease: PI, overwrite: "auto" }, at(13.4));
+    /* ---- beat 13.75: the payoff has rested 0.45 s; it fades out ENDING on 13.75, then the tools start on that beat */
+    out("#tv-pct-wrap, #tv-strip, #tv-bar, #tv-keys2", 13.75);
 
-    /* ---- beats 13.5 to 15: cards glide in two per half beat, then land in one ripple on beat 15 while the count locks */
+    /* ---- beats 13.75 to 15: cards two per half beat, the count follows the cards, the ripple starts on 15 (6.167 s) and the count locks there */
     en("#tv-chips", 13.75, { y: 24, d: 0.35 });
     en("#tv-tools-h", 13.75, { y: 50, d: 0.45 });
-    const first = [[0, 1, 13.75], [2, 3, 14.25]];
-    first.forEach(([a, b2, bt]) => [a, b2].forEach(ci => {
+    [[0, 1, 13.75], [2, 3, 14.25]].forEach(([a, b2, bt]) => [a, b2].forEach(ci => {
       const c = cards[ci], dir = c.col === 0 ? -1 : 1;
       tl.fromTo(c.el, { x: dir * 320, y: 30 }, { x: 0, y: 0, duration: 0.45, ease: EO }, at(bt));
       tl.fromTo(c.el, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, at(bt));
     }));
-    /* the count: 2 with the first pair, 4 with the second pair, then it locks on tools.count at beat 15 (never "1 tools") */
-    const cb0 = 13.75, cb1 = 15, step = (b) => b;
+    const cb0 = 13.75, cb1 = 15, lockLead = 0.08 / BEAT;
     tl.fromTo("#tv-cnt", { textContent: 2 }, { textContent: tools.count, snap: { textContent: 1 }, duration: at(cb1) - at(cb0), ease: (p) => {
       const b = cb0 + p * (cb1 - cb0);
       let v;
       if (b < 14.25) v = 2;
       else if (b < 14.4) v = 2 + 2 * (b - 14.25) / 0.15;
-      else if (b < 14.56) v = 4;
-      else v = 4 + (tools.count - 4) * Math.min(1, (b - 14.56) / (15 - 14.56));
+      else if (b < cb1 - lockLead) v = 4;
+      else v = 4 + (tools.count - 4) * Math.min(1, (b - (cb1 - lockLead)) / lockLead);
       return (v - 2) / (tools.count - 2);
     } }, at(cb0));
     const rest = cards.filter((c, i) => i > 3);
     const anchor = { col: 0.5, row: 1.5 };
     const dist = (c) => Math.hypot((c.col - anchor.col) * 1.1, c.row - anchor.row);
-    const maxd = Math.max(...rest.map(dist));
-    const rip = at(15) - 0.18;
-    rest.forEach((c) => {
-      const t0 = rip + (dist(c) / maxd) * 0.2;
+    const ranked = rest.slice().sort((a, b) => dist(a) - dist(b));
+    ranked.forEach((c, rank) => {
+      const t0 = at(15) + rank * 0.008;   /* under half a frame at 60 fps between neighbours */
       tl.fromTo(c.el, { y: 40, scale: 0.97 }, { y: 0, scale: 1, duration: 0.35, ease: EO }, t0);
       tl.fromTo(c.el, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, t0);
     });
-    /* the board settles to its resting place exactly at the hit and then holds still */
+    /* the board settles into its place exactly at the hit and then holds completely still */
     tl.fromTo("#tv-board", { y: 18 }, { y: 0, duration: at(15) - at(13.75), ease: "none" }, at(13.75));
 
-    /* ---- beat 16.5 (HIT .58): the categories light in a row */
-    CATS.forEach((c, n) => {
-      const t = at(16.5) + n * 0.07;
-      tl.to("#tv-chip-" + c + " .on", { opacity: 1, duration: 0.25, ease: "power1.out" }, t);
-      cards.filter(x => x.cat === c).forEach(x => tl.to(x.lit, { opacity: 1, duration: 0.25, ease: "power1.out" }, t + 0.03));
+    /* ---- beat 17.0 (6.987 s, the loudest jump): ALL categories light together; then the grid holds still until the cut on 18 */
+    CATS.forEach((c) => {
+      tl.to("#tv-chip-" + c + " .on", { opacity: 1, duration: 0.2, ease: "power1.out" }, at(17));
+      cards.filter(x => x.cat === c).forEach(x => tl.to(x.lit, { opacity: 1, duration: 0.2, ease: "power1.out" }, at(17)));
     });
-    tl.to("#tv-tools", { opacity: 0, duration: 0.2, ease: PI }, at(17.75));
+    out("#tv-tools", 18.0);
 
     /* ---- beats 18 to 24: the plugin beat */
     en("#tv-plug-h .ln", 18, { y: 50, d: 0.45, s: 0.08 });
@@ -472,25 +484,26 @@
       tl.fromTo("#tv-fch" + i, { x: ox, y: -300 }, { x: 0, y: 96 - i * 6, duration: 0.45, ease: EO }, at(bt));
       tl.fromTo("#tv-fch" + i, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, at(bt));
     });
-    /* Modules arrives, the folder flies to the header line and the line is patched on arrival */
+    /* the live Modules list arrives with an empty slot; the folder flies into the slot, and on arrival the Word count row lands and the count flips 31 to 32 */
     en("#tv-mod", 20.25, { y: 140, d: 0.45 });
-    tl.to("#tv-folder", { x: -246, y: -366, scale: 0.16, duration: 0.45, ease: EO }, at(20.75));
-    tl.to("#tv-folder", { opacity: 0, duration: 0.2, ease: PI }, at(21.15));
-    tl.to("#tv-cov1, #tv-nd1", { opacity: 1, duration: 0.25, ease: "power1.out" }, at(21.15));
-    en("#tv-call", 21.15, { y: 36, d: 0.4 });
-    tl.fromTo("#tv-ci", { textContent: 31 }, { textContent: 32, snap: { textContent: 1 }, duration: 0.25, ease: "power2.out" }, at(21.35));
-    tl.to("#tv-plug", { opacity: 0, duration: 0.2, ease: PI }, at(23.75));
+    tl.set("#tv-mr3", { opacity: 0 }, 0);
+    tl.to("#tv-folder", { x: -364, y: 158, scale: 0.2, duration: 0.45, ease: EO }, at(20.75));
+    out("#tv-folder", 21.1);
+    en("#tv-mr3", 21.1, { y: 24, d: 0.4 });
+    tl.to("#tv-mslot", { opacity: 0, duration: 0.2, ease: "power1.out" }, at(21.1));
+    tl.fromTo("#tv-hc", { textContent: 31 }, { textContent: 32, snap: { textContent: 1 }, duration: 0.12, ease: "none" }, at(21.1));
+    out("#tv-plug", 24.0);
 
-    /* ---- beats 24 to 28: the wall of example slots, tiles arrive until beat 28 */
+    /* ---- beats 24 to 28: the wall of example slots, tiles arrive until beat 27 */
     en("#tv-wall-h .ln", 24, { y: 50, d: 0.45, s: 0.08 });
     slots.forEach((el, i) => en(el, 24 + i * 0.43, { y: 44, d: 0.4, sc: 0.97 }));
-    tl.to("#tv-wall", { opacity: 0, duration: 0.2, ease: PI }, at(27.85));
+    out("#tv-wall", 28.0);
 
     /* ---- beats 28 to 32.5: one blue ground, the three phrases stack and stay */
     en("#tv-st1 span", 28, { y: 50, d: 0.45 });
     en("#tv-st2 span", 29.5, { y: 50, d: 0.45, s: 0.06 });
     en("#tv-st3 span", 31, { y: 50, d: 0.45, s: 0.06 });
-    tl.to("#tv-stack", { opacity: 0, duration: 0.2, ease: PI }, at(32.25));
+    out("#tv-stack", 32.5);
 
     /* ---- beat 32.5 (HIT .33): the end card. The fan opens, the name settles. beat 34: the url */
     en("#tv-endfan", 32.5, { y: 36, d: 0.45 });

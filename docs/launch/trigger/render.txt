@@ -1,2 +1,2 @@
-teaser looks 60
-# run 7: 16:9 teaser after pass-2 fixes
+teaser-vertical looks 60
+# run 8: vertical teaser after pass-2 fixes
