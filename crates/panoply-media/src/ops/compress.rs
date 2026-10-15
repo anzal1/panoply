@@ -422,6 +422,24 @@ fn one(job: &mut Job, input: &Path, w: &Wish) -> Result<()> {
             cur = (part2, size2, next_bps);
             score = sc2;
         }
+        // A result that is visibly worse and saves little (or is plainly poor) is not worth having:
+        // the original stays and the card says why.
+        let saving = 1.0 - cur.1 as f64 / p.size as f64;
+        if let Some(sc) = score
+            && sc < QUALITY_FLOOR_VMAF
+            && (sc < 60.0 || saving < 0.25)
+        {
+            job.stage.discard(&cur.0);
+            job.note(format!(
+                "{} was left as it is: the best Panoply could do saves {:.0}% but looks visibly worse (VMAF {sc:.0}, below {QUALITY_FLOOR_VMAF:.0}). This video is hard to shrink without losing detail. To choose how much to give up, set a size.",
+                name_of(&input),
+                saving.max(0.0) * 100.0
+            ));
+            for n in notes {
+                job.note(n);
+            }
+            return Ok(());
+        }
         best = Some(cur);
         if let Some(sc) = score
             && sc < QUALITY_FLOOR_VMAF

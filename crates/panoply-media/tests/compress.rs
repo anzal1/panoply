@@ -360,11 +360,11 @@ fn a_clip_that_comes_out_visibly_worse_is_encoded_again_or_says_so() {
         let Some(src) = corpus(rel) else { continue };
         let s = Scratch::new("compress-floor");
         let (out, notes) = run_ok("media.compress", &src, json!({}), s.path());
+        let text = notes.join("\n");
         if out.is_empty() {
-            // Left as it was: nothing to warn about.
+            assert!(text.contains("left as it is"), "{rel}: {text}");
             continue;
         }
-        let text = notes.join("\n");
         let vmaf = text
             .split("Quality VMAF ")
             .nth(1)
