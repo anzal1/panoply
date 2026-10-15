@@ -1,2 +1,2 @@
-teaser draft 30
-# run 4
+video,teaser,teaser-vertical draft 30
+# run 5: after the film review fixes

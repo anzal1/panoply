@@ -8,10 +8,16 @@
     #root * { box-sizing: border-box; }
     #f6-ground { position: absolute; inset: 0; background: #2d6cdf; }
     #f6-lift { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 70% at 50% 46%, rgba(255,255,255,.10), rgba(255,255,255,0) 100%); }
-    #f6-grain { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: .6; }
+    #f6-grain { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: .3; }
     #f6-cam { position: absolute; inset: 0; }
 
     .f6-big { position: absolute; left: 0; right: 0; top: 96px; text-align: center; font-weight: 700; font-size: 128px; line-height: .98; letter-spacing: -0.04em; color: #fff; white-space: nowrap; }
+    /* frame 5's headline, kept for the continuity cut (same geometry as .f5-line in 05-diskmap.html) */
+    #f6-t0 { position: absolute; left: 0; right: 0; top: 930px; text-align: center; font-weight: 700; font-size: 112px; line-height: .98; letter-spacing: -0.04em; color: #fff; white-space: nowrap; }
+
+    /* frame 5's end card, 1400 x 760 at left 260 top 140, radius 28, shrinks into the fan's centre card */
+    #f6-morphshadow { position: absolute; left: 260px; top: 140px; width: 1400px; height: 760px; border-radius: 28px; box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); }
+    #f6-morph { position: absolute; left: 260px; top: 140px; width: 1400px; height: 760px; background: #fff; clip-path: inset(0px 0px 0px 0px round 28px); }
 
     /* fan mark */
     #f6-fan { position: absolute; left: 750px; top: 330px; width: 420px; height: 420px; }
@@ -25,19 +31,20 @@
       font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 34px; letter-spacing: -0.01em; box-shadow: 0 10px 26px rgba(8,24,70,.28); white-space: nowrap; }
     .f6-chip i { display: block; width: 22px; height: 28px; border-radius: 6px; flex: none; }
 
-    /* module card */
-    #f6-card { position: absolute; left: 870px; top: 470px; width: 560px; height: 340px; border-radius: 32px; background: #fff; color: #1d1d1f; box-shadow: 0 30px 70px rgba(8,24,70,.34); }
-    #f6-card .tile { position: absolute; left: 40px; top: 40px; width: 112px; height: 112px; border-radius: 30px; background: #d2e6fc; display: grid; place-items: center; }
-    #f6-card .tile svg { width: 58px; height: 58px; }
-    #f6-card .name { position: absolute; left: 176px; top: 44px; font-weight: 600; font-size: 50px; line-height: 58px; letter-spacing: -0.025em; white-space: nowrap; }
-    #f6-card .sub { position: absolute; left: 176px; top: 108px; font-family: "Geist Mono", monospace; font-weight: 500; font-size: 30px; line-height: 36px; color: #54545b; white-space: nowrap; }
-    #f6-card .sum { position: absolute; left: 40px; top: 170px; width: 490px; font-weight: 500; font-size: 32px; line-height: 40px; letter-spacing: -0.01em; color: #54545b; }
-    #f6-card .pill { position: absolute; left: 40px; top: 270px; height: 46px; padding: 0 20px; border-radius: 23px; background: #d2e6fc; color: #0a60d0; font-weight: 600; font-size: 30px; line-height: 46px; letter-spacing: -0.01em; }
+    /* module card: its tile, name and sub line are a 1.75x copy of the Modules row, so it lands as that row */
+    #f6-card { position: absolute; left: 850px; top: 500px; width: 600px; height: 320px; }
+    #f6-cardbg { position: absolute; inset: 0; border-radius: 32px; background: #fff; box-shadow: 0 30px 70px rgba(8,24,70,.34); }
+    #f6-card .tile { position: absolute; left: 40px; top: 40px; width: 112px; height: 112px; border-radius: 28px; background: #d2e6fc; display: grid; place-items: center; }
+    #f6-card .tile svg { width: 56px; height: 56px; }
+    #f6-card .name { position: absolute; left: 194px; top: 37px; font-weight: 500; font-size: 45.5px; line-height: 56px; color: #1d1d1f; letter-spacing: -0.01em; white-space: nowrap; }
+    #f6-card .sub { position: absolute; left: 194px; top: 105px; font-weight: 400; font-size: 40px; line-height: 49px; color: #54545b; white-space: nowrap; }
+    #f6-card .sum { position: absolute; left: 40px; top: 196px; width: 520px; font-weight: 500; font-size: 32px; line-height: 40px; letter-spacing: -0.01em; color: #54545b; }
 
     /* the real Modules plate, native 2320 x 1440, scaled by the timeline */
     #f6-plate { position: absolute; left: -200px; top: -180px; width: 2320px; height: 1440px; border-radius: 24.36px; overflow: hidden; background: #fafafb;
       box-shadow: 0 0 0 2px rgba(255,255,255,.35), 0 60px 160px rgba(8,24,70,.5); }
     #f6-plate img { position: absolute; left: 0; top: 0; width: 2320px; height: 1440px; display: block; }
+    #f6-ringpatch { position: absolute; left: 16px; top: 228px; width: 430px; height: 72px; border: 12px solid #f0f1f4; border-radius: 26px; }
     #f6-listpatch { position: absolute; left: 464px; top: 225px; width: 1816px; height: 1215px; background: #fafafb; }
     #f6-listimg { position: absolute; left: 0; top: 0; width: 2320px; height: 1440px; clip-path: inset(225px 0 0 0); background: url("assets/captures/app-modules-light.png") 0 0 / 2320px 1440px no-repeat; }
     #f6-listclip { position: absolute; left: 0; top: 0; width: 2320px; height: 1440px; clip-path: inset(225px 40px 0 464px); }
@@ -47,22 +54,22 @@
     #f6-row .tile svg { width: 32px; height: 32px; }
     #f6-row .name { position: absolute; left: 624px; top: 255px; font-weight: 500; font-size: 26px; line-height: 32px; color: #1d1d1f; letter-spacing: -0.01em; white-space: nowrap; }
     #f6-row .sub { position: absolute; left: 624px; top: 294px; font-weight: 400; font-size: 23px; line-height: 28px; color: #54545b; white-space: nowrap; }
-    #f6-row .pill { position: absolute; right: 73px; top: 269px; height: 40px; padding: 0 22px; border-radius: 20px; background: #d2e6fc; color: #0a60d0; font-weight: 500; font-size: 22px; line-height: 40px; }
     #f6-count { position: absolute; left: 500px; top: 146px; width: 1075px; height: 52px; background: #fafafb; padding-left: 14px; white-space: nowrap;
       font-weight: 400; font-size: 27px; line-height: 52px; letter-spacing: -0.45px; color: #54545b; font-variant-numeric: tabular-nums; }
     .f6-odo { display: inline-block; overflow: hidden; height: 52px; vertical-align: top; }
     .f6-odo-in { display: block; }
     .f6-odo-in i { display: block; height: 52px; font-style: normal; }
 
-    /* the wall */
+    /* the wall: a few big cards */
     #f6-wall { position: absolute; inset: 0; }
-    .f6-slot { position: absolute; width: 380px; height: 150px; border-radius: 30px; }
-    .f6-slot.empty { border: 3px dashed rgba(255,255,255,.6); display: grid; place-items: center; font-weight: 500; font-size: 34px; letter-spacing: -0.015em; color: rgba(255,255,255,.6); }
+    .f6-slot { position: absolute; width: 420px; height: 230px; border-radius: 32px; }
+    .f6-slot.empty { border: 3px dashed rgba(255,255,255,.6); display: grid; place-items: center; font-weight: 500; font-size: 40px; letter-spacing: -0.015em; color: rgba(255,255,255,.6); }
     .f6-slot.full { background: #fff; color: #1d1d1f; box-shadow: 0 18px 44px rgba(8,24,70,.30); }
-    .f6-slot.full .tile { position: absolute; left: 24px; top: 37px; width: 76px; height: 76px; border-radius: 22px; background: #d2e6fc; display: grid; place-items: center; }
-    .f6-slot.full .tile svg { width: 40px; height: 40px; }
-    .f6-slot.full .nm { position: absolute; left: 120px; top: 36px; font-weight: 600; font-size: 34px; line-height: 40px; letter-spacing: -0.02em; white-space: nowrap; }
-    .f6-slot.full .by { position: absolute; left: 120px; top: 80px; font-family: "Geist Mono", monospace; font-weight: 500; font-size: 30px; line-height: 34px; color: #54545b; white-space: nowrap; }
+    .f6-slot.full .tile { position: absolute; left: 28px; top: 28px; width: 72px; height: 72px; border-radius: 20px; background: #d2e6fc; display: grid; place-items: center; }
+    .f6-slot.full .tile svg { width: 38px; height: 38px; }
+    .f6-slot.full .nm { position: absolute; left: 116px; top: 30px; font-weight: 600; font-size: 38px; line-height: 44px; letter-spacing: -0.02em; white-space: nowrap; }
+    .f6-slot.full .id { position: absolute; left: 28px; top: 118px; font-family: "Geist Mono", monospace; font-weight: 500; font-size: 30px; line-height: 36px; color: #54545b; white-space: nowrap; }
+    .f6-slot.full .tag { position: absolute; left: 28px; top: 166px; height: 44px; padding: 0 20px; border-radius: 22px; background: #d2e6fc; color: #0a60d0; font-weight: 600; font-size: 30px; line-height: 44px; letter-spacing: -0.01em; }
   </style>
 
   <div id="root" data-composition-id="f6-plugins" data-width="1920" data-height="1080">
@@ -71,28 +78,30 @@
     <img id="f6-grain" src="assets/f6-plugins/grain.png" alt="">
 
     <div id="f6-cam" data-layout-allow-overflow>
+      <div id="f6-t0">See what is eating your space.</div>
+      <div id="f6-morphshadow"></div>
+
       <div id="f6-fan"><div id="f6-fan-in">
         <svg viewBox="0 0 544 544" fill="none">
-          <defs>
-            <clipPath id="f6-clip"><path id="f6-cardpath" d="M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z"/></clipPath>
-          </defs>
-          <g transform="rotate(-20 272.788 612.197)">
+          <defs><clipPath id="f6-clip"><path d="M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z"/></clipPath></defs>
+          <g id="f6-sideL">
             <path d="M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z" fill="rgba(255,255,255,.42)"/>
-            <g clip-path="url(#f6-clip)"><image href="assets/captures/app-home-light.png" x="167.668" y="65.569" width="210.241" height="378.435" preserveAspectRatio="xMidYMid slice" opacity=".5"/></g>
+            <g clip-path="url(#f6-clip)"><image href="assets/captures/app-home-light.png" x="167.668" y="65.569" width="210.241" height="378.435" preserveAspectRatio="xMidYMid meet" opacity=".7"/></g>
           </g>
-          <g transform="rotate(20 272.788 612.197)">
+          <g id="f6-sideR">
             <path d="M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z" fill="rgba(255,255,255,.62)"/>
-            <g clip-path="url(#f6-clip)"><image href="assets/captures/app-tool-result-light.png" x="167.668" y="65.569" width="210.241" height="378.435" preserveAspectRatio="xMidYMid slice" opacity=".5"/></g>
+            <g clip-path="url(#f6-clip)"><image href="assets/captures/app-tool-result-light.png" x="167.668" y="65.569" width="210.241" height="378.435" preserveAspectRatio="xMidYMid meet" opacity=".7"/></g>
           </g>
-          <g>
+          <g id="f6-mid">
             <path d="M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z" fill="#ffffff"/>
-            <g clip-path="url(#f6-clip)"><image href="assets/captures/bar-result-light.png" x="167.668" y="65.569" width="210.241" height="378.435" preserveAspectRatio="xMidYMid slice" opacity=".5"/></g>
+            <g clip-path="url(#f6-clip)"><image id="f6-midimg" href="assets/captures/bar-result-light.png" x="167.668" y="65.569" width="210.241" height="378.435" preserveAspectRatio="xMidYMid meet" opacity=".7"/></g>
           </g>
         </svg>
       </div></div>
+      <div id="f6-morph"></div>
 
       <div id="f6-t1" class="f6-big">Anyone can add a tool.</div>
-      <div id="f6-t2" class="f6-big">Built by the people.</div>
+      <div id="f6-t2" class="f6-big">Add yours in an afternoon.</div>
 
       <div id="f6-folder">
         <svg viewBox="0 0 560 440" fill="none">
@@ -106,26 +115,26 @@
 
       <div id="f6-plate">
         <img src="assets/captures/app-modules-light.png" alt="">
+        <!-- REAL_CAPTURE = false : the patches below stand in for a capture with a user module installed and a settled sidebar.
+             When a real capture exists, delete #f6-ringpatch, #f6-count, #f6-row, #f6-hl, #f6-listpatch and #f6-listclip and show the PNG as is. -->
+        <div id="f6-ringpatch"></div>
         <div id="f6-listpatch"></div>
         <div id="f6-listclip"><div id="f6-listimg"></div></div>
         <div id="f6-hl"></div>
         <div id="f6-row">
           <div class="tile"><svg viewBox="0 0 32 32" fill="none" stroke="#0079fd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11l6 6v18H8z"/><path d="M19 4v6h6"/><path d="M12 16h9M12 21h9"/></svg></div>
           <div class="name">Word count</div>
-          <div class="sub">text.word_count &nbsp;&middot;&nbsp; Chosen files only</div>
-          <div class="pill">Community</div>
+          <div class="sub">text.word_count<span id="f6-suffix">&nbsp;&nbsp;&middot;&nbsp;&nbsp;Chosen files only</span></div>
         </div>
-        <!-- REAL_CAPTURE = false : this flat patch and the rebuilt row above stand in for a capture with a community module installed.
-             When a real capture with one exists, delete #f6-count, #f6-row, #f6-hl, #f6-listpatch and #f6-listclip and show the PNG as is. -->
-        <div id="f6-count"><span class="f6-odo"><span class="f6-odo-in" id="f6-n1"><i>31</i><i>32</i></span></span> installed, <span class="f6-odo"><span class="f6-odo-in" id="f6-n2"><i>0</i><i>1</i></span></span> from the community. Every module runs with only the files you choose.</div>
+        <div id="f6-count"><span class="f6-odo"><span class="f6-odo-in" id="f6-n1"><i>31</i><i>32</i></span></span> installed. Every module runs with only the files you choose.</div>
       </div>
 
       <div id="f6-card">
+        <div id="f6-cardbg"></div>
         <div class="tile"><svg viewBox="0 0 32 32" fill="none" stroke="#0079fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11l6 6v18H8z"/><path d="M19 4v6h6"/><path d="M12 16h9M12 21h9"/></svg></div>
         <div class="name">Word count</div>
         <div class="sub">text.word_count</div>
-        <div class="sum">Count the lines, words and characters in a text file.</div>
-        <div class="pill">Community</div>
+        <div class="sum" id="f6-cardsum">Count the lines, words and characters in a text file.</div>
       </div>
 
       <div id="f6-wall"></div>
@@ -133,99 +142,112 @@
   </div>
 
   <script>
-    // REAL_CAPTURE = false: when a real capture with a community module installed exists, remove the count patch and row (see the comment in the plate).
+    // REAL_CAPTURE = false: when a real capture with a user module installed exists, remove the count patch, the row and the ring patch (see the comment in the plate).
     const REAL_CAPTURE = false;
     const BEAT = 60/130, START = 56;
     const at = b => (b - START) * BEAT;
     const tl = gsap.timeline({ paused: true });
+    const OPA = { duration: 0.25, ease: 'power1.out' };
 
-    /* ---- the wall: 16 cards, seeded ---- */
+    /* ---- the wall: 6 big cards, seeded (2 real examples from modules/examples-wasm, 4 open slots) ---- */
     let seed = 20261014; const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
-    const COLS = 4, ROWS = 4, CW = 380, CH = 150, GAP = 24;
-    const X0 = (1920 - (COLS * CW + (COLS - 1) * GAP)) / 2, Y0 = 330;
-    const REAL = [{ name: 'Word count' }, { name: 'Slugify lines' }];
-    const order = Array.from({ length: COLS * ROWS }, (_, i) => i);
-    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
-    const fullAt = [order[0], order[1]];
+    const COLS = 3, ROWS = 2, CW = 420, CH = 230, GAP = 28;
+    const X0 = (1920 - (COLS * CW + (COLS - 1) * GAP)) / 2, Y0 = 410;
+    const EXAMPLES = [{ name: 'Word count', id: 'text.word_count' }, { name: 'Slugify lines', id: 'text.slugify_lines' }];
+    const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    const cells = shuffle(Array.from({ length: COLS * ROWS }, (_, i) => i));
+    const fullAt = [cells[0], cells[1]];
     const wall = document.getElementById('f6-wall');
     const ICON = '<svg viewBox="0 0 32 32" fill="none" stroke="#0079fd" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11l6 6v18H8z"/><path d="M19 4v6h6"/><path d="M12 16h9M12 21h9"/></svg>';
-    const slots = [];
     for (let i = 0; i < COLS * ROWS; i++) {
       const el = document.createElement('div');
-      const r = Math.floor(i / COLS), c = i % COLS;
-      const k = fullAt.indexOf(i);
+      const r = Math.floor(i / COLS), c = i % COLS, k = fullAt.indexOf(i);
       el.id = 'f6-slot' + i;
       el.className = 'f6-slot ' + (k >= 0 ? 'full' : 'empty');
       el.style.left = (X0 + c * (CW + GAP)) + 'px';
       el.style.top = (Y0 + r * (CH + GAP)) + 'px';
-      el.innerHTML = k >= 0 ? '<div class="tile">' + ICON + '</div><div class="nm">' + REAL[k].name + '</div><div class="by">community</div>' : '+ your tool';
-      wall.appendChild(el); slots.push(el);
+      el.innerHTML = k >= 0 ? '<div class="tile">' + ICON + '</div><div class="nm">' + EXAMPLES[k].name + '</div><div class="id">' + EXAMPLES[k].id + '</div><div class="tag">Example</div>' : '+ your tool';
+      wall.appendChild(el);
     }
-    /* arrival order is its own seeded shuffle, intervals shrink toward the drum fill */
-    const dist = i => { const r = Math.floor(i / COLS), c = i % COLS; return Math.hypot(c - (COLS - 1) / 2, (r - (ROWS - 1) / 2) * 1.4) + rnd() * 0.6; };
-    const keyed = slots.map((_, i) => ({ i, k: dist(i) })).sort((a, b) => a.k - b.k);
-    const arr = keyed.map(o => o.i);
+    const arrival = shuffle(Array.from({ length: COLS * ROWS }, (_, i) => i));
 
     /* ---- camera: slow pull back over the whole frame, ends settled on beat 68 ---- */
     tl.fromTo('#f6-cam', { scale: 1.03 }, { scale: 1, duration: at(68), ease: 'power1.out' }, 0);
 
-    /* ---- 56.0 the fan glides in, drifts, settles smaller at 57.0 ---- */
-    tl.fromTo('#f6-fan', { y: 70, scale: 0.9, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0);
-    tl.fromTo('#f6-fan-in', { scale: 1, rotation: -1.5 }, { scale: 1.05, rotation: 1.5, duration: at(60.2), ease: 'none' }, 0);
-    tl.to('#f6-fan', { x: -340, y: 100, scale: 0.62, duration: 0.8, ease: 'expo.out' }, at(57));
-    tl.to('#f6-fan', { opacity: 0, duration: 0.35, ease: 'power3.in' }, at(60.2));
+    /* ---- 56.0 continuity: frame 5's white card shrinks into the fan's centre card, the side cards rotate out from behind it ---- */
+    tl.to('#f6-t0', { y: -30, duration: 0.25, ease: 'power3.in' }, 0);
+    tl.to('#f6-t0', { opacity: 0, duration: 0.25, ease: 'power3.in' }, 0);
+    tl.to('#f6-morphshadow', { opacity: 0, duration: 0.25, ease: 'power1.out' }, 0);
+    tl.to('#f6-morph', { clipPath: 'inset(240.6px 618.3px 227.2px 619.4px round 35px)', duration: 0.5, ease: 'expo.out' }, 0);
+    tl.to('#f6-morph', { opacity: 0, duration: 0.12, ease: 'power1.out' }, 0.45);
+    gsap.set(['#f6-sideL', '#f6-sideR'], { svgOrigin: '272.788 612.197', rotation: 0 });
+    tl.to('#f6-sideL', { rotation: -20, duration: 0.5, ease: 'expo.out' }, 0);
+    tl.to('#f6-sideR', { rotation: 20, duration: 0.5, ease: 'expo.out' }, 0);
+    tl.fromTo('#f6-midimg', { opacity: 0 }, { opacity: 0.7, duration: 0.25, ease: 'power1.out' }, 0.3);
+    tl.fromTo('#f6-fan-in', { scale: 1, rotation: 0 }, { scale: 1.04, rotation: 2, duration: at(60.2), ease: 'none' }, 0);
 
-    /* ---- 57.0 line lands ---- */
-    tl.fromTo('#f6-t1', { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: 'expo.out' }, at(57) - 0.4);
-    tl.to('#f6-t1', { y: -30, opacity: 0, duration: 0.35, ease: 'power3.in' }, at(60));
-
-    /* ---- folder draws, chips land on 58, 59, 60 ---- */
+    /* ---- 57.0 line lands, the fan settles smaller, the folder draws ---- */
+    tl.fromTo('#f6-t1', { y: 40 }, { y: 0, duration: 0.4, ease: 'expo.out' }, at(57));
+    tl.fromTo('#f6-t1', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(57));
+    tl.to('#f6-fan', { x: -340, y: 100, scale: 0.62, duration: 0.45, ease: 'expo.out' }, at(57));
     gsap.set('#f6-folderline', { strokeDasharray: 1, strokeDashoffset: 1 });
-    tl.to('#f6-folderline', { strokeDashoffset: 0, duration: 0.7, ease: 'expo.out' }, at(57) + 0.0);
-    tl.fromTo('#f6-folderfill', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'expo.out' }, at(57) + 0.35);
-    const chips = [
-      { id: '#f6-chip1', b: 58, from: { x: 0, y: -170 } },
-      { id: '#f6-chip2', b: 59, from: { x: 330, y: 0 } },
-      { id: '#f6-chip3', b: 60, from: { x: 0, y: 170 } },
-    ];
-    chips.forEach(c => {
-      tl.fromTo(c.id, { x: c.from.x, y: c.from.y }, { x: 0, y: 0, duration: 0.42, ease: 'expo.out' }, at(c.b) - 0.42);
-      tl.fromTo(c.id, { opacity: 0 }, { opacity: 1, duration: 0.22, ease: 'power2.out' }, at(c.b) - 0.42);
-    });
-    /* the folder breathes while it fills */
-    tl.fromTo('#f6-folder', { scale: 1 }, { scale: 1.03, duration: at(60.55) - at(57), ease: 'none' }, at(57));
+    tl.to('#f6-folderline', { strokeDashoffset: 0, duration: 0.45, ease: 'expo.out' }, at(57));
+    tl.fromTo('#f6-folderfill', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(57) + 0.1);
 
-    /* ---- 61.0 the folder becomes a module card, slides into the Modules list ---- */
-    tl.to('#f6-folder', { opacity: 0, duration: 0.15, ease: 'power3.in' }, at(61) - 0.317);
-    tl.fromTo('#f6-card', { scale: 0.94, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.167, ease: 'expo.out' }, at(61) - 0.167);
+    /* ---- 58, 59, 60 the chips start on the beat ---- */
+    [{ id: '#f6-chip1', b: 58, x: 0, y: -150 }, { id: '#f6-chip2', b: 59, x: 260, y: 0 }, { id: '#f6-chip3', b: 60, x: 0, y: 150 }].forEach(c => {
+      tl.fromTo(c.id, { x: c.x, y: c.y }, { x: 0, y: 0, duration: 0.4, ease: 'expo.out' }, at(c.b));
+      tl.fromTo(c.id, { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(c.b));
+    });
+
+    /* ---- 60: the line leaves, the fan leaves ---- */
+    tl.to('#f6-t1', { y: -30, duration: 0.25, ease: 'power3.in' }, at(60));
+    tl.to('#f6-t1', { opacity: 0, duration: 0.25, ease: 'power3.in' }, at(60));
+    tl.to('#f6-fan', { opacity: 0, duration: 0.25, ease: 'power1.in' }, at(60.2));
+
+    /* ---- the folder becomes the module card (one object), then travels into its row ---- */
+    const T3 = at(60);
+    tl.to(['#f6-chip1', '#f6-chip2', '#f6-chip3'], { opacity: 0, duration: 0.17, ease: 'power1.in' }, T3 + 0.1);
+    tl.to(['#f6-folderline', '#f6-folderfill'], { opacity: 0, duration: 0.17, ease: 'power1.in' }, T3 + 0.1);
+    tl.fromTo('#f6-card', { opacity: 0 }, { opacity: 1, duration: 0.17, ease: 'power1.out' }, T3 + 0.1);
+    tl.fromTo('#f6-card', { scale: 0.93 }, { scale: 1, duration: 0.17, ease: 'expo.out' }, T3 + 0.1);
 
     gsap.set('#f6-plate', { scale: 0.58, opacity: 0 });
-    tl.to('#f6-plate', { scale: 0.6034, opacity: 1, duration: 0.7, ease: 'expo.out' }, at(60.85));
+    tl.to('#f6-plate', { scale: 0.6034, duration: 0.45, ease: 'expo.out' }, at(60.5));
+    tl.to('#f6-plate', Object.assign({}, OPA, { opacity: 1 }), at(60.5));
     gsap.set('#f6-row', { opacity: 0 });
     gsap.set('#f6-hl', { opacity: 0 });
-    tl.to('#f6-listimg', { y: 104, duration: 0.6, ease: 'expo.out' }, at(61.3));
-    tl.to('#f6-card', { x: -65, y: -358, scale: 0.2, duration: 0.75, ease: 'expo.out' }, at(61.05));
-    tl.to('#f6-card', { opacity: 0, duration: 0.3, ease: 'power2.in' }, at(61.05) + 0.45);
-    tl.fromTo('#f6-row', { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.5, ease: 'expo.out' }, at(61.55));
-    tl.fromTo('#f6-hl', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'expo.out' }, at(61.55));
-    tl.to('#f6-hl', { opacity: 0, duration: 0.5, ease: 'power3.in' }, at(62.9));
+    gsap.set('#f6-suffix', { opacity: 0 });
 
-    /* ---- 62.0 the numbers count up (31 to 32, 0 to 1) ---- */
+    /* card tile -> row tile: scale 38.6 / 112, aligned on the tile centre (602.8, 279.9) in the wide view */
+    const CS = 38.64 / 112, CX = 1150, CY = 660;
+    const TRAVEL = at(60.6), LAND = TRAVEL + 0.45;
+    tl.to('#f6-card', { x: 602.8 - CX + 204 * CS, y: 279.9 - CY + 64 * CS, scale: CS, duration: 0.45, ease: 'expo.out' }, TRAVEL);
+    tl.to(['#f6-cardbg', '#f6-cardsum'], { opacity: 0, duration: 0.2, ease: 'power1.in' }, TRAVEL + 0.1);
+    tl.to('#f6-listimg', { y: 104, duration: 0.4, ease: 'expo.out' }, TRAVEL + 0.1);
+    tl.set('#f6-card', { opacity: 0 }, LAND);
+    tl.set('#f6-row', { opacity: 1 }, LAND);
+    tl.to('#f6-suffix', Object.assign({}, OPA, { opacity: 1 }), LAND);
+    tl.to('#f6-hl', Object.assign({}, OPA, { opacity: 1 }), LAND);
+    tl.to('#f6-hl', { opacity: 0, duration: 0.25, ease: 'power1.in' }, at(62.7));
+
+    /* ---- 61.6 push in about 1.8x onto the count line, the digits roll at 62.0, hold ---- */
+    const S1 = 0.6034 * 1.8;
+    tl.to('#f6-plate', { scale: S1, x: (1160 - 880) * S1, y: 385, duration: 0.45, ease: 'expo.out' }, at(61.6));
     tl.to('#f6-n1', { y: -52, duration: 0.6, ease: 'expo.out' }, at(62));
-    tl.to('#f6-n2', { y: -52, duration: 0.6, ease: 'expo.out' }, at(62));
 
-    /* ---- 63 to 67.5 the plate zooms out, the wall fills ---- */
-    tl.to('#f6-plate', { scale: 0.6034 * 0.55, duration: 1.0, ease: 'expo.out' }, at(63));
-    tl.to('#f6-plate', { opacity: 0, duration: 0.5, ease: 'power3.in' }, at(63.3));
+    /* ---- 63 the plate eases back and zooms out, the wall fills one card per half beat from 64 ---- */
+    tl.to('#f6-plate', { scale: 0.6034 * 0.55, x: 0, y: 0, duration: 0.7, ease: 'expo.out' }, at(63));
+    tl.to('#f6-plate', { opacity: 0, duration: 0.3, ease: 'power1.in' }, at(63) + 0.15);
     tl.fromTo('#f6-wall', { scale: 1.06 }, { scale: 1, duration: at(68) - at(63), ease: 'power2.out' }, at(63));
-    arr.forEach((idx, n) => {
-      const u = n / (arr.length - 1);
-      const b = 64.5 + 2.3 * (1 - Math.pow(1 - u, 1.8));
-      const cx = X0 + (idx % COLS) * (CW + GAP) + CW / 2 - 960, cy = Y0 + Math.floor(idx / COLS) * (CH + GAP) + CH / 2 - 540;
-      tl.fromTo('#f6-slot' + idx, { x: -cx * 0.2, y: -cy * 0.2 + 24, scale: 0.9, opacity: 0 }, { x: 0, y: 0, scale: 1, opacity: 1, duration: 0.5, ease: 'expo.out' }, at(b));
+    arrival.forEach((idx, n) => {
+      const b = 64 + 0.5 * n;
+      tl.fromTo('#f6-slot' + idx, { y: 30, scale: 0.94 }, { y: 0, scale: 1, duration: 0.4, ease: 'expo.out' }, at(b));
+      tl.fromTo('#f6-slot' + idx, { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(b));
     });
     /* 65.0 line lands */
-    tl.fromTo('#f6-t2', { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: 'expo.out' }, at(65) - 0.4);
+    tl.fromTo('#f6-t2', { y: 40 }, { y: 0, duration: 0.4, ease: 'expo.out' }, at(65));
+    tl.fromTo('#f6-t2', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(65));
 
     window.__timelines["f6-plugins"] = tl;
   </script>

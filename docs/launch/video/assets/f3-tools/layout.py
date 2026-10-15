@@ -4,7 +4,7 @@ d=json.load(open('/Users/anzalhussainabidi/personal/panoply-video/docs/launch/vi
 T=d['tools']
 f6=ImageFont.truetype('Geist-600.ttf',38)
 def tw(s): return f6.getlength(s)-0.76*len(s)
-FIX=104; GAP=14; W=1700
+FIX=112; GAP=14; W=1730
 ROWS=[5,4,4,5,4,5,4]
 nat=[FIX+tw(t['name']) for t in T]
 for t,n in zip(T,nat): print(t['name'],round(n))
@@ -36,8 +36,8 @@ def cost(idx,ROWS):
     if len(first)<4: c+=200
     return c
 best=None
-for ROWS in ([5,4,4,5,4,5,4],[4,5,5,4,5,4,4],[5,4,5,4,5,4,4],[4,5,4,5,4,5,4],[5,4,4,4,5,4,5]):
-  for seed in range(1,40):
+for ROWS in ([4,4,5,4,5,4,5],[4,4,4,5,5,5,4],[4,4,5,5,4,5,4],[4,4,5,4,4,5,5],[4,4,4,5,5,4,5]):
+  for seed in range(1,120):
     g=L(seed); idx=list(range(31))
     for i in range(30,0,-1):
         j=int(g.r()*(i+1)); idx[i],idx[j]=idx[j],idx[i]
@@ -63,6 +63,6 @@ for ri,(r,extra) in enumerate(rows):
         w=nat[i]+extra
         out.append([T[i]['id'],T[i]['name'],T[i]['category'],round(x,1),y,round(w,1),ri])
         x+=w+GAP
-    y+=80+12
+    y+=82+12
 json.dump(out,open('slots.json','w'))
 for o in out: print(o)

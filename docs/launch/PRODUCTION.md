@@ -80,17 +80,13 @@ seeded recents: that is demo text. If the real PDF run is less dramatic, use the
 
 ### Where captures run
 
-GPUI's offscreen render uses Metal, so captures need macOS. Two options, in order:
+GPUI's offscreen render uses Metal, so captures need macOS. **Measured 2026-10-15: it works on a `macos-latest` runner of this public repo**
+(`.github/workflows/launch-captures.yml`). A cold build took 16.5 minutes in total, a warm run (cached build) 7 minutes, and the artifact `launch-captures`
+holds the raw RGBA frames (about 85 MB for dark plus light). `tools/prep_captures.py` turns them into the plates the film uses
+(`video/assets/captures/`, about 6 MB). Nothing runs on the owner's Mac.
 
-1. **A `macos-latest` runner in this public repo.** Free. Whether GPUI's offscreen Metal render works on a virtualised
-   runner GPU is not verified. The first task is a ten-minute `workflow_dispatch` probe that builds with the `snapshot`
-   feature and runs `--selfcheck-frames`. CI does not run this today (`ci.yml` has no snapshot build), so there is no
-   evidence either way.
-2. **Once, locally, with the owner's yes.** A release build with `--features snapshot` plus a 1 to 2 minute run, with
-   `nice -n 19`, `-j2`, and the build folder named `target.noindex` so Spotlight stays out. Only if option 1 fails. Ask before
-   starting, as with any build on the Mac.
-
-The frames go up as an artifact named `launch-captures-<tag>` (or a draft release asset), not into git.
+GitHub only lets a workflow be started with `workflow_dispatch` once its file is on the default branch. Until this branch is merged, the capture and
+render workflows start from a push to a trigger file on `launch/video` instead (`trigger/captures.txt`, `trigger/render.txt`), and they do nothing on any other push.
 
 ## What animates
 
@@ -134,18 +130,18 @@ Rules for every frame file:
 
 ## Render on GitHub Actions
 
-The workflow draft is `render-launch-film.workflow.yml.txt` in this folder. It is not under `.github/workflows` on
-purpose: copy it there when the HyperFrames project exists. It is `workflow_dispatch` only, so it never runs on a push.
+The workflow is `.github/workflows/render-launch-film.yml`. It starts from `workflow_dispatch` (once merged) or from a push to `trigger/render.txt` on `launch/video`
+(one line: `<project> <quality> <fps>`, projects `video`, `teaser`, `teaser-vertical`). It never runs on another push.
 
 | Item | Plan |
 |---|---|
 | Where | `anzal1/panoply`, public, `ubuntu-latest` (public repos run free, so this does not touch the 3,000 private minutes) |
 | When | by hand: `quality` (draft, looks, delivery), `fps` (30 or 60), `tag` (release the captures belong to) |
-| Inputs | the `launch-captures-<tag>` artifact, `tools.json` and `claims.json` generated in the job, fonts from `docs/launch/fonts` |
-| Steps | checkout, Node 22, `npx hyperframes browser ensure`, build data, fetch captures, `check --strict --snapshots`, `render` |
+| Inputs | the processed capture plates committed under `video/assets/captures`, `video/assets/data/tools.json`, the Geist fonts under `video/assets/fonts` |
+| Steps | checkout, Node 22, GSAP from npm (not committed), ffmpeg, `npx hyperframes browser ensure`, `check --snapshots`, `render` |
 | Output | `picture.mp4` (silent), `snapshots/contact-sheet.jpg`, `cues-<bpm>.md`, all as one artifact, 14 days |
-| Time cap | `timeout-minutes: 45` |
-| Estimate | 37.2 s at 60 fps is 2,229 frames. At a pessimistic 4 to 6 frames per second on software GL with 3 workers, about 6 to 10 minutes of capture plus encode. At 30 fps half that. This is an estimate, not a measurement: the first draft run replaces it. |
+| Time cap | `timeout-minutes: 60` |
+| Measured | The film at draft quality and 30 fps (1,150 frames) took 1 m 26 s on `ubuntu-latest` (4 cores, software GL, 1 worker, 357 MB peak), 4 minutes door to door with the install steps. 60 fps is twice the frames. Both teasers (450 frames each) are about 40 s of capture. |
 | Cost | zero. A full month of iteration is under 2 hours of public-runner time. |
 | Not on the Mac | the Mac only does the 10 second mux and, if the owner wants it, a one-frame snapshot. The preview server is never left running. |
 

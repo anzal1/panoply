@@ -79,20 +79,29 @@ Beats, with the music situation each scene sits on:
 | 7 | Free, open source, on your device | 68 to 76 | 2 | 31.39 to 35.08 | last full bars |
 | 8 | End card | 76 to 80 | 1 | 35.08 to 36.92, plus a 1.4 s ring-out | final hit, reverb tail |
 
+## Review rules learned from the first film review
+
+1. Every entrance STARTS on its beat (one frame early at most). With an expo-out move the eye reads the arrival at the start of the move, so leading the beat by 0.4 s put the first draft's words 0.38 s early.
+2. Grounds are Midnight for the cold open and brand blue from the drop to the end. No paper or white ground (it reads as a flash), no second blue.
+3. No error states from the real app on screen. The real app flashes "No tools match" for the partial queries "under 5" and "under 50", so the typed frames are composited (`tools/fix_typed_frames.py`) until the app is fixed (a task is queued for that).
+4. No claim that is not true yet: no "community" until real community modules exist.
+5. Counters never run backwards and never show a number below the cards on screen; a result rests for about half a second before anything else moves.
+6. Opacity gets its own tween, so nothing pops on the first frame.
+
 ## Copy deck
 
 Everything that is ever on screen, so it can be reviewed in one place.
 
 | Frame | Text |
 |---|---|
-| 1 | Upload. Wait. Sign up. Pay. / Your file just left your computer. |
+| 1 | Upload. Wait. Sign up. Pay. / Just to shrink one PDF. / Your file just left your computer. |
 | 2 | One hotkey. Any file. (keycaps: Option Space, then Ctrl Alt Space) |
 | 3 | 31 tools. (the number is read from the build at render time) |
 | 4 | Every file on your disk. Before you finish typing. |
 | 5 | See what is eating your space. |
-| 6 | Anyone can add a tool. Built by the people. |
+| 6 | Anyone can add a tool. Add yours in an afternoon. ("Built by the people." comes back only when at least three real community modules exist) |
 | 7 | Free. Open source. On your device. macOS, Windows, Linux |
-| 8 | Panoply, github.com/anzal1/panoply |
+| 8 | Panoply, macOS Windows Linux, github.com/anzal1/panoply (the url appears only here) |
 
 Not used, on purpose: "blazing", "seamless", "supercharge", any price comparison, any competitor, any sentence with an
 em dash, "No uploads. No limits. No catch." (three-item cadence), "100 percent private" (the privacy page allows
@@ -318,7 +327,7 @@ uploaded).
 | "67 KB to 43 KB, 35% smaller" and the run time | frame 3 | the real captured run (`bar-result-*`); re-captured by `--selfcheck-frames` at the release tag |
 | the keystroke latency and file count | frame 4 | the instant search benchmark JSON of the release |
 | freed space number | frame 5 | the real scan and trash run on the demo machine |
-| "1 from the community" and the wall | frame 6 | a real community module installed in the capture build |
+| the Modules count and the wall | frame 6 | the draft says "32 installed" and shows the repo's two example modules as examples. Any "from the community" wording needs three real community modules in the capture build |
 | licence line | frame 7 | `LICENSE-MIT` and `LICENSE-APACHE` at the release tag |
 | "On your device" | frame 7 | `docs/PRIVACY.md` (files are never uploaded, models download only after a yes) |
 

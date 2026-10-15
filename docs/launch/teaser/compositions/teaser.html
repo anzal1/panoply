@@ -49,7 +49,7 @@
     #tz-pline span{display:block;white-space:nowrap}
     #tz-pline b{color:#ff6961;font-weight:700}
 
-    /* ------------------------------------------------ blue scenes */
+    /* ------------------------------------------------ blue scenes (one ground: brand blue) */
     #tz-bground{background:#2d6cdf}
     .hd{position:absolute;left:0;right:0;top:44px;text-align:center;white-space:nowrap;font-size:150px}
     .hd.m{font-size:128px}
@@ -57,17 +57,18 @@
     .key{height:92px;border-radius:24px;display:flex;align-items:center;justify-content:center;gap:14px;font-weight:600;font-size:44px;letter-spacing:-0.02em;color:#fff;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.55);box-shadow:0 14px 34px rgba(10,30,92,.32)}
     .key svg{width:46px;height:46px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
     #tz-keys2{opacity:0}
-    #tz-plate{position:absolute;left:400px;top:326px;width:1120px;height:715px;border-radius:29.4px;overflow:hidden;box-shadow:0 0 0 1.5px rgba(255,255,255,.4),0 40px 110px rgba(8,24,70,.5);background:#f1f2f5}
-    #tz-plate img{position:absolute;left:0;top:0;width:1120px;height:715px;display:block;opacity:0}
-    #tz-chipwrap{position:absolute;left:1184px;top:341.6px;width:317px;height:56px;opacity:0}
-    #tz-chipshadow{position:absolute;inset:0;border-radius:28px;box-shadow:0 18px 36px rgba(10,30,92,.35)}
-    #tz-chipclip{position:absolute;inset:0;border-radius:28px;overflow:hidden}
-    #tz-chipclip img{position:absolute;left:-784px;top:-15.6px;width:1120px;height:715px;display:block}
+    #tz-push{position:absolute;inset:0;transform-origin:960px 330px}
+    #tz-plate{position:absolute;left:510px;top:330px;width:900px;height:575px;border-radius:23.6px;overflow:hidden;box-shadow:0 0 0 1.5px rgba(255,255,255,.25),0 40px 110px rgba(8,24,70,.5);background:#f1f2f5;opacity:0}
+    #tz-plate img{position:absolute;left:0;top:0;width:900px;height:575px;display:block;opacity:0}
+    #tz-chipwrap{position:absolute;left:1140px;top:342.5px;width:254px;height:45px;opacity:0}
+    #tz-chipshadow{position:absolute;inset:0;border-radius:22.5px;box-shadow:0 14px 30px rgba(10,30,92,.35)}
+    #tz-chipclip{position:absolute;inset:0;border-radius:22.5px;overflow:hidden}
+    #tz-chipclip img{position:absolute;left:-630px;top:-12.5px;width:900px;height:575px;display:block}
     #tz-hres{opacity:0}
     #tz-hres .num{display:inline-block;width:1.2em;text-align:right;font-variant-numeric:tabular-nums}
 
     /* tools scene */
-    .pill{position:absolute;width:300px;height:96px;border-radius:28px;background:#fff;box-shadow:0 12px 30px rgba(10,30,90,.22);display:flex;align-items:center;gap:12px;padding:0 12px 0 16px;color:#1d1d1f;font-size:30px;font-weight:500;letter-spacing:-0.02em;line-height:1.08;opacity:0}
+    .pill{position:absolute;width:300px;height:96px;border-radius:28px;background:#fff;box-shadow:0 12px 30px rgba(10,30,90,.22);display:flex;align-items:center;gap:12px;padding:0 18px 0 16px;color:#1d1d1f;font-size:30px;font-weight:500;letter-spacing:-0.02em;line-height:1.08;opacity:0}
     .pill .ic{position:relative;flex:none;width:52px;height:52px;border-radius:15px;background:color-mix(in srgb,var(--k) 16%,white)}
     .pill .tb{position:absolute;inset:0;border-radius:15px;background:var(--k);opacity:0}
     .pill .ic svg{position:absolute;left:11px;top:11px;width:30px;height:30px;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -77,7 +78,7 @@
     #tz-count{position:absolute;left:80px;top:120px;opacity:0}
     #tz-count .n{font-size:330px;font-weight:700;letter-spacing:-0.055em;line-height:.9;font-variant-numeric:tabular-nums}
     #tz-count .t{font-size:120px;font-weight:700;letter-spacing:-0.04em;line-height:1;margin-top:8px;opacity:.85}
-    #tz-cats{position:absolute;left:80px;top:640px;width:480px;opacity:0}
+    #tz-cats{position:absolute;left:80px;top:640px;width:460px}
     .cat{display:flex;align-items:center;gap:18px;height:66px;font-size:40px;font-weight:600;letter-spacing:-0.02em;color:rgba(255,255,255,.55);opacity:0}
     .cat i{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.35);display:block;flex:none}
     .cat b{font-weight:600}
@@ -94,46 +95,43 @@
     #tz-fold .front span{font-size:30px;font-weight:500;color:#54545b}
     .chip{position:absolute;left:90px;top:-180px;width:260px;height:64px;border-radius:20px;background:#fff;box-shadow:0 14px 30px rgba(10,30,92,.28);display:flex;align-items:center;gap:12px;padding:0 18px;font-family:"Geist Mono",monospace;font-size:30px;font-weight:500;color:#1d1d1f;opacity:0}
     .chip svg{width:30px;height:30px;stroke:#2d6cdf;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
-    #tz-mwin{position:absolute;left:760px;top:335px;width:1120px;height:700px;border-radius:28px;overflow:hidden;background:#fafafb;box-shadow:0 0 0 1.5px rgba(255,255,255,.4),0 36px 100px rgba(8,24,70,.5);opacity:0}
+    #tz-mwin{position:absolute;left:760px;top:335px;width:1120px;height:700px;border-radius:28px;overflow:hidden;background:#fafafb;box-shadow:0 0 0 1.5px rgba(255,255,255,.25),0 36px 100px rgba(8,24,70,.5);opacity:0}
     #tz-mwin img{position:absolute;display:block;width:3016px;height:1872px;left:-624px;top:-26px}
     #tz-mlist{position:absolute;left:0;top:270px;width:1120px;height:430px;overflow:hidden;background:#fafafb}
     #tz-mslide{position:absolute;left:0;top:0;width:1120px;height:430px;overflow:hidden}
     #tz-mslide img{left:-624px;top:-296px}
+    #tz-mfade{position:absolute;left:0;right:0;bottom:0;height:150px;background:linear-gradient(to bottom,rgba(250,250,251,0),#fafafb 88%)}
     #tz-mpatch{position:absolute;left:17px;top:150px;width:1110px;height:96px;background:#fafafb}
     #tz-mhead{position:absolute;left:42px;top:176px;height:44px;font-size:31px;line-height:44px;color:#54545b;white-space:nowrap;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;letter-spacing:-0.005em}
     #tz-mhead .rb{display:inline-block;height:44px;overflow:hidden;vertical-align:top}
     #tz-mhead .rc{display:block}
     #tz-mhead .rc i{display:block;height:44px;font-style:normal}
-    #tz-mhl{position:absolute;left:27px;top:172px;width:555px;height:52px;border-radius:12px;background:rgba(10,132,255,.14);opacity:0}
+    #tz-mhl{position:absolute;left:27px;top:172px;width:218px;height:52px;border-radius:12px;background:rgba(10,132,255,.14);opacity:0}
     #tz-mrow{position:absolute;left:73px;top:308px;width:1000px;height:83px;opacity:0}
     #tz-mrow .tile{position:absolute;left:0;top:0;width:83px;height:83px;border-radius:18px;background:#d2e6fc;display:flex;align-items:center;justify-content:center}
     #tz-mrow .tile svg{width:44px;height:44px;stroke:#0a84ff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-    #tz-mrow .nm{position:absolute;left:138px;top:-4px;font-size:35px;line-height:42px;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;white-space:nowrap}
-    #tz-mrow .sb{position:absolute;left:138px;top:41px;font-size:31px;line-height:42px;color:#54545b;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;white-space:nowrap}
-    #tz-mrow .pl{position:absolute;left:770px;top:19px;height:46px;padding:0 20px;border-radius:23px;background:#dfe9fb;color:#1a5fd0;font-size:30px;line-height:46px;font-weight:600;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;white-space:nowrap}
+    #tz-mrow .nm{position:absolute;left:114px;top:-4px;font-size:35px;line-height:42px;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;white-space:nowrap}
+    #tz-mrow .sb{position:absolute;left:114px;top:41px;font-size:31px;line-height:42px;color:#54545b;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;white-space:nowrap}
 
-    /* wall */
-    #tz-wall2{opacity:0}
-    .slot{position:absolute;width:232px;height:160px;border-radius:26px;border:3px dashed rgba(255,255,255,.42);opacity:0}
-    .wc{position:absolute;width:232px;height:160px;border-radius:26px;background:#fff;box-shadow:0 12px 28px rgba(10,30,92,.22);padding:20px 18px;opacity:0;display:flex;flex-direction:column;gap:14px}
-    .wc .wi{position:relative;width:56px;height:56px;border-radius:16px;flex:none;background:color-mix(in srgb,var(--k) 16%,white)}
-    .wc .wi svg{position:absolute;left:13px;top:13px;width:30px;height:30px;fill:none;stroke:var(--k);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-    .wc .sk{height:16px;border-radius:8px;background:rgba(29,29,31,.1)}
-    .wc .sk.s{width:62%}
-    .wc .rn{font-size:30px;font-weight:600;letter-spacing:-0.02em;line-height:1.05;color:#1d1d1f}
+    /* wall of slots (beats 24 to 28) */
+    .tile2{position:absolute;width:324px;height:270px;border-radius:32px;opacity:0}
+    .tile2.real{background:#fff;box-shadow:0 14px 34px rgba(10,30,92,.24);padding:28px 28px}
+    .tile2.real .wi{position:relative;width:76px;height:76px;border-radius:22px;background:#d2e6fc}
+    .tile2.real .wi svg{position:absolute;left:18px;top:18px;width:40px;height:40px;fill:none;stroke:#0a84ff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .tile2.real .rn{position:absolute;left:28px;bottom:28px;font-size:40px;font-weight:600;letter-spacing:-0.025em;line-height:1.05;color:#1d1d1f}
+    .tile2.real .tag{position:absolute;right:24px;top:30px;height:46px;padding:0 20px;border-radius:23px;background:#dfe9fb;color:#1a5fd0;font-size:30px;line-height:46px;font-weight:600}
+    .tile2.empty{border:3px dashed rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:600;letter-spacing:-0.02em;color:rgba(255,255,255,.88)}
 
-    /* phrases and end */
-    .ph{position:absolute;inset:0}
-    .ph .g{position:absolute;inset:0}
-    .ph .tx{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-0.045em;font-size:200px;line-height:1;white-space:nowrap}
+    /* closing stack and end card */
+    .sl{position:absolute;left:380px;font-size:150px;font-weight:700;letter-spacing:-0.045em;line-height:1;color:#fff;white-space:nowrap;opacity:0}
     #tz-end{position:absolute;inset:0}
     #tz-endcam{position:absolute;inset:0}
     #tz-efan{position:absolute;left:770px;top:48px;width:380px;height:380px;opacity:0}
     #tz-efan svg{width:100%;height:100%;display:block;overflow:visible}
     #tz-ename{position:absolute;left:0;right:0;top:452px;text-align:center;font-size:196px;opacity:0}
     #tz-eline{position:absolute;left:0;right:0;top:700px;text-align:center;font-size:68px;font-weight:500;letter-spacing:-0.025em;color:rgba(255,255,255,.88);opacity:0}
-    #tz-eurl{position:absolute;left:0;right:0;top:860px;text-align:center;font-size:44px;color:rgba(255,255,255,.8);letter-spacing:-0.01em;opacity:0}
-    #tz-grain{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;opacity:.13;mix-blend-mode:soft-light}
+    #tz-eurl{position:absolute;left:0;right:0;top:860px;text-align:center;font-size:44px;color:rgba(255,255,255,.9);letter-spacing:-0.01em;opacity:0}
+    #tz-grain{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;opacity:.08;mix-blend-mode:soft-light}
   </style>
 
   <div id="root" data-composition-id="teaser" data-width="1920" data-height="1080">
@@ -151,7 +149,7 @@
       <div id="tz-pline" class="h1"><div><span>Your file just left</span><span>your <b>computer.</b></span></div></div>
     </div>
 
-    <!-- 2. Brand blue from the drop -->
+    <!-- 2. Brand blue from the drop to the end -->
     <div id="tz-blue" class="fill">
       <div id="tz-bground" class="fill"></div>
 
@@ -165,28 +163,29 @@
         <div id="tz-keys2" class="keys">
           <div class="key" id="tz-retkey" style="width:280px"><svg viewBox="0 0 24 24"><path d="M20 5v7a2 2 0 0 1-2 2H5M9 10l-4 4 4 4"/></svg>Return</div>
         </div>
-        <div id="tz-plate">
-          <img id="tz-i-rest" src="assets/captures/bar-rest-light.png">
-          <img id="tz-i-00" src="assets/captures/demo-light-00.png">
-          <img id="tz-i-01" src="assets/captures/demo-light-01.png">
-          <img id="tz-i-02" src="assets/captures/demo-light-02.png">
-          <img id="tz-i-03" src="assets/captures/demo-light-03.png">
-          <img id="tz-i-04" src="assets/captures/demo-light-04.png">
-          <img id="tz-i-05" src="assets/captures/demo-light-05.png">
-          <img id="tz-i-06" src="assets/captures/demo-light-06.png">
-          <img id="tz-i-07" src="assets/captures/demo-light-07.png">
-          <img id="tz-i-08" src="assets/captures/demo-light-08.png">
-          <img id="tz-i-09" src="assets/captures/demo-light-09.png">
-          <img id="tz-i-10" src="assets/captures/demo-light-10.png">
-          <img id="tz-i-11" src="assets/captures/demo-light-11.png">
-          <img id="tz-i-res" src="assets/captures/bar-result-light.png">
+        <div id="tz-push">
+          <div id="tz-plate">
+            <img id="tz-i-rest" src="assets/captures/bar-rest-light.png">
+            <img id="tz-i-01" src="assets/captures/demo-light-01.png">
+            <img id="tz-i-02" src="assets/captures/demo-light-02.png">
+            <img id="tz-i-03" src="assets/captures/demo-light-03.png">
+            <img id="tz-i-04" src="assets/captures/demo-light-04.png">
+            <img id="tz-i-05" src="assets/captures/demo-light-05.png">
+            <img id="tz-i-06" src="assets/captures/demo-light-06.png">
+            <img id="tz-i-07" src="assets/captures/demo-light-07.png">
+            <img id="tz-i-08" src="assets/captures/demo-light-08.png">
+            <img id="tz-i-09" src="assets/captures/demo-light-09.png">
+            <img id="tz-i-10" src="assets/captures/demo-light-10.png">
+            <img id="tz-i-11" src="assets/captures/demo-light-11.png">
+            <img id="tz-i-res" src="assets/captures/bar-result-light.png">
+          </div>
+          <div id="tz-chipwrap"><div id="tz-chipshadow"></div><div id="tz-chipclip"><img src="assets/captures/demo-light-00.png"></div></div>
         </div>
-        <div id="tz-chipwrap"><div id="tz-chipshadow"></div><div id="tz-chipclip"><img src="assets/captures/demo-light-00.png"></div></div>
       </div>
 
       <div id="tz-cam2" class="fill">
         <div id="tz-grid" class="fill"></div>
-        <div id="tz-count" class="h1"><div class="n" id="tz-cnt2">3</div><div class="t">tools.</div></div>
+        <div id="tz-count" class="h1"><div class="n" id="tz-cnt2">1</div><div class="t">tools.</div></div>
         <div id="tz-cats"></div>
       </div>
 
@@ -198,13 +197,13 @@
           <div id="tz-mlist"><div id="tz-mslide"><img src="assets/captures/app-modules-light.png"></div></div>
           <div id="tz-mpatch"></div>
           <div id="tz-mhl"></div>
-          <div id="tz-mhead"><span class="rb"><span class="rc" id="tz-r1"><i>31</i><i>32</i></span></span> installed, <span class="rb"><span class="rc" id="tz-r2"><i>0</i><i>1</i></span></span> from the community</div>
+          <div id="tz-mhead"><span class="rb"><span class="rc" id="tz-r1"><i>31</i><i>32</i></span></span> installed. Every module runs with only the files you choose.</div>
           <div id="tz-mrow">
             <div class="tile"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></div>
             <div class="nm">Slugify lines</div>
-            <div class="sb">text.slugify_lines  ·  Chosen files only</div>
-            <div class="pl">Community</div>
+            <div class="sb">text.slugify_lines · Chosen files only</div>
           </div>
+          <div id="tz-mfade"></div>
         </div>
         <div id="tz-fold">
           <div class="back"></div><div class="tab"></div>
@@ -216,19 +215,19 @@
       </div>
 
       <div id="tz-cam4" class="fill">
-        <div id="tz-hwall" class="hd m h1" style="opacity:0">Built by the people.</div>
+        <div id="tz-hwall" class="hd m h1" style="opacity:0">Add yours in an afternoon.</div>
         <div id="tz-wall2" class="fill"></div>
+      </div>
+
+      <div id="tz-cam5" class="fill">
+        <div class="sl" id="tz-sl1" style="top:285px">Free.</div>
+        <div class="sl" id="tz-sl2" style="top:455px">Open source.</div>
+        <div class="sl" id="tz-sl3" style="top:625px">On your device.</div>
       </div>
     </div>
 
-    <!-- 3. Three phrases, one ground each -->
-    <div id="tz-ph1" class="ph"><div class="g" style="background:#f3f4f6"></div><div class="tx h1" id="tz-t1" style="color:#0c0c0f">Free.</div></div>
-    <div id="tz-ph2" class="ph"><div class="g" style="background:#0c0c0f"></div><div class="tx h1" id="tz-t2" style="color:#ececf1">Open source.</div></div>
-    <div id="tz-ph3" class="ph"><div class="g" style="background:#1f4fb0"></div><div class="tx h1" id="tz-t3" style="color:#fff">On your device.</div></div>
-
-    <!-- 4. End card -->
+    <!-- 3. End card, on the same blue -->
     <div id="tz-end">
-      <div class="g fill" id="tz-eground" style="background:#2d6cdf"></div>
       <div id="tz-endcam">
         <div id="tz-efan"></div>
         <div id="tz-ename" class="h1">Panoply</div>
@@ -247,14 +246,13 @@
     const RESULT = { from: "67 KB", to: "43 KB", pct: 35 };      // equals the capture bar-result-light.png
     const END_LINE = "Coming soon.";
 
-    /* fallback copy of assets/data/tools.json, used only if the fetch fails */
+    /* fallback copy of assets/data/tools.json, used only if the file cannot be read */
     const TOOLS_FALLBACK = {count:31,tools:[["Passport photo","id"],["Print sheet","id"],["Signature cleaner","id"],["Erase object","image"],["Remove background","image"],["Remove watermark","image"],["Upscale","image"],["Compress image","image"],["Convert image","image"],["Resize to exact KB","image"],["Resize image","image"],["Strip metadata","image"],["Compress video","media"],["Convert video or audio","media"],["Extract audio","media"],["HDR to SDR","media"],["Video and audio info","media"],["Normalize loudness","media"],["Repair video","media"],["Streams","media"],["Stereo to mono","media"],["Trim video or audio","media"],["Image to text","image"],["OCR","pdf"],["Compress PDF","pdf"],["Images to PDF","pdf"],["Merge PDF","pdf"],["Organize PDF pages","pdf"],["Split PDF","pdf"],["PDF to images","pdf"],["Hash files","files"]].map(t=>({name:t[0],category:t[1]}))};
 
     function build(DATA) {
       const $ = id => document.getElementById(id);
       const tl = gsap.timeline({ paused: true });
-      const XO = 'expo.out', PI = 'power3.in';
-      const html = (el, h) => { el.insertAdjacentHTML('beforeend', h); };
+      const XO = 'expo.out', P2I = 'power2.in', P1O = 'power1.out';
       let seed = 20260915;
       const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
 
@@ -263,21 +261,21 @@
       try { const v = window.__hyperframes && window.__hyperframes.getVariables ? window.__hyperframes.getVariables() : null; if (v && v.launchDate) launch = String(v.launchDate).trim(); } catch (e) {}
       $('tz-eline').textContent = launch ? 'Coming ' + launch : END_LINE;
 
-      /* entrances land on the beat: expo.out is 97 percent done at half its duration, so it starts half a duration early */
-      const land = (sel, b, o = {}) => {
-        const d = o.dur || 0.55;
-        return tl.fromTo(sel, { opacity: 0, x: o.x || 0, y: o.y === undefined ? 26 : o.y, scale: o.s || 1 },
-          { opacity: 1, x: 0, y: 0, scale: 1, duration: d, ease: XO }, at(b) - d * (o.lead === undefined ? 0.5 : o.lead));
+      /* G1: an entrance starts ON the beat (one frame early at most). The move is expo.out on transform (0.3 to 0.45 s),
+         opacity has its own short power1.out tween so nothing pops on its first frame. */
+      const enter = (sel, t, o = {}) => {
+        const d = o.dur || 0.4;
+        tl.fromTo(sel, { x: o.x || 0, y: o.y === undefined ? 26 : o.y, scale: o.s || 1 }, { x: 0, y: 0, scale: 1, duration: d, ease: XO }, t);
+        tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: P1O }, t);
       };
-      const leave = (sel, b, o = {}) => {
-        const d = o.dur || 0.28;
-        return tl.to(sel, { opacity: 0, y: o.y === undefined ? -28 : o.y, x: o.x || 0, scale: o.s || 1, duration: d, ease: PI, stagger: o.stagger || 0 }, at(b) - (o.end ? d : 0));
-      };
-      const wipe = (sel, b, d = 0.62) => tl.fromTo(sel, { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 -3% 0 0)', duration: d, ease: XO }, at(b));
-      const count = (el, from, to, b, d, ease) => {
+      const land = (sel, b, o) => enter(sel, at(b) - 0.017, o);
+      const leave = (sel, t, o = {}) =>
+        tl.to(sel, { opacity: 0, y: o.y === undefined ? -28 : o.y, x: o.x || 0, scale: o.s || 1, duration: o.dur || 0.3, ease: P2I }, t);
+      const wipe = (sel, b, d = 0.55) => tl.fromTo(sel, { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 -3% 0 0)', duration: d, ease: XO }, at(b));
+      /* counters never write at build time: the markup carries the first value */
+      const count = (el, from, to, b, secs, ease) => {
         const o = { v: from };
-        el.textContent = String(from);
-        tl.to(o, { v: to, duration: d, ease: ease || 'power2.out', onUpdate: () => { el.textContent = String(Math.round(o.v)); } }, at(b));
+        tl.to(o, { v: to, duration: secs, ease: ease || 'power2.out', onUpdate: () => { el.textContent = String(Math.round(o.v)); } }, at(b));
       };
       const drift = (sel, b0, b1, from, to, x0, x1, ease) =>
         tl.fromTo(sel, { scale: from, x: x0 || 0 }, { scale: to, x: x1 || 0, duration: at(b1) - at(b0), ease: ease || 'none' }, at(b0));
@@ -317,75 +315,70 @@
           `<div class="wslot" style="left:${x + off[i][0]}px;top:${y + off[i][1]}px;transform:rotate(${rot[i]}deg) scale(${1.1 + ((i * 7) % 5) * 0.035})"><div class="win" id="tz-win${i}"><div class="bar"><i></i><i></i><i></i><span class="url"></span></div><div class="body">${T[(i * 3 + ri) % T.length](k)}</div></div></div>`);
         wins[i] = $('tz-win' + i);
       }));
+
       const initial = [0, 5, 12, 17, 2, 3, 8, 9, 14, 15];   // already there on frame 0
       const entering = [1, 4, 6, 7, 10, 11, 13, 16];         // one per half beat, beats 0.5 to 4.0
-      entering.forEach((wi, n) => {
-        const b = 0.5 + n * 0.5, d = 0.38;
-        tl.fromTo(wins[wi], { opacity: 0, y: 26, scale: 1.05 }, { opacity: 1, y: 0, scale: 1, duration: d, ease: XO }, at(b) - d * 0.5);
-      });
-      /* wall drifts and then freezes with the music at beat 4.39 */
+      entering.forEach((wi, n) => enter(wins[wi], at(0.5 + n * 0.5) - 0.017, { y: 26, s: 1.05 }));
+      /* the wall drifts and then freezes with the music at beat 4.39 */
       tl.fromTo('#tz-wall', { scale: 1, x: 0 }, { scale: 1.035, x: -26, duration: at(4.39), ease: 'power1.out' }, 0);
 
-      /* the four words on beats 0, 1, 2, 3 */
-      const pw = (id, b) => tl.fromTo(id, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.42, ease: XO }, at(b) - 0.21);
-      pw('#tz-w2', 1); pw('#tz-w3', 2); pw('#tz-w4', 3);
-      tl.to('#tz-w1', { opacity: 0.55, duration: 0.3, ease: XO }, at(1) - 0.1);
-      tl.to('#tz-w1', { opacity: 0.45, duration: 0.3, ease: XO }, at(2) - 0.1);
-      tl.to('#tz-w2', { opacity: 0.6, duration: 0.3, ease: XO }, at(2) - 0.1);
-      tl.to('#tz-w1', { opacity: 0.38, duration: 0.3, ease: XO }, at(3) - 0.1);
-      tl.to('#tz-w2', { opacity: 0.55, duration: 0.3, ease: XO }, at(3) - 0.1);
-      tl.to('#tz-w3', { opacity: 0.75, duration: 0.3, ease: XO }, at(3) - 0.1);
+      /* the four words on beats 0, 1, 2, 3 (Upload. is already down on frame 0) */
+      land('#tz-w2', 1, { y: 30 }); land('#tz-w3', 2, { y: 30 }); land('#tz-w4', 3, { y: 30 });
+      const dim = (id, o, b) => tl.to(id, { opacity: o, duration: 0.25, ease: P1O }, at(b));
+      dim('#tz-w1', 0.55, 1); dim('#tz-w1', 0.45, 2); dim('#tz-w2', 0.6, 2);
+      dim('#tz-w1', 0.38, 3); dim('#tz-w2', 0.55, 3); dim('#tz-w3', 0.75, 3);
 
-      /* STOP, beat 4.39 to 7.92: the scrim deepens, the words leave, one line glides in and holds */
-      tl.to('#tz-deep', { opacity: 0.6, duration: 0.5, ease: XO }, at(4.39));
-      tl.to('#tz-pwords', { opacity: 0, y: -34, duration: 0.34, ease: PI }, at(4.39));
-      tl.fromTo('#tz-pline', { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.8, ease: XO }, at(4.9));
+      /* STOP, beat 4.39 to 7.92: the words are fully gone (0.2 s) before the line starts on beat 5, then it holds */
+      tl.to('#tz-deep', { opacity: 0.6, duration: 0.4, ease: P1O }, at(4.39));
+      tl.to('#tz-pwords', { opacity: 0, y: -34, duration: 0.2, ease: 'power2.out' }, at(4.39));
+      land('#tz-pline', 5, { y: 34, dur: 0.45 });
 
       /* ============================================================ 2. THE DROP, beat 8 */
       wipe('#tz-blue', 8, 0.55);
-      /* once the blue ground has covered it, the cold open is switched off (nothing hidden is left rendering) */
+      /* once the blue ground has covered it, the cold open is switched off */
       tl.set('#tz-pain', { opacity: 0 }, at(8) + 0.6);
-      drift('#tz-cam1', 8, 14.6, 1, 1.045, 0, -10);
 
-      /* the bar opens in place */
-      tl.fromTo('#tz-i-rest', { opacity: 0 }, { opacity: 1, duration: 0.01 }, at(8.05));
-      tl.fromTo('#tz-plate', { opacity: 0, scale: 0.96, y: 18 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: XO }, at(8.05));
+      /* the bar opens in place on the rest frame */
+      tl.set('#tz-i-rest', { opacity: 1 }, at(8));
+      enter('#tz-plate', at(8) + 0.05, { y: 18, s: 0.96 });
 
-      /* a file chip lands on the bar on beat 9 (pixel-exact crop of the captured chip) */
-      tl.fromTo('#tz-chipwrap', { opacity: 0, x: 240, y: -100 }, { opacity: 1, x: 0, y: 0, duration: 0.36, ease: XO }, at(9) - 0.36);
-      tl.to('#tz-chipshadow', { opacity: 0, duration: 0.12, ease: 'none' }, at(9) - 0.12);
-      tl.set('#tz-i-rest', { opacity: 0 }, at(9));
-      tl.set('#tz-i-00', { opacity: 1 }, at(9));
-      tl.set('#tz-chipwrap', { opacity: 0 }, at(9) + 0.001);
+      /* a file chip lands ON beat 9 (pixel-exact crop of the captured chip), then the first typed frame replaces it on 9.25 */
+      tl.fromTo('#tz-chipwrap', { x: 240, y: -100 }, { x: 0, y: 0, duration: 0.4, ease: XO }, at(9) - 0.18);
+      tl.fromTo('#tz-chipwrap', { opacity: 0 }, { opacity: 1, duration: 0.15, ease: P1O }, at(9) - 0.18);
+      tl.to('#tz-chipshadow', { opacity: 0, duration: 0.2, ease: 'none' }, at(9.25) - 0.2);
+      tl.set('#tz-chipwrap', { opacity: 0 }, at(9.25));
 
       /* "under 50 kb" on 16ths, frame k at beat 9.25 + (k - 1) * 0.25 */
       const pad = n => (n < 10 ? '0' : '') + n;
+      tl.set('#tz-i-rest', { opacity: 0 }, at(9.25));
       for (let k = 1; k <= 11; k++) {
         const b = 9.25 + (k - 1) * 0.25;
         tl.set('#tz-i-' + pad(k), { opacity: 1 }, at(b));
-        tl.set('#tz-i-' + pad(k - 1), { opacity: 0 }, at(b));
+        if (k > 1) tl.set('#tz-i-' + pad(k - 1), { opacity: 0 }, at(b));
       }
+      /* a slow push toward the search row, easing out on Return, then a hold that never fully rests */
+      tl.fromTo('#tz-push', { scale: 1 }, { scale: 1.2, duration: at(12) - at(9), ease: 'power1.out' }, at(9));
+      tl.to('#tz-push', { scale: 1.215, duration: at(14.15) - at(12), ease: 'none' }, at(12));
 
-      /* Return on beat 12: the key presses, the real result lands, 35 percent counts up */
+      /* Return on beat 12: the key presses, the real result cuts in, 35 percent counts up in 0.3 s */
       $('tz-hres').setAttribute('aria-label', RESULT.from + ' to ' + RESULT.to + ', ' + RESULT.pct + '% smaller');
-      leave('#tz-keys1', 11.3, { dur: 0.22, y: -10 });
-      tl.fromTo('#tz-keys2', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: XO }, at(11.75));
+      leave('#tz-keys1', at(11.3), { dur: 0.22, y: -10 });
+      land('#tz-keys2', 11.75, { y: 14, dur: 0.3 });
       tl.to('#tz-retkey', { backgroundColor: 'rgba(255,255,255,1)', color: '#2d6cdf', borderColor: 'rgba(255,255,255,1)', duration: 0.1, ease: 'none' }, at(12));
-      leave('#tz-hhot', 12, { dur: 0.22, y: -34, end: true });
-      tl.fromTo('#tz-hres', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: XO }, at(12));
-      count($('tz-cnt'), 0, RESULT.pct, 12, 0.55, 'power2.out');
-      /* the real result is a hard cut on the hit, with a small settle of the plate */
+      leave('#tz-hhot', at(12) - 0.22, { dur: 0.22, y: -34 });
+      land('#tz-hres', 12, { y: 30 });
+      count($('tz-cnt'), 0, RESULT.pct, 12, 0.3, 'power2.out');
       tl.set('#tz-i-res', { opacity: 1 }, at(12));
       tl.set('#tz-i-11', { opacity: 0 }, at(12));
-      tl.fromTo('#tz-plate', { scale: 0.985 }, { scale: 1, duration: 0.5, ease: XO, immediateRender: false }, at(12));
+      tl.fromTo('#tz-plate', { scale: 0.985 }, { scale: 1, duration: 0.4, ease: XO, immediateRender: false }, at(12));
 
-      /* the bar shrinks away */
-      const barOut = 13.2;
-      tl.to('#tz-plate', { opacity: 0, scale: 0.62, y: 70, duration: 0.4, ease: PI }, at(barOut));
-      leave('#tz-keys2', barOut, { dur: 0.3, y: 30 });
-      leave('#tz-hres', 13.4, { dur: 0.26, y: -34 });
+      /* the payoff holds from beat 12.3 to beat 14, then leaves upward before the tools arrive */
+      const outT = at(14) - 0.15;
+      tl.to('#tz-plate', { opacity: 0, y: -40, scale: 0.92, duration: 0.3, ease: P2I }, outT);
+      leave('#tz-keys2', outT, { dur: 0.3, y: -24 });
+      leave('#tz-hres', outT, { dur: 0.3, y: -34 });
 
-      /* ============================================================ 3. THE TOOLS */
+      /* ============================================================ 3. THE TOOLS, beats 14 to 18 */
       const CATS = [['pdf', 'PDF', '#ff453a'], ['id', 'ID and forms', '#ff9f0a'], ['image', 'Images', '#bf5af2'], ['media', 'Video', '#ff7828'], ['files', 'Files', '#1a84f3']];
       const GLYPH = {
         pdf: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
@@ -398,7 +391,7 @@
       const sorted = CATS.flatMap(c => DATA.tools.filter(t => t.category === c[0]));
       const TOTAL = DATA.count;
       const grid = $('tz-grid');
-      const GX = 624, GY = 107, PW = 300, PH = 96, GAPX = 16, GAPY = 14;
+      const GX = 600, GY = 107, PW = 300, PH = 96, GAPX = 16, GAPY = 14;
       const pills = sorted.map((t, i) => {
         const col = Math.floor(i / 8), row = i % 8, k = colOf(t.category);
         const x = GX + col * (PW + GAPX), y = GY + row * (PH + GAPY);
@@ -406,134 +399,106 @@
           `<div class="pill" id="tz-p${i}" style="left:${x}px;top:${y}px;--k:${k}"><span class="ic"><i class="tb"></i><svg class="g0" viewBox="0 0 24 24">${GLYPH[t.category]}</svg><svg class="g1" viewBox="0 0 24 24">${GLYPH[t.category]}</svg></span><span class="nm">${t.name}</span><i class="ring"></i></div>`);
         return { el: $('tz-p' + i), cat: t.category, cx: x + PW / 2, cy: y + PH / 2, i };
       });
-      const early = pills.filter(p => p.i >= 24 && p.i <= 28);      // five cards, one per half beat, beats 12.5 to 14.5
+      /* nothing of the tools scene starts before beat 14. Four cards on quarter beats, then the ripple on 15 */
+      const early = pills.filter(p => p.i >= 24 && p.i <= 27);
       const later = pills.filter(p => !early.includes(p));
-      early.forEach((p, n) => {
-        const d = 0.4;
-        tl.fromTo(p.el, { opacity: 0, x: 150, y: 56 }, { opacity: 1, x: 0, y: 0, duration: d, ease: XO }, at(12.5 + n * 0.5) - d * 0.5);
-      });
-      /* one ripple on beat 15, the strongest hit: centre cards land on the beat, the rest follow in a quick wave */
+      early.forEach((p, n) => enter(p.el, at(14 + n * 0.25) - 0.017, { x: 150, y: 56 }));
+      const GCX = GX + (4 * PW + 3 * GAPX) / 2;
       later.forEach(p => {
-        const dist = Math.hypot(p.cx - 1248, p.cy - 540), d = 0.5;
-        const dx = (p.cx - 1248) / (dist || 1), dy = (p.cy - 540) / (dist || 1);
-        tl.fromTo(p.el, { opacity: 0, x: dx * 70, y: dy * 70 + 30, scale: 0.94 }, { opacity: 1, x: 0, y: 0, scale: 1, duration: d, ease: XO }, at(15) + dist * 0.00042 - d * 0.5);
+        const dist = Math.hypot(p.cx - GCX, p.cy - 540), dx = (p.cx - GCX) / (dist || 1), dy = (p.cy - 540) / (dist || 1);
+        enter(p.el, at(15) - 0.017 + dist * 0.0004, { x: dx * 70, y: dy * 70 + 30, s: 0.94 });
       });
 
-      /* the counter locks on tools.count */
-      tl.fromTo('#tz-count', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: XO }, at(13.5) - 0.2);
-      count($('tz-cnt2'), 3, 4, 14, 0.12, 'none');
-      count($('tz-cnt2'), 4, TOTAL, 14.3, 0.45, 'expo.out');
+      /* ONE monotone count, 1 to tools.count, ending exactly on beat 15 (the strongest hit); never below the cards on screen */
+      land('#tz-count', 14, { y: 30 });
+      count($('tz-cnt2'), 1, TOTAL, 14, at(15) - at(14), 'power2.in');
 
-      /* categories, listed at the left, light in a row from the 16.5 hit */
+      /* categories, listed at the left, light in a quick row from the 16.5 hit */
       const cats = $('tz-cats');
       CATS.forEach((c, i) => {
         const n = DATA.tools.filter(t => t.category === c[0]).length;
         cats.insertAdjacentHTML('beforeend', `<div class="cat" id="tz-cat${i}"><i></i><b>${c[1]}</b><em>${n}</em></div>`);
+        land('#tz-cat' + i, 14.2 + i * 0.1, { y: 18 });
       });
-      tl.set('#tz-cats', { opacity: 1 }, 0);
-      CATS.forEach((c, i) => tl.fromTo('#tz-cat' + i, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: XO }, at(13.7 + i * 0.1) - 0.2));
       CATS.forEach((c, i) => {
-        const b = 16.5 + i * 0.2, lit = pills.filter(p => p.cat === c[0]).map(p => p.el);
-        const t0 = at(b);
-        tl.to('#tz-cat' + i, { color: '#ffffff', duration: 0.3, ease: XO }, t0);
-        tl.to('#tz-cat' + i + ' i', { backgroundColor: c[2], duration: 0.3, ease: XO }, t0);
+        const t0 = at(16.5 + i * 0.1), lit = pills.filter(p => p.cat === c[0]).map(p => p.el);
+        tl.to('#tz-cat' + i, { color: '#ffffff', duration: 0.25, ease: P1O }, t0);
+        tl.to('#tz-cat' + i + ' i', { backgroundColor: c[2], duration: 0.25, ease: P1O }, t0);
         lit.forEach((el, n) => {
-          const tt = t0 + n * 0.012;
-          tl.to(el.querySelector('.tb'), { opacity: 1, duration: 0.32, ease: XO }, tt);
-          tl.to(el.querySelector('.g1'), { opacity: 1, duration: 0.32, ease: XO }, tt);
-          tl.to(el.querySelector('.g0'), { opacity: 0, duration: 0.32, ease: XO }, tt);
-          tl.to(el.querySelector('.ring'), { opacity: 1, duration: 0.32, ease: XO }, tt);
+          const tt = t0 + n * 0.01;
+          tl.to(el.querySelector('.tb'), { opacity: 1, duration: 0.25, ease: P1O }, tt);
+          tl.to(el.querySelector('.g1'), { opacity: 1, duration: 0.25, ease: P1O }, tt);
+          tl.to(el.querySelector('.g0'), { opacity: 0, duration: 0.25, ease: P1O }, tt);
+          tl.to(el.querySelector('.ring'), { opacity: 1, duration: 0.25, ease: P1O }, tt);
         });
       });
-      drift('#tz-cam2', 12.5, 18.0, 1, 1.03, 0, -12);
+      drift('#tz-cam2', 14, 18, 1, 1.03, 0, -12);
 
-      /* the grid pulls back, the left column leaves */
-      tl.to(pills.map(p => p.el), { opacity: 0, scale: 0.95, duration: 0.26, ease: PI, stagger: 0.003 }, at(17.25));
-      leave('#tz-count', 17.4, { dur: 0.26, y: -24 });
-      leave('#tz-cats', 17.4, { dur: 0.26, y: 24 });
+      /* the grid leaves from beat 17.0 and is gone as the next scene starts; the left column follows */
+      tl.to(pills.map(p => p.el), { opacity: 0, scale: 0.95, duration: 0.36, ease: P2I, stagger: { each: 0.003, from: 'center' } }, at(17));
+      leave('#tz-count', at(17.3), { dur: 0.3, y: -24 });
+      leave('#tz-cats', at(17.3), { dur: 0.3, y: 24 });
 
       /* ============================================================ 4. ANYONE CAN ADD A TOOL, beats 18 to 24 */
       $('tz-fan').innerHTML = fanSVG('tz-f1');
-      land('#tz-hplug', 18, { dur: 0.6, y: 30, lead: 0.17 });
-      tl.fromTo('#tz-fan', { opacity: 0, scale: 0.9, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: XO }, at(18) - 0.1);
-      openFan('tz-f1', 17.95, 0.75);
-      land('#tz-mwin', 18.4, { dur: 0.7, x: 150, y: 0, lead: 0.15 });
-      land('#tz-fold', 18.6, { dur: 0.6, y: 40, lead: 0.3 });
-      /* three file chips draw into the folder, beats 19, 19.5, 20 */
+      land('#tz-hplug', 18, { y: 30 });
+      enter('#tz-fan', at(18) - 0.017, { y: 20, s: 0.9 });
+      openFan('tz-f1', 18.1, 0.5);
+      land('#tz-mwin', 18.25, { x: 150, y: 0, dur: 0.45 });
+      land('#tz-fold', 18.5, { y: 40 });
+      /* three file chips draw into the folder, landing on beats 19, 19.5, 20 */
       const chipIn = (id, b, n) => {
-        tl.fromTo(id, { opacity: 0, y: 0 }, { opacity: 1, duration: 0.14, ease: 'none' }, at(b) - 0.3);
-        tl.fromTo(id, { y: 0 }, { y: 285, duration: 0.5, ease: XO }, at(b) - 0.3);
+        tl.fromTo(id, { opacity: 0 }, { opacity: 1, duration: 0.14, ease: 'none' }, at(b) - 0.18);
+        tl.fromTo(id, { y: 0 }, { y: 285, duration: 0.4, ease: XO }, at(b) - 0.18);
         tl.set('#tz-fc' + n, { opacity: 1 }, at(b));
         tl.set('#tz-fc' + (n - 1), { opacity: 0 }, at(b));
       };
-      tl.set('#tz-c1,#tz-c2,#tz-c3', { y: 0 }, 0);
       chipIn('#tz-c1', 19, 1); chipIn('#tz-c2', 19.5, 2); chipIn('#tz-c3', 20, 3);
-      /* the folder slides into the Modules list, the list makes room, the row settles */
+      /* the folder slides into the Modules list and cross-fades into the new row before beat 21; the list makes room first */
       tl.to('#tz-fold .front b, #tz-fold .front span', { opacity: 0, duration: 0.15, ease: 'none' }, at(20.5));
-      tl.to('#tz-fold', { x: 492, y: -90, scale: 0.2, duration: 0.7, ease: XO }, at(20.5));
-      tl.to('#tz-mslide', { y: 135, duration: 0.5, ease: XO }, at(21.0));
-      tl.fromTo('#tz-mrow', { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: XO }, at(21.1));
-      tl.to('#tz-fold', { opacity: 0, duration: 0.18, ease: 'none' }, at(21.18));
-      /* header patched to "32 installed, 1 from the community", counted up */
-      tl.to('#tz-fan', { opacity: 0, y: -20, duration: 0.3, ease: PI }, at(21.15));
-      tl.to('#tz-mwin', { x: -360, duration: 0.7, ease: XO }, at(21.3));
-      tl.to('#tz-mhl', { opacity: 1, duration: 0.3, ease: XO }, at(21.9));
-      tl.to('#tz-r1', { y: -44, duration: 0.55, ease: XO }, at(21.8));
-      tl.to('#tz-r2', { y: -44, duration: 0.55, ease: XO }, at(21.8));
+      tl.to('#tz-fold', { x: 492, y: -90, scale: 0.2, duration: 0.5, ease: XO }, at(20.5));
+      tl.to('#tz-mslide', { y: 135, duration: 0.4, ease: XO }, at(20.75));
+      enter('#tz-mrow', at(20.85), { x: -20, y: 0, dur: 0.4 });
+      tl.to('#tz-fold', { opacity: 0, duration: 0.13, ease: 'none' }, at(20.85));
+      tl.to('#tz-fan', { opacity: 0, y: -20, duration: 0.25, ease: P2I }, at(21.0));
+      /* header: 31 rolls to 32, on beat 21.1 */
+      tl.to('#tz-mhl', { opacity: 1, duration: 0.25, ease: P1O }, at(21.1));
+      tl.to('#tz-r1', { y: -44, duration: 0.45, ease: XO }, at(21.1));
+      tl.to('#tz-mwin', { x: -360, duration: 0.5, ease: XO }, at(21.6));
       drift('#tz-cam3', 18, 23.6, 1, 1.03, 0, -10);
-      /* exit before the wall */
-      tl.to('#tz-cam3', { opacity: 0, y: -24, duration: 0.26, ease: PI }, at(23.1));
+      /* exit overlaps the wall entrance by 0.1 s */
+      tl.to('#tz-cam3', { opacity: 0, y: -24, duration: 0.3, ease: P2I }, at(23.5));
 
-      /* ============================================================ 5. THE WALL, beats 24 to 30 */
+      /* ============================================================ 5. THE WALL, beats 24 to 28 */
       const w2 = $('tz-wall2');
-      const COLS = 7, ROWS = 4, SW = 232, SH = 160, SGX = 20, SGY = 20, WX = 88, WY = 320;
-      const REAL = { 0: 'Slugify lines', 9: 'Word count' };
-      const catKeys = ['pdf', 'image', 'media', 'id', 'files'];
-      const slots = [];
-      for (let n = 0; n < COLS * ROWS; n++) {
-        const col = n % COLS, row = Math.floor(n / COLS);
-        const x = WX + col * (SW + SGX), y = WY + row * (SH + SGY);
-        const ck = catKeys[Math.floor(rnd() * 5)], k = colOf(ck);
-        w2.insertAdjacentHTML('beforeend', `<div class="slot" id="tz-s${n}" style="left:${x}px;top:${y}px"></div>`);
-        const real = REAL[n];
-        w2.insertAdjacentHTML('beforeend',
-          `<div class="wc" id="tz-wc${n}" style="left:${x}px;top:${y}px;--k:${real ? '#1a84f3' : k}"><div class="wi"><svg viewBox="0 0 24 24">${real ? GLYPH.pdf : GLYPH[ck]}</svg></div>${real ? `<div class="rn">${real}</div>` : '<div class="sk"></div><div class="sk s"></div>'}</div>`);
-        slots.push(n);
+      const TW = 324, TH = 270, TGX = 24, TX0 = 102, TY0 = 340;
+      const tileTimes = [24, 24.5, 25, 25.35, 25.7, 26.05, 26.4, 26.75, 27.1, 27.45];
+      for (let n = 0; n < 10; n++) {
+        const col = n % 5, row = Math.floor(n / 5), x = TX0 + col * (TW + TGX), y = TY0 + row * (TH + TGX);
+        const real = n === 0 ? 'Slugify lines' : n === 1 ? 'Word count' : '';
+        w2.insertAdjacentHTML('beforeend', real
+          ? `<div class="tile2 real" id="tz-t${n}" style="left:${x}px;top:${y}px"><div class="wi"><svg viewBox="0 0 24 24">${GLYPH.pdf}</svg></div><div class="tag">Example</div><div class="rn">${real}</div></div>`
+          : `<div class="tile2 empty" id="tz-t${n}" style="left:${x}px;top:${y}px">+ your tool</div>`);
+        land('#tz-t' + n, tileTimes[n], { y: 26 });
       }
-      tl.set('#tz-wall2', { opacity: 1 }, 0);
-      land('#tz-hwall', 24, { dur: 0.6, y: 30, lead: 0.2 });
-      tl.fromTo('.slot', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: XO, stagger: 0.012 }, at(23.9));
-      /* cards fill their slots, faster and faster into the end of the wall (the two real ones go first) */
-      const order = [0, 9].concat(slots.filter(n => n !== 0 && n !== 9).map(n => ({ n, r: rnd() })).sort((a, b) => a.r - b.r).map(o => o.n));
-      order.forEach((n, i) => {
-        const x = i / (order.length - 1);
-        const b = 24.4 + 4.8 * (1 - Math.pow(1 - x, 1.55));
-        tl.fromTo('#tz-wc' + n, { opacity: 0, y: 30, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: XO }, at(b) - 0.22);
-      });
-      drift('#tz-cam4', 24, 30.1, 1.055, 1, 0, 0, 'none');
+      land('#tz-hwall', 24, { y: 30 });
+      drift('#tz-cam4', 24, 28.2, 1.04, 1, 0, 0, 'none');
+      leave('#tz-cam4', at(27.75), { dur: 0.22, y: -20 });
 
-      /* ============================================================ 6. THREE PHRASES, one ground each */
-      const PHR = [['tz-ph1', 'tz-t1', 30], ['tz-ph2', 'tz-t2', 30 + 2.5 / 3], ['tz-ph3', 'tz-t3', 30 + 5 / 3]];
-      PHR.forEach(([ph, t, b]) => {
-        wipe('#' + ph, b, 0.6);
-        tl.fromTo('#' + t, { x: 70 }, { x: 0, duration: 0.5, ease: XO }, at(b) + 0.02);
-        tl.fromTo('#' + t, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'none' }, at(b) + 0.02);
-        const prev = { 'tz-ph1': '#tz-blue', 'tz-ph2': '#tz-ph1', 'tz-ph3': '#tz-ph2' }[ph];
-        tl.set(prev, { opacity: 0 }, at(b) + 0.6);
-        const prevT = { 'tz-ph2': '#tz-t1', 'tz-ph3': '#tz-t2' }[ph];
-        if (prevT) tl.to(prevT, { opacity: 0, x: -50, duration: 0.2, ease: PI }, at(b));
-        tl.fromTo('#' + t, { scale: 1 }, { scale: 1.03, duration: at(2.5 / 3), ease: 'none' }, at(b) + 0.03);
-      });
+      /* ============================================================ 6. THE STACK, one ground, beats 28 to 32.5 */
+      land('#tz-sl1', 28, { y: 40 });
+      land('#tz-sl2', 29.5, { y: 40 });
+      land('#tz-sl3', 31, { y: 40 });
+      drift('#tz-cam5', 28, 32.5, 1, 1.03, 0, 0, 'none');
+      leave('#tz-cam5', at(32.1), { dur: 0.22, y: 0, x: -60 });
 
-      /* ============================================================ 7. END CARD, beat 32.5 */
+      /* ============================================================ 7. END CARD, beat 32.5, same blue */
       $('tz-efan').innerHTML = fanSVG('tz-f2');
-      wipe('#tz-end', 32.5, 0.62);
-      tl.set('#tz-ph3', { opacity: 0 }, at(32.5) + 0.6);
-      tl.fromTo('#tz-efan', { opacity: 0, scale: 0.92, y: 24 }, { opacity: 1, scale: 1, y: 0, duration: 0.7, ease: XO }, at(32.5) + 0.02);
-      openFan('tz-f2', 32.5, 0.9);
-      tl.fromTo('#tz-ename', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, ease: XO }, at(32.5) + 0.12);
-      tl.fromTo('#tz-eline', { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.7, ease: XO }, at(32.5) + 0.28);
-      tl.fromTo('#tz-eurl', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: XO }, at(34) - 0.15);
+      enter('#tz-efan', at(32.5) - 0.017, { y: 24, s: 0.92, dur: 0.45 });
+      openFan('tz-f2', 32.5, 0.6);
+      enter('#tz-ename', at(32.5) + 0.06, { y: 40, dur: 0.45 });
+      enter('#tz-eline', at(32.5) + 0.18, { y: 26 });
+      land('#tz-eurl', 34, { y: 20 });
       /* a drift that settles into the still hold */
       tl.fromTo('#tz-endcam', { scale: 1.03 }, { scale: 1, duration: at(34.2) - at(32.5), ease: 'power2.out' }, at(32.5));
 

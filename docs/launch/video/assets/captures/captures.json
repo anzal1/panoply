@@ -58,10 +58,14 @@
  },
  "composited": {
   "frames": [
+   "demo-light-01",
+   "demo-light-02",
+   "demo-light-03",
+   "demo-light-04",
    "demo-light-07",
    "demo-light-08",
    "demo-light-09"
   ],
-  "why": "the real app shows No tools match for the partial queries under 5 and under 50; these frames keep the results of demo-light-06 and take the real search row. Remove when the app is fixed and re-captured."
+  "why": "frames 01 to 04 keep the list of frame 00 (the real list thrashes between four tools for u, un, und, unde) and 07 to 09 keep the results of frame 06 (the real app shows No tools match for under 5 and under 50). Each takes only the real search row. Remove when the app is fixed and re-captured."
  }
 }

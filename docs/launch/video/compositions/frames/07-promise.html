@@ -4,106 +4,94 @@
   <style>
     @font-face{font-family:"Geist";src:url("assets/fonts/Geist-Variable-latin.woff2") format("woff2");font-weight:100 900}
     @font-face{font-family:"Geist Mono";src:url("assets/fonts/GeistMono-latin.woff2") format("woff2");font-weight:100 900}
-    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: #fff; }
     #root * { box-sizing: border-box; }
-    .f7-g { position: absolute; inset: 0; overflow: hidden; }
-    #f7-g1 { background: #2d6cdf; color: #fff; }
-    #f7-g2 { background: #f3f4f6; color: #1d1d1f; clip-path: inset(0% 100% 0% 0%); }
-    #f7-g3 { background: #0c0c0f; color: #fff; clip-path: inset(0% 100% 0% 0%); }
-    .f7-lift { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 70% at 50% 46%, rgba(255,255,255,.10), rgba(255,255,255,0) 100%); }
-    .f7-grain { position: absolute; inset: 0; background: url("assets/f7-promise/grain.png") 0 0 / 100% 100% no-repeat; }
-    #f7-g2 .f7-grain { opacity: .6; }
+    #f7-ground { position: absolute; inset: 0; background: #2d6cdf; }
+    #f7-lift { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 70% at 50% 46%, rgba(255,255,255,.10), rgba(255,255,255,0) 100%); }
+    #f7-grain { position: absolute; inset: 0; background: url("assets/f7-promise/grain.png") 0 0 / 100% 100% no-repeat; opacity: .5; }
     .f7-c { position: absolute; inset: 0; transform-origin: 0% 50%; }
 
-    .f7-h { position: absolute; left: 140px; font-weight: 700; letter-spacing: -0.04em; line-height: .98; white-space: nowrap; }
+    .f7-h { position: absolute; left: 140px; font-weight: 700; letter-spacing: -0.04em; line-height: .98; white-space: nowrap; color: #fff; }
     .f7-mono { font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; white-space: nowrap; }
 
     /* phrase 1 */
-    #f7-free { top: 393px; font-size: 300px; color: #fff; }
-    #f7-side1 { position: absolute; left: 1200px; top: 340px; width: 560px; }
-    .f7-pill { display: block; width: max-content; margin-bottom: 22px; padding: 12px 34px; border: 2px solid rgba(255,255,255,.4); border-radius: 999px; font-weight: 500; font-size: 44px; line-height: 56px; letter-spacing: -0.015em; color: #fff; }
-    #f7-url1 { margin-top: 44px; font-size: 36px; line-height: 44px; color: rgba(255,255,255,.85); letter-spacing: -0.01em; }
+    #f7-free { top: 253px; font-size: 300px; }
+    #f7-side1 { position: absolute; left: 1200px; top: 255px; width: 560px; }
+    .f7-pill { display: block; width: max-content; margin-bottom: 26px; padding: 12px 34px; border: 2px solid rgba(255,255,255,.4); border-radius: 999px; font-weight: 500; font-size: 44px; line-height: 56px; letter-spacing: -0.015em; color: #fff; }
 
     /* phrase 2 */
-    #f7-open { top: 300px; font-size: 240px; color: #1d1d1f; }
-    #f7-lic { position: absolute; left: 140px; top: 700px; }
-    .f7-ln { font-size: 36px; line-height: 48px; margin-bottom: 14px; color: #54545b; letter-spacing: -0.01em; }
-    #f7-graph { position: absolute; left: 1000px; top: 700px; width: 720px; height: 110px; overflow: visible; }
+    #f7-open { top: 282px; font-size: 240px; }
+    #f7-lic { position: absolute; left: 140px; top: 610px; font-size: 36px; line-height: 48px; color: #fff; letter-spacing: -0.01em; }
+    #f7-graph { position: absolute; left: 1000px; top: 596px; width: 720px; height: 110px; overflow: visible; }
 
     /* phrase 3 */
-    #f7-device { top: 120px; font-size: 220px; color: #fff; }
-    #f7-diagram { position: absolute; left: 170px; top: 500px; width: 1700px; height: 420px; overflow: visible; }
+    #f7-device { top: 292px; font-size: 220px; }
+    #f7-diagram { position: absolute; left: 170px; top: 600px; width: 1700px; height: 420px; overflow: visible; }
   </style>
 
   <div id="root" data-composition-id="f7-promise" data-width="1920" data-height="1080">
+    <div id="f7-ground"></div>
+    <div id="f7-lift"></div>
+    <div id="f7-grain"></div>
 
-    <!-- 68.0 : Free. on brand blue -->
-    <div id="f7-g1" class="f7-g">
-      <div class="f7-lift"></div>
-      <div class="f7-grain"></div>
-      <div id="f7-c1" class="f7-c" data-layout-allow-overflow>
-        <div id="f7-free" class="f7-h">Free.</div>
-        <div id="f7-side1">
-          <span id="f7-p1" class="f7-pill">macOS</span>
-          <span id="f7-p2" class="f7-pill">Windows</span>
-          <span id="f7-p3" class="f7-pill">Linux</span>
-          <div id="f7-url1" class="f7-mono">github.com/anzal1/panoply</div>
-        </div>
+    <!-- 68.0 Free. -->
+    <div id="f7-c1" class="f7-c" data-layout-allow-overflow data-layout-allow-overlap>
+      <div id="f7-free" class="f7-h" data-layout-allow-overlap>Free.</div>
+      <div id="f7-side1" data-layout-allow-overlap>
+        <span id="f7-p1" class="f7-pill">macOS</span>
+        <span id="f7-p2" class="f7-pill">Windows</span>
+        <span id="f7-p3" class="f7-pill">Linux</span>
       </div>
     </div>
 
-    <!-- 72.0 : wipe to paper, Open source. -->
-    <div id="f7-g2" class="f7-g">
-      <div class="f7-grain"></div>
-      <div id="f7-c2" class="f7-c">
-        <div data-layout-allow-overlap id="f7-open" class="f7-h">Open source.</div>
-        <div id="f7-lic">
-          <div id="f7-l1" class="f7-mono f7-ln" style="color:#1d1d1f">MIT OR Apache-2.0</div>
-          <div id="f7-l2" class="f7-mono f7-ln">github.com/anzal1/panoply</div>
-        </div>
-        <svg id="f7-graph" viewBox="0 0 720 110" fill="none">
-          <defs><clipPath id="f7-gclip"><rect id="f7-grect" x="0" y="0" width="0" height="110"/></clipPath></defs>
-          <g clip-path="url(#f7-gclip)">
-            <path d="M12 74 H708" stroke="#8a8a92" stroke-width="4" stroke-linecap="round"/>
-            <path d="M262 74 C292 74 292 30 322 30 H442 C472 30 472 74 502 74" stroke="#8a8a92" stroke-width="4" stroke-linecap="round"/>
-          </g>
-          <g id="f7-dots" fill="#f3f4f6" stroke="#8a8a92" stroke-width="4">
-            <circle class="f7-dot" cx="12" cy="74" r="10"/>
-            <circle class="f7-dot" cx="97" cy="74" r="10"/>
-            <circle class="f7-dot" cx="182" cy="74" r="10"/>
-            <circle class="f7-dot" cx="262" cy="74" r="10"/>
-            <circle class="f7-dot" cx="352" cy="30" r="10"/>
-            <circle class="f7-dot" cx="432" cy="30" r="10"/>
-            <circle class="f7-dot" cx="502" cy="74" r="10"/>
-            <circle class="f7-dot" cx="602" cy="74" r="10"/>
-            <circle class="f7-dot" cx="708" cy="74" r="10" fill="#8a8a92"/>
-          </g>
-        </svg>
-      </div>
+    <!-- 72.0 Open source. -->
+    <div id="f7-c2" class="f7-c" data-layout-allow-overflow data-layout-allow-overlap>
+      <div id="f7-open" class="f7-h" data-layout-allow-overlap>Open source.</div>
+      <div id="f7-lic" class="f7-mono" data-layout-allow-overlap>MIT OR Apache-2.0</div>
+      <svg id="f7-graph" viewBox="0 0 720 110" fill="none">
+        <defs><clipPath id="f7-gclip"><rect id="f7-grect" x="0" y="0" width="0" height="110"/></clipPath></defs>
+        <g clip-path="url(#f7-gclip)">
+          <path d="M12 74 H708" stroke="rgba(255,255,255,.55)" stroke-width="4" stroke-linecap="round"/>
+          <path d="M262 74 C292 74 292 30 322 30 H442 C472 30 472 74 502 74" stroke="rgba(255,255,255,.55)" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        <g id="f7-dots" fill="#2d6cdf" stroke="rgba(255,255,255,.85)" stroke-width="4">
+          <circle class="f7-dot" cx="12" cy="74" r="10"/>
+          <circle class="f7-dot" cx="97" cy="74" r="10"/>
+          <circle class="f7-dot" cx="182" cy="74" r="10"/>
+          <circle class="f7-dot" cx="262" cy="74" r="10"/>
+          <circle class="f7-dot" cx="352" cy="30" r="10"/>
+          <circle class="f7-dot" cx="432" cy="30" r="10"/>
+          <circle class="f7-dot" cx="502" cy="74" r="10"/>
+          <circle class="f7-dot" cx="602" cy="74" r="10"/>
+          <circle class="f7-dot" cx="708" cy="74" r="10" fill="#ffffff"/>
+        </g>
+      </svg>
     </div>
 
-    <!-- 74.0 : wipe to Midnight, On your device. -->
-    <div id="f7-g3" class="f7-g">
-      <div class="f7-grain"></div>
-      <div id="f7-c3" class="f7-c">
-        <div data-layout-allow-overlap id="f7-device" class="f7-h">On your device.</div>
-        <svg id="f7-diagram" viewBox="0 0 1700 420" fill="none">
-          <defs><clipPath id="f7-nclip"><rect id="f7-nrect" x="760" y="60" width="0" height="260"/></clipPath></defs>
-          <rect id="f7-screen" pathLength="1" x="10" y="10" width="480" height="300" rx="22" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
-          <rect id="f7-base" pathLength="1" x="-30" y="326" width="560" height="22" rx="11" stroke="#fff" stroke-width="5"/>
-          <g id="f7-file">
-            <path d="M195 85 H265 L305 125 V235 H195 Z" fill="rgba(255,255,255,.12)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
-            <path d="M265 85 V125 H305" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
-            <path d="M218 168 H282 M218 196 H282" stroke="rgba(255,255,255,.55)" stroke-width="5" stroke-linecap="round"/>
+    <!-- 74.0 On your device. -->
+    <div id="f7-c3" class="f7-c" data-layout-allow-overflow data-layout-allow-overlap>
+      <div id="f7-device" class="f7-h" data-layout-allow-overlap>On your device.</div>
+      <svg id="f7-diagram" viewBox="0 0 1700 420" fill="none">
+        <defs><clipPath id="f7-nclip"><rect id="f7-nrect" x="560" y="40" width="0" height="260"/></clipPath></defs>
+        <rect id="f7-screen" pathLength="1" x="10" y="10" width="480" height="300" rx="22" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+        <rect id="f7-base" pathLength="1" x="-30" y="326" width="560" height="22" rx="11" stroke="#fff" stroke-width="5"/>
+        <g id="f7-file">
+          <path d="M195 85 H265 L305 125 V235 H195 Z" fill="rgba(255,255,255,.14)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M265 85 V125 H305" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M218 168 H282 M218 196 H282" stroke="rgba(255,255,255,.6)" stroke-width="5" stroke-linecap="round"/>
+        </g>
+        <g clip-path="url(#f7-nclip)">
+          <path d="M580 160 H1450" stroke="rgba(255,255,255,.55)" stroke-width="5" stroke-dasharray="22 18"/>
+          <circle cx="568" cy="160" r="12" stroke="rgba(255,255,255,.7)" stroke-width="5"/>
+          <g stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none">
+            <path d="M1572 132 A40 40 0 0 1 1628 132" transform="translate(-100 28)"/>
+            <path d="M1547 107 A75 75 0 0 1 1653 107" transform="translate(-100 28)"/>
+            <path d="M1522 82 A110 110 0 0 1 1678 82" transform="translate(-100 28)"/>
           </g>
-          <g clip-path="url(#f7-nclip)">
-            <path d="M790 160 H1590" stroke="rgba(255,255,255,.45)" stroke-width="5" stroke-dasharray="22 18"/>
-            <circle cx="778" cy="160" r="12" stroke="rgba(255,255,255,.6)" stroke-width="5"/>
-            <circle cx="1602" cy="160" r="12" stroke="rgba(255,255,255,.6)" stroke-width="5"/>
-          </g>
-          <text id="f7-nlabel" x="1190" y="238" text-anchor="middle" font-family="Geist Mono, monospace" font-weight="500" font-size="30" fill="rgba(255,255,255,.78)">nothing leaves</text>
-        </svg>
-      </div>
+          <circle cx="1500" cy="160" r="9" fill="#fff"/>
+        </g>
+        <text id="f7-nlabel" x="1000" y="262" text-anchor="middle" font-family="Geist Mono, monospace" font-weight="500" font-size="44" fill="#ffffff">Nothing leaves.</text>
+      </svg>
     </div>
   </div>
 
@@ -111,40 +99,45 @@
     const BEAT = 60/130, START = 68;
     const at = b => (b - START) * BEAT;
     const tl = gsap.timeline({ paused: true });
+    const OPA = { duration: 0.25, ease: 'power1.out' };
+    const glide = (id, b, delay) => {
+      tl.fromTo(id, { y: 40 }, { y: 0, duration: 0.45, ease: 'expo.out' }, at(b) + (delay || 0));
+      tl.fromTo(id, { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(b) + (delay || 0));
+    };
+    /* the old phrase leaves just before the hit (0.25 s) so the new one lands on a clean ground. The exit into 74.0 may only start at 73.93, the end of the stop. */
+    const leave = (id, b, lead) => {
+      tl.to(id, { y: -30, duration: 0.25, ease: 'power3.in' }, at(b) - lead);
+      tl.to(id, { opacity: 0, duration: 0.25, ease: 'power2.out' }, at(b) - lead);
+    };
 
-    /* ---- 68.0 Free. : the cut is the hit, the text is already home. The quiet things glide in right after. ---- */
-    tl.fromTo('#f7-c1', { scale: 1 }, { scale: 1.025, duration: at(72), ease: 'none' }, 0);
-    ['#f7-p1', '#f7-p2', '#f7-p3', '#f7-url1'].forEach((id, i) => {
-      tl.fromTo(id, { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: 'expo.out' }, 0.04 + i * 0.07);
-    });
+    /* ---- 68.0 Free. : the move starts on the hit. "Free." stays until 72. ---- */
+    tl.fromTo('#f7-c1', { scale: 1 }, { scale: 1.02, duration: at(72), ease: 'none' }, 0);
+    glide('#f7-free', 68, 0);
+    ['#f7-p1', '#f7-p2', '#f7-p3'].forEach((id, i) => glide(id, 68, 0.05 + i * 0.05));
+    leave('#f7-c1', 72, 0.2);
 
-    /* ---- 72.0 wipe to paper (straight clip-path, expo.out 0.4 s), text lands on the hit ---- */
-    tl.fromTo('#f7-g2', { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.4, ease: 'expo.out' }, at(72));
-    tl.fromTo('#f7-open', { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: 'expo.out' }, at(72) - 0.4);
+    /* ---- 72.0 Open source. : starts on the hit, stays until 74 ---- */
+    glide('#f7-open', 72, 0);
+    glide('#f7-lic', 72, 0.1);
     tl.fromTo('#f7-c2', { scale: 1 }, { scale: 1.02, duration: at(73.54) - at(72), ease: 'power1.out' }, at(72));
-    tl.fromTo('#f7-l1', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: 'expo.out' }, at(72) + 0.06);
-    tl.fromTo('#f7-l2', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: 'expo.out' }, at(72) + 0.13);
-    tl.fromTo('#f7-grect', { attr: { width: 0 } }, { attr: { width: 720 }, duration: 0.6, ease: 'expo.out' }, at(72) + 0.2);
-    tl.fromTo('.f7-dot', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power2.out', stagger: 0.04 }, at(72) + 0.25);
+    tl.fromTo('#f7-grect', { attr: { width: 0 } }, { attr: { width: 720 }, duration: 0.4, ease: 'expo.out' }, at(72) + 0.1);
+    tl.fromTo('.f7-dot', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out', stagger: 0.03 }, at(72) + 0.1);
+    leave('#f7-c2', 74, 0.0167);
 
-    tl.set('#f7-g1', { opacity: 0 }, at(72) + 0.45); /* fully covered by paper, drop it from the page */
+    /* ---- 73.54 to 73.93 STOP: nothing moves (every tween above has ended, the drift ends exactly at 73.54) ---- */
 
-    /* ---- 73.54 to 73.93 STOP: nothing moves (drift above ends exactly at 73.54) ---- */
-
-    /* ---- 74.0 wipe to Midnight, the strongest hit ---- */
-    tl.fromTo('#f7-g3', { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.4, ease: 'expo.out' }, at(74));
-    tl.fromTo('#f7-device', { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, ease: 'expo.out' }, at(74) - 0.4);
+    /* ---- 74.0 On your device. : starts on the hit, stays to the end ---- */
+    glide('#f7-device', 74, 0);
     tl.fromTo('#f7-c3', { scale: 1 }, { scale: 1.02, duration: at(75.54) - at(74), ease: 'power1.out' }, at(74));
     gsap.set(['#f7-screen', '#f7-base'], { strokeDasharray: 1, strokeDashoffset: 1 });
-    tl.to('#f7-screen', { strokeDashoffset: 0, duration: 0.55, ease: 'expo.out' }, at(74) + 0.05);
-    tl.to('#f7-base', { strokeDashoffset: 0, duration: 0.5, ease: 'expo.out' }, at(74) + 0.15);
-    tl.fromTo('#f7-file', { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: 'expo.out' }, at(74) + 0.3);
-    tl.fromTo('#f7-nrect', { attr: { width: 0 } }, { attr: { width: 880 }, duration: 0.5, ease: 'expo.out' }, at(74) + 0.4);
-    tl.fromTo('#f7-nlabel', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'expo.out' }, at(74) + 0.6);
+    tl.to('#f7-screen', { strokeDashoffset: 0, duration: 0.4, ease: 'expo.out' }, at(74) + 0.25);
+    tl.to('#f7-base', { strokeDashoffset: 0, duration: 0.35, ease: 'expo.out' }, at(74) + 0.3);
+    tl.fromTo('#f7-file', { y: 18 }, { y: 0, duration: 0.4, ease: 'expo.out' }, at(74) + 0.3);
+    tl.fromTo('#f7-file', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(74) + 0.3);
+    tl.fromTo('#f7-nrect', { attr: { width: 0 } }, { attr: { width: 1000 }, duration: 0.4, ease: 'expo.out' }, at(74) + 0.3);
+    tl.fromTo('#f7-nlabel', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(74) + 0.45);
 
-    tl.set('#f7-g2', { opacity: 0 }, at(74) + 0.45);
-
-    /* ---- 75.54 to 75.92 STOP, end at 76.0 on Midnight ---- */
+    /* ---- 75.54 to 75.92 STOP, the frame ends on the blue picture at 76.0 ---- */
 
     window.__timelines["f7-promise"] = tl;
   </script>

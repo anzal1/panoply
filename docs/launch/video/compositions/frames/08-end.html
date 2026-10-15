@@ -5,34 +5,27 @@
     @font-face{font-family:"Geist";src:url("assets/fonts/Geist-Variable-latin.woff2") format("woff2");font-weight:100 900}
     @font-face{font-family:"Geist Mono";src:url("assets/fonts/GeistMono-latin.woff2") format("woff2");font-weight:100 900}
     #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
-    #f8-midnight { position: absolute; inset: 0; background: #0c0c0f; }
-    #f8-scene { position: absolute; inset: 0; clip-path: inset(100% 0% 0% 0%); }
     #f8-blue { position: absolute; inset: 0; background: #2d6cdf; }
-    #f8-grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .16; mix-blend-mode: soft-light; pointer-events: none; }
+    #f8-grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .08; mix-blend-mode: soft-light; pointer-events: none; }
     #f8-cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
-    #f8-fan { position: absolute; left: 730px; top: 60px; width: 460px; height: 460px; }
+    #f8-fan { position: absolute; left: 730px; top: 90px; width: 460px; height: 460px; }
     #f8-fan svg { width: 100%; height: 100%; display: block; overflow: visible; }
     .f8-line { position: absolute; left: 0; right: 0; text-align: center; color: #fff; white-space: nowrap; }
-    #f8-name { top: 520px; font-weight: 700; font-size: 190px; letter-spacing: -0.04em; line-height: 0.98; }
-    #f8-tag { top: 738px; font-weight: 500; font-size: 56px; letter-spacing: -0.02em; line-height: 1.1; color: rgba(255,255,255,.8); }
-    #f8-plat { top: 852px; font-weight: 500; font-size: 38px; letter-spacing: -0.01em; line-height: 1.1; color: rgba(255,255,255,.8); display: flex; justify-content: center; gap: 64px; }
-    #f8-url { top: 934px; font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 36px; letter-spacing: -0.01em; line-height: 1.1; color: rgba(255,255,255,.8); }
+    #f8-name { top: 560px; font-weight: 700; font-size: 190px; letter-spacing: -0.04em; line-height: 0.98; }
+    #f8-plat { top: 810px; font-weight: 500; font-size: 44px; letter-spacing: -0.01em; line-height: 1.1; color: rgba(255,255,255,.8); display: flex; justify-content: center; gap: 72px; }
+    #f8-url { top: 904px; font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 44px; letter-spacing: -0.01em; line-height: 1.1; color: rgba(255,255,255,.9); }
   </style>
   <div id="root" data-composition-id="f8-end" data-width="1920" data-height="1080">
-    <div id="f8-midnight"></div>
-    <div id="f8-scene">
-      <div id="f8-blue"></div>
-      <div id="f8-cam">
-        <div id="f8-fan"></div>
-        <div class="f8-line" id="f8-name">Panoply</div>
-        <div class="f8-line" id="f8-tag">Free. Open source. On your device.</div>
-        <div class="f8-line" id="f8-plat"><span>macOS</span><span>Windows</span><span>Linux</span></div>
-        <div class="f8-line" id="f8-url">github.com/anzal1/panoply</div>
-      </div>
-      <img id="f8-grain" src="assets/f8-end/grain.png" alt="">
+    <div id="f8-blue"></div>
+    <div id="f8-cam" data-layout-allow-overflow>
+      <div id="f8-fan"></div>
+      <div class="f8-line" id="f8-name">Panoply</div>
+      <div class="f8-line" id="f8-plat"><span>macOS</span><span>Windows</span><span>Linux</span></div>
+      <div class="f8-line" id="f8-url">github.com/anzal1/panoply</div>
     </div>
+    <img id="f8-grain" src="assets/f8-end/grain.png" alt="">
   </div>
-  <script>
+<script>
     const BEAT = 60 / 130, START = 76;
     const at = b => (b - START) * BEAT;
 
@@ -47,27 +40,29 @@
 
     const tl = gsap.timeline({ paused: true });
 
-    // side cards start stacked behind the front card, hidden
+    // frame 7 ends on brand blue, so this frame starts on blue with the single front card already showing.
     gsap.set('#f8-cardL', { rotation: 0, svgOrigin: PIVOT, opacity: 0 });
     gsap.set('#f8-cardR', { rotation: 0, svgOrigin: PIVOT, opacity: 0 });
     gsap.set('#f8-name', { y: 36, opacity: 0 });
-    gsap.set('#f8-tag', { y: 24, opacity: 0 });
     gsap.set('#f8-plat', { y: 24, opacity: 0 });
     gsap.set('#f8-url', { y: 24, opacity: 0 });
 
-    // BEAT 76.0, the final hit: the ground becomes brand blue by a straight wipe from the bottom
-    tl.fromTo('#f8-scene', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.45 * BEAT, ease: 'expo.out' }, at(76));
+    // an entrance: the move starts ON the beat (expo.out, transform only); opacity has its own short tween
+    const enter = (sel, beat, from, dur = 0.5, extra = {}) => {
+      tl.fromTo(sel, from, Object.assign({ x: 0, y: 0, duration: dur, ease: 'expo.out' }, extra), at(beat));
+      tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out' }, at(beat));
+    };
 
-    // the fan opens from its single front card to the full fan (about the icon pivot)
-    tl.fromTo('#f8-cardL', { rotation: 0, opacity: 0 }, { rotation: -20, opacity: 1, duration: 0.6, ease: 'expo.out', svgOrigin: PIVOT }, at(76.04));
-    tl.fromTo('#f8-cardR', { rotation: 0, opacity: 0 }, { rotation: 20, opacity: 1, duration: 0.6, ease: 'expo.out', svgOrigin: PIVOT }, at(76.04));
-    // wordmark settles on the same beat
-    tl.fromTo('#f8-name', { y: 36, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'expo.out' }, at(76.04));
+    // BEAT 76.0, the final hit: the fan opens from its front card (about the icon pivot), "Panoply" settles
+    tl.fromTo('#f8-cardL', { rotation: 0 }, { rotation: -20, duration: 0.5, ease: 'expo.out', svgOrigin: PIVOT }, at(76));
+    tl.fromTo('#f8-cardR', { rotation: 0 }, { rotation: 20, duration: 0.5, ease: 'expo.out', svgOrigin: PIVOT }, at(76));
+    tl.fromTo('#f8-cardL', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out', immediateRender: false }, at(76));
+    tl.fromTo('#f8-cardR', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out', immediateRender: false }, at(76));
+    enter('#f8-name', 76, { y: 36 });
 
-    // 77.5 tagline, 78.5 platform row and url
-    tl.fromTo('#f8-tag', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'expo.out' }, at(77.5));
-    tl.fromTo('#f8-plat', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'expo.out' }, at(78.5));
-    tl.fromTo('#f8-url', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'expo.out' }, at(78.5) + 0.06);
+    // 77.5 platform row, 78.5 url (the only place the url appears in the film)
+    enter('#f8-plat', 77.5, { y: 24 });
+    enter('#f8-url', 78.5, { y: 24 });
 
     // from here nothing moves except a very slow 1 percent scale drift
     tl.fromTo('#f8-cam', { scale: 1 }, { scale: 1.01, duration: 7 * BEAT, ease: 'none' }, 0);
