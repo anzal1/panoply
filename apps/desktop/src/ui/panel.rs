@@ -191,7 +191,8 @@ impl ToolPanel {
             }
         }
         let focus = cx.focus_handle();
-        match inputs.values().next() {
+        // The first option on screen, when it is a text box (see `focus_default`).
+        match form.primary().first().and_then(|f| inputs.get(&f.key)) {
             Some(first) => first.update(cx, |s, cx| s.focus(window, cx)),
             None => window.focus(&focus, cx),
         }
@@ -222,7 +223,15 @@ impl ToolPanel {
     /// Put keyboard focus where the current screen needs it: the first text field while editing
     /// options, the panel itself otherwise, so Return, Escape and Command+Z reach it.
     fn focus_default(&self, window: &mut Window, cx: &mut Context<Self>) {
-        match (&self.phase, self.inputs.values().next()) {
+        // The first option on screen, when it is a text box. `inputs` is keyed by name, so its first
+        // entry is the alphabetically first option, which is often one further down the panel (or
+        // one that does not apply to the chosen target) and drew the focus ring there.
+        let first_shown = self
+            .form
+            .primary()
+            .first()
+            .and_then(|f| self.inputs.get(&f.key));
+        match (&self.phase, first_shown) {
             (Phase::Options, Some(first)) => first.update(cx, |s, cx| s.focus(window, cx)),
             _ => window.focus(&self.focus, cx),
         }
