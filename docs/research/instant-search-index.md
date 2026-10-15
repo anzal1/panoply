@@ -68,3 +68,29 @@ longest token and a later driver only runs for a short page.
 - A trigram posting list (as sketched in the spec) would double the memory; a linear SIMD scan over 18 MB across
   8 threads is already around 1 ms.
 - No reverse engineering was needed: the bar is reachable, so ADR 0005 was not triggered.
+
+## Phase 2 measurements (macOS)
+
+Same 1,083,006 entry tree and the same Mac under the same shared load, release build, 8 walker threads.
+
+| first scan, with modified times | best of 3 builds |
+|---|---|
+| `getattrlistbulk` (name, type, mtime, device in one call per few hundred entries) | 2.99 to 3.78 s |
+| `readdir` plus one `lstat` per entry (`bench --lstat`) | 4.65 to 5.00 s |
+| names only, no mtime (`bench --no-mtime`, the floor) | 1.75 s |
+
+The bulk read removes about 40 percent of the lstat cost; what is left over the floor is the kernel filling in the
+attributes. A volume without bulk support falls back to the old path by itself (`WalkOptions::bulk_reader`
+turns it off on purpose).
+
+Live updates, from `examples/watch_demo.rs` on a 1 M entry index with FSEvents (0.1 s stream latency, 200 ms
+settle window):
+
+| change | searchable after |
+|---|---|
+| new file | 217 ms |
+| rename | 219 ms |
+| delete | 221 ms |
+| 2,000 file burst across 20 new folders | 316 ms |
+| removal of that burst | 309 ms |
+| idle for 60 s | 0.00 s of CPU, rss steady at 74.0 MB |
