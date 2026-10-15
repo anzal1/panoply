@@ -81,7 +81,7 @@ impl AppView {
     pub(crate) fn new(window: &mut Window, cx: &mut Context<Self>, hub: Hub) -> Self {
         let search = cx.new(|cx| {
             InputState::new(window, cx).placeholder(format!(
-                "Search {} tools and files",
+                "Search {} tools",
                 hub.catalog.tools().len()
             ))
         });
@@ -855,7 +855,7 @@ impl AppView {
                 div()
                     .id("app-search")
                     .role(Role::SearchInput)
-                    .aria_label("Search tools and files")
+                    .aria_label("Search tools")
                     .aria_keyshortcuts("Meta+F")
                     .aria_value(self.query.clone())
                     .track_focus(&focus)
@@ -1779,7 +1779,7 @@ impl Render for AppView {
                 (
                     "search",
                     "Find arrives with the file index",
-                    "Searching inside your files, screenshots and photos comes in a later phase. Until then, the search box on Home finds tools and takes files.",
+                    "Searching inside your files, screenshots and photos is not in the app yet. For now the search box on Home finds tools and takes files.",
                 ),
                 t,
                 cx,
@@ -1790,7 +1790,7 @@ impl Render for AppView {
                 (
                     "radio",
                     "Nearby arrives with sharing",
-                    "Sending to your phone and other computers comes in a later phase, over your own network.",
+                    "Sending to your phone and other computers is not in the app yet. From the command line, panoply share already does it over your own network.",
                 ),
                 t,
                 cx,

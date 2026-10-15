@@ -193,7 +193,7 @@ impl Bar {
             }
         }
         let placeholder = format!(
-            "Search {} tools and your files, or drop anything",
+            "Search {} tools, or drop anything",
             hub.catalog.tools().len()
         );
         let input = cx.new(|cx| InputState::new(window, cx).placeholder(placeholder));
@@ -1017,7 +1017,7 @@ impl Render for Bar {
         let scroll = snap(self.scroll.position);
         let pill_y = self.pill.position;
         let placeholder: SharedString = format!(
-            "Search {} tools and your files, or drop anything",
+            "Search {} tools, or drop anything",
             self.hub.catalog.tools().len()
         )
         .into();
@@ -1044,7 +1044,7 @@ impl Render for Bar {
             .id("search-field")
             .track_focus(&input_focus)
             .role(Role::SearchInput)
-            .aria_label("Search tools and files")
+            .aria_label("Search tools")
             .aria_placeholder(ph)
             .aria_value(self.query.clone())
             .flex_1()
