@@ -1,1 +1,2 @@
 video draft 30
+# run 2: ffmpeg installed, pipefail on

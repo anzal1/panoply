@@ -60,6 +60,10 @@ jobs:
           npm install --no-save --prefix "$RUNNER_TEMP/gsap" gsap@3.15.0
           mkdir -p docs/launch/video/assets/vendor
           cp "$RUNNER_TEMP/gsap/node_modules/gsap/dist/gsap.min.js" docs/launch/video/assets/vendor/gsap.min.js
+      - name: FFmpeg
+        run: |
+          command -v ffmpeg >/dev/null || { sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg; }
+          ffmpeg -version | head -1
       - name: Chrome for HyperFrames
         working-directory: docs/launch/${{ steps.s.outputs.project }}
         run: npx --yes hyperframes@0.8.160 browser ensure
@@ -67,6 +71,7 @@ jobs:
         working-directory: docs/launch/${{ steps.s.outputs.project }}
         run: npx --yes hyperframes@0.8.160 check . --snapshots
       - name: Render
+        shell: bash
         working-directory: docs/launch/${{ steps.s.outputs.project }}
         run: |
           mkdir -p renders
