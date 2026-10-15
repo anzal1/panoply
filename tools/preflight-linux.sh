@@ -23,7 +23,7 @@
 # folder and the downloaded engines warm between runs. Everything runs at nice 15, and only one heavy check runs on the Mac at a time (tools/lib/heavy-lock.sh). When the check ends the
 # VM is stopped (`colima stop`), so it costs nothing while idle, and your docker context is put back.
 #
-# Environment: PANOPLY_COLIMA_PROFILE (default panoply), PANOPLY_LINUX_JOBS (cargo jobs, default 8),
+# Environment: PANOPLY_COLIMA_PROFILE (default panoply), PANOPLY_LINUX_JOBS (cargo jobs, default 4),
 # PANOPLY_SMOKE_OUT (where the screenshots go, default ~/.cache/panoply/linux-smoke).
 set -euo pipefail
 
@@ -51,7 +51,8 @@ done
 profile="${PANOPLY_COLIMA_PROFILE:-panoply}"
 ctx="colima-$profile"
 [ "$profile" = default ] && ctx=colima
-jobs="${PANOPLY_LINUX_JOBS:-${CARGO_BUILD_JOBS:-8}}"
+# 4 jobs: the VM has 4 CPUs and 3.7 GB, and 8 rustc processes (cranelift-codegen above all) were OOM-killed.
+jobs="${PANOPLY_LINUX_JOBS:-4}"
 smoke_out="${PANOPLY_SMOKE_OUT:-$HOME/.cache/panoply/linux-smoke}"
 start=$SECONDS
 step() { printf '\n==> [linux] %s\n' "$*"; step_start=$SECONDS; }
