@@ -25,7 +25,7 @@ Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polis
 | P1 | 12 | 6 | 6 |
 | P2 | 31 | 9 | 22 |
 
-No P0: nothing crashed, hung, lost an original or wrote a half-finished file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
+No P0: nothing crashed, hung, lost an original or left a half-written file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
 
 What held up, for the record: Remove background (hair, flag patch and collar edges are clean on a portrait, `user-pass/cutout-on-dark.jpg`), Upscale (`user-pass/upscale-nearest-bicubic-model.jpg`), the six passport portraits (`user-pass/passport-six-portraits.jpg`), HEIC compress (54% smaller, indistinguishable at 100%), EXIF orientation (all eight orientations resize to the same picture), strip metadata (GPS and camera tags really gone), passport framing and background on six portraits, signature cleaning, OCR text selectable after the pass, 300 MB PDF compress in 5 s at 17 MB peak, a 3 hour FLAC converted in 7 s, a 20,000 by 20,000 PNG compressed in 0.6 s at 23 MB, cancel on video, erase and OCR returns in under 100 ms.
 
