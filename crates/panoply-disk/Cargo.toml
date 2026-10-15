@@ -1,0 +1,43 @@
+[package]
+name = "panoply-disk"
+description = "Disk map engine: a parallel allocated-size scanner and a compact aggregated tree for Panoply"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["disk-usage", "du", "treemap", "storage"]
+categories = ["filesystem"]
+
+[dependencies]
+thiserror.workspace = true
+
+# Operating system calls only. Each platform backend reads a folder with the fastest call the OS has,
+# and every dependency is already in the tree through another crate.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSURL", "NSString", "NSArray", "NSDictionary", "NSError", "NSValue", "NSObject"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+] }
+
+# Not the workspace lints: `unsafe` is denied here instead of forbidden, because reading a folder with
+# getattrlistbulk, getdents64 and statx, or GetFileInformationByHandleEx, is an operating system call.
+# Each platform module allows it on its own and every unsafe block carries a SAFETY note. The tree, the
+# scanner and everything a caller touches stay safe.
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
