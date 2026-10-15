@@ -5,11 +5,16 @@
 //! was skipped (other volumes, unreadable folders) and why. See the crate README for the rules.
 
 mod backend;
+mod layout;
 mod scan;
 mod tree;
 mod volume;
 
 pub use backend::{BackendChoice, SkipReason};
+pub use layout::{
+    Arc, DRILL_DURATION, Drill, LayoutOptions, MoreInfo, Rect, SunburstOptions, Tile,
+    ease_out_cubic, hit_test, squarify, sunburst,
+};
 pub use scan::{Progress, Scan, ScanError, ScanOptions, ScanReport, Skipped, scan};
 pub use tree::{Kind, NodeId, Tree, flags};
 pub use volume::{Accounting, VolumeInfo, info as volume_info};
