@@ -82,47 +82,141 @@ impl Panel {
     }
 }
 
-/// One boolean system setting read through gsettings: where its answer is kept, and what to ask.
+/// One boolean system setting kept in GNOME's settings: where its answer is cached, and what to ask.
 #[cfg(target_os = "linux")]
 #[derive(Clone, Copy)]
 struct Watch {
     slot: &'static std::sync::atomic::AtomicU8,
+    started: &'static std::sync::Once,
     schema: &'static str,
     key: &'static str,
     on: &'static str,
 }
 
-/// Whether a boolean system setting is on, read off the UI thread. The answer is cached and
-/// refreshed every few seconds by a small background thread, so asking costs an atomic load.
+/// Whether a boolean system setting is on, without asking from the UI thread. The first call
+/// starts one background thread that reads the value once and then follows changes through a
+/// single long-lived `gsettings monitor` child; nothing polls. Asking costs an atomic load.
 #[cfg(target_os = "linux")]
 fn gnome_flag(w: Watch) -> bool {
     use std::sync::atomic::Ordering;
-    static STARTED: std::sync::Once = std::sync::Once::new();
-    static WATCHED: std::sync::Mutex<Vec<Watch>> = std::sync::Mutex::new(Vec::new());
-    if let Ok(mut list) = WATCHED.lock()
-        && !list.iter().any(|x| std::ptr::eq(x.slot, w.slot))
-    {
-        list.push(w);
-    }
-    STARTED.call_once(|| {
-        std::thread::spawn(|| {
-            loop {
-                let list: Vec<Watch> = WATCHED.lock().map(|l| l.clone()).unwrap_or_default();
-                for x in list {
-                    let v = std::process::Command::new("gsettings")
-                        .args(["get", x.schema, x.key])
-                        .output()
-                        .ok()
-                        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == x.on);
-                    if let Some(v) = v {
-                        x.slot.store(1 + u8::from(v), Ordering::Relaxed);
-                    }
-                }
-                std::thread::sleep(std::time::Duration::from_secs(4));
-            }
-        });
+    w.started.call_once(|| {
+        std::thread::spawn(move || follow(w));
     });
     w.slot.load(Ordering::Relaxed) == 2
+}
+
+/// Read a setting once, then block on its change feed. A desktop without the schema (anything but
+/// GNOME, or no `gsettings` at all) keeps the default and says so once.
+#[cfg(target_os = "linux")]
+fn follow(w: Watch) {
+    use std::io::{BufRead, BufReader};
+    use std::process::{Command, Stdio};
+    use std::sync::atomic::Ordering;
+    let store = |text: &str| {
+        w.slot
+            .store(1 + u8::from(text.trim() == w.on), Ordering::Relaxed);
+    };
+    let first = Command::new("gsettings")
+        .args(["get", w.schema, w.key])
+        .stdin(Stdio::null())
+        .stderr(Stdio::null())
+        .output();
+    match first {
+        Ok(o) if o.status.success() => store(&String::from_utf8_lossy(&o.stdout)),
+        _ => {
+            eprintln!(
+                "setting {} {} is not available here, using the default",
+                w.schema, w.key
+            );
+            return;
+        }
+    }
+    use std::os::unix::process::CommandExt;
+    let mut cmd = Command::new("gsettings");
+    cmd.args(["monitor", w.schema, w.key])
+        .stdin(Stdio::null())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null());
+    // SAFETY: the closure runs between fork and exec and only calls prctl, which is async-signal-safe.
+    // The kernel then sends SIGTERM to the child when this process dies, however it dies.
+    unsafe {
+        cmd.pre_exec(|| {
+            if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM) != 0 {
+                return Err(std::io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+    let Ok(mut child) = cmd.spawn() else {
+        return;
+    };
+    let Some(out) = child.stdout.take() else {
+        let _ = child.kill();
+        let _ = child.wait();
+        return;
+    };
+    // Kept where `stop_watchers` can reach it: this thread is blocked reading while the app runs.
+    if let Ok(mut list) = MONITORS.lock() {
+        list.push(child);
+    }
+    // Each change arrives as one line, `key: value`.
+    for line in BufReader::new(out).lines().map_while(Result::ok) {
+        if let Some((_, v)) = line.rsplit_once(": ") {
+            store(v);
+        }
+    }
+}
+
+/// The long-lived `gsettings monitor` children.
+#[cfg(target_os = "linux")]
+static MONITORS: std::sync::Mutex<Vec<std::process::Child>> = std::sync::Mutex::new(Vec::new());
+
+/// Kill and reap the `gsettings monitor` children. Called when the app quits; a crash is covered by
+/// the parent-death signal set when they are spawned.
+#[cfg(target_os = "linux")]
+pub(crate) fn stop_watchers() {
+    if let Ok(mut list) = MONITORS.lock() {
+        for mut child in list.drain(..) {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+    }
+}
+
+/// Give keyboard focus to the command bar. On X11 the bar is an override-redirect pop-up, which the
+/// window manager never focuses and `_NET_ACTIVE_WINDOW` cannot reach, so without this Escape goes to
+/// whatever had focus before. Returns the window that had it, for [`x11_restore_focus`]. Wayland
+/// and every failure return `None`.
+#[cfg(target_os = "linux")]
+pub(crate) fn x11_take_focus(window: &Window) -> Option<u32> {
+    use raw_window_handle::{HasWindowHandle, RawWindowHandle};
+    use x11rb::CURRENT_TIME;
+    use x11rb::connection::Connection;
+    use x11rb::protocol::xproto::{ConnectionExt, InputFocus};
+    let id = match HasWindowHandle::window_handle(window).ok()?.as_raw() {
+        RawWindowHandle::Xcb(h) => h.window.get(),
+        RawWindowHandle::Xlib(h) => u32::try_from(h.window).ok()?,
+        _ => return None,
+    };
+    let (conn, _) = x11rb::connect(None).ok()?;
+    let prev = conn.get_input_focus().ok()?.reply().ok()?.focus;
+    conn.set_input_focus(InputFocus::POINTER_ROOT, id, CURRENT_TIME)
+        .ok()?;
+    conn.flush().ok()?;
+    // The previous focus is only worth handing back when it was a real window.
+    (prev > 1).then_some(prev)
+}
+
+/// Hand focus back to the window [`x11_take_focus`] saw, so the app window keeps its keyboard.
+#[cfg(target_os = "linux")]
+pub(crate) fn x11_restore_focus(prev: u32) {
+    use x11rb::CURRENT_TIME;
+    use x11rb::connection::Connection;
+    use x11rb::protocol::xproto::{ConnectionExt, InputFocus};
+    if let Ok((conn, _)) = x11rb::connect(None) {
+        let _ = conn.set_input_focus(InputFocus::PARENT, prev, CURRENT_TIME);
+        let _ = conn.flush();
+    }
 }
 
 #[cfg(windows)]
@@ -299,8 +393,10 @@ pub(crate) fn reduce_motion() -> bool {
     #[cfg(target_os = "linux")]
     {
         static SLOT: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+        static ONCE: std::sync::Once = std::sync::Once::new();
         gnome_flag(Watch {
             slot: &SLOT,
+            started: &ONCE,
             schema: "org.gnome.desktop.interface",
             key: "enable-animations",
             on: "false",
@@ -325,8 +421,10 @@ pub(crate) fn increase_contrast() -> bool {
     #[cfg(target_os = "linux")]
     {
         static SLOT: std::sync::atomic::AtomicU8 = std::sync::atomic::AtomicU8::new(0);
+        static ONCE: std::sync::Once = std::sync::Once::new();
         gnome_flag(Watch {
             slot: &SLOT,
+            started: &ONCE,
             schema: "org.gnome.desktop.a11y.interface",
             key: "high-contrast",
             on: "true",

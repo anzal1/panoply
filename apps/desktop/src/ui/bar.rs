@@ -164,6 +164,9 @@ pub(crate) struct Bar {
     anim: Option<VisAnim>,
     pub(crate) suppress_autohide: bool,
     launch_pending: bool,
+    /// Linux/X11: the window that had keyboard focus before the bar took it.
+    #[cfg(target_os = "linux")]
+    prev_focus: Option<u32>,
 }
 
 impl Bar {
@@ -256,6 +259,8 @@ impl Bar {
             anim: None,
             suppress_autohide: false,
             launch_pending: mode == BarMode::Live,
+            #[cfg(target_os = "linux")]
+            prev_focus: None,
         };
         bar.rebuild(cx);
         bar
@@ -569,6 +574,10 @@ impl Bar {
             w.position(WIDTH as f64, HEIGHT as f64, 0.22);
         })
         .detach();
+        #[cfg(target_os = "linux")]
+        {
+            self.prev_focus = platform::x11_take_focus(window);
+        }
         window.focus(&self.focus, cx);
         self.anim = Some(VisAnim {
             showing: true,
@@ -650,10 +659,19 @@ impl Bar {
             if let Some(w) = self.win {
                 w.order_out();
             }
-            #[cfg(not(target_os = "macos"))]
-            window.minimize_window();
             self.phase = Phase::Hidden;
             self.reset(window, cx);
+            #[cfg(target_os = "linux")]
+            {
+                // X11 never unmaps a pop-up and ignores minimize for it, so on Linux the bar window
+                // exists only while it is up: closed here, created again by the next hotkey.
+                if let Some(prev) = self.prev_focus.take() {
+                    platform::x11_restore_focus(prev);
+                }
+                window.remove_window();
+            }
+            #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+            window.minimize_window();
         }
     }
 

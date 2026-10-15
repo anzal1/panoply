@@ -4,23 +4,32 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
-## Unreleased
+## v0.1.2-beta (2026-10-15)
 
-### Changed
-
-- Icon: the fan now opens narrower, so all three tool cards read at every size.
+The first release checked on real Windows and Linux desktops before shipping.
 
 ### Fixed
 
-- Undo moves the result to the Recycle Bin on Windows and the trash on Linux, never a permanent delete.
-
-### Fixed
-
+- **Linux: the app now opens a window.** The v0.1.0 and v0.1.1 Linux builds started without X11 or Wayland
+  support, so nothing appeared on screen. The command bar now stays hidden until the hotkey shows it, and
+  the app follows system appearance changes instead of checking every few seconds.
+- **Undo never deletes for good.** It moves the result to the Recycle Bin on Windows, the trash on Linux and
+  the Trash on macOS. If a drive has no bin, the file stays where it is and the result card says so.
 - **Windows: a tray icon while the app runs in the background.** Closing the window used to leave the
   process running with nothing to see. The fan now sits in the notification area with Open Panoply, Open
   command bar and Quit.
 - **Windows: the command bar opens centred in the upper part of the display under the pointer**, not at a
   fixed spot near the top left.
+- **Small screens:** the first window fits displays such as 1024 by 768 instead of running off the edge.
+
+### Changed
+
+- **Icon:** the fan opens narrower, so all three tool cards read at every size.
+
+### Known
+
+- On Linux, Escape does not hide the command bar yet. Press the hotkey again to hide it. Fixed in the next
+  release.
 
 ## v0.1.1-beta (2026-10-14)
 
