@@ -575,9 +575,15 @@ Journey '2' 'Hotkey, type "compress", Enter: a Compress panel opens' {
     Fact 'bar_has_focus_before_typing' ([W]::GetForegroundWindow().ToInt64() -eq $bar.hwnd)
     if ([W]::GetForegroundWindow().ToInt64() -ne $bar.hwnd) { Note 'the bar did not hold keyboard focus after the hotkey; the script clicked it to focus, which a person would also have to do'; [void](Focus-Window $bar) }
     Type-Text 'compress'
-    $barNow = Get-Bar $app.proc
-    $before = Wait-Text $app.proc 'bar-typed' { Get-Bar $app.proc } 'compress' 6
+    # The typed word has to land in the search box: the placeholder goes away and the Suggested list changes.
+    $before = $null; $landed = $false
+    for ($k = 1; $k -le 6 -and -not $landed; $k++) {
+      Start-Sleep -Milliseconds 1200
+      $before = Wait-Text $app.proc "bar-typed-$k" { Get-Bar $app.proc } 'compress' 3
+      $landed = ($before.text -notmatch 'Search 31 tools')
+    }
     Fact 'rows_after_typing' ($before.text -replace '\s+', ' ')
+    Check 'the typed word replaces the placeholder in the search box' $landed ($before.text -replace '\s+', ' ')
     Check 'typed text and result rows are visible' $before.ok ($before.text -replace '\s+', ' ')
     Press-Key 0x0D; Start-Sleep -Seconds 2
     $after = Wait-Text $app.proc 'bar-after-enter' { Get-Bar $app.proc } 'Choose files|Quality|Run|Options' 8

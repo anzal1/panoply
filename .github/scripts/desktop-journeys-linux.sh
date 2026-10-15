@@ -208,8 +208,14 @@ j_2() { # Hotkey, type compress, Enter
     data focus_after_hotkey "$(xdotool getwindowfocus 2>&1) bar=$(bar_id)"
     local bid; bid="$(bar_id)"; xdotool windowfocus "$bid" 2>/dev/null; sleep 0.3
     type_text "compress"
-    wait_text bar-typed bar 'compress' 6
+    # The typed word has to land in the search box: the placeholder goes away and the Suggested list changes.
+    local k landed=0
+    for k in 1 2 3 4 5 6; do
+      sleep 1.2; wait_text "bar-typed-$k" bar 'compress' 3
+      echo "$WT_TEXT" | grep -Eiq 'Search 31 tools' || { landed=1; break; }
+    done
     data rows_after_typing "$(one_line "$WT_TEXT")"
+    check "the typed word replaces the placeholder in the search box" "$landed" "$(one_line "$WT_TEXT")"
     check "typed text and result rows are visible" "$WT_OK" "$(one_line "$WT_TEXT")"
     key Return; sleep 2
     wait_text bar-after-enter bar 'Choose files|Quality|Run|Options' 8
