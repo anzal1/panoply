@@ -368,6 +368,72 @@ fn one(job: &mut Job, input: &Path, w: &Wish) -> Result<()> {
         }
         attempt += 1;
     }
+    // The default goal is a picture that looks good, and the planner reaches it from a typical
+    // bit rate for the size. Clips that are hard to encode (noise, fast motion, a thin source) come
+    // out well below that, so the first result is measured and, when it is visibly degraded, encoded
+    // again with more bit rate (up to the source's own), keeping whichever stays smaller than the
+    // original.
+    let mut quality_warning: Option<String> = None;
+    if target_cap.is_none()
+        && w.quality.is_none()
+        && w.measure
+        && let Some((first_part, first_size, first_bps)) = best.clone()
+    {
+        let ceiling = src_video_bps * 9 / 10;
+        let mut cur = (first_part, first_size, first_bps);
+        let mut score = measure(job, &input, &cur.0, duration, &v, &dir)
+            .filter(|q| q.vmaf)
+            .map(|q| q.score);
+        let mut boosts = 0;
+        while let Some(sc) = score
+            && sc < QUALITY_FLOOR_VMAF
+            && boosts < 2
+            && ceiling > cur.2 * 11 / 10
+        {
+            let next_bps = (cur.2 * 18 / 10).min(ceiling);
+            let setup = EncodeSetup {
+                input: &input,
+                p: &p,
+                v: &v,
+                enc: &enc,
+                codec,
+                ten,
+                container,
+                plan: &plan,
+                sdr: if to_sdr { transfer } else { None },
+                dir: &dir,
+            };
+            let part2 = encode(job, &setup, next_bps, (0.9, 0.97))?;
+            let size2 = std::fs::metadata(&part2)?.len();
+            if size2 as f64 > p.size as f64 * 0.97 {
+                job.stage.discard(&part2);
+                break;
+            }
+            let sc2 = measure(job, &input, &part2, duration, &v, &dir)
+                .filter(|q| q.vmaf)
+                .map(|q| q.score);
+            boosts += 1;
+            notes.push(format!(
+                "The first result scored VMAF {sc:.0}, which looks visibly worse than the original, so it was encoded again at {} (VMAF {}).",
+                bitrate_text(next_bps as f64),
+                sc2.map(|v| format!("{v:.0}")).unwrap_or_else(|| "not measured".into())
+            ));
+            job.stage.discard(&cur.0);
+            cur = (part2, size2, next_bps);
+            score = sc2;
+        }
+        best = Some(cur);
+        if let Some(sc) = score
+            && sc < QUALITY_FLOOR_VMAF
+        {
+            quality_warning = Some(format!(
+                "Quality is VMAF {sc:.0}, below the {QUALITY_FLOOR_VMAF:.0} Panoply recommends: this video is hard to shrink without losing detail. Keep the original if it matters, or compress it less (quality 70 or more)."
+            ));
+        }
+    }
+    if let Some(wm) = quality_warning {
+        notes.insert(0, wm);
+    }
     let Some((part, size, used_bps)) = best else {
         let closest = tried.iter().map(|t| t.1).min().unwrap_or(0);
         return Err(MediaError::Failed(format!(
@@ -438,6 +504,9 @@ fn one(job: &mut Job, input: &Path, w: &Wish) -> Result<()> {
     }
     Ok(())
 }
+
+/// Below this VMAF the result looks visibly worse than the original.
+const QUALITY_FLOOR_VMAF: f64 = 75.0;
 
 fn measure(
     job: &mut Job,
