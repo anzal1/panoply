@@ -5,3 +5,12 @@ video/assets/*.mp3
 video/renders/
 video/node_modules/
 video/snapshots/
+video/assets/vendor/
+video/assets/captures-raw/
+teaser/assets/vendor/
+video/.hyperframes/
+video/snapshots/
+video/renders/
+teaser/.hyperframes/
+teaser/snapshots/
+teaser/renders/

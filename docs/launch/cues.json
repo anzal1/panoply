@@ -1,23 +1,329 @@
 {
-  "note": "All times in beats from the first video downbeat (bar 1 beat 1 = 0). 4/4. Fractions are 16ths (0.25). Scene lengths are in bars, so the cut re-times itself to any tempo between 120 and 150 BPM: node tools/cues.mjs --bpm <bpm>",
+  "note": "All times in beats from the first video downbeat (bar 1 beat 1 = 0). 4/4. The anchors are the MEASURED hits and stops of the pick (Shinji, 130.0 BPM, edit start 25.884 s, see music-analysis/hits-shinji.json): hits at beats 8, 16, 33, 46.5, 68, 72, 74 (the strongest), 76; stops at 13.3 to 15.9, 32.6 to 32.9, 73.5 to 73.9, 75.5 to 75.9. Scene lengths are in bars so the cut re-times to any tempo: node tools/cues.mjs --bpm 130 --offset 25.884",
   "bars": 20,
   "tail_beats": 3,
   "scenes": [
-    { "id": "pain",    "name": "Cold open, the upload chaos", "start": 0,  "bars": 4, "pacing": "accelerating onsets, filtered build",
-      "cues": [ ["first window",0],["windows on every beat",1],["windows on 8ths",4],["Upload.",4],["Wait.",6],["Sign up.",8],["Pay.",10],["Everything freezes, scrim in",12],["Your file just left your computer.",12.5],["hard stop, silence",15.5] ] },
-    { "id": "hotkey",  "name": "The hotkey",                  "start": 16, "bars": 2, "pacing": "DROP on beat 16",
-      "cues": [["DROP: keycaps land, ground turns brand blue",16],["bar opens",16.5],["file lands on the bar",18],["tool list sorts in on 16ths",18.5],["first typed character",20],["last typed character (11 on 16ths)",22.75],["understood chip",23],["Return",23.5]] },
-    { "id": "tools",   "name": "The tools fly in",            "start": 24, "bars": 4, "pacing": "one tile per beat, then 8ths",
-      "cues": [["result card, 35 percent smaller",24],["first tile",26],["tile per beat",27],["tiles on 8ths",32],["counter locks at the real tool count",36],["categories light in a row",37],["resolve to the real Home screen",39]] },
-    { "id": "find",    "name": "Instant search (placeholder)","start": 40, "bars": 2, "pacing": "keystrokes on 16ths",
-      "cues": [["Find view in",40],["type three letters",41],["results reflow per keystroke",41.25],["latency pill (measured)",43],["Every file on your disk.",44],["Before you finish typing.",46]] },
-    { "id": "diskmap", "name": "Disk map (placeholder)",      "start": 48, "bars": 2, "pacing": "rects grow on 8ths",
-      "cues": [["treemap grows",48],["drill into the biggest block",50],["Move to trash",52],["freed counter",53],["See what is eating your space.",54]] },
-    { "id": "plugins", "name": "The moat, community plugins", "start": 56, "bars": 3, "pacing": "build to a fill",
-      "cues": [["UI recedes into the fan",56],["Anyone can add a tool.",57],["folder: module.toml",58],["folder: tool.wasm",59],["folder: icon",60],["module slides into Modules",61],["community badge counts up",62],["wall of community tools",63],["Built by the people.",65],["drum fill",67]] },
-    { "id": "promise", "name": "Free, open source, on device","start": 68, "bars": 2, "pacing": "one phrase per two beats",
-      "cues": [["Free.",68],["Open source.",70],["On your device.",72],["macOS Windows Linux",74]] },
-    { "id": "end",     "name": "End card",                    "start": 76, "bars": 1, "pacing": "final hit then ring out",
-      "cues": [["fan mark + Panoply land on the downbeat",76],["url",77],["hold, track rings out",78]] }
-  ]
+    {
+      "id": "pain",
+      "name": "Cold open, the upload chaos",
+      "start": 0,
+      "bars": 4,
+      "pacing": "accelerating onsets, filtered build",
+      "cues": [
+        [
+          "first window",
+          0
+        ],
+        [
+          "windows on every beat",
+          1
+        ],
+        [
+          "windows on 8ths",
+          4
+        ],
+        [
+          "Upload.",
+          4
+        ],
+        [
+          "Wait.",
+          6
+        ],
+        [
+          "HIT beat 8 (0.63): Sign up.",
+          8
+        ],
+        [
+          "Pay.",
+          10
+        ],
+        [
+          "STOP begins: wall freezes, scrim in",
+          13.3
+        ],
+        [
+          "Your file just left your computer. (lands in the silence)",
+          14
+        ],
+        [
+          "STOP ends, black",
+          15.9
+        ]
+      ]
+    },
+    {
+      "id": "hotkey",
+      "name": "The hotkey",
+      "start": 16,
+      "bars": 2,
+      "pacing": "DROP on beat 16",
+      "cues": [
+        [
+          "HIT beat 16, the drop: keycaps down, ground turns brand blue",
+          16
+        ],
+        [
+          "bar opens",
+          16.5
+        ],
+        [
+          "keycaps swap to Ctrl Alt Space",
+          17
+        ],
+        [
+          "file lands on the bar",
+          18
+        ],
+        [
+          "tool list sorts in on 16ths",
+          18.5
+        ],
+        [
+          "first typed character",
+          20
+        ],
+        [
+          "last typed character (11 on 16ths)",
+          22.75
+        ],
+        [
+          "understood chip",
+          23
+        ],
+        [
+          "Return",
+          23.5
+        ]
+      ]
+    },
+    {
+      "id": "tools",
+      "name": "The tools fly in",
+      "start": 24,
+      "bars": 4,
+      "pacing": "one tile per beat, then 8ths",
+      "cues": [
+        [
+          "result card, 35 percent smaller",
+          24
+        ],
+        [
+          "first tile",
+          26
+        ],
+        [
+          "tile per beat",
+          27
+        ],
+        [
+          "tiles on 8ths",
+          31
+        ],
+        [
+          "STOP 32.6 to 32.9, then HIT beat 33 (0.79): counter locks on the real tool count",
+          33
+        ],
+        [
+          "categories light in a row",
+          34
+        ],
+        [
+          "resolve to the real Home screen",
+          39
+        ]
+      ]
+    },
+    {
+      "id": "find",
+      "name": "Instant search (placeholder)",
+      "start": 40,
+      "bars": 2,
+      "pacing": "keystrokes on 16ths",
+      "cues": [
+        [
+          "Find view in",
+          40
+        ],
+        [
+          "type three letters",
+          41
+        ],
+        [
+          "results reflow per keystroke",
+          41.25
+        ],
+        [
+          "Every file on your disk.",
+          44
+        ],
+        [
+          "HIT beat 46.5 (0.53): latency pill, Before you finish typing.",
+          46.5
+        ]
+      ]
+    },
+    {
+      "id": "diskmap",
+      "name": "Disk map (placeholder)",
+      "start": 48,
+      "bars": 2,
+      "pacing": "rects grow on 8ths",
+      "cues": [
+        [
+          "HIT beat 48: treemap grows",
+          48
+        ],
+        [
+          "drill into the biggest block",
+          50
+        ],
+        [
+          "Move to trash",
+          52
+        ],
+        [
+          "freed counter",
+          53
+        ],
+        [
+          "See what is eating your space.",
+          54
+        ]
+      ]
+    },
+    {
+      "id": "plugins",
+      "name": "The moat, community plugins",
+      "start": 56,
+      "bars": 3,
+      "pacing": "build to a fill",
+      "cues": [
+        [
+          "UI recedes into the fan",
+          56
+        ],
+        [
+          "Anyone can add a tool.",
+          57
+        ],
+        [
+          "folder: module.toml",
+          58
+        ],
+        [
+          "folder: tool.wasm",
+          59
+        ],
+        [
+          "folder: icon",
+          60
+        ],
+        [
+          "module slides into Modules",
+          61
+        ],
+        [
+          "community badge counts up",
+          62
+        ],
+        [
+          "wall of community tools",
+          63
+        ],
+        [
+          "Built by the people.",
+          65
+        ],
+        [
+          "wall fills into the hit",
+          67.5
+        ],
+        [
+          "HIT beat 68: the wall locks, cut to Free.",
+          68
+        ]
+      ]
+    },
+    {
+      "id": "promise",
+      "name": "Free, open source, on device",
+      "start": 68,
+      "bars": 2,
+      "pacing": "one phrase per two beats",
+      "cues": [
+        [
+          "HIT beat 68: Free.",
+          68
+        ],
+        [
+          "HIT beat 72 (0.70): Open source.",
+          72
+        ],
+        [
+          "STOP 73.5 to 73.9: hold",
+          73.5
+        ],
+        [
+          "HIT beat 74 (1.0, the strongest hit): On your device.",
+          74
+        ],
+        [
+          "STOP 75.5 to 75.9: everything is still",
+          75.5
+        ]
+      ]
+    },
+    {
+      "id": "end",
+      "name": "End card",
+      "start": 76,
+      "bars": 1,
+      "pacing": "final hit then ring out",
+      "cues": [
+        [
+          "HIT beat 76 (0.66): fan mark + Panoply land on the downbeat",
+          76
+        ],
+        [
+          "macOS Windows Linux, url",
+          77.5
+        ],
+        [
+          "hold, track rings out",
+          79
+        ]
+      ]
+    }
+  ],
+  "measured": {
+    "hits": [
+      8,
+      16,
+      33,
+      46.5,
+      68,
+      72,
+      74,
+      76
+    ],
+    "stops": [
+      [
+        13.32,
+        15.93
+      ],
+      [
+        32.61,
+        32.93
+      ],
+      [
+        73.54,
+        73.93
+      ],
+      [
+        75.54,
+        75.92
+      ]
+    ]
+  }
 }

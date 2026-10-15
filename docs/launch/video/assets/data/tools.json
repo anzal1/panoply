@@ -1,0 +1,192 @@
+{
+ "count": 31,
+ "tools": [
+  {
+   "id": "id.passport_photo",
+   "name": "Passport photo",
+   "summary": "Make a photo that passes the passport or visa rules of a country, with live pass, warn and fail checks.",
+   "category": "id"
+  },
+  {
+   "id": "id.print_sheet",
+   "name": "Print sheet",
+   "summary": "Put several copies of this photo on one sheet for the print shop, at the exact size.",
+   "category": "id"
+  },
+  {
+   "id": "id.signature_cleaner",
+   "name": "Signature cleaner",
+   "summary": "Turn a photo of your signature into a clean transparent PNG.",
+   "category": "id"
+  },
+  {
+   "id": "image.erase",
+   "name": "Erase object",
+   "summary": "Paint over something and make it disappear. Give a mask picture as the second file (white is erased), or a rectangle.",
+   "category": "image"
+  },
+  {
+   "id": "image.remove_background",
+   "name": "Remove background",
+   "summary": "Cut the subject out: a transparent PNG, a solid color or a blurred background.",
+   "category": "image"
+  },
+  {
+   "id": "image.remove_watermark",
+   "name": "Remove watermark",
+   "summary": "Remove a watermark, logo or date stamp from pictures you own. Finds the mark, then fills it in.",
+   "category": "image"
+  },
+  {
+   "id": "image.upscale",
+   "name": "Upscale",
+   "summary": "Make a small or soft picture 2 or 4 times bigger and sharper.",
+   "category": "image"
+  },
+  {
+   "id": "image.compress",
+   "name": "Compress image",
+   "summary": "Make this image smaller without it looking worse, or fit it under a size.",
+   "category": "image"
+  },
+  {
+   "id": "image.convert",
+   "name": "Convert image",
+   "summary": "Turn this image into another format and keep its colors, orientation and details.",
+   "category": "image"
+  },
+  {
+   "id": "image.resize_to_kb",
+   "name": "Resize to exact KB",
+   "summary": "Fit a photo to the exact pixels and KB a form or exam portal asks for.",
+   "category": "image"
+  },
+  {
+   "id": "image.resize",
+   "name": "Resize image",
+   "summary": "Make this image an exact size, a percentage, or fit a longest side.",
+   "category": "image"
+  },
+  {
+   "id": "image.strip_metadata",
+   "name": "Strip metadata",
+   "summary": "Remove location, camera details or everything hidden in a photo, without touching its pixels.",
+   "category": "image"
+  },
+  {
+   "id": "media.compress",
+   "name": "Compress video",
+   "summary": "Make this video small enough to send or upload, under a size or as small as looks good.",
+   "category": "media"
+  },
+  {
+   "id": "media.convert",
+   "name": "Convert video or audio",
+   "summary": "Turn this video or audio file into MP4, MOV, MKV, WebM, MP3, M4A, WAV, FLAC and more.",
+   "category": "media"
+  },
+  {
+   "id": "media.extract_audio",
+   "name": "Extract audio",
+   "summary": "Pull the sound out of a video, as it is stored or as MP3, M4A, WAV, FLAC, Opus.",
+   "category": "media"
+  },
+  {
+   "id": "media.hdr_to_sdr",
+   "name": "HDR to SDR",
+   "summary": "Fix the washed-out look of an iPhone or HDR video on screens that are not HDR.",
+   "category": "media"
+  },
+  {
+   "id": "media.info",
+   "name": "Video and audio info",
+   "summary": "Tell me everything about this video or audio file and what is wrong with it.",
+   "category": "media"
+  },
+  {
+   "id": "media.normalize",
+   "name": "Normalize loudness",
+   "summary": "Make the loudness even and meet the broadcast or podcast standard.",
+   "category": "media"
+  },
+  {
+   "id": "media.repair",
+   "name": "Repair video",
+   "summary": "This video will not play: find out why and fix it.",
+   "category": "media"
+  },
+  {
+   "id": "media.streams",
+   "name": "Streams",
+   "summary": "Take out, drop or relabel the audio, subtitle and video tracks of a file.",
+   "category": "media"
+  },
+  {
+   "id": "media.to_mono",
+   "name": "Stereo to mono",
+   "summary": "Make it mono, swap the sides, split into two files or merge two mono files.",
+   "category": "media"
+  },
+  {
+   "id": "media.trim",
+   "name": "Trim video or audio",
+   "summary": "Cut out the parts you do not want, without re-encoding what does not have to be.",
+   "category": "media"
+  },
+  {
+   "id": "image.to_text",
+   "name": "Image to text",
+   "summary": "Copy the text out of this picture.",
+   "category": "image"
+  },
+  {
+   "id": "pdf.ocr",
+   "name": "OCR",
+   "summary": "Make this scan searchable and selectable.",
+   "category": "pdf"
+  },
+  {
+   "id": "pdf.compress",
+   "name": "Compress PDF",
+   "summary": "Make this PDF small enough to email or upload.",
+   "category": "pdf"
+  },
+  {
+   "id": "pdf.images_to_pdf",
+   "name": "Images to PDF",
+   "summary": "Make a PDF from these pictures, one per page.",
+   "category": "pdf"
+  },
+  {
+   "id": "pdf.merge",
+   "name": "Merge PDF",
+   "summary": "Put these PDFs in one file.",
+   "category": "pdf"
+  },
+  {
+   "id": "pdf.organize",
+   "name": "Organize PDF pages",
+   "summary": "Reorder, delete, rotate or pull out pages.",
+   "category": "pdf"
+  },
+  {
+   "id": "pdf.split",
+   "name": "Split PDF",
+   "summary": "Cut this PDF into parts by page ranges or every N pages.",
+   "category": "pdf"
+  },
+  {
+   "id": "pdf.to_images",
+   "name": "PDF to images",
+   "summary": "Turn each page of this PDF into a PNG or JPG picture.",
+   "category": "pdf"
+  },
+  {
+   "id": "files.hash",
+   "name": "Hash files",
+   "summary": "Show the SHA-256 checksum of each file.",
+   "category": "files"
+  }
+ ],
+ "_note": "generated from modules/builtin/*/module.toml plus the built-in Hash files tool; the film reads the count from here"
+}

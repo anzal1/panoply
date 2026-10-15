@@ -1,0 +1,59 @@
+{
+  "id": "launch",
+  "w": 1920,
+  "h": 1080,
+  "bpm": 130.0,
+  "bg": "#0c0c0f",
+  "frames": [
+    {
+      "id": "f1-pain",
+      "name": "1 pain",
+      "src": "compositions/frames/01-pain.html",
+      "beats": 16
+    },
+    {
+      "id": "f2-hotkey",
+      "name": "2 hotkey",
+      "src": "compositions/frames/02-hotkey.html",
+      "beats": 8
+    },
+    {
+      "id": "f3-tools",
+      "name": "3 tools",
+      "src": "compositions/frames/03-tools.html",
+      "beats": 16
+    },
+    {
+      "id": "f4-find",
+      "name": "4 find",
+      "src": "compositions/frames/04-find.html",
+      "beats": 8
+    },
+    {
+      "id": "f5-diskmap",
+      "name": "5 diskmap",
+      "src": "compositions/frames/05-diskmap.html",
+      "beats": 8
+    },
+    {
+      "id": "f6-plugins",
+      "name": "6 plugins",
+      "src": "compositions/frames/06-plugins.html",
+      "beats": 12
+    },
+    {
+      "id": "f7-promise",
+      "name": "7 promise",
+      "src": "compositions/frames/07-promise.html",
+      "beats": 8
+    },
+    {
+      "id": "f8-end",
+      "name": "8 end",
+      "src": "compositions/frames/08-end.html",
+      "beats": 4,
+      "tail_beats": 3
+    }
+  ],
+  "total_s": 38.30769
+}

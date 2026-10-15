@@ -1,0 +1,1 @@
+These are stand-ins from docs/design/review/after (flattened, square corners). Replaced by the real RGBA frames from the Launch captures workflow via tools/prep_captures.py.
