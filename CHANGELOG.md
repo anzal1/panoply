@@ -11,8 +11,8 @@ The first release checked on real Windows and Linux desktops before shipping.
 ### Fixed
 
 - **Linux: the app now opens a window.** The v0.1.0 and v0.1.1 Linux builds started without X11 or Wayland
-  support, so nothing appeared on screen. The command bar now stays hidden until the hotkey shows it, and
-  the app follows system appearance changes instead of checking every few seconds.
+  support, so nothing appeared on screen. The command bar now stays hidden until the hotkey shows it,
+  Escape hides it, and the app follows system appearance changes instead of polling them.
 - **Undo never deletes for good.** It moves the result to the Recycle Bin on Windows, the trash on Linux and
   the Trash on macOS. If a drive has no bin, the file stays where it is and the result card says so.
 - **Windows: a tray icon while the app runs in the background.** Closing the window used to leave the
@@ -28,8 +28,8 @@ The first release checked on real Windows and Linux desktops before shipping.
 
 ### Known
 
-- On Linux, Escape does not hide the command bar yet. Press the hotkey again to hide it. Fixed in the next
-  release.
+- On Linux with a compositing window manager, pressing the hotkey to hide the command bar can bring it
+  straight back. Press Escape to hide it instead. Fixed in the next release.
 
 ## v0.1.1-beta (2026-10-14)
 
