@@ -14,7 +14,7 @@ Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polis
 
 - **UI thread.** In the 49 app scenarios the slowest single frame while a job ran was 4.39 ms (Passport photo, the 4 ms line is 4.0); the other 48 stayed under 3.9 ms. A tool panel is drawn the first time in 0.9 to 3.0 ms, 8.5 ms for the first panel opened in a fresh process.
 - **Jobs.** 170 CLI jobs. Most tools are far inside the budgets: hash of a 300 MB PDF 1.0 s (faster than `shasum`, 2.7 s), PDF split of a 3,000 page file 0.07 s, Compress PDF of a 300 MB file 5.4 s at 17 MB, 3 hour FLAC to MP3 7.2 s at 17 MB, normalize of the same file 7.3 s at 24 MB, a 400 megapixel PNG compressed at 23 MB, passport photo 0.4 to 1.0 s.
-- **Over 300 MB.** HEVC/HEIF photos through ImageIO 825 MB to 834 MB (33 MP, documented), camera RAW 624 MB (documented), OCR with Arabic, Hebrew or Hindi 383 to 521 MB (documented up to 550 MB), video compress 0.5 to 3.6 GB (UP-10, not documented for hardware encoders).
+- **Over 300 MB.** HEVC/HEIF photos through ImageIO 825 MB to 834 MB (33 MP, documented), camera RAW 624 MB (documented), OCR with Arabic, Hebrew or Hindi 383 to 521 MB (documented up to 550 MB), video compress 0.4 to 1.4 GB after UP-10 (it was 0.5 to 3.6 GB; not documented for hardware encoders).
 - **Slow.** Compress PDF with `--under 1mb` on a 228 page scan 25.9 s; PDF to images of 3,000 pages at 36 DPI 14.8 s; OCR of a 42 page Arabic book 7.4 s.
 
 ## Counts
@@ -22,7 +22,7 @@ Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polis
 | | Found | Fixed on this branch | Open |
 |---|---:|---:|---:|
 | P0 | 0 | 0 | 0 |
-| P1 | 13 | 8 | 5 |
+| P1 | 13 | 9 | 4 |
 | P2 | 32 | 11 | 21 |
 
 No P0: nothing crashed, hung, lost an original or left a half-written file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
@@ -104,13 +104,13 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 - **Direction.** A thumbnail of the first output (and a before and after slider for the picture tools), and size tiles only where size is the goal.
 - **Screenshot.** `user-pass/sheet-done.png`, `user-pass/unmark-done.png`.
 
-### UP-09 "Smallest that still looks good" returned VMAF 52 and 59 and the card says nothing (open)
+### UP-09 "Smallest that still looks good" returned VMAF 52 and 59 and the card says nothing (fixed)
 
 - **Tool.** Compress video, default options.
 - **Steps.** `panoply run media.compress phone-clip-vid20240601.webm` and `camera-clip-mvi0131.ogv`.
 - **Expected.** Either quality that looks good (every other clip scored VMAF 88 to 96) or a warning.
 - **Happened.** The notes read "Goal: the smallest that still looks good ... Quality VMAF 59.5" and "... VMAF 52.6". Those are visibly degraded. The result saved 32% and 65%. No warning, no suggestion to keep the original.
-- **Direction.** Below a floor (say VMAF 80) say so in plain words and offer the original, or raise the bit rate until the floor is met, as the image path does with its similarity floor.
+- **Fix.** `crates/panoply-media/src/ops/compress.rs`: in the default mode the first result is measured; under VMAF 75 it is encoded again with up to 1.8 times the bit rate, twice at most and never above the source's own. If it is still under 75 and either under 60 or saves under 25%, the original is kept and the card says why; otherwise the card carries a warning first. On the two clips the hardware encoder cannot do better (59 to 61 and 53 to 56 after the retries), so both now keep the original with "left as it is: the best Panoply could do saves 4% but looks visibly worse". Test `a_clip_that_comes_out_visibly_worse_is_encoded_again_or_says_so`. Clips that already scored 81 to 96 are unchanged.
 
 ### UP-10 Compress video of one 5 second 4K clip peaked at 3.5 GB resident (fixed)
 
@@ -119,7 +119,7 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 - **Expected.** FLOWS.md: "constant for video and audio regardless of length (streamed)", and KNOWN-LIMITATIONS lists about 1.3 GB for software AV1 at 1080p as the worst case.
 - **Happened.** Resident set 3,579 MB (ffmpeg child process). The 1080p clips measured 861 MB (10 s H.264), 886 MB (10 s WebM), 914 MB (portrait phone clip) and 1,081 MB (10-bit HDR HEVC, 5 s); 720p clips 0.2 to 0.5 GB. KNOWN-LIMITATIONS lists only software AV1 (about 1.3 GB at 1080p) as a heavy case, so the default hardware path is heavier than the page says. A person on an 8 GB Mac would feel it.
 - **Cause.** Not the encoder. With `measure_quality=false` the same job peaks at 709 MB (4K) and 243 MB (1080p); the 3 GB and 0.6 GB on top are the quality check, which ran libvmaf with up to eight threads on frames at the source's own size.
-- **Fix.** `apps`-independent, in `crates/panoply-media/src/ops/quality.rs`: both pictures are compared at no more than 1080p (the size VMAF's model is made for) with four threads. Test `the_comparison_never_runs_above_1080p`. Re-measured numbers are in the table of the final report.
+- **Fix.** `apps`-independent, in `crates/panoply-media/src/ops/quality.rs`: both pictures are compared at no more than 1080p (the size VMAF's model is made for) with four threads. Test `the_comparison_never_runs_above_1080p`. Re-measured with the fix: 4K clip 3,584 to 1,370 MB, 1080p H264 861 to 485 MB, 10-bit HDR 1,081 to 650 MB, 1080p WebM 886 to 432 MB (the encoder alone is 709 MB for the 4K clip, 243 MB for 1080p).
 
 ### UP-11 The "Compress image" similarity floor lets smooth gradients block (open)
 
