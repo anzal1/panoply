@@ -562,7 +562,7 @@ Journey '1' 'First launch: window, home, no crash or blank window within 3 s' {
 # ================================================================================================
 # 2. Hotkey, type "compress", Enter
 # ================================================================================================
-Journey '2' 'Hotkey, type "compress", Enter: the Compress image panel opens' {
+Journey '2' 'Hotkey, type "compress", Enter: a Compress panel opens' {
   $app = Launch-App @('--background')
   Start-Sleep -Seconds 4
   Check 'the process is alive in the background' (-not $app.proc.HasExited)
@@ -739,6 +739,32 @@ Journey '4b' 'OCR a scanned PDF: the text becomes extractable' {
     $words = Py @('words', $out.FullName, 'invoice,4812,total,350,thank,business'); $ok = ($script:PyExit -eq 0)
     Check 'the text can be extracted (at least two of the words on the page)' $ok "found: $words"
   }
+  Stop-App $app
+}
+
+# ================================================================================================
+# 3b. The same words on a grainy photo saved as a PNG (the common exam-portal case)
+# ================================================================================================
+Journey '3b' 'A photo saved as PNG, "under 50 kb": an output under 50 KB, in whatever format works' {
+  if (-not $pyOk) { Limit 'fixtures could not be made (python or pip failed)'; return }
+  $d = Join-Path $Work 'j3b'; Copy-Fixtures $d
+  $png = Join-Path $d 'photo.png'; Fact 'input_bytes' (Get-Item $png).Length
+  $app = Launch-App @($png)
+  $main = Wait-Main $app 20
+  Check 'the app window opens with the file argument' ([bool]$main)
+  if (-not $main) { Stop-App $app; return }
+  [void](Wait-Text $app.proc 'file-open' { Get-Main $app.proc } 'photo' 10)
+  [void](Focus-Window $main)
+  Press-Chord @(0x11) 0x46; Start-Sleep -Milliseconds 400
+  Type-Text 'under 50 kb'
+  $q = Wait-Text $app.proc 'query' { Get-Main $app.proc } 'under 50' 6
+  Fact 'rows_after_typing' ($q.text -replace '\s+', ' ')
+  Press-Key 0x0D
+  $out = Find-NewFile $d 'photo*(*' @() 25
+  $done = Wait-Text $app.proc 'result-card' { Get-Main $app.proc } 'KB|MB|smaller|Undo|Done|saved|did not work' 8
+  Fact 'result_card' ($done.text -replace '\s+', ' ')
+  Check 'an output file appeared next to the input' ([bool]$out) ($done.text -replace '\s+', ' ')
+  if ($out) { Fact 'output' $out.Name; Fact 'output_bytes' $out.Length; Check 'the output is under 50 KB' ($out.Length -lt 50 * 1024) "$($out.Length) bytes" }
   Stop-App $app
 }
 

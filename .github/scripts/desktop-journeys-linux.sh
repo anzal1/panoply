@@ -358,6 +358,31 @@ j_4b() {
   stop_all
 }
 
+j_3b() { # The same words on a grainy photo saved as a PNG
+  [ "$FX_OK" = 1 ] || { limit "fixtures could not be made (python or pip failed)"; return; }
+  local d="$WORK/j3b"; fixtures "$d"
+  data input_bytes "$(filesize "$d/photo.png")"
+  launch_app "$d/photo.png"
+  local w; w="$(wait_main 25)"
+  check "the app window opens with the file argument" "$(ok_if x '[ -n "$w" ]')"
+  [ -n "$w" ] || { stop_all; return; }
+  wait_text file-open main 'photo' 10
+  focus_main; key ctrl+f; sleep 0.4
+  type_text "under 50 kb"
+  wait_text query main 'under 50' 8
+  data rows_after_typing "$(one_line "$WT_TEXT")"
+  key Return
+  local out; out="$(find_new "$d" 'photo*(*' 25)"
+  wait_text result-card main 'KB|MB|smaller|Undo|Done|saved|did not work' 8
+  data result_card "$(one_line "$WT_TEXT")"
+  check "an output file appeared next to the input" "$(ok_if x '[ -n "$out" ]')" "$(one_line "$WT_TEXT")"
+  if [ -n "$out" ]; then
+    local sz; sz="$(filesize "$out")"; data output "$(basename "$out")"; data output_bytes "$sz"
+    check "the output is under 50 KB" "$(ok_if x '[ "$sz" -lt 51200 ]')" "$sz bytes"
+  fi
+  stop_all
+}
+
 j_6() { # Close the window; Quit
   launch_app
   local w; w="$(wait_main 25)"
@@ -460,11 +485,12 @@ j_8() { # Idle memory and CPU
 }
 
 run_journey 1 'First launch: window, home, no crash or blank window within 3 s' j_1
-run_journey 2 'Hotkey, type "compress", Enter: the Compress image panel opens' j_2
+run_journey 2 'Hotkey, type "compress", Enter: a Compress panel opens' j_2
 run_journey 3 'Open a PNG by command line, run "under 50 kb": an output under 50 KB named (compressed)' j_3
 run_journey 5 'Undo on a result: the file goes to the trash, not deleted' j_5
 run_journey 4a 'Merge two PDFs: one output with 5 pages' j_4a
 run_journey 4b 'OCR a scanned PDF: the text becomes extractable' j_4b
+run_journey 3b 'A photo saved as PNG, "under 50 kb": an output under 50 KB, in whatever format works' j_3b
 run_journey 6 'Close the window, Quit (Ctrl+Q); no tray icon on Linux' j_6
 run_journey 7 'Light and dark theme, 125% and 150% scaling (Xft.dpi 120 and 144)' j_7
 run_journey 8 'Memory and idle CPU after 60 s idle' j_8
