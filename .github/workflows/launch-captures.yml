@@ -2,8 +2,13 @@ name: Launch captures
 
 # Renders the real app's windows offscreen (nothing is shown) and keeps the raw frames as an artifact, for the
 # launch film (docs/launch). macOS only, because the renders use Metal. Run by hand only.
-#   gh workflow run launch-captures.yml --ref launch/video
+#   gh workflow run launch-captures.yml --ref launch/video   (works once this file is on the default branch)
+# Until then, GitHub only lets a push start it from the launch/video branch: change docs/launch/trigger/captures.txt
+# (the modes to run) and push. It never runs on any other push.
 on:
+  push:
+    branches: [launch/video]
+    paths: [docs/launch/trigger/captures.txt]
   workflow_dispatch:
     inputs:
       modes:
@@ -49,7 +54,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p captures
-          for mode in ${{ inputs.modes }}; do
+          modes="${{ inputs.modes }}"
+          [ -n "$modes" ] || modes="$(cat docs/launch/trigger/captures.txt)"
+          for mode in $modes; do
             case "$mode" in
               frames)
                 for a in dark light; do
