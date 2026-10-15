@@ -345,7 +345,10 @@ impl Scanner<'_> {
         }
 
         // Pass 3: fuzzy, only when the pool is still short.
-        if coll.len() < self.opts.limit && nl >= 2 {
+        // Fuzzy only for a single word: with several words the extra checks cost microseconds per
+        // candidate, and a half-typed second word ("quarterly r") would run a fuzzy pass over a
+        // million names on every keystroke for results nobody asked for.
+        if coll.len() < self.opts.limit && nl >= 2 && self.q.tokens.len() == 1 {
             match (chunks.len() > 1).then(search_pool).flatten() {
                 Some(pool) => {
                     let parts: Vec<Collector> = pool.install(|| {

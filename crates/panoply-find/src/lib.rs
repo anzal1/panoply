@@ -19,13 +19,16 @@ mod exclude;
 pub mod fold;
 pub mod fuzzy;
 mod index;
+mod live;
 mod mounts;
 mod query;
 pub mod segment;
 mod walk;
+pub mod watch;
 
 pub use exclude::Exclusions;
 pub use index::{EntryInfo, Index};
+pub use live::{ApplyOutcome, LiveIndex};
 pub use mounts::{network_mounts, parse_mount_output, parse_mountinfo};
 pub use query::{Hit, Kind, SearchOptions};
 pub use segment::{Segment, SegmentBuilder};

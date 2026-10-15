@@ -83,6 +83,28 @@ impl Exclusions {
             || self.suffixes.iter().any(|s| folded.ends_with(s))
     }
 
+    /// True when `path` (below `root`) lies inside a folder this policy never enters. The excluded
+    /// folder's own entry does not count: it is indexed by name.
+    pub fn has_excluded_ancestor(&self, root: &Path, path: &Path) -> bool {
+        let Ok(rel) = path.strip_prefix(root) else {
+            return true;
+        };
+        let comps: Vec<_> = rel.components().collect();
+        let mut cur = root.to_path_buf();
+        for (i, c) in comps.iter().enumerate() {
+            cur.push(c.as_os_str());
+            if i + 1 == comps.len() {
+                break;
+            }
+            let name = c.as_os_str().to_string_lossy();
+            let (folded, _) = crate::fold::fold(&name);
+            if self.name_excluded(&folded) || self.path_excluded(&cur) {
+                return true;
+            }
+        }
+        false
+    }
+
     /// True when this absolute folder must not be entered (system folder or network mount).
     pub fn path_excluded(&self, p: &Path) -> bool {
         self.paths.contains(p) || self.network_mounts.contains(p)

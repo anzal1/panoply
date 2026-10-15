@@ -67,7 +67,7 @@ pub struct WalkStats {
 struct Ent {
     f_len: u32,
     o_len: u32,
-    mtime: u32,
+    pub(crate) mtime: u32,
     mask: u32,
     flags: u8,
     child: u32,
@@ -99,7 +99,12 @@ struct Ctx<'a> {
     root_dev: u64,
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, target_os = "macos"))]
+fn dev_of(md: &fs::Metadata) -> u64 {
+    // macOS device ids are 32 bits; getattrlistbulk reports them unsigned.
+    u64::from(std::os::unix::fs::MetadataExt::dev(md) as u32)
+}
+#[cfg(all(unix, not(target_os = "macos")))]
 fn dev_of(md: &fs::Metadata) -> u64 {
     std::os::unix::fs::MetadataExt::dev(md)
 }
@@ -121,12 +126,12 @@ fn mtime_of(md: &fs::Metadata) -> u32 {
 }
 
 /// One directory entry as the reader hands it over.
-struct Raw<'a> {
-    name: &'a std::ffi::OsStr,
-    is_dir: bool,
-    mtime: u32,
-    dev: u64,
-    stat_failed: bool,
+pub(crate) struct Raw<'a> {
+    pub(crate) name: &'a std::ffi::OsStr,
+    pub(crate) is_dir: bool,
+    pub(crate) mtime: u32,
+    pub(crate) dev: u64,
+    pub(crate) stat_failed: bool,
 }
 
 /// Reads one folder and calls `f` for every entry (not `.` or `..`). File types come from the directory
@@ -176,7 +181,11 @@ fn read_entries_native(
                     #[allow(clippy::unnecessary_cast)]
                     {
                         mtime = (st.st_mtime as i64).clamp(0, u32::MAX as i64) as u32;
-                        dev = st.st_dev as u64;
+                        dev = if cfg!(target_os = "macos") {
+                            u64::from(st.st_dev as u32)
+                        } else {
+                            st.st_dev as u64
+                        };
                     }
                     if ft == FileType::Unknown {
                         is_dir = (st.st_mode as u32 & 0o170000) == 0o040000;
@@ -230,13 +239,34 @@ fn read_entries_std(
     true
 }
 
-fn read_entries(
+pub(crate) fn read_entries(
     portable: bool,
     path: &Path,
     want_stat: bool,
     dirs_only_stat: bool,
     f: &mut dyn FnMut(Raw<'_>),
 ) -> bool {
+    #[cfg(target_os = "macos")]
+    if !portable && want_stat {
+        // One getattrlistbulk call returns name, type and modified time for a few hundred entries.
+        // A file system that does not support it (some network and FAT volumes) falls back below,
+        // unless entries were already delivered.
+        use std::os::unix::ffi::OsStrExt;
+        let mut delivered = 0usize;
+        let r = panoply_platform_macos::read_dir_bulk(path, &mut |e| {
+            delivered += 1;
+            f(Raw {
+                name: std::ffi::OsStr::from_bytes(e.name),
+                is_dir: e.kind == panoply_platform_macos::EntryKind::Dir,
+                mtime: e.mtime.clamp(0, i64::from(u32::MAX)) as u32,
+                dev: u64::from(e.dev),
+                stat_failed: false,
+            });
+        });
+        if r.is_ok() || delivered > 0 {
+            return true;
+        }
+    }
     #[cfg(unix)]
     if !portable {
         return read_entries_native(path, want_stat, dirs_only_stat, f);
@@ -322,6 +352,7 @@ pub fn walk(roots: &[PathBuf], opts: &WalkOptions) -> io::Result<(Segment, WalkS
         let a = &arenas[ti];
         let rec = &a.batches[bi];
         let (mut fo, mut oo) = (rec.f_lo as usize, rec.o_lo as usize);
+        let block_start = builder.len();
         for e in &a.ents[rec.ent_lo as usize..rec.ent_hi as usize] {
             let f = &a.f[fo..fo + e.f_len as usize];
             let o = &a.o[oo..oo + e.o_len as usize];
@@ -341,6 +372,7 @@ pub fn walk(roots: &[PathBuf], opts: &WalkOptions) -> io::Result<(Segment, WalkS
                 parent_of_batch[e.child as usize] = gid;
             }
         }
+        builder.add_block(parent, block_start, builder.len() - block_start);
     }
     let entries = builder.len() as u64;
     let seg = builder.finish();

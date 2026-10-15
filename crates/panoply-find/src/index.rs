@@ -62,7 +62,7 @@ impl Index {
         self.segs.iter().map(Segment::heap_bytes).sum()
     }
 
-    fn locate(&self, id: u32) -> Option<(&Segment, usize)> {
+    pub(crate) fn locate(&self, id: u32) -> Option<(&Segment, usize)> {
         let i = self.segs.partition_point(|s| s.base <= id).checked_sub(1)?;
         let s = &self.segs[i];
         let local = (id - s.base) as usize;

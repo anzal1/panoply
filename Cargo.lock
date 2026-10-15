@@ -5311,6 +5311,7 @@ version = "0.1.2"
 dependencies = [
  "ignore",
  "memchr",
+ "panoply-platform-macos",
  "rayon",
  "rustix",
 ]
@@ -5452,6 +5453,7 @@ dependencies = [
 name = "panoply-platform-macos"
 version = "0.1.2"
 dependencies = [
+ "libc",
  "objc2 0.6.5",
  "objc2-core-foundation",
  "objc2-core-graphics",

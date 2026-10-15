@@ -44,6 +44,9 @@ pub struct Segment {
     pub(crate) first: Vec<u8>,
     pub(crate) depth: Vec<u8>,
     pub(crate) flags: Vec<u8>,
+    /// Where each folder's listing sits: `(folder id, first local index, count)`, sorted by folder id.
+    /// A walker writes a folder's entries as one block, so finding a child by name is a short scan.
+    pub(crate) blocks: Vec<(u32, u32, u32)>,
 }
 
 impl Segment {
@@ -84,6 +87,77 @@ impl Segment {
             + self.first.capacity()
             + self.depth.capacity()
             + self.flags.capacity()
+            + 12 * self.blocks.capacity()
+    }
+
+    /// An empty segment whose first entry will have global id `base`.
+    pub fn with_base(base: u32) -> Self {
+        let mut seg = Segment {
+            base,
+            ..Segment::default()
+        };
+        seg.f_off.push(0);
+        seg.o_off.push(0);
+        seg
+    }
+
+    /// Appends one entry. `folded` and `original` are the name without its terminator; `folded` must be
+    /// non-empty and neither may contain a zero byte.
+    #[allow(clippy::too_many_arguments)]
+    pub fn push(
+        &mut self,
+        original: &[u8],
+        folded: &[u8],
+        parent: u32,
+        mtime: u32,
+        mask: u32,
+        flags: u8,
+        depth: u8,
+    ) {
+        debug_assert!(!folded.is_empty() && !folded.contains(&0) && !original.contains(&0));
+        self.f_names.extend_from_slice(folded);
+        self.f_names.push(0);
+        self.o_names.extend_from_slice(original);
+        self.o_names.push(0);
+        self.f_off.push(self.f_names.len() as u32);
+        self.o_off.push(self.o_names.len() as u32);
+        self.parent.push(parent);
+        self.mtime.push(mtime);
+        self.mask.push(mask);
+        self.first.push(folded[0]);
+        self.depth.push(depth);
+        self.flags.push(flags);
+    }
+
+    /// Records that the entries `start..start + count` (local indexes) are the listing of folder `dir`.
+    pub fn add_block(&mut self, dir: u32, start: usize, count: usize) {
+        if count > 0 {
+            self.blocks.push((dir, start as u32, count as u32));
+        }
+    }
+
+    /// Sorts the block table; call once after the last `add_block`.
+    pub fn seal_blocks(&mut self) {
+        self.blocks.sort_unstable();
+    }
+
+    /// The listing blocks of folder `dir` in this segment (a folder can have more than one after updates).
+    pub(crate) fn blocks_of(&self, dir: u32) -> impl Iterator<Item = (usize, usize)> + '_ {
+        let lo = self.blocks.partition_point(|b| b.0 < dir);
+        self.blocks[lo..]
+            .iter()
+            .take_while(move |b| b.0 == dir)
+            .map(|b| (b.1 as usize, b.2 as usize))
+    }
+
+    /// True for a removed entry.
+    pub fn is_dead(&self, i: usize) -> bool {
+        self.flags[i] & F_DEAD != 0
+    }
+
+    /// Replaces an entry's modified time.
+    pub fn set_mtime(&mut self, i: usize, mtime: u32) {
+        self.mtime[i] = mtime;
     }
 
     /// Marks an entry removed. The bytes stay until the segment is rebuilt.
@@ -103,6 +177,14 @@ impl Segment {
         w.write_all(&self.first)?;
         w.write_all(&self.depth)?;
         w.write_all(&self.flags)?;
+        w.write_all(&(self.blocks.len() as u64).to_le_bytes())?;
+        let mut bytes = Vec::with_capacity(self.blocks.len() * 12);
+        for b in &self.blocks {
+            bytes.extend_from_slice(&b.0.to_le_bytes());
+            bytes.extend_from_slice(&b.1.to_le_bytes());
+            bytes.extend_from_slice(&b.2.to_le_bytes());
+        }
+        w.write_all(&bytes)?;
         for col in [
             &self.f_off,
             &self.o_off,
@@ -163,6 +245,27 @@ impl Segment {
                 .map(|c| u32::from_le_bytes(*c))
                 .collect())
         };
+        r.read_exact(&mut b8)?;
+        let nb = u64::from_le_bytes(b8) as usize;
+        if nb > n {
+            return Err(bad("too many blocks"));
+        }
+        let raw = read_vec(&mut r, nb * 12)?;
+        seg.blocks = raw
+            .as_chunks::<12>()
+            .0
+            .iter()
+            .map(|c| {
+                (
+                    u32::from_le_bytes([c[0], c[1], c[2], c[3]]),
+                    u32::from_le_bytes([c[4], c[5], c[6], c[7]]),
+                    u32::from_le_bytes([c[8], c[9], c[10], c[11]]),
+                )
+            })
+            .collect();
+        if seg.blocks.iter().any(|b| b.1 as usize + b.2 as usize > n) {
+            return Err(bad("block out of range"));
+        }
         seg.f_off = col(&mut r, n + 1)?;
         seg.o_off = col(&mut r, n + 1)?;
         seg.parent = col(&mut r, n)?;
@@ -182,7 +285,7 @@ impl Segment {
     }
 }
 
-const MAGIC: &[u8; 8] = b"PFIXSEG1";
+const MAGIC: &[u8; 8] = b"PFIXSEG2";
 
 /// Appends entries and produces a [`Segment`].
 #[derive(Default)]
@@ -193,13 +296,9 @@ pub struct SegmentBuilder {
 impl SegmentBuilder {
     /// A builder whose first entry will have global id `base`.
     pub fn new(base: u32) -> Self {
-        let mut seg = Segment {
-            base,
-            ..Segment::default()
-        };
-        seg.f_off.push(0);
-        seg.o_off.push(0);
-        SegmentBuilder { seg }
+        SegmentBuilder {
+            seg: Segment::with_base(base),
+        }
     }
 
     /// Reserves room for `entries` rows and `name_bytes` of names in each buffer.
@@ -219,7 +318,7 @@ impl SegmentBuilder {
 
     /// Number of entries so far.
     pub fn len(&self) -> usize {
-        self.seg.parent.len()
+        self.seg.len()
     }
 
     /// True before the first push.
@@ -237,8 +336,7 @@ impl SegmentBuilder {
         self.seg.flags[local]
     }
 
-    /// Appends one entry. `folded` and `original` are the name without its terminator; `folded` must be
-    /// non-empty and neither may contain a zero byte.
+    /// Appends one entry (see [`Segment::push`]).
     #[allow(clippy::too_many_arguments)]
     pub fn push(
         &mut self,
@@ -250,25 +348,19 @@ impl SegmentBuilder {
         flags: u8,
         depth: u8,
     ) {
-        debug_assert!(!folded.is_empty() && !folded.contains(&0) && !original.contains(&0));
-        let s = &mut self.seg;
-        s.f_names.extend_from_slice(folded);
-        s.f_names.push(0);
-        s.o_names.extend_from_slice(original);
-        s.o_names.push(0);
-        s.f_off.push(s.f_names.len() as u32);
-        s.o_off.push(s.o_names.len() as u32);
-        s.parent.push(parent);
-        s.mtime.push(mtime);
-        s.mask.push(mask);
-        s.first.push(folded[0]);
-        s.depth.push(depth);
-        s.flags.push(flags);
+        self.seg
+            .push(original, folded, parent, mtime, mask, flags, depth);
+    }
+
+    /// Records a folder listing block (see [`Segment::add_block`]).
+    pub fn add_block(&mut self, dir: u32, start: usize, count: usize) {
+        self.seg.add_block(dir, start, count);
     }
 
     /// Finishes the segment, releasing spare capacity.
     pub fn finish(mut self) -> Segment {
         let s = &mut self.seg;
+        s.seal_blocks();
         s.f_names.shrink_to_fit();
         s.o_names.shrink_to_fit();
         s.f_off.shrink_to_fit();
@@ -279,6 +371,7 @@ impl SegmentBuilder {
         s.first.shrink_to_fit();
         s.depth.shrink_to_fit();
         s.flags.shrink_to_fit();
+        s.blocks.shrink_to_fit();
         self.seg
     }
 }
