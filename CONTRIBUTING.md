@@ -37,7 +37,7 @@ tests of the changed crates inside Ubuntu 24.04 in a small [colima](https://gith
 leaves it running). `tools/preflight.sh --linux` runs it after the macOS checks, and does so by itself when a
 changed file holds Linux-only code. `--smoke` also builds `panoply-desktop` and runs it headless under Xvfb and
 openbox (a window titled Panoply appears, the command bar is not mapped before the hotkey, screenshots are
-saved). Only one heavy check runs on the machine at a time: a second one prints "waiting for another check"
+saved). At most two heavy checks run on the machine at a time: a third one prints "waiting for another check"
 (`tools/lib/heavy-lock.sh`). Details in [docs/CI.md](docs/CI.md).
 
 **The Windows check.** Windows-only errors (the `cfg(windows)` code, a dependency missing from a `cfg(windows)`
