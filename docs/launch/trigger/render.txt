@@ -1,2 +1,2 @@
-video,teaser,teaser-vertical draft 30
-# run 5: after the film review fixes
+teaser looks 60
+# run 6: interim 60 fps teaser
