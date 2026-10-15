@@ -4,6 +4,13 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
+## Unreleased
+
+### Fixed
+
+- **Linux: the hotkey always hides the command bar.** With a compositing window manager it could bring the
+  bar straight back.
+
 ## v0.1.2-beta (2026-10-15)
 
 The first release checked on real Windows and Linux desktops before shipping.
