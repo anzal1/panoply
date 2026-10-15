@@ -19,10 +19,10 @@ const out = [];
 out.push(`bpm ${bpm}, beat ${f(beat)} s, bar ${f(beat * 4)} s, video ${f(total)} s (${f(total + sec(plan.tail_beats))} s with the ring-out), track offset ${offset} s`);
 for (const s of plan.scenes) {
   const a = sec(s.start), b = sec(s.start + s.bars * 4);
-  out.push(md ? `\n### ${s.name}  (${f(a)} to ${f(b)} s, ${s.bars} bars)\n\n| cue | beat | second | frame@${fps} |\n|---|---|---|---|` : `\n${s.name}  ${f(a)} to ${f(b)} s`);
+  out.push(md ? `\n### ${s.name}  (${f(a)} to ${f(b)} s, ${s.bars} bars)\n\n| cue | beat | film second | frame@${fps} | track second |\n|---|---|---|---|---|` : `\n${s.name}  ${f(a)} to ${f(b)} s`);
   for (const [name, bt] of s.cues) {
     const t = sec(bt);
-    out.push(md ? `| ${name} | ${bt} | ${f(t)} | ${Math.round(t * fps)} |` : `  ${String(bt).padStart(5)}  ${f(t)} s  f${Math.round(t * fps)}  ${name}`);
+    out.push(md ? `| ${name} | ${bt} | ${f(t)} | ${Math.round(t * fps)} | ${f(t + offset)} |` : `  ${String(bt).padStart(5)}  ${f(t)} s  f${Math.round(t * fps)}  track ${f(t + offset)} s  ${name}`);
   }
 }
 console.log(out.join('\n'));

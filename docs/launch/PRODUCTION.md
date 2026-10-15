@@ -145,7 +145,7 @@ purpose: copy it there when the HyperFrames project exists. It is `workflow_disp
 | Steps | checkout, Node 22, `npx hyperframes browser ensure`, build data, fetch captures, `check --strict --snapshots`, `render` |
 | Output | `picture.mp4` (silent), `snapshots/contact-sheet.jpg`, `cues-<bpm>.md`, all as one artifact, 14 days |
 | Time cap | `timeout-minutes: 45` |
-| Estimate | 37.5 s at 60 fps is 2,250 frames. At a pessimistic 4 to 6 frames per second on software GL with 3 workers, about 6 to 10 minutes of capture plus encode. At 30 fps half that. This is an estimate, not a measurement: the first draft run replaces it. |
+| Estimate | 37.2 s at 60 fps is 2,229 frames. At a pessimistic 4 to 6 frames per second on software GL with 3 workers, about 6 to 10 minutes of capture plus encode. At 30 fps half that. This is an estimate, not a measurement: the first draft run replaces it. |
 | Cost | zero. A full month of iteration is under 2 hours of public-runner time. |
 | Not on the Mac | the Mac only does the 10 second mux and, if the owner wants it, a one-frame snapshot. The preview server is never left running. |
 
@@ -172,7 +172,7 @@ file and a public repo is that. So:
 
 - 1920x1080, 16:9, progressive, H.264 High profile, yuv420p, BT.709, 60 fps master (30 fps copy if X's re-encode looks
   worse at 60, test both).
-- AAC-LC 48 kHz stereo, 256 kbps. Length 37.5 s plus the ring-out is well under X's 2 minute 20 limit for standard accounts.
+- AAC-LC 48 kHz stereo, 256 kbps. Length 37.2 s plus the ring-out is well under X's 2 minute 20 limit for standard accounts.
 - Upload the highest bitrate X accepts, around 25 Mbps for the master, because X re-encodes and a clean source survives it
   best. File size will be about 120 MB, under X's 512 MB cap.
 - Most X viewers see it muted and autoplaying, so frame 0 has to hold on its own, and each beat must read without sound.
@@ -214,7 +214,7 @@ built last, on the real modules.
 | Review, fixes, delivery render, mux, X export | agent plus owner | everything | half a day |
 
 The film is cut the day the last launch-gate box in `docs/LEDGER.md` is ticked. If search or the disk map slips, the
-film still ships at 16 bars (30.0 s at 128 BPM) without frames 4 and 5 (`cues.json` changes by deleting two scenes).
+film still ships at 16 bars (29.7 s at 129.2 BPM) without frames 4 and 5 (`cues.json` changes by deleting two scenes).
 
 ## Risks
 

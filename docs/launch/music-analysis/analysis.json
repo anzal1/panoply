@@ -1,0 +1,3925 @@
+{
+ "metrics": {
+  "px-beats-millenia-413782.mp3": {
+   "dur": 102.48,
+   "lufs": -10.69726584285091,
+   "sub_share": 0.5786057710647583,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.02018980765614875,
+   "drop_t": 7.1053061224489795,
+   "drop_db": 8.843335499008166,
+   "drop_beat_t": 14.082902494331066,
+   "start": 7.581315192743764,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 14.623753547668457,
+   "trans_rate": 3.7866666666666666,
+   "post_density": 6.0,
+   "contrast": 15.2527437210083
+  },
+  "px-dance-dance-for-me-280006.mp3": {
+   "dur": 129.6,
+   "lufs": -12.610982529844451,
+   "sub_share": 0.7872692346572876,
+   "tempo_raw": 126.04801829268293,
+   "bpm": 126.04801829268293,
+   "beat_cv": 0.023366521347344602,
+   "drop_t": 126.1772335600907,
+   "drop_db": 4.3690632386415444,
+   "drop_beat_t": 121.4984126984127,
+   "start": 113.88226757369614,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 38.409786224365234,
+   "trans_rate": 2.0,
+   "post_density": 2.3333333333333335,
+   "contrast": 18.3643856048584
+  },
+  "px-dubstep-darkness-462142.mp3": {
+   "dur": 133.27201814058958,
+   "lufs": -6.356491551792741,
+   "sub_share": 0.5681484937667847,
+   "tempo_raw": 86.1328125,
+   "bpm": 86.1328125,
+   "beat_cv": 0.047651954768243174,
+   "drop_t": 8.916462585034013,
+   "drop_db": 5.964477675428307,
+   "drop_beat_t": 9.113832199546485,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.023219954648526078,
+   "sharp": 8.524550437927246,
+   "trans_rate": 2.026666666666667,
+   "post_density": 4.0,
+   "contrast": 6.781403064727783
+  },
+  "px-future-bass-dont-talk-315229.mp3": {
+   "dur": 110.70693877551021,
+   "lufs": -11.286793489811156,
+   "sub_share": 0.7334908843040466,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.0966352211663462,
+   "drop_t": 2.5774149659863945,
+   "drop_db": 10.436872492321406,
+   "drop_beat_t": 2.507755102040816,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 4,
+   "gap_total": 1.18421768707483,
+   "sharp": 18.871906280517578,
+   "trans_rate": 3.8666666666666667,
+   "post_density": 5.333333333333333,
+   "contrast": 20.83232307434082
+  },
+  "px-trap-energy-trap-bass-111291.mp3": {
+   "dur": 80.14367346938775,
+   "lufs": -8.171420475676337,
+   "sub_share": 0.9305211305618286,
+   "tempo_raw": 99.38401442307692,
+   "bpm": 99.38401442307692,
+   "beat_cv": 0.01129633741338646,
+   "drop_t": 1.486077097505669,
+   "drop_db": 4.227507944781535,
+   "drop_beat_t": 1.555736961451247,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.6965986394557823,
+   "sharp": 16.584449768066406,
+   "trans_rate": 4.1066666666666665,
+   "post_density": 4.166666666666667,
+   "contrast": 5.787899971008301
+  },
+  "px-beats-intro-music-black-box-trap-beat-13221.mp3": {
+   "dur": 116.63673469387756,
+   "lufs": -6.739954932804391,
+   "sub_share": 0.846137285232544,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.014603497526772377,
+   "drop_t": 70.77442176870748,
+   "drop_db": 6.306762782669793,
+   "drop_beat_t": 70.79764172335601,
+   "start": 63.92453514739229,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.13931972789115646,
+   "sharp": 41.380760192871094,
+   "trans_rate": 5.973333333333334,
+   "post_density": 4.666666666666667,
+   "contrast": 11.256803512573242
+  },
+  "px-upbeat-blessings-hyperpop-467037.mp3": {
+   "dur": 125.71201814058956,
+   "lufs": -15.839502079455446,
+   "sub_share": 0.6587653756141663,
+   "tempo_raw": 112.34714673913044,
+   "bpm": 112.34714673913044,
+   "beat_cv": 0.07954634292907518,
+   "drop_t": 100.84426303854875,
+   "drop_db": 18.476998142166984,
+   "drop_beat_t": 101.00680272108843,
+   "start": 92.46185941043083,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 2,
+   "gap_total": 1.0681179138321995,
+   "sharp": 8.570701599121094,
+   "trans_rate": 1.52,
+   "post_density": 4.333333333333333,
+   "contrast": 21.6441593170166
+  },
+  "px-upbeat-chrome-tears-hyperpop-467040.mp3": {
+   "dur": 134.04,
+   "lufs": -13.540617313001045,
+   "sub_share": 0.4551846385002136,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.025406112063029864,
+   "drop_t": 68.5685260770975,
+   "drop_db": 14.710192877425014,
+   "drop_beat_t": 68.6033560090703,
+   "start": 61.73024943310658,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 4,
+   "gap_total": 0.7430385487528345,
+   "sharp": 13.43837833404541,
+   "trans_rate": 2.1066666666666665,
+   "post_density": 3.1666666666666665,
+   "contrast": 17.798194885253906
+  },
+  "px-upbeat-alien-money-hyperpop-467038.mp3": {
+   "dur": 132.84,
+   "lufs": -11.976964093519188,
+   "sub_share": 0.7069515585899353,
+   "tempo_raw": 156.60511363636363,
+   "bpm": 156.60511363636363,
+   "beat_cv": 0.019782423999656074,
+   "drop_t": 59.60562358276644,
+   "drop_db": 11.261067216418487,
+   "drop_beat_t": 59.66367346938775,
+   "start": 53.53360544217687,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.34829931972789113,
+   "sharp": 18.275588989257812,
+   "trans_rate": 2.56,
+   "post_density": 3.0,
+   "contrast": 12.661775588989258
+  },
+  "px-upbeat-adrenaline-hyperpop-467041.mp3": {
+   "dur": 189.02403628117915,
+   "lufs": -15.044046373986061,
+   "sub_share": 0.7141444683074951,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.028261966185514773,
+   "drop_t": 54.21859410430839,
+   "drop_db": 25.714643624885188,
+   "drop_beat_t": 54.276643990929706,
+   "start": 47.77505668934241,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 5,
+   "gap_total": 3.1811337868480725,
+   "sharp": 19.41915512084961,
+   "trans_rate": 3.04,
+   "post_density": 4.5,
+   "contrast": 27.48440933227539
+  },
+  "px-trap-solo-levelling-hyperpop-type-beat-492107.mp3": {
+   "dur": 124.99201814058956,
+   "lufs": -13.870038221575895,
+   "sub_share": 0.6418288946151733,
+   "tempo_raw": 129.19921875,
+   "bpm": 129.19921875,
+   "beat_cv": 0.012427380155001697,
+   "drop_t": 48.01886621315193,
+   "drop_db": 14.60987938844673,
+   "drop_beat_t": 48.06530612244898,
+   "start": 40.63492063492063,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 2,
+   "gap_total": 1.4396371882086167,
+   "sharp": 21.37394905090332,
+   "trans_rate": 3.68,
+   "post_density": 5.0,
+   "contrast": 20.236343383789062
+  },
+  "px-trap-space-drip-hyperpop-type-beat-492109.mp3": {
+   "dur": 139.27201814058958,
+   "lufs": -14.204644676252125,
+   "sub_share": 0.6067589521408081,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.022991367122743717,
+   "drop_t": 81.92,
+   "drop_db": 12.54911455270636,
+   "drop_beat_t": 81.8271201814059,
+   "start": 75.3255328798186,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 10.357643127441406,
+   "trans_rate": 1.7866666666666666,
+   "post_density": 4.666666666666667,
+   "contrast": 13.111310958862305
+  },
+  "px-trap-spirit-bomb-hyperpop-type-beat-492114.mp3": {
+   "dur": 114.14403628117914,
+   "lufs": -14.530110028932185,
+   "sub_share": 0.4711756706237793,
+   "tempo_raw": 129.19921875,
+   "bpm": 129.19921875,
+   "beat_cv": 0.01618658519163962,
+   "drop_t": 58.142766439909295,
+   "drop_db": 11.060558392514022,
+   "drop_beat_t": 58.200816326530614,
+   "start": 50.770430839002266,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 3,
+   "gap_total": 1.1609977324263039,
+   "sharp": 9.868529319763184,
+   "trans_rate": 3.1466666666666665,
+   "post_density": 2.6666666666666665,
+   "contrast": 15.561509132385254
+  },
+  "px-electronic-tantrum-hyperpop-type-beat-492115.mp3": {
+   "dur": 120.07201814058956,
+   "lufs": -15.153800232170452,
+   "sub_share": 0.5364460945129395,
+   "tempo_raw": 143.5546875,
+   "bpm": 143.5546875,
+   "beat_cv": 0.036538291715030834,
+   "drop_t": 93.36743764172336,
+   "drop_db": 8.243270128374007,
+   "drop_beat_t": 93.4138775510204,
+   "start": 86.7265306122449,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 8.713726997375488,
+   "trans_rate": 2.2933333333333334,
+   "post_density": 5.166666666666667,
+   "contrast": 13.016768455505371
+  },
+  "px-trap-shinji-hyperpop-type-beat-492110.mp3": {
+   "dur": 140.35201814058956,
+   "lufs": -15.508137945383547,
+   "sub_share": 0.5319972634315491,
+   "tempo_raw": 129.19921875,
+   "bpm": 129.19921875,
+   "beat_cv": 0.0293245473362558,
+   "drop_t": 33.22775510204082,
+   "drop_db": 27.675120701960545,
+   "drop_beat_t": 33.28580498866213,
+   "start": 25.855419501133785,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 4,
+   "gap_total": 1.4396371882086167,
+   "sharp": 13.923951148986816,
+   "trans_rate": 3.493333333333333,
+   "post_density": 4.833333333333333,
+   "contrast": 16.300411224365234
+  },
+  "px-video-games-timelaspe-hyperpop-type-beat-492116.mp3": {
+   "dur": 130.94403628117914,
+   "lufs": -14.922266434407035,
+   "sub_share": 0.5897620320320129,
+   "tempo_raw": 151.99908088235293,
+   "bpm": 151.99908088235293,
+   "beat_cv": 0.019878340618212465,
+   "drop_t": 99.7297052154195,
+   "drop_db": 20.14917817492754,
+   "drop_beat_t": 99.77614512471655,
+   "start": 93.46031746031746,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 5,
+   "gap_total": 2.48453514739229,
+   "sharp": 37.40084457397461,
+   "trans_rate": 2.7466666666666666,
+   "post_density": 2.0,
+   "contrast": 21.626243591308594
+  },
+  "px-beats-synth-rage-beat-hyperpop-528326.mp3": {
+   "dur": 175.46448979591835,
+   "lufs": -9.868032802060693,
+   "sub_share": 0.9254544973373413,
+   "tempo_raw": 112.34714673913044,
+   "bpm": 112.34714673913044,
+   "beat_cv": 0.021402847454695735,
+   "drop_t": 16.99700680272109,
+   "drop_db": 9.658864753272718,
+   "drop_beat_t": 16.99700680272109,
+   "start": 8.452063492063493,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 17.17822265625,
+   "trans_rate": 5.946666666666666,
+   "post_density": 6.5,
+   "contrast": 14.162822723388672
+  },
+  "px-trap-rage-hyperpop-synth-beat-458634.mp3": {
+   "dur": 147.30448979591836,
+   "lufs": -12.948133764655262,
+   "sub_share": 0.9016120433807373,
+   "tempo_raw": 99.38401442307692,
+   "bpm": 99.38401442307692,
+   "beat_cv": 0.060631618956934634,
+   "drop_t": 69.59020408163265,
+   "drop_db": 14.08551671619874,
+   "drop_beat_t": 69.8572335600907,
+   "start": 60.19773242630386,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 18.524765014648438,
+   "trans_rate": 4.746666666666667,
+   "post_density": 5.166666666666667,
+   "contrast": 18.08026885986328
+  },
+  "px-trap-turban-hyperpop-trap-type-beat-200667.mp3": {
+   "dur": 120.05877551020409,
+   "lufs": -9.401752939861314,
+   "sub_share": 0.9586023092269897,
+   "tempo_raw": 95.703125,
+   "bpm": 95.703125,
+   "beat_cv": 0.07576642522696407,
+   "drop_t": 70.03138321995465,
+   "drop_db": 19.51972739879697,
+   "drop_beat_t": 70.08943310657597,
+   "start": 60.0584126984127,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.11609977324263039,
+   "sharp": 13.364264488220215,
+   "trans_rate": 4.506666666666667,
+   "post_density": 5.666666666666667,
+   "contrast": 8.247725486755371
+  },
+  "px-future-bass-hyper-reality-hyper-pop-191163.mp3": {
+   "dur": 85.75201814058957,
+   "lufs": -8.370666498639354,
+   "sub_share": 0.5766100883483887,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.010780486282651634,
+   "drop_t": 47.159727891156464,
+   "drop_db": 10.068286122960739,
+   "drop_beat_t": 47.206167800453514,
+   "start": 40.333061224489796,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 12.226293563842773,
+   "trans_rate": 3.84,
+   "post_density": 5.5,
+   "contrast": 23.886592864990234
+  },
+  "px-cartoons-artificially-flavored-candy-glbml-99294.mp3": {
+   "dur": 88.84802721088435,
+   "lufs": -13.902644537005118,
+   "sub_share": 0.6740151643753052,
+   "tempo_raw": 161.4990234375,
+   "bpm": 161.4990234375,
+   "beat_cv": 0.0264511107605563,
+   "drop_t": 3.250793650793651,
+   "drop_db": 26.68963875404119,
+   "drop_beat_t": 3.308843537414966,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 14,
+   "gap_total": 3.7848526077097504,
+   "sharp": 38.832359313964844,
+   "trans_rate": 3.6,
+   "post_density": 4.5,
+   "contrast": 32.06282043457031
+  },
+  "px-pop-drip-267191.mp3": {
+   "dur": 69.04163265306123,
+   "lufs": -10.454440630918551,
+   "sub_share": 0.7468475699424744,
+   "tempo_raw": 107.666015625,
+   "bpm": 107.666015625,
+   "beat_cv": 0.05438591550851902,
+   "drop_t": 41.912018140589566,
+   "drop_db": 11.655101746253521,
+   "drop_beat_t": 42.05133786848072,
+   "start": 33.13487528344671,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 0.8823582766439909,
+   "sharp": 11.242658615112305,
+   "trans_rate": 2.6666666666666665,
+   "post_density": 4.5,
+   "contrast": 14.39498519897461
+  },
+  "px-beats-glitch-hop-576825.mp3": {
+   "dur": 132.67591836734695,
+   "lufs": -12.027164653435372,
+   "sub_share": 0.829957127571106,
+   "tempo_raw": 151.99908088235293,
+   "bpm": 151.99908088235293,
+   "beat_cv": 0.019796367161211897,
+   "drop_t": 1.486077097505669,
+   "drop_db": 31.601494035247853,
+   "drop_beat_t": 1.6253968253968254,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 1.3003174603174603,
+   "sharp": 20.502826690673828,
+   "trans_rate": 4.053333333333334,
+   "post_density": 2.5,
+   "contrast": 12.808187484741211
+  },
+  "px-beats-sub-pressure-experimental-bass-540254.mp3": {
+   "dur": 78.88979591836734,
+   "lufs": -9.596081328561597,
+   "sub_share": 0.8893587589263916,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.016132569863774014,
+   "drop_t": 6.849886621315193,
+   "drop_db": 14.06851811265885,
+   "drop_beat_t": 6.907936507936508,
+   "start": 0.03482993197278983,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 8,
+   "gap_total": 2.8560544217687074,
+   "sharp": 32.31068801879883,
+   "trans_rate": 6.4,
+   "post_density": 7.833333333333333,
+   "contrast": 27.92296028137207
+  },
+  "px-future-bass-abstract-trap-vibe-orbital-303651.mp3": {
+   "dur": 97.33224489795919,
+   "lufs": -7.5662909360155055,
+   "sub_share": 0.830785870552063,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.027659624374860626,
+   "drop_t": 64.85333333333334,
+   "drop_db": 14.12693888976295,
+   "drop_beat_t": 64.91138321995464,
+   "start": 58.409795918367344,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.8126984126984127,
+   "sharp": 8.169683456420898,
+   "trans_rate": 1.68,
+   "post_density": 5.333333333333333,
+   "contrast": 22.183177947998047
+  },
+  "px-future-bass-crystal-experimental-electronic-292772.mp3": {
+   "dur": 97.20163265306122,
+   "lufs": -8.27977667767015,
+   "sub_share": 0.7741380929946899,
+   "tempo_raw": 156.60511363636363,
+   "bpm": 156.60511363636363,
+   "beat_cv": 0.05408318883419057,
+   "drop_t": 65.48027210884354,
+   "drop_db": 5.216613716172222,
+   "drop_beat_t": 65.5847619047619,
+   "start": 59.45469387755102,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 2,
+   "gap_total": 1.811156462585034,
+   "sharp": 12.596935272216797,
+   "trans_rate": 2.986666666666667,
+   "post_density": 4.833333333333333,
+   "contrast": 20.80415153503418
+  },
+  "px-beautiful-plays-experimental-beat-133252.mp3": {
+   "dur": 134.19102040816327,
+   "lufs": -9.893950330510934,
+   "sub_share": 0.7035951018333435,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.07412246103824847,
+   "drop_t": 1.486077097505669,
+   "drop_db": 22.13717510840845,
+   "drop_beat_t": 2.2639455782312927,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.9752380952380952,
+   "sharp": 6.564704418182373,
+   "trans_rate": 0.9866666666666667,
+   "post_density": 6.0,
+   "contrast": 13.604183197021484
+  },
+  "px-sion-junkyard-jam-stomps-claps-found-percussion-drums-572706.mp3": {
+   "dur": 70.03428571428572,
+   "lufs": -10.884135524366952,
+   "sub_share": 0.5790698528289795,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.016006525879230966,
+   "drop_t": 50.340861678004536,
+   "drop_db": 12.681395727355623,
+   "drop_beat_t": 50.31764172335601,
+   "start": 42.32997732426304,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 1.9272562358276644,
+   "sharp": 23.553903579711914,
+   "trans_rate": 3.52,
+   "post_density": 7.166666666666667,
+   "contrast": 20.20233154296875
+  },
+  "px-electronic-honey-kisses-sped-up-remix-462108.mp3": {
+   "dur": 119.11201814058957,
+   "lufs": -9.548863839766748,
+   "sub_share": 0.31255942583084106,
+   "tempo_raw": 92.28515625,
+   "bpm": 92.28515625,
+   "beat_cv": 0.014307021266442918,
+   "drop_t": 44.46621315192744,
+   "drop_db": 6.072626158915822,
+   "drop_beat_t": 44.535873015873015,
+   "start": 34.13333333333333,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 9.09286880493164,
+   "trans_rate": 2.7466666666666666,
+   "post_density": 6.0,
+   "contrast": 11.546939849853516
+  },
+  "fma-1000-handz-cc-by-free-to-use-electronicgaming-24eb88.mp3": {
+   "dur": 144.0130612244898,
+   "lufs": -11.234918018653676,
+   "sub_share": 0.5519261956214905,
+   "tempo_raw": 135.99917763157896,
+   "bpm": 135.99917763157896,
+   "beat_cv": 0.03326752214705786,
+   "drop_t": 10.147120181405896,
+   "drop_db": 6.873315545326802,
+   "drop_beat_t": 10.193560090702947,
+   "start": 3.1346938775510207,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 10.328256607055664,
+   "trans_rate": 5.626666666666667,
+   "post_density": 8.333333333333334,
+   "contrast": 4.7838134765625
+  },
+  "fma-anipatok-single-grimez-349f8f.mp3": {
+   "dur": 133.5,
+   "lufs": -12.739656850889562,
+   "sub_share": 0.5878158211708069,
+   "tempo_raw": 79.50721153846153,
+   "bpm": 159.01442307692307,
+   "beat_cv": 0.024259365123353457,
+   "drop_t": 54.61333333333334,
+   "drop_db": 10.874219008398342,
+   "drop_beat_t": 54.659773242630386,
+   "start": 48.6225850340136,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 21.72219467163086,
+   "trans_rate": 4.8,
+   "post_density": 5.666666666666667,
+   "contrast": 8.576078414916992
+  },
+  "fma-soularflair-cc-by-free-to-use-for-anything-1--733964.mp3": {
+   "dur": 138.8590022675737,
+   "lufs": -9.732656236731293,
+   "sub_share": 0.7635170221328735,
+   "tempo_raw": 129.19921875,
+   "bpm": 129.19921875,
+   "beat_cv": 0.06164710405845636,
+   "drop_t": 9.659501133786849,
+   "drop_db": 19.331366240577154,
+   "drop_beat_t": 9.7059410430839,
+   "start": 2.275555555555555,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 8,
+   "gap_total": 2.089795918367347,
+   "sharp": 22.272275924682617,
+   "trans_rate": 3.2533333333333334,
+   "post_density": 3.1666666666666665,
+   "contrast": 18.89354133605957
+  },
+  "fma-soularflair-cc-by-free-to-use-for-anything-1--c45dad.mp3": {
+   "dur": 158.0390476190476,
+   "lufs": -10.385373706772556,
+   "sub_share": 0.7889873385429382,
+   "tempo_raw": 126.04801829268293,
+   "bpm": 126.04801829268293,
+   "beat_cv": 0.04349986370104475,
+   "drop_t": 71.74965986394558,
+   "drop_db": 8.072431472971743,
+   "drop_beat_t": 71.91219954648525,
+   "start": 64.2960544217687,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 9.978961944580078,
+   "trans_rate": 6.32,
+   "post_density": 8.333333333333334,
+   "contrast": 12.954973220825195
+  },
+  "fma-soularflair-cc-by-free-to-use-for-anything-1--674de5.mp3": {
+   "dur": 208.4007709750567,
+   "lufs": -11.67430974633447,
+   "sub_share": 0.6862289309501648,
+   "tempo_raw": 126.04801829268293,
+   "bpm": 126.04801829268293,
+   "beat_cv": 0.030522553618372014,
+   "drop_t": 189.9160090702948,
+   "drop_db": 5.902436231599374,
+   "drop_beat_t": 183.2518820861678,
+   "start": 175.63573696145124,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 0.7662585034013606,
+   "sharp": 7.435901641845703,
+   "trans_rate": 1.4666666666666666,
+   "post_density": 7.333333333333333,
+   "contrast": 12.000990867614746
+  },
+  "fma-dilating-times-single-gut-music-c19948.mp3": {
+   "dur": 193.9954195011338,
+   "lufs": -20.55908657595865,
+   "sub_share": 0.26098963618278503,
+   "tempo_raw": 156.60511363636363,
+   "bpm": 156.60511363636363,
+   "beat_cv": 0.03169093991797962,
+   "drop_t": 2.089795918367347,
+   "drop_db": 17.233247510855854,
+   "drop_beat_t": 22.77877551020408,
+   "start": 16.648707482993196,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 7.136324882507324,
+   "trans_rate": 3.04,
+   "post_density": 9.333333333333334,
+   "contrast": 8.622713088989258
+  },
+  "fma-beat-mekanik-single-you-bet-b637e0.mp3": {
+   "dur": 180.30512471655328,
+   "lufs": -14.051578759929614,
+   "sub_share": 0.29607516527175903,
+   "tempo_raw": 93.96306818181819,
+   "bpm": 93.96306818181819,
+   "beat_cv": 0.04967764064805751,
+   "drop_t": 40.07764172335601,
+   "drop_db": 6.587556239298685,
+   "drop_beat_t": 40.13569160997732,
+   "start": 29.918911564625848,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 11.641550064086914,
+   "trans_rate": 4.746666666666667,
+   "post_density": 5.333333333333333,
+   "contrast": 8.77254867553711
+  },
+  "fma-holiznacc0-nature-spirit-kitsune-f4b167.mp3": {
+   "dur": 193.12897959183672,
+   "lufs": -12.583498737388275,
+   "sub_share": 0.4978533685207367,
+   "tempo_raw": 82.03125,
+   "bpm": 164.0625,
+   "beat_cv": 0.03593363590993439,
+   "drop_t": 24.752471655328797,
+   "drop_db": 8.887058396456865,
+   "drop_beat_t": 24.79891156462585,
+   "start": 18.94748299319728,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 18.132535934448242,
+   "trans_rate": 3.066666666666667,
+   "post_density": 3.5,
+   "contrast": 8.919135093688965
+  },
+  "fma-holiznacc0-nature-spirit-tengu-c94814.mp3": {
+   "dur": 148.36897959183673,
+   "lufs": -14.931538593970012,
+   "sub_share": 0.7991335988044739,
+   "tempo_raw": 151.99908088235293,
+   "bpm": 151.99908088235293,
+   "beat_cv": 0.03780374186421872,
+   "drop_t": 75.7667120181406,
+   "drop_db": 12.46491421342308,
+   "drop_beat_t": 75.8247619047619,
+   "start": 69.5089342403628,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 25.578861236572266,
+   "trans_rate": 4.053333333333334,
+   "post_density": 4.166666666666667,
+   "contrast": 14.128225326538086
+  },
+  "fma-cillek-my-heart-is-burning-out-1-my-heart-is--b78d63.mp3": {
+   "dur": 33.5156462585034,
+   "lufs": -8.942637440839045,
+   "sub_share": 0.600555419921875,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.04189718841895077,
+   "drop_t": 9.496961451247165,
+   "drop_db": 0.9359238224629376,
+   "drop_beat_t": 9.531791383219955,
+   "start": 1.5441269841269847,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 0.8359183673469388,
+   "sharp": 13.827676773071289,
+   "trans_rate": 3.546666666666667,
+   "post_density": 6.0,
+   "contrast": 5.154131889343262
+  },
+  "fma-cillek-my-heart-is-burning-out-1-my-heart-is--c141d1.mp3": {
+   "dur": 32.0156462585034,
+   "lufs": -10.746016062765241,
+   "sub_share": 0.735160231590271,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.009352202765940423,
+   "drop_t": 1.509297052154195,
+   "drop_db": 0.9623172558864432,
+   "drop_beat_t": 1.5325170068027212,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": false,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 16.718828201293945,
+   "trans_rate": 3.2533333333333334,
+   "post_density": 5.0,
+   "contrast": 5.805858612060547
+  },
+  "fma-1000-handz-cc-by-free-to-use-electronicgaming-25d955.mp3": {
+   "dur": 184.0065306122449,
+   "lufs": -12.384628251985642,
+   "sub_share": 0.6043792963027954,
+   "tempo_raw": 135.99917763157896,
+   "bpm": 135.99917763157896,
+   "beat_cv": 0.022981325603209018,
+   "drop_t": 166.30131519274377,
+   "drop_db": 11.086346429387808,
+   "drop_beat_t": 166.33614512471655,
+   "start": 159.27727891156462,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 2.995374149659864,
+   "sharp": 15.43677806854248,
+   "trans_rate": 1.9733333333333334,
+   "post_density": 3.5,
+   "contrast": 109.45157623291016
+  },
+  "fma-1000-handz-cc-by-free-to-use-electronicgaming-2094b9.mp3": {
+   "dur": 202.10938775510203,
+   "lufs": -9.473456683030907,
+   "sub_share": 0.6720803380012512,
+   "tempo_raw": 151.99908088235293,
+   "bpm": 151.99908088235293,
+   "beat_cv": 0.02470250723133886,
+   "drop_t": 1.486077097505669,
+   "drop_db": 11.300258667950526,
+   "drop_beat_t": 2.6238548752834467,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.8126984126984127,
+   "sharp": 5.923312664031982,
+   "trans_rate": 1.04,
+   "post_density": 8.666666666666666,
+   "contrast": 9.135932922363281
+  },
+  "fma-shaolin-dub-reimagined-some-thoughts-2026-2a645f.mp3": {
+   "dur": 132.12,
+   "lufs": -13.249227872941537,
+   "sub_share": 0.784728467464447,
+   "tempo_raw": 166.70866935483872,
+   "bpm": 166.70866935483872,
+   "beat_cv": 0.037038339358116124,
+   "drop_t": 97.57024943310658,
+   "drop_db": 12.071415769395102,
+   "drop_beat_t": 97.62829931972789,
+   "start": 91.86975056689342,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 21.74918556213379,
+   "trans_rate": 2.6666666666666665,
+   "post_density": 4.0,
+   "contrast": 18.79575538635254
+  },
+  "fma-elijah-k-single-rushing-hearts-0e1d2f.mp3": {
+   "dur": 68.57251700680273,
+   "lufs": -10.75548171002183,
+   "sub_share": 0.507074236869812,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.011558504489953486,
+   "drop_t": 13.676553287981859,
+   "drop_db": 17.2501669924614,
+   "drop_beat_t": 13.734603174603174,
+   "start": 6.861496598639456,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.2089795918367347,
+   "sharp": 14.528950691223145,
+   "trans_rate": 4.72,
+   "post_density": 4.666666666666667,
+   "contrast": 14.749981880187988
+  },
+  "fma-elijah-k-single-indestructible-3a62c1.mp3": {
+   "dur": 120.00004535147393,
+   "lufs": -14.293127862762615,
+   "sub_share": 0.6691359877586365,
+   "tempo_raw": 143.5546875,
+   "bpm": 143.5546875,
+   "beat_cv": 0.014575658287619222,
+   "drop_t": 66.64126984126985,
+   "drop_db": 8.512054470999047,
+   "drop_beat_t": 66.69931972789115,
+   "start": 60.01197278911564,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 7.9658331871032715,
+   "trans_rate": 2.4266666666666667,
+   "post_density": 4.666666666666667,
+   "contrast": 12.561702728271484
+  },
+  "fma-elijah-k-single-digital-anarchy-213813.mp3": {
+   "dur": 74.0,
+   "lufs": -12.829561807531991,
+   "sub_share": 0.4805276095867157,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.045434375540558604,
+   "drop_t": 5.990748299319728,
+   "drop_db": 10.850272686284907,
+   "drop_beat_t": 6.025578231292517,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 2,
+   "gap_total": 0.5108390022675737,
+   "sharp": 8.48331069946289,
+   "trans_rate": 2.8,
+   "post_density": 3.1666666666666665,
+   "contrast": 16.0871524810791
+  },
+  "fma-elijah-k-single-unresolved-tension-c11fc3.mp3": {
+   "dur": 60.0,
+   "lufs": -12.094429178422878,
+   "sub_share": 0.7332276701927185,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.03409383505369853,
+   "drop_t": 41.470839002267574,
+   "drop_db": 12.064818437058403,
+   "drop_beat_t": 41.54049886621315,
+   "start": 33.55283446712018,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 2,
+   "gap_total": 0.5340589569160997,
+   "sharp": 10.58024787902832,
+   "trans_rate": 1.36,
+   "post_density": 3.3333333333333335,
+   "contrast": 17.317153930664062
+  },
+  "fma-elijah-k-single-revolution-2-0e1678.mp3": {
+   "dur": 68.0,
+   "lufs": -11.980274394754376,
+   "sub_share": 0.6150909662246704,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.018242230923294685,
+   "drop_t": 64.50503401360544,
+   "drop_db": 7.102116273977295,
+   "drop_beat_t": 64.51664399092971,
+   "start": 56.52897959183674,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 1.6718367346938776,
+   "sharp": 15.37741756439209,
+   "trans_rate": 0.56,
+   "post_density": 0.6666666666666666,
+   "contrast": 42.33614730834961
+  }
+ },
+ "clap": {
+  "px-beats-millenia-413782.mp3": {
+   "style": 0.822444032120984,
+   "neg": 0.0781595815824403,
+   "aggr": 0.09939636307535693,
+   "top": [
+    [
+     "hyperpop",
+     0.7991693615913391
+    ],
+    [
+     "confident swagger hip hop",
+     0.07398845255374908
+    ],
+    [
+     "cinematic trailer",
+     0.02889304608106613
+    ]
+   ]
+  },
+  "px-dance-dance-for-me-280006.mp3": {
+   "style": 0.5411012394251884,
+   "neg": 0.11295934030931676,
+   "aggr": 0.3459395454265177,
+   "top": [
+    [
+     "distorted bass stabs",
+     0.4686959981918335
+    ],
+    [
+     "dubstep wobble",
+     0.1505698263645172
+    ],
+    [
+     "dark trap",
+     0.1475311517715454
+    ]
+   ]
+  },
+  "px-dubstep-darkness-462142.mp3": {
+   "style": 0.4518526381580159,
+   "neg": 0.3901693472871557,
+   "aggr": 0.15797800570726395,
+   "top": [
+    [
+     "hyperpop",
+     0.38702958822250366
+    ],
+    [
+     "lo-fi chill",
+     0.1943754255771637
+    ],
+    [
+     "happy pop",
+     0.10228118300437927
+    ]
+   ]
+  },
+  "px-future-bass-dont-talk-315229.mp3": {
+   "style": 0.25731187580458936,
+   "neg": 0.16062387100555497,
+   "aggr": 0.5820642371691065,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.5281891226768494
+    ],
+    [
+     "hyperpop",
+     0.24926817417144775
+    ],
+    [
+     "generic trap",
+     0.15030696988105774
+    ]
+   ]
+  },
+  "px-trap-energy-trap-bass-111291.mp3": {
+   "style": 0.6789283584512305,
+   "neg": 0.14907981796022796,
+   "aggr": 0.1719917980954051,
+   "top": [
+    [
+     "hyperpop",
+     0.5800157785415649
+    ],
+    [
+     "generic trap",
+     0.12895233929157257
+    ],
+    [
+     "confident swagger hip hop",
+     0.10789767652750015
+    ]
+   ]
+  },
+  "px-beats-intro-music-black-box-trap-beat-13221.mp3": {
+   "style": 0.13471103773918003,
+   "neg": 0.4701949777081609,
+   "aggr": 0.3950939637143165,
+   "top": [
+    [
+     "generic trap",
+     0.4614908695220947
+    ],
+    [
+     "confident swagger hip hop",
+     0.3375895917415619
+    ],
+    [
+     "hyperpop",
+     0.12023083865642548
+    ]
+   ]
+  },
+  "px-upbeat-blessings-hyperpop-467037.mp3": {
+   "style": 0.2914368065439703,
+   "neg": 0.10731875114834111,
+   "aggr": 0.601244407997001,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.4997289180755615
+    ],
+    [
+     "hyperpop",
+     0.28426840901374817
+    ],
+    [
+     "dark trap",
+     0.09425979852676392
+    ]
+   ]
+  },
+  "px-upbeat-chrome-tears-hyperpop-467040.mp3": {
+   "style": 0.6812615954695502,
+   "neg": 0.05608781650153105,
+   "aggr": 0.2626505658845417,
+   "top": [
+    [
+     "hyperpop",
+     0.6135863065719604
+    ],
+    [
+     "aggressive phonk",
+     0.19313406944274902
+    ],
+    [
+     "playful aggressive pop",
+     0.05831269174814224
+    ]
+   ]
+  },
+  "px-upbeat-alien-money-hyperpop-467038.mp3": {
+   "style": 0.7355609346559504,
+   "neg": 0.07417064669698448,
+   "aggr": 0.19026845082407817,
+   "top": [
+    [
+     "hyperpop",
+     0.6888648271560669
+    ],
+    [
+     "confident swagger hip hop",
+     0.15515044331550598
+    ],
+    [
+     "playful aggressive pop",
+     0.04124319925904274
+    ]
+   ]
+  },
+  "px-upbeat-adrenaline-hyperpop-467041.mp3": {
+   "style": 0.3206071755521407,
+   "neg": 0.08006464010395575,
+   "aggr": 0.5993281900300644,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.4535055160522461
+    ],
+    [
+     "hyperpop",
+     0.2727970480918884
+    ],
+    [
+     "aggressive phonk",
+     0.11502058804035187
+    ]
+   ]
+  },
+  "px-trap-solo-levelling-hyperpop-type-beat-492107.mp3": {
+   "style": 0.38459095572488877,
+   "neg": 0.20079016061936272,
+   "aggr": 0.41461887319746893,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.37410736083984375
+    ],
+    [
+     "hyperpop",
+     0.3704107403755188
+    ],
+    [
+     "lo-fi chill",
+     0.06987179815769196
+    ]
+   ]
+  },
+  "px-trap-space-drip-hyperpop-type-beat-492109.mp3": {
+   "style": 0.3736540227109799,
+   "neg": 0.2789929898626724,
+   "aggr": 0.347352957847761,
+   "top": [
+    [
+     "hyperpop",
+     0.3574080467224121
+    ],
+    [
+     "confident swagger hip hop",
+     0.3128402829170227
+    ],
+    [
+     "happy pop",
+     0.08366300165653229
+    ]
+   ]
+  },
+  "px-trap-spirit-bomb-hyperpop-type-beat-492114.mp3": {
+   "style": 0.7501664943756623,
+   "neg": 0.08388604610081529,
+   "aggr": 0.1659474780317396,
+   "top": [
+    [
+     "hyperpop",
+     0.6942191123962402
+    ],
+    [
+     "confident swagger hip hop",
+     0.12196230888366699
+    ],
+    [
+     "playful aggressive pop",
+     0.04708878695964813
+    ]
+   ]
+  },
+  "px-electronic-tantrum-hyperpop-type-beat-492115.mp3": {
+   "style": 0.4402814495269922,
+   "neg": 0.17397236267424887,
+   "aggr": 0.38574618520215154,
+   "top": [
+    [
+     "hyperpop",
+     0.41210708022117615
+    ],
+    [
+     "confident swagger hip hop",
+     0.28480497002601624
+    ],
+    [
+     "cinematic trailer",
+     0.09088534116744995
+    ]
+   ]
+  },
+  "px-trap-shinji-hyperpop-type-beat-492110.mp3": {
+   "style": 0.7814458915199793,
+   "neg": 0.03635600146753859,
+   "aggr": 0.18219813145697117,
+   "top": [
+    [
+     "hyperpop",
+     0.7401050329208374
+    ],
+    [
+     "confident swagger hip hop",
+     0.10186275839805603
+    ],
+    [
+     "aggressive phonk",
+     0.058292873203754425
+    ]
+   ]
+  },
+  "px-video-games-timelaspe-hyperpop-type-beat-492116.mp3": {
+   "style": 0.6687190764714614,
+   "neg": 0.1530193460475857,
+   "aggr": 0.17826158797834069,
+   "top": [
+    [
+     "hyperpop",
+     0.5289647579193115
+    ],
+    [
+     "confident swagger hip hop",
+     0.1359374225139618
+    ],
+    [
+     "PC Music",
+     0.1010260358452797
+    ]
+   ]
+  },
+  "px-beats-synth-rage-beat-hyperpop-528326.mp3": {
+   "style": 0.026045434464776918,
+   "neg": 0.2894438020848611,
+   "aggr": 0.6845108160050586,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.6102574467658997
+    ],
+    [
+     "generic trap",
+     0.2824912667274475
+    ],
+    [
+     "dark trap",
+     0.07257168740034103
+    ]
+   ]
+  },
+  "px-trap-rage-hyperpop-synth-beat-458634.mp3": {
+   "style": 0.016556917461457488,
+   "neg": 0.14842549098830204,
+   "aggr": 0.835017568031617,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.7495691776275635
+    ],
+    [
+     "generic trap",
+     0.14111033082008362
+    ],
+    [
+     "dark trap",
+     0.08455639332532883
+    ]
+   ]
+  },
+  "px-trap-turban-hyperpop-trap-type-beat-200667.mp3": {
+   "style": 0.09404135874046915,
+   "neg": 0.2676377228763158,
+   "aggr": 0.638320904574357,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.5487004518508911
+    ],
+    [
+     "generic trap",
+     0.2573448419570923
+    ],
+    [
+     "dark trap",
+     0.08792027086019516
+    ]
+   ]
+  },
+  "px-future-bass-hyper-reality-hyper-pop-191163.mp3": {
+   "style": 0.4627952704922791,
+   "neg": 0.12707023836992448,
+   "aggr": 0.4101344722585054,
+   "top": [
+    [
+     "hyperpop",
+     0.4503463804721832
+    ],
+    [
+     "confident swagger hip hop",
+     0.3551899194717407
+    ],
+    [
+     "generic trap",
+     0.07304377853870392
+    ]
+   ]
+  },
+  "px-cartoons-artificially-flavored-candy-glbml-99294.mp3": {
+   "style": 0.13521669252077118,
+   "neg": 0.46682307694572955,
+   "aggr": 0.3979602452600375,
+   "top": [
+    [
+     "generic trap",
+     0.384290874004364
+    ],
+    [
+     "confident swagger hip hop",
+     0.365596741437912
+    ],
+    [
+     "lo-fi chill",
+     0.07257740944623947
+    ]
+   ]
+  },
+  "px-pop-drip-267191.mp3": {
+   "style": 0.3997349526216567,
+   "neg": 0.14374666266303393,
+   "aggr": 0.4565183552913368,
+   "top": [
+    [
+     "hyperpop",
+     0.3543860614299774
+    ],
+    [
+     "confident swagger hip hop",
+     0.3271480202674866
+    ],
+    [
+     "generic trap",
+     0.12046904861927032
+    ]
+   ]
+  },
+  "px-beats-glitch-hop-576825.mp3": {
+   "style": 0.08570188895100728,
+   "neg": 0.36421922635054216,
+   "aggr": 0.5500788913341239,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.41063231229782104
+    ],
+    [
+     "generic trap",
+     0.20943984389305115
+    ],
+    [
+     "dark trap",
+     0.1306685209274292
+    ]
+   ]
+  },
+  "px-beats-sub-pressure-experimental-bass-540254.mp3": {
+   "style": 0.16213669662829489,
+   "neg": 0.36489830967911985,
+   "aggr": 0.47296499088406563,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.3975726366043091
+    ],
+    [
+     "generic trap",
+     0.344730019569397
+    ],
+    [
+     "hyperpop",
+     0.1397361159324646
+    ]
+   ]
+  },
+  "px-future-bass-abstract-trap-vibe-orbital-303651.mp3": {
+   "style": 0.1257407422599499,
+   "neg": 0.25859203311847523,
+   "aggr": 0.6156672211363912,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.4870540201663971
+    ],
+    [
+     "generic trap",
+     0.18962930142879486
+    ],
+    [
+     "dark trap",
+     0.09541797637939453
+    ]
+   ]
+  },
+  "px-future-bass-crystal-experimental-electronic-292772.mp3": {
+   "style": 0.4663313044839015,
+   "neg": 0.3778982861622353,
+   "aggr": 0.1557703537546331,
+   "top": [
+    [
+     "hyperpop",
+     0.44304993748664856
+    ],
+    [
+     "cinematic trailer",
+     0.3398311734199524
+    ],
+    [
+     "confident swagger hip hop",
+     0.0861409604549408
+    ]
+   ]
+  },
+  "px-beautiful-plays-experimental-beat-133252.mp3": {
+   "style": 0.13302309332357254,
+   "neg": 0.6939121708855964,
+   "aggr": 0.17306478146929294,
+   "top": [
+    [
+     "cinematic trailer",
+     0.4878203868865967
+    ],
+    [
+     "epic orchestral",
+     0.12281903624534607
+    ],
+    [
+     "dark trap",
+     0.11711950600147247
+    ]
+   ]
+  },
+  "px-sion-junkyard-jam-stomps-claps-found-percussion-drums-572706.mp3": {
+   "style": 0.20643063590978272,
+   "neg": 0.2753464484376309,
+   "aggr": 0.5182228752164519,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.43898534774780273
+    ],
+    [
+     "cinematic trailer",
+     0.18914735317230225
+    ],
+    [
+     "hyperpop",
+     0.17276699841022491
+    ]
+   ]
+  },
+  "px-electronic-honey-kisses-sped-up-remix-462108.mp3": {
+   "style": 0.5403220297666849,
+   "neg": 0.2837142045973451,
+   "aggr": 0.1759637996001402,
+   "top": [
+    [
+     "hyperpop",
+     0.5275466442108154
+    ],
+    [
+     "happy pop",
+     0.2070797085762024
+    ],
+    [
+     "confident swagger hip hop",
+     0.14203917980194092
+    ]
+   ]
+  },
+  "fma-1000-handz-cc-by-free-to-use-electronicgaming-24eb88.mp3": {
+   "style": 0.9205721605248982,
+   "neg": 0.051656757006639964,
+   "aggr": 0.027771051274612546,
+   "top": [
+    [
+     "hyperpop",
+     0.7284215688705444
+    ],
+    [
+     "playful aggressive pop",
+     0.18899281322956085
+    ],
+    [
+     "happy pop",
+     0.02634068764746189
+    ]
+   ]
+  },
+  "fma-anipatok-single-grimez-349f8f.mp3": {
+   "style": 0.6772331482643494,
+   "neg": 0.12321045598946512,
+   "aggr": 0.1995564396493137,
+   "top": [
+    [
+     "hyperpop",
+     0.6085670590400696
+    ],
+    [
+     "confident swagger hip hop",
+     0.1133103221654892
+    ],
+    [
+     "dark trap",
+     0.07461483776569366
+    ]
+   ]
+  },
+  "fma-soularflair-cc-by-free-to-use-for-anything-1--733964.mp3": {
+   "style": 0.09383922754932428,
+   "neg": 0.3773593330915901,
+   "aggr": 0.5288014723919332,
+   "top": [
+    [
+     "generic trap",
+     0.3531720042228699
+    ],
+    [
+     "dark trap",
+     0.2922526001930237
+    ],
+    [
+     "confident swagger hip hop",
+     0.21840636432170868
+    ]
+   ]
+  },
+  "fma-soularflair-cc-by-free-to-use-for-anything-1--c45dad.mp3": {
+   "style": 0.8266188719535421,
+   "neg": 0.07138300850056112,
+   "aggr": 0.10199818102410063,
+   "top": [
+    [
+     "hyperpop",
+     0.792475163936615
+    ],
+    [
+     "confident swagger hip hop",
+     0.064485102891922
+    ],
+    [
+     "generic trap",
+     0.053408898413181305
+    ]
+   ]
+  },
+  "fma-soularflair-cc-by-free-to-use-for-anything-1--674de5.mp3": {
+   "style": 0.4555591573152924,
+   "neg": 0.1075269802731782,
+   "aggr": 0.43691387213766575,
+   "top": [
+    [
+     "hyperpop",
+     0.2834896147251129
+    ],
+    [
+     "dark trap",
+     0.23971331119537354
+    ],
+    [
+     "distorted bass stabs",
+     0.15903061628341675
+    ]
+   ]
+  },
+  "fma-dilating-times-single-gut-music-c19948.mp3": {
+   "style": 0.6506639622384682,
+   "neg": 0.10949404584243894,
+   "aggr": 0.23984201048733667,
+   "top": [
+    [
+     "hyperpop",
+     0.46557947993278503
+    ],
+    [
+     "glitchy experimental club",
+     0.14850150048732758
+    ],
+    [
+     "dark trap",
+     0.11474417895078659
+    ]
+   ]
+  },
+  "fma-beat-mekanik-single-you-bet-b637e0.mp3": {
+   "style": 0.831065499340184,
+   "neg": 0.0358777936999104,
+   "aggr": 0.13305668061366305,
+   "top": [
+    [
+     "hyperpop",
+     0.7090280055999756
+    ],
+    [
+     "confident swagger hip hop",
+     0.08311798423528671
+    ],
+    [
+     "chopped vocal stabs",
+     0.07214170694351196
+    ]
+   ]
+  },
+  "fma-holiznacc0-nature-spirit-kitsune-f4b167.mp3": {
+   "style": 0.017622586189645517,
+   "neg": 0.2902490978012793,
+   "aggr": 0.6921282810108096,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.6268110275268555
+    ],
+    [
+     "generic trap",
+     0.1825251430273056
+    ],
+    [
+     "lo-fi chill",
+     0.0908101350069046
+    ]
+   ]
+  },
+  "fma-holiznacc0-nature-spirit-tengu-c94814.mp3": {
+   "style": 0.006213704353285721,
+   "neg": 0.2773700663819909,
+   "aggr": 0.7164162340632174,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.6806086301803589
+    ],
+    [
+     "generic trap",
+     0.24681872129440308
+    ],
+    [
+     "dark trap",
+     0.035170793533325195
+    ]
+   ]
+  },
+  "fma-cillek-my-heart-is-burning-out-1-my-heart-is--b78d63.mp3": {
+   "style": 0.5601026143249328,
+   "neg": 0.258645079247799,
+   "aggr": 0.1812523412227165,
+   "top": [
+    [
+     "hyperpop",
+     0.5082213282585144
+    ],
+    [
+     "confident swagger hip hop",
+     0.11732668429613113
+    ],
+    [
+     "cinematic trailer",
+     0.10586894303560257
+    ]
+   ]
+  },
+  "fma-cillek-my-heart-is-burning-out-1-my-heart-is--c141d1.mp3": {
+   "style": 0.11361458729879814,
+   "neg": 0.2893311277257453,
+   "aggr": 0.5970542712893803,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.48623624444007874
+    ],
+    [
+     "generic trap",
+     0.23149490356445312
+    ],
+    [
+     "dark trap",
+     0.10943331569433212
+    ]
+   ]
+  },
+  "fma-1000-handz-cc-by-free-to-use-electronicgaming-25d955.mp3": {
+   "style": 0.2148072526033502,
+   "neg": 0.3378382866503671,
+   "aggr": 0.44735447177663445,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.2585465908050537
+    ],
+    [
+     "hyperpop",
+     0.18495577573776245
+    ],
+    [
+     "cinematic trailer",
+     0.17776167392730713
+    ]
+   ]
+  },
+  "fma-1000-handz-cc-by-free-to-use-electronicgaming-2094b9.mp3": {
+   "style": 0.311523636025413,
+   "neg": 0.5381754607660696,
+   "aggr": 0.15030093432869762,
+   "top": [
+    [
+     "cinematic trailer",
+     0.4009578227996826
+    ],
+    [
+     "hyperpop",
+     0.24854779243469238
+    ],
+    [
+     "dark trap",
+     0.06685762107372284
+    ]
+   ]
+  },
+  "fma-shaolin-dub-reimagined-some-thoughts-2026-2a645f.mp3": {
+   "style": 0.02118556867208099,
+   "neg": 0.3646510330727324,
+   "aggr": 0.6141634141386021,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.5759422779083252
+    ],
+    [
+     "lo-fi chill",
+     0.1932607740163803
+    ],
+    [
+     "generic trap",
+     0.1089261919260025
+    ]
+   ]
+  },
+  "fma-elijah-k-single-rushing-hearts-0e1d2f.mp3": {
+   "style": 0.8672385112695338,
+   "neg": 0.05232663740480348,
+   "aggr": 0.08043496456957655,
+   "top": [
+    [
+     "hyperpop",
+     0.8233777284622192
+    ],
+    [
+     "confident swagger hip hop",
+     0.04652089625597
+    ],
+    [
+     "playful aggressive pop",
+     0.034708376973867416
+    ]
+   ]
+  },
+  "fma-elijah-k-single-indestructible-3a62c1.mp3": {
+   "style": 0.9199857031489955,
+   "neg": 0.034443183649273124,
+   "aggr": 0.04557111533358693,
+   "top": [
+    [
+     "hyperpop",
+     0.8332227468490601
+    ],
+    [
+     "playful aggressive pop",
+     0.06555348634719849
+    ],
+    [
+     "generic trap",
+     0.026948407292366028
+    ]
+   ]
+  },
+  "fma-elijah-k-single-digital-anarchy-213813.mp3": {
+   "style": 0.7453167697503886,
+   "neg": 0.13318595091550378,
+   "aggr": 0.12149722361937165,
+   "top": [
+    [
+     "hyperpop",
+     0.696036159992218
+    ],
+    [
+     "cinematic trailer",
+     0.07953641563653946
+    ],
+    [
+     "confident swagger hip hop",
+     0.07341980934143066
+    ]
+   ]
+  },
+  "fma-elijah-k-single-unresolved-tension-c11fc3.mp3": {
+   "style": 0.5119355433243982,
+   "neg": 0.3440513461464434,
+   "aggr": 0.14401307771913707,
+   "top": [
+    [
+     "hyperpop",
+     0.4066944122314453
+    ],
+    [
+     "cinematic trailer",
+     0.25669601559638977
+    ],
+    [
+     "playful aggressive pop",
+     0.0988873541355133
+    ]
+   ]
+  },
+  "fma-elijah-k-single-revolution-2-0e1678.mp3": {
+   "style": 0.26104074221802875,
+   "neg": 0.407179767760681,
+   "aggr": 0.3317795447946992,
+   "top": [
+    [
+     "cinematic trailer",
+     0.3749465346336365
+    ],
+    [
+     "aggressive phonk",
+     0.27423709630966187
+    ],
+    [
+     "hyperpop",
+     0.1400434970855713
+    ]
+   ]
+  }
+ },
+ "ranked": [
+  {
+   "file": "px-beats-sub-pressure-experimental-bass-540254.mp3",
+   "id": "beats-sub-pressure-experimental-bass-540254",
+   "src": "pixabay",
+   "score": 72.76595744680851,
+   "style": 0.16213669662829489,
+   "neg": 0.36489830967911985,
+   "aggr": 0.47296499088406563,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.3975726366043091
+    ],
+    [
+     "generic trap",
+     0.344730019569397
+    ],
+    [
+     "hyperpop",
+     0.1397361159324646
+    ]
+   ],
+   "dur": 78.88979591836734,
+   "lufs": -9.596081328561597,
+   "sub_share": 0.8893587589263916,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.016132569863774014,
+   "drop_t": 6.849886621315193,
+   "drop_db": 14.06851811265885,
+   "drop_beat_t": 6.907936507936508,
+   "start": 0.03482993197278983,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 8,
+   "gap_total": 2.8560544217687074,
+   "sharp": 32.31068801879883,
+   "trans_rate": 6.4,
+   "post_density": 7.833333333333333,
+   "contrast": 27.92296028137207
+  },
+  {
+   "file": "px-trap-shinji-hyperpop-type-beat-492110.mp3",
+   "id": "trap-shinji-hyperpop-type-beat-492110",
+   "src": "pixabay",
+   "score": 71.82978723404257,
+   "style": 0.7814458915199793,
+   "neg": 0.03635600146753859,
+   "aggr": 0.18219813145697117,
+   "top": [
+    [
+     "hyperpop",
+     0.7401050329208374
+    ],
+    [
+     "confident swagger hip hop",
+     0.10186275839805603
+    ],
+    [
+     "aggressive phonk",
+     0.058292873203754425
+    ]
+   ],
+   "dur": 140.35201814058956,
+   "lufs": -15.508137945383547,
+   "sub_share": 0.5319972634315491,
+   "tempo_raw": 129.19921875,
+   "bpm": 129.19921875,
+   "beat_cv": 0.0293245473362558,
+   "drop_t": 33.22775510204082,
+   "drop_db": 27.675120701960545,
+   "drop_beat_t": 33.28580498866213,
+   "start": 25.855419501133785,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 4,
+   "gap_total": 1.4396371882086167,
+   "sharp": 13.923951148986816,
+   "trans_rate": 3.493333333333333,
+   "post_density": 4.833333333333333,
+   "contrast": 16.300411224365234
+  },
+  {
+   "file": "fma-elijah-k-single-rushing-hearts-0e1d2f.mp3",
+   "id": "elijah-k-single-rushing-hearts-0e1d2f",
+   "src": "fma",
+   "score": 69.70212765957447,
+   "style": 0.8672385112695338,
+   "neg": 0.05232663740480348,
+   "aggr": 0.08043496456957655,
+   "top": [
+    [
+     "hyperpop",
+     0.8233777284622192
+    ],
+    [
+     "confident swagger hip hop",
+     0.04652089625597
+    ],
+    [
+     "playful aggressive pop",
+     0.034708376973867416
+    ]
+   ],
+   "dur": 68.57251700680273,
+   "lufs": -10.75548171002183,
+   "sub_share": 0.507074236869812,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.011558504489953486,
+   "drop_t": 13.676553287981859,
+   "drop_db": 17.2501669924614,
+   "drop_beat_t": 13.734603174603174,
+   "start": 6.861496598639456,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.2089795918367347,
+   "sharp": 14.528950691223145,
+   "trans_rate": 4.72,
+   "post_density": 4.666666666666667,
+   "contrast": 14.749981880187988
+  },
+  {
+   "file": "px-upbeat-adrenaline-hyperpop-467041.mp3",
+   "id": "upbeat-adrenaline-hyperpop-467041",
+   "src": "pixabay",
+   "score": 68.70212765957447,
+   "style": 0.3206071755521407,
+   "neg": 0.08006464010395575,
+   "aggr": 0.5993281900300644,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.4535055160522461
+    ],
+    [
+     "hyperpop",
+     0.2727970480918884
+    ],
+    [
+     "aggressive phonk",
+     0.11502058804035187
+    ]
+   ],
+   "dur": 189.02403628117915,
+   "lufs": -15.044046373986061,
+   "sub_share": 0.7141444683074951,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.028261966185514773,
+   "drop_t": 54.21859410430839,
+   "drop_db": 25.714643624885188,
+   "drop_beat_t": 54.276643990929706,
+   "start": 47.77505668934241,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 5,
+   "gap_total": 3.1811337868480725,
+   "sharp": 19.41915512084961,
+   "trans_rate": 3.04,
+   "post_density": 4.5,
+   "contrast": 27.48440933227539
+  },
+  {
+   "file": "fma-soularflair-cc-by-free-to-use-for-anything-1--c45dad.mp3",
+   "id": "soularflair-cc-by-free-to-use-for-anything-1--c45dad",
+   "src": "fma",
+   "score": 66.95744680851064,
+   "style": 0.8266188719535421,
+   "neg": 0.07138300850056112,
+   "aggr": 0.10199818102410063,
+   "top": [
+    [
+     "hyperpop",
+     0.792475163936615
+    ],
+    [
+     "confident swagger hip hop",
+     0.064485102891922
+    ],
+    [
+     "generic trap",
+     0.053408898413181305
+    ]
+   ],
+   "dur": 158.0390476190476,
+   "lufs": -10.385373706772556,
+   "sub_share": 0.7889873385429382,
+   "tempo_raw": 126.04801829268293,
+   "bpm": 126.04801829268293,
+   "beat_cv": 0.04349986370104475,
+   "drop_t": 71.74965986394558,
+   "drop_db": 8.072431472971743,
+   "drop_beat_t": 71.91219954648525,
+   "start": 64.2960544217687,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 9.978961944580078,
+   "trans_rate": 6.32,
+   "post_density": 8.333333333333334,
+   "contrast": 12.954973220825195
+  },
+  {
+   "file": "px-trap-solo-levelling-hyperpop-type-beat-492107.mp3",
+   "id": "trap-solo-levelling-hyperpop-type-beat-492107",
+   "src": "pixabay",
+   "score": 66.72340425531915,
+   "style": 0.38459095572488877,
+   "neg": 0.20079016061936272,
+   "aggr": 0.41461887319746893,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.37410736083984375
+    ],
+    [
+     "hyperpop",
+     0.3704107403755188
+    ],
+    [
+     "lo-fi chill",
+     0.06987179815769196
+    ]
+   ],
+   "dur": 124.99201814058956,
+   "lufs": -13.870038221575895,
+   "sub_share": 0.6418288946151733,
+   "tempo_raw": 129.19921875,
+   "bpm": 129.19921875,
+   "beat_cv": 0.012427380155001697,
+   "drop_t": 48.01886621315193,
+   "drop_db": 14.60987938844673,
+   "drop_beat_t": 48.06530612244898,
+   "start": 40.63492063492063,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 2,
+   "gap_total": 1.4396371882086167,
+   "sharp": 21.37394905090332,
+   "trans_rate": 3.68,
+   "post_density": 5.0,
+   "contrast": 20.236343383789062
+  },
+  {
+   "file": "px-cartoons-artificially-flavored-candy-glbml-99294.mp3",
+   "id": "cartoons-artificially-flavored-candy-glbml-99294",
+   "src": "pixabay",
+   "score": 65.48936170212767,
+   "style": 0.13521669252077118,
+   "neg": 0.46682307694572955,
+   "aggr": 0.3979602452600375,
+   "top": [
+    [
+     "generic trap",
+     0.384290874004364
+    ],
+    [
+     "confident swagger hip hop",
+     0.365596741437912
+    ],
+    [
+     "lo-fi chill",
+     0.07257740944623947
+    ]
+   ],
+   "dur": 88.84802721088435,
+   "lufs": -13.902644537005118,
+   "sub_share": 0.6740151643753052,
+   "tempo_raw": 161.4990234375,
+   "bpm": 161.4990234375,
+   "beat_cv": 0.0264511107605563,
+   "drop_t": 3.250793650793651,
+   "drop_db": 26.68963875404119,
+   "drop_beat_t": 3.308843537414966,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 14,
+   "gap_total": 3.7848526077097504,
+   "sharp": 38.832359313964844,
+   "trans_rate": 3.6,
+   "post_density": 4.5,
+   "contrast": 32.06282043457031
+  },
+  {
+   "file": "fma-soularflair-cc-by-free-to-use-for-anything-1--733964.mp3",
+   "id": "soularflair-cc-by-free-to-use-for-anything-1--733964",
+   "src": "fma",
+   "score": 60.25531914893618,
+   "style": 0.09383922754932428,
+   "neg": 0.3773593330915901,
+   "aggr": 0.5288014723919332,
+   "top": [
+    [
+     "generic trap",
+     0.3531720042228699
+    ],
+    [
+     "dark trap",
+     0.2922526001930237
+    ],
+    [
+     "confident swagger hip hop",
+     0.21840636432170868
+    ]
+   ],
+   "dur": 138.8590022675737,
+   "lufs": -9.732656236731293,
+   "sub_share": 0.7635170221328735,
+   "tempo_raw": 129.19921875,
+   "bpm": 129.19921875,
+   "beat_cv": 0.06164710405845636,
+   "drop_t": 9.659501133786849,
+   "drop_db": 19.331366240577154,
+   "drop_beat_t": 9.7059410430839,
+   "start": 2.275555555555555,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 8,
+   "gap_total": 2.089795918367347,
+   "sharp": 22.272275924682617,
+   "trans_rate": 3.2533333333333334,
+   "post_density": 3.1666666666666665,
+   "contrast": 18.89354133605957
+  },
+  {
+   "file": "px-upbeat-chrome-tears-hyperpop-467040.mp3",
+   "id": "upbeat-chrome-tears-hyperpop-467040",
+   "src": "pixabay",
+   "score": 60.06382978723405,
+   "style": 0.6812615954695502,
+   "neg": 0.05608781650153105,
+   "aggr": 0.2626505658845417,
+   "top": [
+    [
+     "hyperpop",
+     0.6135863065719604
+    ],
+    [
+     "aggressive phonk",
+     0.19313406944274902
+    ],
+    [
+     "playful aggressive pop",
+     0.05831269174814224
+    ]
+   ],
+   "dur": 134.04,
+   "lufs": -13.540617313001045,
+   "sub_share": 0.4551846385002136,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.025406112063029864,
+   "drop_t": 68.5685260770975,
+   "drop_db": 14.710192877425014,
+   "drop_beat_t": 68.6033560090703,
+   "start": 61.73024943310658,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 4,
+   "gap_total": 0.7430385487528345,
+   "sharp": 13.43837833404541,
+   "trans_rate": 2.1066666666666665,
+   "post_density": 3.1666666666666665,
+   "contrast": 17.798194885253906
+  },
+  {
+   "file": "px-beats-millenia-413782.mp3",
+   "id": "beats-millenia-413782",
+   "src": "pixabay",
+   "score": 59.29787234042554,
+   "style": 0.822444032120984,
+   "neg": 0.0781595815824403,
+   "aggr": 0.09939636307535693,
+   "top": [
+    [
+     "hyperpop",
+     0.7991693615913391
+    ],
+    [
+     "confident swagger hip hop",
+     0.07398845255374908
+    ],
+    [
+     "cinematic trailer",
+     0.02889304608106613
+    ]
+   ],
+   "dur": 102.48,
+   "lufs": -10.69726584285091,
+   "sub_share": 0.5786057710647583,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.02018980765614875,
+   "drop_t": 7.1053061224489795,
+   "drop_db": 8.843335499008166,
+   "drop_beat_t": 14.082902494331066,
+   "start": 7.581315192743764,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 14.623753547668457,
+   "trans_rate": 3.7866666666666666,
+   "post_density": 6.0,
+   "contrast": 15.2527437210083
+  },
+  {
+   "file": "px-upbeat-alien-money-hyperpop-467038.mp3",
+   "id": "upbeat-alien-money-hyperpop-467038",
+   "src": "pixabay",
+   "score": 59.17021276595745,
+   "style": 0.7355609346559504,
+   "neg": 0.07417064669698448,
+   "aggr": 0.19026845082407817,
+   "top": [
+    [
+     "hyperpop",
+     0.6888648271560669
+    ],
+    [
+     "confident swagger hip hop",
+     0.15515044331550598
+    ],
+    [
+     "playful aggressive pop",
+     0.04124319925904274
+    ]
+   ],
+   "dur": 132.84,
+   "lufs": -11.976964093519188,
+   "sub_share": 0.7069515585899353,
+   "tempo_raw": 156.60511363636363,
+   "bpm": 156.60511363636363,
+   "beat_cv": 0.019782423999656074,
+   "drop_t": 59.60562358276644,
+   "drop_db": 11.261067216418487,
+   "drop_beat_t": 59.66367346938775,
+   "start": 53.53360544217687,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.34829931972789113,
+   "sharp": 18.275588989257812,
+   "trans_rate": 2.56,
+   "post_density": 3.0,
+   "contrast": 12.661775588989258
+  },
+  {
+   "file": "fma-anipatok-single-grimez-349f8f.mp3",
+   "id": "anipatok-single-grimez-349f8f",
+   "src": "fma",
+   "score": 59.08510638297872,
+   "style": 0.6772331482643494,
+   "neg": 0.12321045598946512,
+   "aggr": 0.1995564396493137,
+   "top": [
+    [
+     "hyperpop",
+     0.6085670590400696
+    ],
+    [
+     "confident swagger hip hop",
+     0.1133103221654892
+    ],
+    [
+     "dark trap",
+     0.07461483776569366
+    ]
+   ],
+   "dur": 133.5,
+   "lufs": -12.739656850889562,
+   "sub_share": 0.5878158211708069,
+   "tempo_raw": 79.50721153846153,
+   "bpm": 159.01442307692307,
+   "beat_cv": 0.024259365123353457,
+   "drop_t": 54.61333333333334,
+   "drop_db": 10.874219008398342,
+   "drop_beat_t": 54.659773242630386,
+   "start": 48.6225850340136,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 21.72219467163086,
+   "trans_rate": 4.8,
+   "post_density": 5.666666666666667,
+   "contrast": 8.576078414916992
+  },
+  {
+   "file": "fma-1000-handz-cc-by-free-to-use-electronicgaming-24eb88.mp3",
+   "id": "1000-handz-cc-by-free-to-use-electronicgaming-24eb88",
+   "src": "fma",
+   "score": 57.510638297872354,
+   "style": 0.9205721605248982,
+   "neg": 0.051656757006639964,
+   "aggr": 0.027771051274612546,
+   "top": [
+    [
+     "hyperpop",
+     0.7284215688705444
+    ],
+    [
+     "playful aggressive pop",
+     0.18899281322956085
+    ],
+    [
+     "happy pop",
+     0.02634068764746189
+    ]
+   ],
+   "dur": 144.0130612244898,
+   "lufs": -11.234918018653676,
+   "sub_share": 0.5519261956214905,
+   "tempo_raw": 135.99917763157896,
+   "bpm": 135.99917763157896,
+   "beat_cv": 0.03326752214705786,
+   "drop_t": 10.147120181405896,
+   "drop_db": 6.873315545326802,
+   "drop_beat_t": 10.193560090702947,
+   "start": 3.1346938775510207,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 10.328256607055664,
+   "trans_rate": 5.626666666666667,
+   "post_density": 8.333333333333334,
+   "contrast": 4.7838134765625
+  },
+  {
+   "file": "px-trap-spirit-bomb-hyperpop-type-beat-492114.mp3",
+   "id": "trap-spirit-bomb-hyperpop-type-beat-492114",
+   "src": "pixabay",
+   "score": 57.361702127659576,
+   "style": 0.7501664943756623,
+   "neg": 0.08388604610081529,
+   "aggr": 0.1659474780317396,
+   "top": [
+    [
+     "hyperpop",
+     0.6942191123962402
+    ],
+    [
+     "confident swagger hip hop",
+     0.12196230888366699
+    ],
+    [
+     "playful aggressive pop",
+     0.04708878695964813
+    ]
+   ],
+   "dur": 114.14403628117914,
+   "lufs": -14.530110028932185,
+   "sub_share": 0.4711756706237793,
+   "tempo_raw": 129.19921875,
+   "bpm": 129.19921875,
+   "beat_cv": 0.01618658519163962,
+   "drop_t": 58.142766439909295,
+   "drop_db": 11.060558392514022,
+   "drop_beat_t": 58.200816326530614,
+   "start": 50.770430839002266,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 3,
+   "gap_total": 1.1609977324263039,
+   "sharp": 9.868529319763184,
+   "trans_rate": 3.1466666666666665,
+   "post_density": 2.6666666666666665,
+   "contrast": 15.561509132385254
+  },
+  {
+   "file": "px-future-bass-dont-talk-315229.mp3",
+   "id": "future-bass-dont-talk-315229",
+   "src": "pixabay",
+   "score": 54.638297872340424,
+   "style": 0.25731187580458936,
+   "neg": 0.16062387100555497,
+   "aggr": 0.5820642371691065,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.5281891226768494
+    ],
+    [
+     "hyperpop",
+     0.24926817417144775
+    ],
+    [
+     "generic trap",
+     0.15030696988105774
+    ]
+   ],
+   "dur": 110.70693877551021,
+   "lufs": -11.286793489811156,
+   "sub_share": 0.7334908843040466,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.0966352211663462,
+   "drop_t": 2.5774149659863945,
+   "drop_db": 10.436872492321406,
+   "drop_beat_t": 2.507755102040816,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 4,
+   "gap_total": 1.18421768707483,
+   "sharp": 18.871906280517578,
+   "trans_rate": 3.8666666666666667,
+   "post_density": 5.333333333333333,
+   "contrast": 20.83232307434082
+  },
+  {
+   "file": "px-video-games-timelaspe-hyperpop-type-beat-492116.mp3",
+   "id": "video-games-timelaspe-hyperpop-type-beat-492116",
+   "src": "pixabay",
+   "score": 54.29787234042553,
+   "style": 0.6687190764714614,
+   "neg": 0.1530193460475857,
+   "aggr": 0.17826158797834069,
+   "top": [
+    [
+     "hyperpop",
+     0.5289647579193115
+    ],
+    [
+     "confident swagger hip hop",
+     0.1359374225139618
+    ],
+    [
+     "PC Music",
+     0.1010260358452797
+    ]
+   ],
+   "dur": 130.94403628117914,
+   "lufs": -14.922266434407035,
+   "sub_share": 0.5897620320320129,
+   "tempo_raw": 151.99908088235293,
+   "bpm": 151.99908088235293,
+   "beat_cv": 0.019878340618212465,
+   "drop_t": 99.7297052154195,
+   "drop_db": 20.14917817492754,
+   "drop_beat_t": 99.77614512471655,
+   "start": 93.46031746031746,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 5,
+   "gap_total": 2.48453514739229,
+   "sharp": 37.40084457397461,
+   "trans_rate": 2.7466666666666666,
+   "post_density": 2.0,
+   "contrast": 21.626243591308594
+  },
+  {
+   "file": "px-trap-energy-trap-bass-111291.mp3",
+   "id": "trap-energy-trap-bass-111291",
+   "src": "pixabay",
+   "score": 54.191489361702125,
+   "style": 0.6789283584512305,
+   "neg": 0.14907981796022796,
+   "aggr": 0.1719917980954051,
+   "top": [
+    [
+     "hyperpop",
+     0.5800157785415649
+    ],
+    [
+     "generic trap",
+     0.12895233929157257
+    ],
+    [
+     "confident swagger hip hop",
+     0.10789767652750015
+    ]
+   ],
+   "dur": 80.14367346938775,
+   "lufs": -8.171420475676337,
+   "sub_share": 0.9305211305618286,
+   "tempo_raw": 99.38401442307692,
+   "bpm": 99.38401442307692,
+   "beat_cv": 0.01129633741338646,
+   "drop_t": 1.486077097505669,
+   "drop_db": 4.227507944781535,
+   "drop_beat_t": 1.555736961451247,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.6965986394557823,
+   "sharp": 16.584449768066406,
+   "trans_rate": 4.1066666666666665,
+   "post_density": 4.166666666666667,
+   "contrast": 5.787899971008301
+  },
+  {
+   "file": "fma-elijah-k-single-indestructible-3a62c1.mp3",
+   "id": "elijah-k-single-indestructible-3a62c1",
+   "src": "fma",
+   "score": 53.57446808510639,
+   "style": 0.9199857031489955,
+   "neg": 0.034443183649273124,
+   "aggr": 0.04557111533358693,
+   "top": [
+    [
+     "hyperpop",
+     0.8332227468490601
+    ],
+    [
+     "playful aggressive pop",
+     0.06555348634719849
+    ],
+    [
+     "generic trap",
+     0.026948407292366028
+    ]
+   ],
+   "dur": 120.00004535147393,
+   "lufs": -14.293127862762615,
+   "sub_share": 0.6691359877586365,
+   "tempo_raw": 143.5546875,
+   "bpm": 143.5546875,
+   "beat_cv": 0.014575658287619222,
+   "drop_t": 66.64126984126985,
+   "drop_db": 8.512054470999047,
+   "drop_beat_t": 66.69931972789115,
+   "start": 60.01197278911564,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 7.9658331871032715,
+   "trans_rate": 2.4266666666666667,
+   "post_density": 4.666666666666667,
+   "contrast": 12.561702728271484
+  },
+  {
+   "file": "px-future-bass-crystal-experimental-electronic-292772.mp3",
+   "id": "future-bass-crystal-experimental-electronic-292772",
+   "src": "pixabay",
+   "score": 52.78723404255319,
+   "style": 0.4663313044839015,
+   "neg": 0.3778982861622353,
+   "aggr": 0.1557703537546331,
+   "top": [
+    [
+     "hyperpop",
+     0.44304993748664856
+    ],
+    [
+     "cinematic trailer",
+     0.3398311734199524
+    ],
+    [
+     "confident swagger hip hop",
+     0.0861409604549408
+    ]
+   ],
+   "dur": 97.20163265306122,
+   "lufs": -8.27977667767015,
+   "sub_share": 0.7741380929946899,
+   "tempo_raw": 156.60511363636363,
+   "bpm": 156.60511363636363,
+   "beat_cv": 0.05408318883419057,
+   "drop_t": 65.48027210884354,
+   "drop_db": 5.216613716172222,
+   "drop_beat_t": 65.5847619047619,
+   "start": 59.45469387755102,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 2,
+   "gap_total": 1.811156462585034,
+   "sharp": 12.596935272216797,
+   "trans_rate": 2.986666666666667,
+   "post_density": 4.833333333333333,
+   "contrast": 20.80415153503418
+  },
+  {
+   "file": "fma-elijah-k-single-digital-anarchy-213813.mp3",
+   "id": "elijah-k-single-digital-anarchy-213813",
+   "src": "fma",
+   "score": 52.48936170212766,
+   "style": 0.7453167697503886,
+   "neg": 0.13318595091550378,
+   "aggr": 0.12149722361937165,
+   "top": [
+    [
+     "hyperpop",
+     0.696036159992218
+    ],
+    [
+     "cinematic trailer",
+     0.07953641563653946
+    ],
+    [
+     "confident swagger hip hop",
+     0.07341980934143066
+    ]
+   ],
+   "dur": 74.0,
+   "lufs": -12.829561807531991,
+   "sub_share": 0.4805276095867157,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.045434375540558604,
+   "drop_t": 5.990748299319728,
+   "drop_db": 10.850272686284907,
+   "drop_beat_t": 6.025578231292517,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 2,
+   "gap_total": 0.5108390022675737,
+   "sharp": 8.48331069946289,
+   "trans_rate": 2.8,
+   "post_density": 3.1666666666666665,
+   "contrast": 16.0871524810791
+  },
+  {
+   "file": "px-trap-turban-hyperpop-trap-type-beat-200667.mp3",
+   "id": "trap-turban-hyperpop-trap-type-beat-200667",
+   "src": "pixabay",
+   "score": 52.46808510638298,
+   "style": 0.09404135874046915,
+   "neg": 0.2676377228763158,
+   "aggr": 0.638320904574357,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.5487004518508911
+    ],
+    [
+     "generic trap",
+     0.2573448419570923
+    ],
+    [
+     "dark trap",
+     0.08792027086019516
+    ]
+   ],
+   "dur": 120.05877551020409,
+   "lufs": -9.401752939861314,
+   "sub_share": 0.9586023092269897,
+   "tempo_raw": 95.703125,
+   "bpm": 95.703125,
+   "beat_cv": 0.07576642522696407,
+   "drop_t": 70.03138321995465,
+   "drop_db": 19.51972739879697,
+   "drop_beat_t": 70.08943310657597,
+   "start": 60.0584126984127,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.11609977324263039,
+   "sharp": 13.364264488220215,
+   "trans_rate": 4.506666666666667,
+   "post_density": 5.666666666666667,
+   "contrast": 8.247725486755371
+  },
+  {
+   "file": "px-future-bass-hyper-reality-hyper-pop-191163.mp3",
+   "id": "future-bass-hyper-reality-hyper-pop-191163",
+   "src": "pixabay",
+   "score": 51.957446808510646,
+   "style": 0.4627952704922791,
+   "neg": 0.12707023836992448,
+   "aggr": 0.4101344722585054,
+   "top": [
+    [
+     "hyperpop",
+     0.4503463804721832
+    ],
+    [
+     "confident swagger hip hop",
+     0.3551899194717407
+    ],
+    [
+     "generic trap",
+     0.07304377853870392
+    ]
+   ],
+   "dur": 85.75201814058957,
+   "lufs": -8.370666498639354,
+   "sub_share": 0.5766100883483887,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.010780486282651634,
+   "drop_t": 47.159727891156464,
+   "drop_db": 10.068286122960739,
+   "drop_beat_t": 47.206167800453514,
+   "start": 40.333061224489796,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 12.226293563842773,
+   "trans_rate": 3.84,
+   "post_density": 5.5,
+   "contrast": 23.886592864990234
+  },
+  {
+   "file": "px-trap-rage-hyperpop-synth-beat-458634.mp3",
+   "id": "trap-rage-hyperpop-synth-beat-458634",
+   "src": "pixabay",
+   "score": 50.87234042553192,
+   "style": 0.016556917461457488,
+   "neg": 0.14842549098830204,
+   "aggr": 0.835017568031617,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.7495691776275635
+    ],
+    [
+     "generic trap",
+     0.14111033082008362
+    ],
+    [
+     "dark trap",
+     0.08455639332532883
+    ]
+   ],
+   "dur": 147.30448979591836,
+   "lufs": -12.948133764655262,
+   "sub_share": 0.9016120433807373,
+   "tempo_raw": 99.38401442307692,
+   "bpm": 99.38401442307692,
+   "beat_cv": 0.060631618956934634,
+   "drop_t": 69.59020408163265,
+   "drop_db": 14.08551671619874,
+   "drop_beat_t": 69.8572335600907,
+   "start": 60.19773242630386,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 18.524765014648438,
+   "trans_rate": 4.746666666666667,
+   "post_density": 5.166666666666667,
+   "contrast": 18.08026885986328
+  },
+  {
+   "file": "px-future-bass-abstract-trap-vibe-orbital-303651.mp3",
+   "id": "future-bass-abstract-trap-vibe-orbital-303651",
+   "src": "pixabay",
+   "score": 50.48936170212767,
+   "style": 0.1257407422599499,
+   "neg": 0.25859203311847523,
+   "aggr": 0.6156672211363912,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.4870540201663971
+    ],
+    [
+     "generic trap",
+     0.18962930142879486
+    ],
+    [
+     "dark trap",
+     0.09541797637939453
+    ]
+   ],
+   "dur": 97.33224489795919,
+   "lufs": -7.5662909360155055,
+   "sub_share": 0.830785870552063,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.027659624374860626,
+   "drop_t": 64.85333333333334,
+   "drop_db": 14.12693888976295,
+   "drop_beat_t": 64.91138321995464,
+   "start": 58.409795918367344,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.8126984126984127,
+   "sharp": 8.169683456420898,
+   "trans_rate": 1.68,
+   "post_density": 5.333333333333333,
+   "contrast": 22.183177947998047
+  },
+  {
+   "file": "fma-holiznacc0-nature-spirit-tengu-c94814.mp3",
+   "id": "holiznacc0-nature-spirit-tengu-c94814",
+   "src": "fma",
+   "score": 47.723404255319146,
+   "style": 0.006213704353285721,
+   "neg": 0.2773700663819909,
+   "aggr": 0.7164162340632174,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.6806086301803589
+    ],
+    [
+     "generic trap",
+     0.24681872129440308
+    ],
+    [
+     "dark trap",
+     0.035170793533325195
+    ]
+   ],
+   "dur": 148.36897959183673,
+   "lufs": -14.931538593970012,
+   "sub_share": 0.7991335988044739,
+   "tempo_raw": 151.99908088235293,
+   "bpm": 151.99908088235293,
+   "beat_cv": 0.03780374186421872,
+   "drop_t": 75.7667120181406,
+   "drop_db": 12.46491421342308,
+   "drop_beat_t": 75.8247619047619,
+   "start": 69.5089342403628,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 25.578861236572266,
+   "trans_rate": 4.053333333333334,
+   "post_density": 4.166666666666667,
+   "contrast": 14.128225326538086
+  },
+  {
+   "file": "fma-beat-mekanik-single-you-bet-b637e0.mp3",
+   "id": "beat-mekanik-single-you-bet-b637e0",
+   "src": "fma",
+   "score": 47.42553191489362,
+   "style": 0.831065499340184,
+   "neg": 0.0358777936999104,
+   "aggr": 0.13305668061366305,
+   "top": [
+    [
+     "hyperpop",
+     0.7090280055999756
+    ],
+    [
+     "confident swagger hip hop",
+     0.08311798423528671
+    ],
+    [
+     "chopped vocal stabs",
+     0.07214170694351196
+    ]
+   ],
+   "dur": 180.30512471655328,
+   "lufs": -14.051578759929614,
+   "sub_share": 0.29607516527175903,
+   "tempo_raw": 93.96306818181819,
+   "bpm": 93.96306818181819,
+   "beat_cv": 0.04967764064805751,
+   "drop_t": 40.07764172335601,
+   "drop_db": 6.587556239298685,
+   "drop_beat_t": 40.13569160997732,
+   "start": 29.918911564625848,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 11.641550064086914,
+   "trans_rate": 4.746666666666667,
+   "post_density": 5.333333333333333,
+   "contrast": 8.77254867553711
+  },
+  {
+   "file": "px-beats-intro-music-black-box-trap-beat-13221.mp3",
+   "id": "beats-intro-music-black-box-trap-beat-13221",
+   "src": "pixabay",
+   "score": 46.38297872340425,
+   "style": 0.13471103773918003,
+   "neg": 0.4701949777081609,
+   "aggr": 0.3950939637143165,
+   "top": [
+    [
+     "generic trap",
+     0.4614908695220947
+    ],
+    [
+     "confident swagger hip hop",
+     0.3375895917415619
+    ],
+    [
+     "hyperpop",
+     0.12023083865642548
+    ]
+   ],
+   "dur": 116.63673469387756,
+   "lufs": -6.739954932804391,
+   "sub_share": 0.846137285232544,
+   "tempo_raw": 139.6748310810811,
+   "bpm": 139.6748310810811,
+   "beat_cv": 0.014603497526772377,
+   "drop_t": 70.77442176870748,
+   "drop_db": 6.306762782669793,
+   "drop_beat_t": 70.79764172335601,
+   "start": 63.92453514739229,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.13931972789115646,
+   "sharp": 41.380760192871094,
+   "trans_rate": 5.973333333333334,
+   "post_density": 4.666666666666667,
+   "contrast": 11.256803512573242
+  },
+  {
+   "file": "px-beats-synth-rage-beat-hyperpop-528326.mp3",
+   "id": "beats-synth-rage-beat-hyperpop-528326",
+   "src": "pixabay",
+   "score": 45.702127659574465,
+   "style": 0.026045434464776918,
+   "neg": 0.2894438020848611,
+   "aggr": 0.6845108160050586,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.6102574467658997
+    ],
+    [
+     "generic trap",
+     0.2824912667274475
+    ],
+    [
+     "dark trap",
+     0.07257168740034103
+    ]
+   ],
+   "dur": 175.46448979591835,
+   "lufs": -9.868032802060693,
+   "sub_share": 0.9254544973373413,
+   "tempo_raw": 112.34714673913044,
+   "bpm": 112.34714673913044,
+   "beat_cv": 0.021402847454695735,
+   "drop_t": 16.99700680272109,
+   "drop_db": 9.658864753272718,
+   "drop_beat_t": 16.99700680272109,
+   "start": 8.452063492063493,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 17.17822265625,
+   "trans_rate": 5.946666666666666,
+   "post_density": 6.5,
+   "contrast": 14.162822723388672
+  },
+  {
+   "file": "px-beats-glitch-hop-576825.mp3",
+   "id": "beats-glitch-hop-576825",
+   "src": "pixabay",
+   "score": 43.87234042553192,
+   "style": 0.08570188895100728,
+   "neg": 0.36421922635054216,
+   "aggr": 0.5500788913341239,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.41063231229782104
+    ],
+    [
+     "generic trap",
+     0.20943984389305115
+    ],
+    [
+     "dark trap",
+     0.1306685209274292
+    ]
+   ],
+   "dur": 132.67591836734695,
+   "lufs": -12.027164653435372,
+   "sub_share": 0.829957127571106,
+   "tempo_raw": 151.99908088235293,
+   "bpm": 151.99908088235293,
+   "beat_cv": 0.019796367161211897,
+   "drop_t": 1.486077097505669,
+   "drop_db": 31.601494035247853,
+   "drop_beat_t": 1.6253968253968254,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 1.3003174603174603,
+   "sharp": 20.502826690673828,
+   "trans_rate": 4.053333333333334,
+   "post_density": 2.5,
+   "contrast": 12.808187484741211
+  },
+  {
+   "file": "px-sion-junkyard-jam-stomps-claps-found-percussion-drums-572706.mp3",
+   "id": "percussion-junkyard-jam-stomps-claps-found-percussion-drums-572706",
+   "src": "pixabay",
+   "score": 42.29787234042553,
+   "style": 0.20643063590978272,
+   "neg": 0.2753464484376309,
+   "aggr": 0.5182228752164519,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.43898534774780273
+    ],
+    [
+     "cinematic trailer",
+     0.18914735317230225
+    ],
+    [
+     "hyperpop",
+     0.17276699841022491
+    ]
+   ],
+   "dur": 70.03428571428572,
+   "lufs": -10.884135524366952,
+   "sub_share": 0.5790698528289795,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.016006525879230966,
+   "drop_t": 50.340861678004536,
+   "drop_db": 12.681395727355623,
+   "drop_beat_t": 50.31764172335601,
+   "start": 42.32997732426304,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 1.9272562358276644,
+   "sharp": 23.553903579711914,
+   "trans_rate": 3.52,
+   "post_density": 7.166666666666667,
+   "contrast": 20.20233154296875
+  },
+  {
+   "file": "px-trap-space-drip-hyperpop-type-beat-492109.mp3",
+   "id": "trap-space-drip-hyperpop-type-beat-492109",
+   "src": "pixabay",
+   "score": 40.680851063829785,
+   "style": 0.3736540227109799,
+   "neg": 0.2789929898626724,
+   "aggr": 0.347352957847761,
+   "top": [
+    [
+     "hyperpop",
+     0.3574080467224121
+    ],
+    [
+     "confident swagger hip hop",
+     0.3128402829170227
+    ],
+    [
+     "happy pop",
+     0.08366300165653229
+    ]
+   ],
+   "dur": 139.27201814058958,
+   "lufs": -14.204644676252125,
+   "sub_share": 0.6067589521408081,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.022991367122743717,
+   "drop_t": 81.92,
+   "drop_db": 12.54911455270636,
+   "drop_beat_t": 81.8271201814059,
+   "start": 75.3255328798186,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 10.357643127441406,
+   "trans_rate": 1.7866666666666666,
+   "post_density": 4.666666666666667,
+   "contrast": 13.111310958862305
+  },
+  {
+   "file": "fma-dilating-times-single-gut-music-c19948.mp3",
+   "id": "dilating-times-single-gut-music-c19948",
+   "src": "fma",
+   "score": 38.5531914893617,
+   "style": 0.6506639622384682,
+   "neg": 0.10949404584243894,
+   "aggr": 0.23984201048733667,
+   "top": [
+    [
+     "hyperpop",
+     0.46557947993278503
+    ],
+    [
+     "glitchy experimental club",
+     0.14850150048732758
+    ],
+    [
+     "dark trap",
+     0.11474417895078659
+    ]
+   ],
+   "dur": 193.9954195011338,
+   "lufs": -20.55908657595865,
+   "sub_share": 0.26098963618278503,
+   "tempo_raw": 156.60511363636363,
+   "bpm": 156.60511363636363,
+   "beat_cv": 0.03169093991797962,
+   "drop_t": 2.089795918367347,
+   "drop_db": 17.233247510855854,
+   "drop_beat_t": 22.77877551020408,
+   "start": 16.648707482993196,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 7.136324882507324,
+   "trans_rate": 3.04,
+   "post_density": 9.333333333333334,
+   "contrast": 8.622713088989258
+  },
+  {
+   "file": "fma-shaolin-dub-reimagined-some-thoughts-2026-2a645f.mp3",
+   "id": "shaolin-dub-reimagined-some-thoughts-2026-2a645f",
+   "src": "fma",
+   "score": 37.70212765957447,
+   "style": 0.02118556867208099,
+   "neg": 0.3646510330727324,
+   "aggr": 0.6141634141386021,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.5759422779083252
+    ],
+    [
+     "lo-fi chill",
+     0.1932607740163803
+    ],
+    [
+     "generic trap",
+     0.1089261919260025
+    ]
+   ],
+   "dur": 132.12,
+   "lufs": -13.249227872941537,
+   "sub_share": 0.784728467464447,
+   "tempo_raw": 166.70866935483872,
+   "bpm": 166.70866935483872,
+   "beat_cv": 0.037038339358116124,
+   "drop_t": 97.57024943310658,
+   "drop_db": 12.071415769395102,
+   "drop_beat_t": 97.62829931972789,
+   "start": 91.86975056689342,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 21.74918556213379,
+   "trans_rate": 2.6666666666666665,
+   "post_density": 4.0,
+   "contrast": 18.79575538635254
+  },
+  {
+   "file": "px-dance-dance-for-me-280006.mp3",
+   "id": "dance-dance-for-me-280006",
+   "src": "pixabay",
+   "score": 37.404255319148945,
+   "style": 0.5411012394251884,
+   "neg": 0.11295934030931676,
+   "aggr": 0.3459395454265177,
+   "top": [
+    [
+     "distorted bass stabs",
+     0.4686959981918335
+    ],
+    [
+     "dubstep wobble",
+     0.1505698263645172
+    ],
+    [
+     "dark trap",
+     0.1475311517715454
+    ]
+   ],
+   "dur": 129.6,
+   "lufs": -12.610982529844451,
+   "sub_share": 0.7872692346572876,
+   "tempo_raw": 126.04801829268293,
+   "bpm": 126.04801829268293,
+   "beat_cv": 0.023366521347344602,
+   "drop_t": 126.1772335600907,
+   "drop_db": 4.3690632386415444,
+   "drop_beat_t": 121.4984126984127,
+   "start": 113.88226757369614,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 38.409786224365234,
+   "trans_rate": 2.0,
+   "post_density": 2.3333333333333335,
+   "contrast": 18.3643856048584
+  },
+  {
+   "file": "fma-1000-handz-cc-by-free-to-use-electronicgaming-2094b9.mp3",
+   "id": "1000-handz-cc-by-free-to-use-electronicgaming-2094b9",
+   "src": "fma",
+   "score": 36.255319148936174,
+   "style": 0.311523636025413,
+   "neg": 0.5381754607660696,
+   "aggr": 0.15030093432869762,
+   "top": [
+    [
+     "cinematic trailer",
+     0.4009578227996826
+    ],
+    [
+     "hyperpop",
+     0.24854779243469238
+    ],
+    [
+     "dark trap",
+     0.06685762107372284
+    ]
+   ],
+   "dur": 202.10938775510203,
+   "lufs": -9.473456683030907,
+   "sub_share": 0.6720803380012512,
+   "tempo_raw": 151.99908088235293,
+   "bpm": 151.99908088235293,
+   "beat_cv": 0.02470250723133886,
+   "drop_t": 1.486077097505669,
+   "drop_db": 11.300258667950526,
+   "drop_beat_t": 2.6238548752834467,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.8126984126984127,
+   "sharp": 5.923312664031982,
+   "trans_rate": 1.04,
+   "post_density": 8.666666666666666,
+   "contrast": 9.135932922363281
+  },
+  {
+   "file": "px-electronic-honey-kisses-sped-up-remix-462108.mp3",
+   "id": "electronic-honey-kisses-sped-up-remix-462108",
+   "src": "pixabay",
+   "score": 34.1063829787234,
+   "style": 0.5403220297666849,
+   "neg": 0.2837142045973451,
+   "aggr": 0.1759637996001402,
+   "top": [
+    [
+     "hyperpop",
+     0.5275466442108154
+    ],
+    [
+     "happy pop",
+     0.2070797085762024
+    ],
+    [
+     "confident swagger hip hop",
+     0.14203917980194092
+    ]
+   ],
+   "dur": 119.11201814058957,
+   "lufs": -9.548863839766748,
+   "sub_share": 0.31255942583084106,
+   "tempo_raw": 92.28515625,
+   "bpm": 92.28515625,
+   "beat_cv": 0.014307021266442918,
+   "drop_t": 44.46621315192744,
+   "drop_db": 6.072626158915822,
+   "drop_beat_t": 44.535873015873015,
+   "start": 34.13333333333333,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 9.09286880493164,
+   "trans_rate": 2.7466666666666666,
+   "post_density": 6.0,
+   "contrast": 11.546939849853516
+  },
+  {
+   "file": "fma-cillek-my-heart-is-burning-out-1-my-heart-is--b78d63.mp3",
+   "id": "cillek-my-heart-is-burning-out-1-my-heart-is--b78d63",
+   "src": "fma",
+   "score": 31.404255319148938,
+   "style": 0.5601026143249328,
+   "neg": 0.258645079247799,
+   "aggr": 0.1812523412227165,
+   "top": [
+    [
+     "hyperpop",
+     0.5082213282585144
+    ],
+    [
+     "confident swagger hip hop",
+     0.11732668429613113
+    ],
+    [
+     "cinematic trailer",
+     0.10586894303560257
+    ]
+   ],
+   "dur": 33.5156462585034,
+   "lufs": -8.942637440839045,
+   "sub_share": 0.600555419921875,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.04189718841895077,
+   "drop_t": 9.496961451247165,
+   "drop_db": 0.9359238224629376,
+   "drop_beat_t": 9.531791383219955,
+   "start": 1.5441269841269847,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 0.8359183673469388,
+   "sharp": 13.827676773071289,
+   "trans_rate": 3.546666666666667,
+   "post_density": 6.0,
+   "contrast": 5.154131889343262
+  },
+  {
+   "file": "fma-1000-handz-cc-by-free-to-use-electronicgaming-25d955.mp3",
+   "id": "1000-handz-cc-by-free-to-use-electronicgaming-25d955",
+   "src": "fma",
+   "score": 31.02127659574468,
+   "style": 0.2148072526033502,
+   "neg": 0.3378382866503671,
+   "aggr": 0.44735447177663445,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.2585465908050537
+    ],
+    [
+     "hyperpop",
+     0.18495577573776245
+    ],
+    [
+     "cinematic trailer",
+     0.17776167392730713
+    ]
+   ],
+   "dur": 184.0065306122449,
+   "lufs": -12.384628251985642,
+   "sub_share": 0.6043792963027954,
+   "tempo_raw": 135.99917763157896,
+   "bpm": 135.99917763157896,
+   "beat_cv": 0.022981325603209018,
+   "drop_t": 166.30131519274377,
+   "drop_db": 11.086346429387808,
+   "drop_beat_t": 166.33614512471655,
+   "start": 159.27727891156462,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 2.995374149659864,
+   "sharp": 15.43677806854248,
+   "trans_rate": 1.9733333333333334,
+   "post_density": 3.5,
+   "contrast": 109.45157623291016
+  },
+  {
+   "file": "fma-elijah-k-single-unresolved-tension-c11fc3.mp3",
+   "id": "elijah-k-single-unresolved-tension-c11fc3",
+   "src": "fma",
+   "score": 30.5531914893617,
+   "style": 0.5119355433243982,
+   "neg": 0.3440513461464434,
+   "aggr": 0.14401307771913707,
+   "top": [
+    [
+     "hyperpop",
+     0.4066944122314453
+    ],
+    [
+     "cinematic trailer",
+     0.25669601559638977
+    ],
+    [
+     "playful aggressive pop",
+     0.0988873541355133
+    ]
+   ],
+   "dur": 60.0,
+   "lufs": -12.094429178422878,
+   "sub_share": 0.7332276701927185,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.03409383505369853,
+   "drop_t": 41.470839002267574,
+   "drop_db": 12.064818437058403,
+   "drop_beat_t": 41.54049886621315,
+   "start": 33.55283446712018,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 2,
+   "gap_total": 0.5340589569160997,
+   "sharp": 10.58024787902832,
+   "trans_rate": 1.36,
+   "post_density": 3.3333333333333335,
+   "contrast": 17.317153930664062
+  },
+  {
+   "file": "px-pop-drip-267191.mp3",
+   "id": "pop-drip-267191",
+   "src": "pixabay",
+   "score": 29.21276595744682,
+   "style": 0.3997349526216567,
+   "neg": 0.14374666266303393,
+   "aggr": 0.4565183552913368,
+   "top": [
+    [
+     "hyperpop",
+     0.3543860614299774
+    ],
+    [
+     "confident swagger hip hop",
+     0.3271480202674866
+    ],
+    [
+     "generic trap",
+     0.12046904861927032
+    ]
+   ],
+   "dur": 69.04163265306123,
+   "lufs": -10.454440630918551,
+   "sub_share": 0.7468475699424744,
+   "tempo_raw": 107.666015625,
+   "bpm": 107.666015625,
+   "beat_cv": 0.05438591550851902,
+   "drop_t": 41.912018140589566,
+   "drop_db": 11.655101746253521,
+   "drop_beat_t": 42.05133786848072,
+   "start": 33.13487528344671,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 0.8823582766439909,
+   "sharp": 11.242658615112305,
+   "trans_rate": 2.6666666666666665,
+   "post_density": 4.5,
+   "contrast": 14.39498519897461
+  },
+  {
+   "file": "fma-holiznacc0-nature-spirit-kitsune-f4b167.mp3",
+   "id": "holiznacc0-nature-spirit-kitsune-f4b167",
+   "src": "fma",
+   "score": 28.148936170212767,
+   "style": 0.017622586189645517,
+   "neg": 0.2902490978012793,
+   "aggr": 0.6921282810108096,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.6268110275268555
+    ],
+    [
+     "generic trap",
+     0.1825251430273056
+    ],
+    [
+     "lo-fi chill",
+     0.0908101350069046
+    ]
+   ],
+   "dur": 193.12897959183672,
+   "lufs": -12.583498737388275,
+   "sub_share": 0.4978533685207367,
+   "tempo_raw": 82.03125,
+   "bpm": 164.0625,
+   "beat_cv": 0.03593363590993439,
+   "drop_t": 24.752471655328797,
+   "drop_db": 8.887058396456865,
+   "drop_beat_t": 24.79891156462585,
+   "start": 18.94748299319728,
+   "start_ok": true,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 18.132535934448242,
+   "trans_rate": 3.066666666666667,
+   "post_density": 3.5,
+   "contrast": 8.919135093688965
+  },
+  {
+   "file": "fma-soularflair-cc-by-free-to-use-for-anything-1--674de5.mp3",
+   "id": "soularflair-cc-by-free-to-use-for-anything-1--674de5",
+   "src": "fma",
+   "score": 28.021276595744688,
+   "style": 0.4555591573152924,
+   "neg": 0.1075269802731782,
+   "aggr": 0.43691387213766575,
+   "top": [
+    [
+     "hyperpop",
+     0.2834896147251129
+    ],
+    [
+     "dark trap",
+     0.23971331119537354
+    ],
+    [
+     "distorted bass stabs",
+     0.15903061628341675
+    ]
+   ],
+   "dur": 208.4007709750567,
+   "lufs": -11.67430974633447,
+   "sub_share": 0.6862289309501648,
+   "tempo_raw": 126.04801829268293,
+   "bpm": 126.04801829268293,
+   "beat_cv": 0.030522553618372014,
+   "drop_t": 189.9160090702948,
+   "drop_db": 5.902436231599374,
+   "drop_beat_t": 183.2518820861678,
+   "start": 175.63573696145124,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 0.7662585034013606,
+   "sharp": 7.435901641845703,
+   "trans_rate": 1.4666666666666666,
+   "post_density": 7.333333333333333,
+   "contrast": 12.000990867614746
+  },
+  {
+   "file": "px-beautiful-plays-experimental-beat-133252.mp3",
+   "id": "beautiful-plays-experimental-beat-133252",
+   "src": "pixabay",
+   "score": 27.382978723404257,
+   "style": 0.13302309332357254,
+   "neg": 0.6939121708855964,
+   "aggr": 0.17306478146929294,
+   "top": [
+    [
+     "cinematic trailer",
+     0.4878203868865967
+    ],
+    [
+     "epic orchestral",
+     0.12281903624534607
+    ],
+    [
+     "dark trap",
+     0.11711950600147247
+    ]
+   ],
+   "dur": 134.19102040816327,
+   "lufs": -9.893950330510934,
+   "sub_share": 0.7035951018333435,
+   "tempo_raw": 147.65625,
+   "bpm": 147.65625,
+   "beat_cv": 0.07412246103824847,
+   "drop_t": 1.486077097505669,
+   "drop_db": 22.13717510840845,
+   "drop_beat_t": 2.2639455782312927,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 1,
+   "gap_total": 0.9752380952380952,
+   "sharp": 6.564704418182373,
+   "trans_rate": 0.9866666666666667,
+   "post_density": 6.0,
+   "contrast": 13.604183197021484
+  },
+  {
+   "file": "px-upbeat-blessings-hyperpop-467037.mp3",
+   "id": "upbeat-blessings-hyperpop-467037",
+   "src": "pixabay",
+   "score": 25.148936170212764,
+   "style": 0.2914368065439703,
+   "neg": 0.10731875114834111,
+   "aggr": 0.601244407997001,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.4997289180755615
+    ],
+    [
+     "hyperpop",
+     0.28426840901374817
+    ],
+    [
+     "dark trap",
+     0.09425979852676392
+    ]
+   ],
+   "dur": 125.71201814058956,
+   "lufs": -15.839502079455446,
+   "sub_share": 0.6587653756141663,
+   "tempo_raw": 112.34714673913044,
+   "bpm": 112.34714673913044,
+   "beat_cv": 0.07954634292907518,
+   "drop_t": 100.84426303854875,
+   "drop_db": 18.476998142166984,
+   "drop_beat_t": 101.00680272108843,
+   "start": 92.46185941043083,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 2,
+   "gap_total": 1.0681179138321995,
+   "sharp": 8.570701599121094,
+   "trans_rate": 1.52,
+   "post_density": 4.333333333333333,
+   "contrast": 21.6441593170166
+  },
+  {
+   "file": "px-dubstep-darkness-462142.mp3",
+   "id": "dubstep-darkness-462142",
+   "src": "pixabay",
+   "score": 23.170212765957448,
+   "style": 0.4518526381580159,
+   "neg": 0.3901693472871557,
+   "aggr": 0.15797800570726395,
+   "top": [
+    [
+     "hyperpop",
+     0.38702958822250366
+    ],
+    [
+     "lo-fi chill",
+     0.1943754255771637
+    ],
+    [
+     "happy pop",
+     0.10228118300437927
+    ]
+   ],
+   "dur": 133.27201814058958,
+   "lufs": -6.356491551792741,
+   "sub_share": 0.5681484937667847,
+   "tempo_raw": 86.1328125,
+   "bpm": 86.1328125,
+   "beat_cv": 0.047651954768243174,
+   "drop_t": 8.916462585034013,
+   "drop_db": 5.964477675428307,
+   "drop_beat_t": 9.113832199546485,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": true,
+   "gaps": 0,
+   "gap_total": 0.023219954648526078,
+   "sharp": 8.524550437927246,
+   "trans_rate": 2.026666666666667,
+   "post_density": 4.0,
+   "contrast": 6.781403064727783
+  },
+  {
+   "file": "fma-elijah-k-single-revolution-2-0e1678.mp3",
+   "id": "elijah-k-single-revolution-2-0e1678",
+   "src": "fma",
+   "score": 21.787234042553187,
+   "style": 0.26104074221802875,
+   "neg": 0.407179767760681,
+   "aggr": 0.3317795447946992,
+   "top": [
+    [
+     "cinematic trailer",
+     0.3749465346336365
+    ],
+    [
+     "aggressive phonk",
+     0.27423709630966187
+    ],
+    [
+     "hyperpop",
+     0.1400434970855713
+    ]
+   ],
+   "dur": 68.0,
+   "lufs": -11.980274394754376,
+   "sub_share": 0.6150909662246704,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.018242230923294685,
+   "drop_t": 64.50503401360544,
+   "drop_db": 7.102116273977295,
+   "drop_beat_t": 64.51664399092971,
+   "start": 56.52897959183674,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 1,
+   "gap_total": 1.6718367346938776,
+   "sharp": 15.37741756439209,
+   "trans_rate": 0.56,
+   "post_density": 0.6666666666666666,
+   "contrast": 42.33614730834961
+  },
+  {
+   "file": "px-electronic-tantrum-hyperpop-type-beat-492115.mp3",
+   "id": "electronic-tantrum-hyperpop-type-beat-492115",
+   "src": "pixabay",
+   "score": 20.361702127659576,
+   "style": 0.4402814495269922,
+   "neg": 0.17397236267424887,
+   "aggr": 0.38574618520215154,
+   "top": [
+    [
+     "hyperpop",
+     0.41210708022117615
+    ],
+    [
+     "confident swagger hip hop",
+     0.28480497002601624
+    ],
+    [
+     "cinematic trailer",
+     0.09088534116744995
+    ]
+   ],
+   "dur": 120.07201814058956,
+   "lufs": -15.153800232170452,
+   "sub_share": 0.5364460945129395,
+   "tempo_raw": 143.5546875,
+   "bpm": 143.5546875,
+   "beat_cv": 0.036538291715030834,
+   "drop_t": 93.36743764172336,
+   "drop_db": 8.243270128374007,
+   "drop_beat_t": 93.4138775510204,
+   "start": 86.7265306122449,
+   "start_ok": true,
+   "enough": false,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 8.713726997375488,
+   "trans_rate": 2.2933333333333334,
+   "post_density": 5.166666666666667,
+   "contrast": 13.016768455505371
+  },
+  {
+   "file": "fma-cillek-my-heart-is-burning-out-1-my-heart-is--c141d1.mp3",
+   "id": "cillek-my-heart-is-burning-out-1-my-heart-is--c141d1",
+   "src": "fma",
+   "score": 13.0,
+   "style": 0.11361458729879814,
+   "neg": 0.2893311277257453,
+   "aggr": 0.5970542712893803,
+   "top": [
+    [
+     "confident swagger hip hop",
+     0.48623624444007874
+    ],
+    [
+     "generic trap",
+     0.23149490356445312
+    ],
+    [
+     "dark trap",
+     0.10943331569433212
+    ]
+   ],
+   "dur": 32.0156462585034,
+   "lufs": -10.746016062765241,
+   "sub_share": 0.735160231590271,
+   "tempo_raw": 120.18531976744185,
+   "bpm": 120.18531976744185,
+   "beat_cv": 0.009352202765940423,
+   "drop_t": 1.509297052154195,
+   "drop_db": 0.9623172558864432,
+   "drop_beat_t": 1.5325170068027212,
+   "start": 0.0,
+   "start_ok": false,
+   "enough": false,
+   "gaps": 0,
+   "gap_total": 0.0,
+   "sharp": 16.718828201293945,
+   "trans_rate": 3.2533333333333334,
+   "post_density": 5.0,
+   "contrast": 5.805858612060547
+  }
+ ],
+ "edits": {
+  "shinji": {
+   "file": "px-trap-shinji-hyperpop-type-beat-492110.mp3",
+   "bpm": 129.2,
+   "beat_s": 0.4643962848297214,
+   "drop_t_detected": 33.22775510204082,
+   "drop_beat_time": 33.297,
+   "drop_offset_ms": 69.24489795918021,
+   "start": 25.913,
+   "drop_in_film_s": 7.383999999999997,
+   "film_80_s": 37.15170278637771,
+   "film_83_s": 38.54489164086688,
+   "end": 64.45789164086688,
+   "pre": 0.2537500083333336,
+   "post": 0.2903597666666666
+  },
+  "adrenaline": {
+   "file": "px-upbeat-adrenaline-hyperpop-467041.mp3",
+   "bpm": 143.6,
+   "beat_s": 0.4178272980501393,
+   "drop_t_detected": 54.21859410430839,
+   "drop_beat_time": 54.288,
+   "drop_offset_ms": 69.40589569160949,
+   "start": 47.717,
+   "drop_in_film_s": 6.570999999999998,
+   "film_80_s": 33.42618384401114,
+   "film_83_s": 34.67966573816156,
+   "end": 82.39666573816156,
+   "pre": 0.17137486666666688,
+   "post": 0.4857633666666663
+  },
+  "rushing": {
+   "file": "fma-elijah-k-single-rushing-hearts-0e1d2f.mp3",
+   "bpm": 92.3,
+   "beat_s": 0.6500541711809318,
+   "drop_t_detected": 13.676553287981859,
+   "drop_beat_time": 13.746,
+   "drop_offset_ms": 69.44671201814145,
+   "start": 3.483,
+   "drop_in_film_s": 10.263,
+   "film_80_s": 52.00433369447454,
+   "film_83_s": 53.95449620801734,
+   "end": 57.437496208017336,
+   "pre": 0.16775736666666666,
+   "post": 0.575767725
+  },
+  "solo": {
+   "file": "px-trap-solo-levelling-hyperpop-type-beat-492107.mp3",
+   "bpm": 129.2,
+   "beat_s": 0.4643962848297214,
+   "drop_t_detected": 48.01886621315193,
+   "drop_beat_time": 48.065,
+   "drop_offset_ms": 46.133786848066904,
+   "start": 40.681,
+   "drop_in_film_s": 7.384,
+   "film_80_s": 37.15170278637771,
+   "film_83_s": 38.54489164086688,
+   "end": 79.22589164086688,
+   "pre": 0.14700183333333364,
+   "post": 0.3067287083333332
+  },
+  "candy": {
+   "file": "px-cartoons-artificially-flavored-candy-glbml-99294.mp3",
+   "bpm": 161.5,
+   "beat_s": 0.3715170278637771,
+   "drop_t_detected": 3.250793650793651,
+   "drop_beat_time": 3.32,
+   "drop_offset_ms": 69.20634920634905,
+   "start": 0.0,
+   "drop_in_film_s": 3.32,
+   "film_80_s": 29.72136222910217,
+   "film_83_s": 30.8359133126935,
+   "end": 30.8359133126935,
+   "pre": 0.01,
+   "post": 0.39207229166666674
+  }
+ }
+}

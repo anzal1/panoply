@@ -1,6 +1,6 @@
 ---
 compositionId: panoply-launch
-duration_s: 37.5          # at 128 BPM, 20 bars. Final value = audiomap.audio.duration_sec after the track is cut. See "Tempo".
+duration_s: 37.15         # 80 beats at 129.2 BPM (the pick, see MUSIC.md). Final value = audiomap.audio.duration_sec after the track is cut.
 canvas: { w: 1920, h: 1080, fps: 60 }
 style:                    # the owner picks one of three, see style-frames/. Recommended: A for the cold open, C from the drop on.
   font: "Geist / Geist Mono"
@@ -12,14 +12,14 @@ avoid: ["shockwaves", "screen shakes", "bounce or overshoot easing", "burst rays
 
 # Panoply launch film, storyboard
 
-37.5 seconds at 128 BPM (20 bars), 16:9, 60 fps, cut to a licensed human-made track. Ships at public launch,
+37.2 seconds at 129.2 BPM (20 bars), 16:9, 60 fps, cut to a licensed human-made track. Ships at public launch,
 once instant search and the disk map exist (see `docs/LEDGER.md`, the launch gate). Frames 4 and 5 are
 placeholders until those two ship, and they stay placeholders in every review cut.
 
 The cue sheet for any tempo is generated, never typed by hand:
 
 ```
-node docs/launch/tools/cues.mjs --bpm 128 --md     # seconds and frame numbers for every cue below
+node docs/launch/tools/cues.mjs --bpm 129.2 --offset 25.913 --md     # seconds and frame numbers for every cue below
 ```
 
 ## The idea in one line
@@ -51,27 +51,32 @@ music. The track brings the energy, the picture brings the clarity.
 
 All timing is in beats, so the film re-times itself to any track from 120 to 150 BPM.
 
-| BPM | 120 | 124 | 128 | 130 | 140 | 150 |
+| BPM | 120 | 124 | 129.2 | 130 | 140 | 150 |
 |---|---|---|---|---|---|---|
-| Film length | 40.0 s | 38.7 s | 37.5 s | 36.9 s | 34.3 s | 32.0 s |
+| Film length | 40.0 s | 38.7 s | 37.2 s | 36.9 s | 34.3 s | 32.0 s |
 
 Track requirements the shortlist was filtered on: a clear build into a hard drop, the drop on a downbeat, 4 to 8
-bars of build before it. The cut puts the drop on beat 16 (bar 5, 7.5 s at 128). If the track's intro is longer, the
+bars of build before it. The cut puts the drop on beat 16 (bar 5, 7.43 s at 129.2). If the track's intro is longer, the
 edit keeps the last 4 bars of the build and drops the rest. If it is shorter, the first 2 bars loop. The cut is a
 single `ffmpeg` trim at a measured downbeat, done by the music-to-video analyzer's offset, never by ear.
 
+The pick (see `MUSIC.md`) is "Shinji, Hyperpop Type Beat" at 129.2 BPM, cut from track second 25.913. The track goes quiet on its own at
+film seconds 6.1, 15.1 and 20.1 (beats 13, 32.5 and 43), so the hard stop in frame 1 and the holds in frames 3 and 4 can follow the
+music's real silences. `cues-shinji-129bpm.md` has every cue with its track second. Style decision: option A for frame 1, option C from
+the drop on. Frames 4 and 5 stay in.
+
 Beats, with the music situation each scene sits on:
 
-| # | Frame | Beats | Bars | Seconds at 128 | Music |
+| # | Frame | Beats | Bars | Seconds at 129.2 | Music |
 |---|---|---|---|---|---|
-| 1 | Cold open, the upload chaos | 0 to 16 | 4 | 0.0 to 7.5 | filtered build, onsets accelerating, hard stop on the last 8th |
-| 2 | The hotkey | 16 to 24 | 2 | 7.5 to 11.25 | DROP lands on beat 16 |
-| 3 | The tools fly in | 24 to 40 | 4 | 11.25 to 18.75 | full groove, steady kick |
-| 4 | Instant search (placeholder) | 40 to 48 | 2 | 18.75 to 22.5 | groove, hats open |
-| 5 | Disk map (placeholder) | 48 to 56 | 2 | 22.5 to 26.25 | groove, filter lift |
-| 6 | The moat, community plugins | 56 to 68 | 3 | 26.25 to 31.9 | second build, ends in a drum fill |
-| 7 | Free, open source, on your device | 68 to 76 | 2 | 31.9 to 35.6 | last full bars |
-| 8 | End card | 76 to 80 | 1 | 35.6 to 37.5, plus a 1.4 s ring-out | final hit, reverb tail |
+| 1 | Cold open, the upload chaos | 0 to 16 | 4 | 0.0 to 7.43 | filtered build, onsets accelerating, hard stop on the last 8th |
+| 2 | The hotkey | 16 to 24 | 2 | 7.43 to 11.15 | DROP lands on beat 16 |
+| 3 | The tools fly in | 24 to 40 | 4 | 11.15 to 18.58 | full groove, steady kick |
+| 4 | Instant search (placeholder) | 40 to 48 | 2 | 18.58 to 22.29 | groove, hats open |
+| 5 | Disk map (placeholder) | 48 to 56 | 2 | 22.29 to 26.01 | groove, filter lift |
+| 6 | The moat, community plugins | 56 to 68 | 3 | 26.01 to 31.58 | second build, ends in a drum fill |
+| 7 | Free, open source, on your device | 68 to 76 | 2 | 31.58 to 35.29 | last full bars |
+| 8 | End card | 76 to 80 | 1 | 35.29 to 37.15, plus a 1.4 s ring-out | final hit, reverb tail |
 
 ## Copy deck
 
@@ -98,8 +103,8 @@ uploaded).
 ## Frame 1: pain
 
 - src: compositions/frames/01-pain.html
-- duration: 7.500s
-- span_sec: [0.0, 7.5]
+- duration: 7.430s
+- span_sec: [0.000, 7.430]
 - pacing: beat_cut
 - mood: [tense, dark]
 - feel: filtered build, onsets accelerating, a hard stop on the last 8th before the drop
@@ -128,8 +133,8 @@ uploaded).
 ## Frame 2: hotkey
 
 - src: compositions/frames/02-hotkey.html
-- duration: 3.750s
-- span_sec: [7.5, 11.25]
+- duration: 3.716s
+- span_sec: [7.430, 11.146]
 - pacing: beat_cut
 - mood: [hype, elegant]
 - feel: the drop, then a full groove
@@ -157,8 +162,8 @@ uploaded).
 ## Frame 3: tools
 
 - src: compositions/frames/03-tools.html
-- duration: 7.500s
-- span_sec: [11.25, 18.75]
+- duration: 7.430s
+- span_sec: [11.146, 18.576]
 - pacing: beat_cut
 - mood: [hype, elegant]
 - feel: full groove, steady kick
@@ -189,8 +194,8 @@ uploaded).
 ## Frame 4: find (PLACEHOLDER until instant search ships)
 
 - src: compositions/frames/04-find.html
-- duration: 3.750s
-- span_sec: [18.75, 22.5]
+- duration: 3.715s
+- span_sec: [18.576, 22.291]
 - pacing: beat_cut
 - mood: [hype]
 - feel: groove, open hats
@@ -206,14 +211,14 @@ uploaded).
   - Text: "Every file on your disk." then "Before you finish typing."
   - Gate: every digit on this frame comes from the engine's own benchmark JSON (the launch gate says under 10 ms per keystroke
     on a million files). If the shipped number is higher, the pill shows the shipped number. If instant search is not ready, this
-    frame is cut and the film is 33.75 s at 128 BPM (18 bars, cues re-run).
+    frame is cut and the film is 33.4 s at 129.2 BPM (18 bars, cues re-run).
   - Placeholder now: `app-find-light.png` from the review set, plus a typed-frame capture mode to add (see PRODUCTION.md).
 
 ## Frame 5: diskmap (PLACEHOLDER until the disk map ships)
 
 - src: compositions/frames/05-diskmap.html
-- duration: 3.750s
-- span_sec: [22.5, 26.25]
+- duration: 3.715s
+- span_sec: [22.291, 26.006]
 - pacing: beat_cut
 - mood: [hype, elegant]
 - feel: groove, filter lift
@@ -233,8 +238,8 @@ uploaded).
 ## Frame 6: plugins
 
 - src: compositions/frames/06-plugins.html
-- duration: 5.625s
-- span_sec: [26.25, 31.875]
+- duration: 5.573s
+- span_sec: [26.006, 31.579]
 - pacing: beat_cut
 - mood: [elegant, hype]
 - feel: a second build ending in a drum fill
@@ -262,8 +267,8 @@ uploaded).
 ## Frame 7: promise
 
 - src: compositions/frames/07-promise.html
-- duration: 3.750s
-- span_sec: [31.875, 35.625]
+- duration: 3.715s
+- span_sec: [31.579, 35.294]
 - pacing: beat_cut
 - mood: [elegant, hype]
 - feel: last full bars before the end
@@ -284,8 +289,8 @@ uploaded).
 ## Frame 8: end
 
 - src: compositions/frames/08-end.html
-- duration: 1.875s
-- span_sec: [35.625, 37.5]
+- duration: 1.858s
+- span_sec: [35.294, 37.152]
 - pacing: beat_cut
 - mood: [elegant]
 - feel: the final hit, then reverb ring-out
@@ -320,4 +325,4 @@ uploaded).
 
 1. The track (see `MUSIC.md`). The film re-times to any of the six.
 2. The style (see `style-frames/contact-sheet.png`): A Midnight, B Paper, C Fan, or the recommended hybrid.
-3. Whether frames 4 and 5 are in the first cut, or the film ships at 16 bars (30.0 s at 128 BPM) without them.
+3. Whether frames 4 and 5 are in the first cut, or the film ships at 16 bars (29.7 s at 129.2 BPM) without them.
