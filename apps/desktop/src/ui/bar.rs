@@ -167,6 +167,9 @@ pub(crate) struct Bar {
     /// Linux/X11: the window that had keyboard focus before the bar took it.
     #[cfg(target_os = "linux")]
     prev_focus: Option<u32>,
+    /// Linux/X11: when losing focus last started a hide. See [`Bar::toggle`].
+    #[cfg(target_os = "linux")]
+    deactivated_at: Option<Instant>,
 }
 
 impl Bar {
@@ -216,6 +219,10 @@ impl Bar {
                 && matches!(bar.phase, Phase::Showing | Phase::Shown)
                 && !bar.suppress_autohide
             {
+                #[cfg(target_os = "linux")]
+                {
+                    bar.deactivated_at = Some(Instant::now());
+                }
                 bar.hide(window, cx);
             }
         });
@@ -261,6 +268,8 @@ impl Bar {
             launch_pending: mode == BarMode::Live,
             #[cfg(target_os = "linux")]
             prev_focus: None,
+            #[cfg(target_os = "linux")]
+            deactivated_at: None,
         };
         bar.rebuild(cx);
         bar
@@ -536,6 +545,17 @@ impl Bar {
     }
 
     pub(crate) fn toggle(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        // X11 reports the hotkey's own key grab to the focused bar as a focus loss, which starts a
+        // hide; the hotkey press that caused it then arrives and would turn that hide back into a
+        // show. When the hide is that fresh, the press has already had its effect.
+        #[cfg(target_os = "linux")]
+        if self.phase == Phase::Hiding
+            && self
+                .deactivated_at
+                .is_some_and(|t| t.elapsed() < std::time::Duration::from_millis(250))
+        {
+            return;
+        }
         if self.is_visible_phase() {
             self.hide(window, cx);
         } else {
