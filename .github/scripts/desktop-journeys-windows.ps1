@@ -721,11 +721,11 @@ Journey '4b' 'OCR a scanned PDF: the text becomes extractable' {
   Fact 'rows_after_typing' ($q.text -replace '\s+', ' ')
   Press-Key 0x0D
   $out = $null; $presses = 1; $t0 = Get-Date
-  # OCR asks to download its models and the runtime, one consent sheet each: say yes (Return) while one shows.
+  # Return runs the options step, then OCR asks to download its models and the runtime, one consent sheet each: say yes (Return) while an options or consent sheet shows.
   for ($i = 1; $i -le 14 -and -not $out; $i++) {
     $out = Find-NewFile $d 'scan*(*.pdf' @() 6
     if (-not $out) {
-      $w = Wait-Text $app.proc "wait-$i" { Get-Main $app.proc } 'Download the|Not now' 1
+      $w = Wait-Text $app.proc "wait-$i" { Get-Main $app.proc } 'Download the|Not now|Options' 1
       if ($w.ok) { Press-Key 0x0D; $presses++ }
       if (((Get-Date) - $t0).TotalSeconds -ge 200) { break }
     }
@@ -760,7 +760,11 @@ Journey '3b' 'A photo saved as PNG, "under 50 kb": an output under 50 KB, in wha
   $q = Wait-Text $app.proc 'query' { Get-Main $app.proc } 'under 50' 6
   Fact 'rows_after_typing' ($q.text -replace '\s+', ' ')
   Press-Key 0x0D
-  $out = Find-NewFile $d 'photo*(*' @() 25
+  $out = $null
+  for ($i = 1; $i -le 4 -and -not $out; $i++) {
+    $out = Find-NewFile $d 'photo*(*' @() 6
+    if (-not $out -and $i -lt 4) { Press-Key 0x0D }   # the options step, if the tool waited for Return
+  }
   $done = Wait-Text $app.proc 'result-card' { Get-Main $app.proc } 'KB|MB|smaller|Undo|Done|saved|did not work' 8
   Fact 'result_card' ($done.text -replace '\s+', ' ')
   Check 'an output file appeared next to the input' ([bool]$out) ($done.text -replace '\s+', ' ')

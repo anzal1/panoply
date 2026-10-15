@@ -120,12 +120,12 @@ wait_text() { # wait_text NAME main|bar REGEX SECONDS -> sets WT_OK (0|1), WT_TE
   while :; do
     i=$((i + 1)); p="$(shot "$1-$i" "$2")"; WT_PNG="$p"; WT_TEXT="$(ocr "$p")"
     if echo "$WT_TEXT" | grep -Eiq "$3"; then WT_OK=1; return 0; fi
-    [ $(( $(date +%s) - t0 )) -ge "$4" ] && return 0
+    [ "$i" -ge 2 ] && [ $(( $(date +%s) - t0 )) -ge "$4" ] && return 0
     sleep 0.7
   done
 }
 key() { xdotool key --clearmodifiers "$@"; sleep 0.15; }
-type_text() { xdotool type --delay 70 -- "$1"; sleep 0.4; }
+type_text() { xdotool type --delay 70 -- "$1"; sleep 1.5; }
 hotkey() { xdotool key --clearmodifiers ctrl+alt+space; }
 focus_main() { local id; id="$(win_main)"; [ -n "$id" ] && { xdotool windowactivate --sync "$id" 2>/dev/null || xdotool windowfocus "$id" 2>/dev/null; }; sleep 0.4; return 0; }
 one_line() { echo "$1" | tr -s '[:space:]' ' ' | cut -c1-400; }
@@ -337,10 +337,10 @@ j_4b() {
   data rows_after_typing "$(one_line "$WT_TEXT")"
   key Return
   local out="" presses=1 i t0; t0=$(date +%s)
-  # OCR asks to download its models and the runtime, one consent sheet each: say yes (Return) while one shows.
+  # Return runs the options step, then OCR asks to download its models and the runtime, one consent sheet each: say yes (Return) while an options or consent sheet shows.
   for i in $(seq 1 14); do
     out="$(find_new "$d" 'scan*(*.pdf' 6)" && break
-    wait_text "wait-$i" main 'Download the|Not now' 1
+    wait_text "wait-$i" main 'Download the|Not now|Options' 1
     if [ "$WT_OK" = 1 ]; then key Return; presses=$((presses + 1)); fi
     [ $(( $(date +%s) - t0 )) -ge 200 ] && break
   done
@@ -372,7 +372,11 @@ j_3b() { # The same words on a grainy photo saved as a PNG
   wait_text query main 'under 50' 8
   data rows_after_typing "$(one_line "$WT_TEXT")"
   key Return
-  local out; out="$(find_new "$d" 'photo*(*' 25)"
+  local out="" i
+  for i in 1 2 3 4; do
+    out="$(find_new "$d" 'photo*(*' 6)" && break
+    [ "$i" -lt 4 ] && key Return   # the options step, if the tool waited for Return
+  done
   wait_text result-card main 'KB|MB|smaller|Undo|Done|saved|did not work' 8
   data result_card "$(one_line "$WT_TEXT")"
   check "an output file appeared next to the input" "$(ok_if x '[ -n "$out" ]')" "$(one_line "$WT_TEXT")"

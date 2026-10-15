@@ -30,16 +30,13 @@ def font(size):
 
 
 def graphic(path):
-    """A screenshot-like PNG well over 50 kB: a window with a gradient header, cards and many lines of text.
+    """A screenshot-like PNG well over 50 kB: a window with a header bar, cards and many lines of text.
 
-    What people really shrink under a size limit: flat areas, anti-aliased text, a few soft gradients. A
+    What people really shrink under a size limit: flat areas and anti-aliased text, a few thousand colours at most (the app treats more than 5000 as a photograph). A
     grainy photo cannot stay a PNG under 50 kB, and the app says so (see `photo`)."""
     w, h = 1200, 640
     img = Image.new("RGB", (w, h), (246, 247, 249))
-    px = img.load()
-    for y in range(120):
-        for x in range(w):
-            px[x, y] = (int(30 + 60 * x / w), int(70 + 90 * y / 120), int(160 + 70 * x / w))
+    ImageDraw.Draw(img).rectangle([0, 0, w, 120], fill=(36, 99, 190))
     d = ImageDraw.Draw(img)
     f_big, f_mid, f_small = font(44), font(26), font(18)
     d.text((40, 36), "Quarterly report - regional summary", fill="white", font=f_big)
