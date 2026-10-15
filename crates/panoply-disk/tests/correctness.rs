@@ -453,3 +453,30 @@ fn small_apfs_clones_count_once() {
         "four copies occupy the space of one"
     );
 }
+
+/// Folded small clones (8 KiB each) still give their bytes back from the folder's folded entry.
+#[cfg(target_os = "macos")]
+#[test]
+fn folded_small_clones_count_once() {
+    let d = Dir::new("clone-folded");
+    write(&d.0.join("src/a.bin"), 8_000);
+    fs::create_dir_all(d.0.join("copy")).unwrap();
+    for name in ["x.bin", "y.bin", "z.bin"] {
+        let ok = std::process::Command::new("cp")
+            .arg("-c")
+            .arg(d.0.join("src/a.bin"))
+            .arg(d.0.join("copy").join(name))
+            .status()
+            .unwrap();
+        assert!(ok.success());
+    }
+    let du_style = reference(&d.0);
+    let s = scan(&d.0, &ScanOptions::default()).unwrap();
+    let one = fs::metadata(d.0.join("src/a.bin")).unwrap().blocks() * 512;
+    assert_eq!(
+        s.report.total_bytes, one,
+        "four folded copies occupy the space of one"
+    );
+    assert_eq!(s.report.total_bytes + s.report.clone_bytes_saved, du_style);
+    assert_eq!(s.report.files, 4);
+}

@@ -171,6 +171,9 @@ impl Batch {
     }
 }
 
+/// Marks a clone record that belongs to the folder's folded entry, whose position is known only at the merge.
+const IN_SMALL: u32 = u32::MAX;
+
 /// Files up to this many bytes on disk are folded into their folder's "small files" entry.
 const SMALL_MAX: u64 = 16 * 1024;
 
@@ -383,8 +386,13 @@ pub fn scan(root: &Path, opts: &ScanOptions) -> Result<Scan, ScanError> {
     report.skipped.sort_by_key(|s| s.node.0);
     report.elapsed = started.elapsed();
     report.volume = volume::info(&root).ok();
-    tree.nodes.shrink_to_fit();
-    tree.names.shrink_to_fit();
+    // Giving back slack copies the whole array, which is itself the peak; only worth it for real waste.
+    if tree.nodes.capacity() > tree.nodes.len() + tree.nodes.len() / 4 {
+        tree.nodes.shrink_to_fit();
+    }
+    if tree.names.capacity() > tree.names.len() + tree.names.len() / 4 {
+        tree.names.shrink_to_fit();
+    }
     Ok(Scan { tree, report })
 }
 
@@ -472,7 +480,6 @@ fn read_one(
                 if sh.collapse
                     && e.kind == Kind::File
                     && e.nlink == 1
-                    && e.clone_shared == 0
                     && e.flags == 0
                     && e.alloc <= SMALL_MAX
                     && e.apparent < e.alloc.saturating_add(64 * 1024)
@@ -482,6 +489,14 @@ fn read_one(
                     bytes += e.alloc;
                     batch.small_bytes += e.alloc;
                     batch.small_files += 1;
+                    if e.clone_shared > 0 {
+                        // A folded clone still gives its bytes back, from the folder's folded entry.
+                        batch.clones.push(CloneRec {
+                            clone_id: e.clone_id,
+                            shared: e.clone_shared,
+                            node: IN_SMALL,
+                        });
+                    }
                     return;
                 }
                 let idx = batch.recs.len() as u32;
@@ -620,7 +635,13 @@ fn read_one(
     }
     for c in &batch.clones {
         b.clones.push(CloneRec {
-            node: base as u32 + c.node,
+            // The folded entry is the last one of the batch.
+            node: base as u32
+                + if c.node == IN_SMALL {
+                    count as u32 - 1
+                } else {
+                    c.node
+                },
             ..*c
         });
     }
