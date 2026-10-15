@@ -15,6 +15,11 @@ Fixes found by running the app on real Windows and Linux desktops.
   `doc.markdown_to_html` (Markdown to one HTML page that prints to PDF), `data.format` (tidy, convert or
   check JSON, YAML and TOML, with line and column for mistakes) and `image.qr_code` (links or text in a file
   to PNG or SVG QR codes). They live in `modules/examples-wasm`, each with its own README.
+- **The plugins ship in the app.** The release workflow builds exactly the modules in `modules/shipped.txt` and
+  puts them in the macOS app (`Resources/modules`), the Windows MSI and zip, and the Linux AppImage and
+  tarball, in the folder the app's catalog loads from. The learning examples stay out of releases.
+  `panoply modules` lists them from a release build too: the command line and the app now share one
+  module search path (`panoply_core::modules`).
 - `tools/check-modules.sh` and a `modules` CI job: fmt, clippy, unit tests and the WebAssembly build for every
   community module.
 

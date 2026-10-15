@@ -274,18 +274,7 @@ impl Catalog {
 
 /// The module folders inside `dir`, or `dir` itself when it holds a `module.toml`.
 fn module_folders(dir: &Path) -> Vec<PathBuf> {
-    if dir.join("module.toml").is_file() {
-        return vec![dir.to_path_buf()];
-    }
-    let mut v: Vec<PathBuf> = std::fs::read_dir(dir)
-        .into_iter()
-        .flatten()
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| p.join("module.toml").is_file())
-        .collect();
-    v.sort();
-    v
+    panoply_core::modules::module_folders(dir)
 }
 
 #[cfg(test)]

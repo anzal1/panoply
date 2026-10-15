@@ -4,6 +4,7 @@
     Version      MSI product version, four numeric parts (0.1.0.1)
     ProductCode  GUID, fixed per version and architecture
     BinDir       folder with panoply.exe and panoply-desktop.exe
+    ModulesDir   folder with the shipped community modules: one folder each, module.toml and module.wasm
     AssetDir     folder with panoply.ico, LICENSE-MIT, LICENSE-APACHE and THIRD-PARTY-NOTICES.md
     LicenseRtf   the license text shown in the setup dialog
   Features: Panoply (required), the panoply command on PATH, and the Explorer right-click entry.
@@ -27,7 +28,10 @@
     <ui:WixUI Id="WixUI_FeatureTree" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="Panoply" />
+      <Directory Id="INSTALLFOLDER" Name="Panoply">
+        <!-- Next to panoply-desktop.exe: the folder the app's module catalog loads from. -->
+        <Directory Id="ModulesFolder" Name="modules" />
+      </Directory>
     </StandardDirectory>
 
     <!-- Files -->
@@ -87,9 +91,15 @@
       </Component>
     </ComponentGroup>
 
+    <!-- The shipped community modules. Files harvests the folder at build time, subfolders included. -->
+    <ComponentGroup Id="ModuleFiles" Directory="ModulesFolder">
+      <Files Include="$(ModulesDir)\**" />
+    </ComponentGroup>
+
     <Feature Id="Main" Title="Panoply" Description="The app and the panoply command." Level="1"
              AllowAbsent="no" ConfigurableDirectory="INSTALLFOLDER">
       <ComponentGroupRef Id="AppFiles" />
+      <ComponentGroupRef Id="ModuleFiles" />
     </Feature>
     <Feature Id="PathFeature" Title="Add panoply to PATH"
              Description="Lets you run the panoply command from any terminal." Level="1">

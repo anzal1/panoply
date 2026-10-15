@@ -346,3 +346,76 @@ fn modules_lists_the_community_plugins() {
         assert!(out.contains(id), "{id} missing from:\n{out}");
     }
 }
+
+/// The folders and ids in `modules/shipped.txt`.
+fn shipped() -> Vec<(String, String)> {
+    let text = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../modules/shipped.txt"),
+    )
+    .unwrap();
+    text.lines()
+        .filter(|l| !l.trim().is_empty() && !l.starts_with('#'))
+        .map(|l| {
+            let mut w = l.split_whitespace();
+            (w.next().unwrap().to_string(), w.next().unwrap().to_string())
+        })
+        .collect()
+}
+
+#[test]
+fn the_shipped_list_is_the_three_plugins_and_no_example() {
+    let list = shipped();
+    let ids: Vec<&str> = list.iter().map(|(_, id)| id.as_str()).collect();
+    assert_eq!(
+        ids,
+        ["doc.markdown_to_html", "data.format", "image.qr_code"]
+    );
+    for (folder, id) in &list {
+        let manifest = std::fs::read_to_string(
+            Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../modules/examples-wasm")
+                .join(folder)
+                .join("module.toml"),
+        )
+        .unwrap();
+        assert!(
+            manifest.contains(&format!("id = \"{id}\"")),
+            "{folder} is not {id}"
+        );
+    }
+}
+
+#[test]
+fn a_shipped_module_folder_is_found_by_the_cli_from_anywhere() {
+    // The release layout: a folder of module folders, found through the search path, listed from a
+    // folder that is not a source checkout.
+    let module = build_module("qr-code");
+    let src = module.parent().unwrap();
+    let d = scratch("shipped");
+    let dest = d.join("modules/qr-code");
+    std::fs::create_dir_all(&dest).unwrap();
+    std::fs::copy(src.join("module.toml"), dest.join("module.toml")).unwrap();
+    std::fs::copy(
+        src.join("target/wasm32-wasip2/release/module.wasm"),
+        dest.join("module.wasm"),
+    )
+    .unwrap();
+    let out = Command::new(env!("CARGO_BIN_EXE_panoply"))
+        .arg("modules")
+        .env("PANOPLY_MODULES", d.join("modules"))
+        .env("PANOPLY_DATA_DIR", d.join("data"))
+        .current_dir(&d)
+        .output()
+        .unwrap();
+    let text = String::from_utf8_lossy(&out.stdout);
+    assert!(out.status.success());
+    assert!(
+        text.contains("image.qr_code") && text.contains("QR code maker"),
+        "{text}"
+    );
+    assert!(
+        !text.contains("text.word_count"),
+        "an example showed up from nowhere:\n{text}"
+    );
+    std::fs::remove_dir_all(&d).unwrap();
+}

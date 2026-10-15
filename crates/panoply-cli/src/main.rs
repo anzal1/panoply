@@ -465,18 +465,23 @@ fn modules() -> ExitCode {
             }
         }
     }
-    if let Some(dir) = examples_dir("examples-wasm") {
-        let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
-            .into_iter()
-            .flatten()
-            .flatten()
-            .map(|e| e.path().join("module.toml"))
-            .filter(|p| p.is_file())
+    // Community modules: the folders the app scans (the user folder, the folder shipped with the
+    // program) and the examples in a source checkout. A module found twice is listed once.
+    let mut dirs = panoply_core::modules::search_dirs();
+    dirs.extend(examples_dir("examples-wasm"));
+    let mut listed: Vec<String> = Vec::new();
+    {
+        let mut paths: Vec<PathBuf> = dirs
+            .iter()
+            .flat_map(|d| panoply_core::modules::module_folders(d))
+            .map(|d| d.join("module.toml"))
             .collect();
-        paths.sort();
+        paths.dedup();
         for path in paths {
             match Manifest::from_file(&path) {
+                Ok(m) if listed.contains(&m.module.id) => {}
                 Ok(m) => {
+                    listed.push(m.module.id.clone());
                     let info = &m.module;
                     println!(
                         "{:<22}{:<22}{}  community (run with `panoply run {}`)",
