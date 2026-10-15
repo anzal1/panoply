@@ -23,7 +23,7 @@ Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polis
 |---|---:|---:|---:|
 | P0 | 0 | 0 | 0 |
 | P1 | 13 | 7 | 6 |
-| P2 | 32 | 9 | 23 |
+| P2 | 32 | 11 | 21 |
 
 No P0: nothing crashed, hung, lost an original or left a half-written file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
 
@@ -159,8 +159,8 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 | UP-16 | Passport photo | A 16 by 16 picture answers "No face was found" where FLOWS.md says "very low resolution (refuse and say why)". | Open |
 | UP-17 | Passport photo, Print sheet | The size tiles read "1.6 MB to 236 KB, 85% smaller" for a passport photo and "1.2 MB to 3.7 MB, 209% bigger" for a print sheet. | Open (see UP-08) |
 | UP-18 | App | Cancelling a running job returns to the options with no sign that it was cancelled. | Fixed ("Cancelled. Nothing was written.") |
-| UP-19 | Convert, Resize, Compress, Passport | A PDF named `.jpg` says "This file is not an image Panoply can read. Check that it is a JPEG, PNG..." though the bytes are a PDF and Panoply knows it. Say "This is a PDF. Use PDF to images." | Open |
-| UP-20 | Convert image | An SVG says "not an image Panoply can read" (SVG is on the limitations page, the message should say SVG is not supported yet). | Open |
+| UP-19 | Convert, Resize, Compress, Passport | A PDF named `.jpg` says "This file is not an image Panoply can read. Check that it is a JPEG, PNG..." though the bytes are a PDF and Panoply knows it. Say "This is a PDF. Use PDF to images." | Fixed (`not_an_image_message`, test `a_pdf_named_like_a_picture_is_called_a_pdf`) |
+| UP-20 | Convert image | An SVG says "not an image Panoply can read" (SVG is on the limitations page, the message should say SVG is not supported yet). | Fixed (`not_an_image_message`, test `a_pdf_named_like_a_picture_is_called_a_pdf`) |
 | UP-21 | App | Every failure is titled "That did not work", and the next step "Check the file and the options, then try again." is printed under messages that already say what to do ("Make it smaller first, or leave it as it is."). | Open |
 | UP-22 | Resize to exact KB | "The picture was reduced from 3200 x 4000" for a file that is 3684 x 4605: it reports its own pre-shrunk working copy as the original. | Open |
 | UP-23 | Resize to exact KB | With no size or limits set it re-encodes the picture and writes `jemison (3200x4000, 1665KB).jpg`, a copy that is the same size. It should ask for a limit. | Open |
