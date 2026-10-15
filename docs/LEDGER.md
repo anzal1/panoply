@@ -12,15 +12,15 @@ quality bar does not move to make the date. Owner is who drives it; "crew" means
 
 | | Item | Owner | Status |
 |---|---|---|---|
-| [ ] | User pass of every tool, every state, light and dark, keyboard only: zero open P0 and P1 | crew (user pass) | 13 P1 found, 9 fixed |
-| [ ] | Command bar: no "No tools match" flash or list jitter while typing a request | crew (user pass) | found by the film, fixing |
+| [ ] | User pass of every tool, every state, light and dark, keyboard only: zero open P0 and P1 | crew (user pass) | 14 P1 found, 10 fixed |
+| [x] | Command bar: no "No tools match" flash or list jitter while typing a request | crew (user pass) | fixed on qa/user-pass |
 | [ ] | Instant search: under 10 ms per keystroke on 1M files, live index, Find page, files in the command bar | crew (search) | engine passes (0.75 ms p50), phase 2 |
 | [ ] | Instant search on Windows (USN journal) and Linux (fanotify or inotify) | crew (search) | not started |
 | [ ] | Disk map: scan, treemap or sunburst, review and move to trash with Undo, CLI | crew (disk map) | scanner passes (9x du), phase 2 |
 | [ ] | Disk map home scan under 300 MB peak | crew (disk map) | 333 MB, fixing |
 | [ ] | Three real community plugins people would search for, so the plugin moment is true | Claude | not started |
 | [ ] | v0.2.0 release with all of the above, smoke-tested on real Windows and Linux desktops | Claude | not started |
-| [ ] | App opened by hand on one real Windows PC | Anzal | open |
+| [ ] | Scripted user journeys on real Windows and Linux desktops in CI (launch, hotkey, compress, merge, OCR, Undo, tray, themes, memory) | crew (journeys) | building |
 
 ### Launch assets
 
@@ -42,10 +42,12 @@ quality bar does not move to make the date. Owner is who drives it; "crew" means
 | [x] | Real-desktop smoke on every release tag | Claude | on main |
 | [ ] | Windows CI under 6 min (workspace crate opt-level, sccache) | crew (CI) | paused until launch work frees runners |
 
-### Decisions for Anzal
+### Decided
 
-- Code signing for the public launch (an Apple Developer account removes the first-open warning on macOS).
-  Open, his call.
+- No paid services for launch: no code signing, no paid runners. The first-open steps stay in the README
+  and KNOWN-LIMITATIONS.
+- Real-device testing beyond CI comes from users after launch; CI runs scripted user journeys on GitHub's
+  hosted Windows and Linux desktops before every release.
 
 ## In progress
 
