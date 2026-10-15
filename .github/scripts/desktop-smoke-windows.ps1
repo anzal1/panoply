@@ -35,6 +35,21 @@ public static class W {
 [void][W]::SetProcessDPIAware()
 
 Add-Type @"
+using System; using System.Runtime.InteropServices;
+public static class Tray {
+  [StructLayout(LayoutKind.Sequential)] public struct RECT { public int Left, Top, Right, Bottom; }
+  [StructLayout(LayoutKind.Sequential)] public struct NID { public uint cbSize; public IntPtr hWnd; public uint uID; public Guid guidItem; }
+  [DllImport("shell32.dll")] public static extern int Shell_NotifyIconGetRect(ref NID id, out RECT r);
+  // The shell's rectangle for a notify icon owned by hwnd with this id, or null when it has none.
+  public static int[] Rect(IntPtr hwnd, uint uid) {
+    var n = new NID(); n.cbSize = (uint)Marshal.SizeOf(typeof(NID)); n.hWnd = hwnd; n.uID = uid;
+    RECT r; if (Shell_NotifyIconGetRect(ref n, out r) != 0) return null;
+    return new int[] { r.Left, r.Top, r.Right, r.Bottom };
+  }
+}
+"@
+
+Add-Type @"
 using System; using System.Collections.Generic; using System.Runtime.InteropServices;
 public static class Disp {
   [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Ansi)]
@@ -104,6 +119,30 @@ function Windows-Of([int]$ProcId) {
   $out
 }
 
+# The notify icon this process registered: its hidden message window (class tray_icon_app) and the
+# rectangle the shell reports for it. Also whether the shell lists the exe under NotifyIconSettings.
+function Tray-Of([int]$ProcId, [string]$Exe) {
+  $win = [W]::ForPid([uint32]$ProcId) | Where-Object {
+    $c = New-Object System.Text.StringBuilder 256; [void][W]::GetClassName($_, $c, 256); $c.ToString() -eq 'tray_icon_app'
+  } | Select-Object -First 1
+  $rect = $null; $uid = 0
+  if ($win) { foreach ($i in 1..8) { $r = [Tray]::Rect($win, [uint32]$i); if ($r) { $rect = $r; $uid = $i; break } } }
+  $listed = $false
+  $root = 'HKCU:\Control Panel\NotifyIconSettings'
+  if (Test-Path $root) {
+    foreach ($k in Get-ChildItem $root) {
+      $path = (Get-ItemProperty $k.PSPath -ErrorAction SilentlyContinue).ExecutablePath
+      if ($path -and $path -like "*Panoply*panoply-desktop.exe") { $listed = $true }
+    }
+  }
+  [pscustomobject]@{ hwnd = $(if ($win) { $win.ToInt64() } else { 0 }); uid = $uid; rect = $(if ($rect) { $rect -join ',' } else { $null }); settings_listed = $listed }
+}
+
+function Press-Key([byte]$vk) {
+  [W]::keybd_event($vk, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 60
+  [W]::keybd_event($vk, 0, 2, [UIntPtr]::Zero); Start-Sleep -Milliseconds 120
+}
+
 function Press-Hotkey {
   # Ctrl+Alt+Space, as injected keyboard input (RegisterHotKey sees it like a real keypress).
   foreach ($vk in 0x11, 0x12, 0x20) { [W]::keybd_event([byte]$vk, 0, 0, [UIntPtr]::Zero); Start-Sleep -Milliseconds 40 }
@@ -166,20 +205,57 @@ foreach ($theme in 'light', 'dark') {
     $run.windows_after_hotkey = $after
     $bar = $after | Where-Object { $_.visible -and $_.w -gt 300 -and ($_.hwnd -ne $(if ($main) { $main.hwnd } else { 0 })) } | Select-Object -First 1
     $run.bar_visible = [bool]$bar
+    if ($bar) {
+      $sw = [W]::GetSystemMetrics(0); $sh = [W]::GetSystemMetrics(1)
+      $run.bar_rect = "$($bar.x),$($bar.y) $($bar.w)x$($bar.h) on $($sw)x$($sh)"
+      $run.bar_centered = ([Math]::Abs(($bar.x + $bar.w / 2) - $sw / 2) -le 4)
+      $run.bar_top_ratio = [Math]::Round($bar.y / $sh, 3)
+      if (-not $run.bar_centered) { $failed += "${theme}: command bar not horizontally centred ($($run.bar_rect))" }
+      if ($bar.y -lt $sh * 0.1 -or $bar.y -gt $sh * 0.35) { $failed += "${theme}: command bar not in the upper third ($($run.bar_rect))" }
+    } else { $failed += "${theme}: command bar did not appear on the hotkey" }
     Shot "windows-$theme-bar" $bar
     $run.alive_after_hotkey = -not $proc.HasExited
     Press-Hotkey; Start-Sleep -Seconds 1
 
-    # Close the app window the way the caption button does, then see whether the process ends.
+    # Close the app window the way the caption button does. The process must stay alive, because the
+    # command bar is still bound to the hotkey, and the notification-area icon must say so.
     if ($main) { [void][W]::PostMessage([IntPtr]$main.hwnd, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) }
-    $run.exited_after_close = $proc.WaitForExit(15000)
-    if ($run.exited_after_close) { $run.exit_code = $proc.ExitCode }
+    Start-Sleep -Seconds 4
+    $proc.Refresh()
+    $run.alive_after_close = -not $proc.HasExited
+    if (-not $run.alive_after_close) { $failed += "${theme}: the app exited when its window closed (expected it to stay in the tray)" }
     else {
-      $run.exit_code = $null
-      $run.note = 'still running 15 s after the window was closed (the hidden command bar keeps the process alive)'
-      Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+      $tray = $null
+      foreach ($try in 1..10) { $tray = Tray-Of $proc.Id $exe; if ($tray.rect -or $tray.settings_listed) { break }; Start-Sleep -Seconds 1 }
+      $run.tray = $tray
+      $run.windows_after_close = @(Windows-Of $proc.Id | Where-Object { $_.visible })
+      $run.tray_icon_registered = [bool]($tray.rect -or $tray.settings_listed)
+      if (-not $run.tray_icon_registered) { $failed += "${theme}: no notification-area icon after the window closed" }
+      Shot "windows-$theme-closed" $null
+      # The hotkey still brings the bar back.
+      Press-Hotkey; Start-Sleep -Seconds 2
+      $run.bar_after_close = [bool](@(Windows-Of $proc.Id) | Where-Object { $_.visible -and $_.w -gt 300 } | Select-Object -First 1)
+      Press-Hotkey; Start-Sleep -Seconds 1
+      # Quit from the tray menu: right click on the icon (the message the shell sends), then the last
+      # item (Up wraps to it) and Enter.
+      if ($tray.hwnd) {
+        [void][W]::PostMessage([IntPtr]$tray.hwnd, 6002, [IntPtr]$tray.uid, [IntPtr]0x0205)
+        Start-Sleep -Seconds 2
+        Shot "windows-$theme-traymenu" $null
+        Press-Key 0x26; Press-Key 0x0D
+      }
+      $run.exited_after_tray_quit = $proc.WaitForExit(15000)
+      if ($run.exited_after_tray_quit) {
+        # The process being gone is the pass. The exit code is recorded when Windows still has it
+        # (Start-Process can return an empty one) and only a non-zero number counts as a failure.
+        $code = $proc.ExitCode; $run.exit_code = $code
+        if ($null -ne $code -and "$code" -ne '' -and [int]$code -ne 0) { $failed += "${theme}: exit code $code after tray Quit" }
+      }
+      else {
+        $failed += "${theme}: tray Quit did not end the process"
+        Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+      }
     }
-    if ($run.exited_after_close -and $run.exit_code -ne 0) { $failed += "${theme}: exit code $($run.exit_code) after close" }
   }
   if (Test-Path "$Out\stderr-$theme.txt") { $run.stderr = (Get-Content "$Out\stderr-$theme.txt" -Raw) }
   $report.runs += [pscustomobject]$run

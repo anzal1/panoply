@@ -62,6 +62,53 @@ struct AppWindow(Rc<RefCell<Option<WindowHandle<AppView>>>>);
 
 impl Global for AppWindow {}
 
+/// The notification-area icon, kept for as long as the app runs so Quit can take it down first.
+#[cfg(windows)]
+struct TrayHandle(Rc<crate::platform::tray::Tray>);
+
+#[cfg(windows)]
+impl Global for TrayHandle {}
+
+/// Quit the app. On Windows the tray icon is removed first, so none is left behind.
+fn quit_app(cx: &mut App) {
+    #[cfg(windows)]
+    {
+        if let Some(t) = cx.try_global::<TrayHandle>() {
+            t.0.remove();
+        }
+    }
+    cx.quit();
+}
+
+/// Put the Panoply icon in the Windows notification area. The command bar keeps the process alive
+/// after the app window closes, so the icon is what shows that it is running and lets the user
+/// open it or quit.
+#[cfg(windows)]
+fn install_tray(cx: &mut App) {
+    use crate::platform::tray::{self, TrayCmd};
+    let (tx, mut rx) = mpsc::unbounded::<TrayCmd>();
+    let keys = hotkey_caps().join("+");
+    let Some(handle) = tray::install(&keys, move |c| {
+        let _ = tx.unbounded_send(c);
+    }) else {
+        return;
+    };
+    cx.set_global(TrayHandle(Rc::new(handle)));
+    cx.spawn(async move |cx| {
+        while let Some(cmd) = rx.next().await {
+            cx.update(|cx| match cmd {
+                TrayCmd::OpenApp => open_app_window(cx, Vec::new()),
+                TrayCmd::OpenBar => {
+                    let bar = cx.global::<BarSlot>().0;
+                    let _ = bar.update(cx, |bar, window, cx| bar.show(window, cx));
+                }
+                TrayCmd::Quit => quit_app(cx),
+            });
+        }
+    })
+    .detach();
+}
+
 /// The hotkey, Option+Space (Ctrl+Alt+Space off macOS) unless `PANOPLY_HOTKEY` says otherwise ("ctrl+alt+p").
 fn hotkey() -> HotKey {
     std::env::var("PANOPLY_HOTKEY")
@@ -281,7 +328,7 @@ fn register_actions(cx: &mut App) {
         KeyBinding::new("ctrl-y", gpui_base::input::Redo, Some("Input")),
     ]);
 
-    cx.on_action(|_: &Quit, cx| cx.quit());
+    cx.on_action(|_: &Quit, cx| quit_app(cx));
     cx.on_action(|_: &OpenSettings, cx| show_page(cx, Route::Settings));
     cx.on_action(|_: &About, cx| show_page(cx, Route::Settings));
     cx.on_action(|_: &Hide, cx| cx.hide());
@@ -430,6 +477,8 @@ pub(crate) fn run(args: Vec<String>) {
             .expect("open the command bar window");
 
         cx.set_global(BarSlot(bar));
+        #[cfg(windows)]
+        install_tray(cx);
         if !background {
             open_app_window(cx, start_files);
         }

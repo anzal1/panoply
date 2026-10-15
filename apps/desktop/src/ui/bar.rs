@@ -558,6 +558,17 @@ impl Bar {
         w.show_key();
         #[cfg(not(target_os = "macos"))]
         window.activate_window();
+        // Windows applies the window's opening position on its first activation, which is queued
+        // behind this call and would undo the placement above (the bar landed at 200,200). Place
+        // it again once that has run.
+        #[cfg(windows)]
+        cx.spawn(async move |_, cx| {
+            cx.background_executor()
+                .timer(Duration::from_millis(40))
+                .await;
+            w.position(WIDTH as f64, HEIGHT as f64, 0.22);
+        })
+        .detach();
         window.focus(&self.focus, cx);
         self.anim = Some(VisAnim {
             showing: true,

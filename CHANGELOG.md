@@ -14,6 +14,14 @@ marking releases that are still finding their edges.
 
 - Undo moves the result to the Recycle Bin on Windows and the trash on Linux, never a permanent delete.
 
+### Fixed
+
+- **Windows: a tray icon while the app runs in the background.** Closing the window used to leave the
+  process running with nothing to see. The fan now sits in the notification area with Open Panoply, Open
+  command bar and Quit.
+- **Windows: the command bar opens centred in the upper part of the display under the pointer**, not at a
+  fixed spot near the top left.
+
 ## v0.1.1-beta (2026-10-14)
 
 A new look, and fixes for Windows and Linux.

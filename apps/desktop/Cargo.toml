@@ -48,6 +48,12 @@ png = { workspace = true, optional = true }
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
+# The notification-area icon that keeps the background app visible and quittable on Windows
+# (MIT OR Apache-2.0; it only pulls in muda, crossbeam-channel and windows-sys).
+[target.'cfg(windows)'.dependencies]
+tray-icon = { version = "0.25", default-features = false }
+raw-window-handle = "0.6"
+
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 raw-window-handle = "0.6"

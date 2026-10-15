@@ -15,6 +15,10 @@ mod other;
 #[cfg(not(target_os = "macos"))]
 pub(crate) use other::*;
 
+pub(crate) mod ico;
+#[cfg(windows)]
+pub(crate) mod tray;
+
 #[cfg(all(unix, feature = "snapshot"))]
 pub(crate) mod proc;
 
