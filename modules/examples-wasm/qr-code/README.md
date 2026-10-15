@@ -6,12 +6,12 @@ instant transform. Built with [qrcode](https://crates.io/crates/qrcode) (MIT or 
 
 ```
 panoply run modules/examples-wasm/qr-code/module.toml links.txt
-panoply run modules/examples-wasm/qr-code/module.toml contact.txt --opt format=svg --opt lines=whole_file
+panoply run modules/examples-wasm/qr-code/module.toml contact.vcf --opt format=svg --opt lines=whole_file
 ```
 
 A file with three lines makes `links (qr 1).png`, `links (qr 2).png` and `links (qr 3).png`.
 A one-line file makes `links (qr).png`. Anything works that fits in a code: a link, plain text,
-a Wi-Fi sign-in (`WIFI:T:WPA;S:name;P:password;;`), a contact card (a whole file, with
+a Wi-Fi sign-in (`WIFI:T:WPA;S:name;P:password;;`), a contact card (a `.vcf` file, made as a whole file with
 `lines=whole_file`).
 
 ## Options

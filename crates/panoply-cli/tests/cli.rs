@@ -311,7 +311,7 @@ fn qr_code_makes_real_pngs_and_svgs() {
         let bytes = std::fs::read(d.join(format!("links (qr {n}).png"))).unwrap();
         assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
     }
-    let contact = fixture("qr-code", "contact.txt", &d);
+    let contact = fixture("qr-code", "contact.vcf", &d);
     let (out, err, ok) = panoply_full(&[
         "run",
         module,

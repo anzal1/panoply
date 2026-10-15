@@ -261,6 +261,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: cargo fetch --locked
+      # The community modules are their own Cargo projects with their own lock files.
+      - name: Fetch the community modules' crates
+        run: for m in modules/examples-wasm/*/; do cargo fetch --locked --manifest-path "$m/Cargo.toml"; done
       - run: python3 -I tools/notices/generate.py --check
 
   conversions:
