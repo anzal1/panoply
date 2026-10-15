@@ -22,7 +22,7 @@ Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polis
 | | Found | Fixed on this branch | Open |
 |---|---:|---:|---:|
 | P0 | 0 | 0 | 0 |
-| P1 | 13 | 7 | 6 |
+| P1 | 13 | 8 | 5 |
 | P2 | 32 | 11 | 21 |
 
 No P0: nothing crashed, hung, lost an original or left a half-written file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
@@ -112,13 +112,14 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 - **Happened.** The notes read "Goal: the smallest that still looks good ... Quality VMAF 59.5" and "... VMAF 52.6". Those are visibly degraded. The result saved 32% and 65%. No warning, no suggestion to keep the original.
 - **Direction.** Below a floor (say VMAF 80) say so in plain words and offer the original, or raise the bit rate until the floor is met, as the image path does with its similarity floor.
 
-### UP-10 Compress video of one 5 second 4K clip peaked at 3.5 GB resident (open)
+### UP-10 Compress video of one 5 second 4K clip peaked at 3.5 GB resident (fixed)
 
 - **Tool.** Compress video, default (VideoToolbox HEVC).
 - **Steps.** `/usr/bin/time -l panoply run media.compress 4k-hevc-5s.mp4`.
 - **Expected.** FLOWS.md: "constant for video and audio regardless of length (streamed)", and KNOWN-LIMITATIONS lists about 1.3 GB for software AV1 at 1080p as the worst case.
 - **Happened.** Resident set 3,579 MB (ffmpeg child process). The 1080p clips measured 861 MB (10 s H.264), 886 MB (10 s WebM), 914 MB (portrait phone clip) and 1,081 MB (10-bit HDR HEVC, 5 s); 720p clips 0.2 to 0.5 GB. KNOWN-LIMITATIONS lists only software AV1 (about 1.3 GB at 1080p) as a heavy case, so the default hardware path is heavier than the page says. A person on an 8 GB Mac would feel it.
-- **Direction.** Cap the decode and encode queues (`-threads`, `-extra_hw_frames`, fewer in-flight frames) and re-measure; add a 4K clip to the beta smoke budget table.
+- **Cause.** Not the encoder. With `measure_quality=false` the same job peaks at 709 MB (4K) and 243 MB (1080p); the 3 GB and 0.6 GB on top are the quality check, which ran libvmaf with up to eight threads on frames at the source's own size.
+- **Fix.** `apps`-independent, in `crates/panoply-media/src/ops/quality.rs`: both pictures are compared at no more than 1080p (the size VMAF's model is made for) with four threads. Test `the_comparison_never_runs_above_1080p`. Re-measured numbers are in the table of the final report.
 
 ### UP-11 The "Compress image" similarity floor lets smooth gradients block (open)
 
