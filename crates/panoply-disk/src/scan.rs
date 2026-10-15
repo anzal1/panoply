@@ -746,19 +746,30 @@ const PROBE_MIN_BYTES: u64 = 1 << 20;
 /// - A big file that cannot be opened falls back to the group rule when it still names a group.
 fn resolve_clones(
     tree: &mut Tree,
-    clones: Vec<CloneRec>,
+    mut small: Vec<CloneRec>,
     threads: usize,
     probe_big_files: bool,
     report: &mut ScanReport,
 ) {
     let threads = threads.max(1);
-    let (small, mut big): (Vec<CloneRec>, Vec<CloneRec>) = clones
-        .into_iter()
-        .partition(|c| tree.nodes[c.node as usize].size < PROBE_MIN_BYTES);
+    // Split in place: `partition` would hold a second copy of a list that can run to millions of records.
+    // A folder's folded entry is a sum of small files, never one big file, whatever its total is.
+    let mut big: Vec<CloneRec> = Vec::new();
+    small.retain(|c| {
+        let n = &tree.nodes[c.node as usize];
+        let is_big = n.kind != Kind::Small as u8 && n.size >= PROBE_MIN_BYTES;
+        if is_big {
+            big.push(*c);
+        }
+        !is_big
+    });
     give_back_groups(tree, small, report);
 
     if probe_big_files {
-        let known: std::collections::HashSet<u32> = big.iter().map(|c| c.node).collect();
+        let mut known = vec![false; tree.nodes.len()];
+        for c in &big {
+            known[c.node as usize] = true;
+        }
         let candidates: Vec<u32> = tree
             .nodes
             .iter()
@@ -767,7 +778,7 @@ fn resolve_clones(
                 n.kind == Kind::File as u8
                     && n.size >= PROBE_MIN_BYTES
                     && n.flags & flags::HARD_LINK_DUPLICATE == 0
-                    && !known.contains(&(*i as u32))
+                    && !known[*i]
             })
             .map(|(i, _)| i as u32)
             .collect();
