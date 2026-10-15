@@ -160,7 +160,7 @@ mod imp {
     }
 
     fn code(e: &windows::core::Error) -> i32 {
-        (e.code().0 & 0xFFFF) as i32
+        e.code().0 & 0xFFFF
     }
 
     /// `\\?\` form so paths past 260 characters open.

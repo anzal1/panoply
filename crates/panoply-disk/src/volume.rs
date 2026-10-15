@@ -271,7 +271,7 @@ mod imp {
                 Some(&mut free),
             )
         }
-        .map_err(|e| io::Error::from_raw_os_error((e.code().0 & 0xFFFF) as i32))?;
+        .map_err(|e| io::Error::from_raw_os_error(e.code().0 & 0xFFFF))?;
         Ok((total, avail))
     }
 }
