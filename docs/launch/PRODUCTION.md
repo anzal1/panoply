@@ -214,7 +214,7 @@ built last, on the real modules.
 | Review, fixes, delivery render, mux, X export | agent plus owner | everything | half a day |
 
 The film is cut the day the last launch-gate box in `docs/LEDGER.md` is ticked. If search or the disk map slips, the
-film still ships at 16 bars (29.7 s at 129.2 BPM) without frames 4 and 5 (`cues.json` changes by deleting two scenes).
+film still ships at 16 bars (29.5 s at 130 BPM) without frames 4 and 5 (`cues.json` changes by deleting two scenes).
 
 ## Risks
 

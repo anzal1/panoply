@@ -1,6 +1,6 @@
 ---
 compositionId: panoply-launch
-duration_s: 37.15         # 80 beats at 129.2 BPM (the pick, see MUSIC.md). Final value = audiomap.audio.duration_sec after the track is cut.
+duration_s: 36.92         # 80 beats at 130.0 BPM (the pick, see MUSIC.md). Final value = audiomap.audio.duration_sec after the track is cut.
 canvas: { w: 1920, h: 1080, fps: 60 }
 style:                    # the owner picks one of three, see style-frames/. Recommended: A for the cold open, C from the drop on.
   font: "Geist / Geist Mono"
@@ -12,14 +12,14 @@ avoid: ["shockwaves", "screen shakes", "bounce or overshoot easing", "burst rays
 
 # Panoply launch film, storyboard
 
-37.2 seconds at 129.2 BPM (20 bars), 16:9, 60 fps, cut to a licensed human-made track. Ships at public launch,
+36.9 seconds at 130.0 BPM (20 bars), 16:9, 60 fps, cut to a licensed human-made track. Ships at public launch,
 once instant search and the disk map exist (see `docs/LEDGER.md`, the launch gate). Frames 4 and 5 are
 placeholders until those two ship, and they stay placeholders in every review cut.
 
 The cue sheet for any tempo is generated, never typed by hand:
 
 ```
-node docs/launch/tools/cues.mjs --bpm 129.2 --offset 25.913 --md     # seconds and frame numbers for every cue below
+node docs/launch/tools/cues.mjs --bpm 130 --offset 25.884 --md     # seconds and frame numbers for every cue below
 ```
 
 ## The idea in one line
@@ -51,32 +51,33 @@ music. The track brings the energy, the picture brings the clarity.
 
 All timing is in beats, so the film re-times itself to any track from 120 to 150 BPM.
 
-| BPM | 120 | 124 | 129.2 | 130 | 140 | 150 |
+| BPM | 120 | 124 | 128 | 130 | 140 | 150 |
 |---|---|---|---|---|---|---|
-| Film length | 40.0 s | 38.7 s | 37.2 s | 36.9 s | 34.3 s | 32.0 s |
+| Film length | 40.0 s | 38.7 s | 37.5 s | 36.9 s | 34.3 s | 32.0 s |
 
 Track requirements the shortlist was filtered on: a clear build into a hard drop, the drop on a downbeat, 4 to 8
-bars of build before it. The cut puts the drop on beat 16 (bar 5, 7.43 s at 129.2). If the track's intro is longer, the
+bars of build before it. The cut puts the drop on beat 16 (bar 5, 7.38 s at 130). If the track's intro is longer, the
 edit keeps the last 4 bars of the build and drops the rest. If it is shorter, the first 2 bars loop. The cut is a
 single `ffmpeg` trim at a measured downbeat, done by the music-to-video analyzer's offset, never by ear.
 
-The pick (see `MUSIC.md`) is "Shinji, Hyperpop Type Beat" at 129.2 BPM, cut from track second 25.913. The track goes quiet on its own at
-film seconds 6.1, 15.1 and 20.1 (beats 13, 32.5 and 43), so the hard stop in frame 1 and the holds in frames 3 and 4 can follow the
-music's real silences. `cues-shinji-129bpm.md` has every cue with its track second. Style decision: option A for frame 1, option C from
+The pick (see `MUSIC.md`) is "Shinji, Hyperpop Type Beat" at **130.0 BPM**, cut from track second **25.884** (the beat analyzer's 129.2 is a 23 ms
+quantisation artefact: a fine onset fit gives 129.94, and at 129.2 the cuts would drift 230 ms by the end). The track's measured hits are at beats
+8, 16 (the drop), 33, 46.5, 68, 72, 74 (the strongest) and 76, and its measured stops at 13.3 to 15.9, 32.6 to 32.9, 73.5 to 73.9 and 75.5 to 75.9, so every cut
+lands on one of them. `cues-shinji-130bpm.md` has every cue with its track second; `music-analysis/hits-shinji.json` has the raw hit and stop map. Style decision: option A for frame 1, option C from
 the drop on. Frames 4 and 5 stay in.
 
 Beats, with the music situation each scene sits on:
 
-| # | Frame | Beats | Bars | Seconds at 129.2 | Music |
+| # | Frame | Beats | Bars | Seconds at 130 | Music |
 |---|---|---|---|---|---|
-| 1 | Cold open, the upload chaos | 0 to 16 | 4 | 0.0 to 7.43 | filtered build, onsets accelerating, hard stop on the last 8th |
-| 2 | The hotkey | 16 to 24 | 2 | 7.43 to 11.15 | DROP lands on beat 16 |
-| 3 | The tools fly in | 24 to 40 | 4 | 11.15 to 18.58 | full groove, steady kick |
-| 4 | Instant search (placeholder) | 40 to 48 | 2 | 18.58 to 22.29 | groove, hats open |
-| 5 | Disk map (placeholder) | 48 to 56 | 2 | 22.29 to 26.01 | groove, filter lift |
-| 6 | The moat, community plugins | 56 to 68 | 3 | 26.01 to 31.58 | second build, ends in a drum fill |
-| 7 | Free, open source, on your device | 68 to 76 | 2 | 31.58 to 35.29 | last full bars |
-| 8 | End card | 76 to 80 | 1 | 35.29 to 37.15, plus a 1.4 s ring-out | final hit, reverb tail |
+| 1 | Cold open, the upload chaos | 0 to 16 | 4 | 0.0 to 7.38 | filtered build, onsets accelerating, hard stop on the last 8th |
+| 2 | The hotkey | 16 to 24 | 2 | 7.38 to 11.08 | DROP lands on beat 16 |
+| 3 | The tools fly in | 24 to 40 | 4 | 11.08 to 18.46 | full groove, steady kick |
+| 4 | Instant search (placeholder) | 40 to 48 | 2 | 18.46 to 22.15 | groove, hats open |
+| 5 | Disk map (placeholder) | 48 to 56 | 2 | 22.15 to 25.85 | groove, filter lift |
+| 6 | The moat, community plugins | 56 to 68 | 3 | 25.85 to 31.39 | second build, ends in a drum fill |
+| 7 | Free, open source, on your device | 68 to 76 | 2 | 31.39 to 35.08 | last full bars |
+| 8 | End card | 76 to 80 | 1 | 35.08 to 36.92, plus a 1.4 s ring-out | final hit, reverb tail |
 
 ## Copy deck
 
@@ -103,8 +104,8 @@ uploaded).
 ## Frame 1: pain
 
 - src: compositions/frames/01-pain.html
-- duration: 7.430s
-- span_sec: [0.000, 7.430]
+- duration: 7.385s
+- span_sec: [0.000, 7.385]
 - pacing: beat_cut
 - mood: [tense, dark]
 - feel: filtered build, onsets accelerating, a hard stop on the last 8th before the drop
@@ -124,17 +125,17 @@ uploaded).
   - Real or rebuilt: rebuilt HTML windows, deliberately unbranded. Reference frames: `style-frames/*-pain.png`.
 - **g2: the freeze and the line** (beats 12 to 16)
   - free_design: { dominant_system: "scrim and single line", primitives: ["scrim-in", "text-reveal"], density_topology: "reduce" }
-  - anchors: beat 12 (scrim), 12.5 (line), 15.5 (hard stop)
-  - Picture: the wall stops moving at beat 12. A scrim DRAWS in over it, the four words slide up and fade to a quiet
-    line, "Your file just left your computer." appears and holds. On beat 15.5 the music hard-stops and so does the picture:
+  - anchors: beat 13.32 (the measured stop begins: scrim), 14.0 (line, inside the silence), 15.93 (the stop ends, then the drop on 16)
+  - Picture: the wall stops moving at beat 13.32, where the track goes silent. A scrim DRAWS in over it, the four words slide up and fade to a quiet
+    line, "Your file just left your computer." appears and holds. The music is silent until beat 15.93 and the picture is as still as it:
     one beat of still frame, then black on beat 16. Silence is the build.
   - Text: "Your file just left your computer."
 
 ## Frame 2: hotkey
 
 - src: compositions/frames/02-hotkey.html
-- duration: 3.716s
-- span_sec: [7.430, 11.146]
+- duration: 3.692s
+- span_sec: [7.385, 11.077]
 - pacing: beat_cut
 - mood: [hype, elegant]
 - feel: the drop, then a full groove
@@ -162,8 +163,8 @@ uploaded).
 ## Frame 3: tools
 
 - src: compositions/frames/03-tools.html
-- duration: 7.430s
-- span_sec: [11.146, 18.576]
+- duration: 7.385s
+- span_sec: [11.077, 18.462]
 - pacing: beat_cut
 - mood: [hype, elegant]
 - feel: full groove, steady kick
@@ -179,11 +180,11 @@ uploaded).
   - Real captures: `run-*`, `bar-result-*`, `app-tool-result-*`.
 - **g2: everything else, on the beat** (beats 26 to 40)
   - free_design: { dominant_system: "tiles and counter", primitives: ["staggered-entrance", "count-up", "grid-fill", "row-highlight"], density_topology: "accumulate" }
-  - anchors: 26 (first tile), then one per beat to 32, then 8ths to 36, 36 (counter locks), 37 (rows light), 39 (resolve)
+  - anchors: 26 (first tile), one per beat to 31, 8ths to 32.6, the stop 32.61 to 32.93, 33 (HIT .79: the rest ripple in, counter locks), 34 to 38 (rows light), 39 (resolve)
   - Picture: the bar slides down and shrinks to a small anchor. Real tool tiles (icon, name, category tint, rebuilt from
     `modules/builtin/*/module.toml` and the app's palette) GLIDE in from below on every beat, then on 8ths, and settle into
     a grid that is the shape of the real Home screen. A big counter counts up with the tiles and locks on the real tool
-    count on beat 36. On beat 37 the categories light in sequence, one per half beat: PDF, Images, Video, ID photos, Files.
+    count on beat 33, the measured hit. From beat 34 the categories light in sequence, one per half beat: PDF, Images, Video, ID photos, Files.
     Slow orbit of the whole grid, 3 degrees, no tilt past that. On beat 39 the grid resolves into the real `app-home` render by
     cross-fade, so the viewer ends on the actual product.
   - Text: "31 tools." (read from the build)
@@ -194,8 +195,8 @@ uploaded).
 ## Frame 4: find (PLACEHOLDER until instant search ships)
 
 - src: compositions/frames/04-find.html
-- duration: 3.715s
-- span_sec: [18.576, 22.291]
+- duration: 3.692s
+- span_sec: [18.462, 22.154]
 - pacing: beat_cut
 - mood: [hype]
 - feel: groove, open hats
@@ -204,21 +205,21 @@ uploaded).
 
 - **g1: type three letters, the list is already there** (beats 40 to 48)
   - free_design: { dominant_system: "real UI sequence, one measured number", primitives: ["frame-sequence", "list-sort", "count-up"], density_topology: "steady" }
-  - anchors: 40 (Find view), 41 to 41.5 (three keystrokes on 16ths), 43 (latency pill), 44 (line one), 46 (line two)
+  - anchors: 40 (Find view), 41 to 41.5 (three keystrokes on 16ths), 44 (line one), 46.5 (HIT .53: latency pill and line two)
   - Picture: the Find view opens. Three letters are typed on three 16ths. After each one, the result list re-sorts at once,
     and a small pill shows the real measured time for that keystroke and the real file count of the scanned disk.
     The camera drifts left to right across the result list.
   - Text: "Every file on your disk." then "Before you finish typing."
   - Gate: every digit on this frame comes from the engine's own benchmark JSON (the launch gate says under 10 ms per keystroke
     on a million files). If the shipped number is higher, the pill shows the shipped number. If instant search is not ready, this
-    frame is cut and the film is 33.4 s at 129.2 BPM (18 bars, cues re-run).
+    frame is cut and the film is 33.2 s at 130 BPM (18 bars, cues re-run).
   - Placeholder now: `app-find-light.png` from the review set, plus a typed-frame capture mode to add (see PRODUCTION.md).
 
 ## Frame 5: diskmap (PLACEHOLDER until the disk map ships)
 
 - src: compositions/frames/05-diskmap.html
-- duration: 3.715s
-- span_sec: [22.291, 26.006]
+- duration: 3.692s
+- span_sec: [22.154, 25.846]
 - pacing: beat_cut
 - mood: [hype, elegant]
 - feel: groove, filter lift
@@ -238,8 +239,8 @@ uploaded).
 ## Frame 6: plugins
 
 - src: compositions/frames/06-plugins.html
-- duration: 5.573s
-- span_sec: [26.006, 31.579]
+- duration: 5.539s
+- span_sec: [25.846, 31.385]
 - pacing: beat_cut
 - mood: [elegant, hype]
 - feel: a second build ending in a drum fill
@@ -257,7 +258,7 @@ uploaded).
   - Real captures: `app-modules-*` with a real community module installed (see PRODUCTION.md, community plugin prerequisite).
 - **g2: the wall** (beats 62 to 68)
   - free_design: { dominant_system: "wall of community tools", primitives: ["grid-fill", "staggered-entrance", "text-reveal"], density_topology: "accumulate" }
-  - anchors: 63 (wall starts), 65 (line), 67 (drum fill)
+  - anchors: 63 (wall starts), 65 (line), 67.5 (wall fills), 68 (HIT: the wall locks and the film cuts to frame 7)
   - Picture: the Modules list zooms out into a wall of tool cards in the app's category tints, each from a real community
     module (at launch, the real ones; the number is real). Cards arrive faster into the drum fill. Camera pulls back
     continuously. No fake modules: if the wall is thin at launch, the frame shows the real few, large, and the line carries it.
@@ -267,8 +268,8 @@ uploaded).
 ## Frame 7: promise
 
 - src: compositions/frames/07-promise.html
-- duration: 3.715s
-- span_sec: [31.579, 35.294]
+- duration: 3.692s
+- span_sec: [31.385, 35.077]
 - pacing: beat_cut
 - mood: [elegant, hype]
 - feel: last full bars before the end
@@ -277,20 +278,20 @@ uploaded).
 
 - **g1: three phrases** (beats 68 to 76)
   - free_design: { dominant_system: "full-bleed type, one phrase per two beats", primitives: ["text-reveal", "wipe"], density_topology: "one thing at a time" }
-  - anchors: 68 ("Free."), 70 ("Open source."), 72 ("On your device."), 74 (platform row)
+  - anchors: 68 (HIT, "Free."), 72 (HIT .70, "Open source."), the stop 73.54 to 73.93, 74 (HIT 1.00, the strongest, "On your device."), the stop 75.54 to 75.92, 76 (the final hit, frame 8)
   - Picture: each phrase GLIDES in at full width and holds for two beats, the previous one slides up and out. Under
     each, one quiet real thing: "Free." with the release page showing the download buttons (real
     screenshot of the release assets list), "Open source." with the repo's licence line (MIT OR Apache-2.0) and the
     commit graph, "On your device." with a file icon that stays inside a laptop outline while a network line beside it stays
-    flat. On beat 74 the platform row sets in: macOS, Windows, Linux.
+    flat. The platform row "macOS, Windows, Linux" sets in with "Free." on beat 68.
   - Text: "Free." / "Open source." / "On your device." / "macOS, Windows, Linux"
   - Real captures: the repo page and the release page, taken at launch day from the live GitHub pages by `capture`.
 
 ## Frame 8: end
 
 - src: compositions/frames/08-end.html
-- duration: 1.858s
-- span_sec: [35.294, 37.152]
+- duration: 1.846s
+- span_sec: [35.077, 36.923]
 - pacing: beat_cut
 - mood: [elegant]
 - feel: the final hit, then reverb ring-out
@@ -325,4 +326,4 @@ uploaded).
 
 1. The track (see `MUSIC.md`). The film re-times to any of the six.
 2. The style (see `style-frames/contact-sheet.png`): A Midnight, B Paper, C Fan, or the recommended hybrid.
-3. Whether frames 4 and 5 are in the first cut, or the film ships at 16 bars (29.7 s at 129.2 BPM) without them.
+3. Whether frames 4 and 5 are in the first cut, or the film ships at 16 bars (29.5 s at 130 BPM) without them.

@@ -29,7 +29,7 @@ Free Music Archive tracks under CC BY or CC0. Full table: [music-analysis/result
 | | Shinji (pick) | Adrenaline (runner-up) | Solo Levelling |
 |---|---|---|---|
 | Score (0 to 100) | 72, rank 2 of 48 | 69, rank 4 | 67, rank 6 |
-| BPM (beat-grid analyzer), grid steadiness | 129.2, very steady (beat spacing varies 3 percent) | 143.6, steady | 129.2, steady |
+| BPM, fine fit of the onsets (the analyzer's own number was 129.2, 143.6 and 129.2, rounded by its 23 ms frames) | 130.0 | 146.0 | 130.0 |
 | Biggest hit | +27.7 dB jump, from silence | +25.7 dB jump | +14.6 dB jump |
 | Silent gaps in the 37 s edit | 6 (analyzer), 4 over 120 ms (own measure) | 6 and 5 | 5 and 2 |
 | Sub-bass share (below 120 Hz) | 53 percent | 71 percent | 64 percent |
@@ -37,14 +37,13 @@ Free Music Archive tracks under CC BY or CC0. Full table: [music-analysis/result
 | Loudness | -15.5 LUFS (quiet, will be normalised) | -15.0 LUFS | -13.9 LUFS |
 | CLAP, hyperpop-family labels | 0.78 | 0.32 | 0.38 |
 | CLAP, corporate, chill, generic, cinematic | 0.04 | 0.08 | 0.20 |
-| Film length at its own tempo | 37.15 s (38.5 s with ring-out) | 33.4 s (34.7 s) | 37.15 s (38.5 s) |
+| 80 beats at its own tempo | 36.92 s (38.31 s with the ring-out) | 32.9 s | 36.92 s |
 
 Plain words, from the top CLAP labels and the measurements. Shinji reads as hyperpop first, then playful aggressive pop,
-with almost nothing that sounds corporate or lo-fi. It runs a steady 129 BPM, and in the edit the energy drops to nothing
+with almost nothing that sounds corporate or lo-fi. It runs a steady 130 BPM, and in the edit the energy drops to nothing
 several times (the analyzer finds silences at 6.1, 15.1, 20.1, 26.1, 29.1 and 37.1 s) before hard hits. That sparse, sudden
 stop and start is the quality that matches "Hard". It has less sub-bass than the others, which is its weakest number.
-Adrenaline is the heavier option: 71 percent sub-bass, a +25.7 dB hit, longer silences, but at 143.6 BPM the film is
-only 33.4 s and the hyperpop read is weaker. Solo Levelling is a close cousin of Shinji with a smaller hit.
+Adrenaline is the heavier option: 71 percent sub-bass, a +25.7 dB hit, longer silences, but the hyperpop read is weaker (it became the 15 s teaser, see `TEASER.md`). Solo Levelling is a close cousin of Shinji with a smaller hit.
 
 How the ranking was done, so it can be argued with. The banger score is a percentile blend: hyperpop CLAP score minus half
 the negative score (28 percent), drop size (15), sub-bass share (10), silent gaps plus level contrast in the edit (17),
@@ -57,29 +56,31 @@ What the measurement cannot see: timbre. Whether the percussion is rubbery and m
 stabs, whether it is playful. CLAP's zero-shot labels are a rough proxy, and its "hyperpop" label leans toward any bright
 synthetic track (it gave a sped-up Pixabay pop remix 0.54). Only an ear settles it.
 
-### The exact edit, for a film of 80 beats plus a 3 beat ring-out
+### The exact edit (corrected 2026-10-15 after a finer tempo measurement)
 
-Measured with `analyze-beatgrid.py` (beat grid) and my own level detector (the drop). The drop sits within 70 ms of a
-measured beat, as it should.
+The beat analyzer rounds beats to 23 ms frames, which made Shinji read 129.2 BPM and Adrenaline 143.6. A fit of the tracks' onsets at 1.4 ms
+resolution gives **Shinji 130.0 BPM** (best fit 129.94, error 0.0724 against 0.1082 at 129.2) and **Adrenaline 146.0 BPM** (0.0483 against 0.1005 at 143.6).
+At 129.2 the cuts would have drifted 230 ms by the end of the film. All cue sheets use the corrected tempo. The drops are the strongest onsets after a silence:
+Shinji at track second 33.269, Adrenaline at 54.266.
 
-| | Shinji | Adrenaline | Solo Levelling |
-|---|---|---|---|
-| Start offset in the track | 25.913 s | 47.717 s | 40.681 s |
-| Drop lands in the film at | 7.38 s (beat 16 is 7.43 s) | 6.57 s (beat 16 is 6.69 s) | 7.38 s |
-| Length of cut | 38.54 s (80 beats plus 3) | 34.68 s | 38.54 s |
-| Ends at track second | 64.45 s of 140 | 82.4 s of 189 | 79.2 s of 125 |
+| | Shinji, main film | Adrenaline, teaser |
+|---|---|---|
+| Tempo | 130.0 BPM, beat 0.46154 s | 146.0 BPM, beat 0.41096 s |
+| Start offset in the track | **25.884 s** (the drop on beat 16, 33.269 minus 16 beats) | **50.978 s** (the drop on beat 8) |
+| Length of cut | 38.308 s (80 beats plus a 3 beat ring-out) | 15.000 s |
+| Fade out | last 1.4 s | last 0.6 s |
+| Measured hits (beat, strength) | 8 (.63), 16 (.64, the drop), 33 (.79), 46.5 (.53), 68 (.41), 72 (.70), 74 (1.00), 76 (.66) | 8 (.88, the drop), 9 (.76), 11 (.71), 12 (.85), 15 (1.00), 16.5 (.58) |
+| Measured stops (beats) | 13.32 to 15.93, 32.61 to 32.93, 73.54 to 73.93, 75.54 to 75.92 | 4.39 to 7.92, 8.54 to 8.93 |
 
 ```
-ffmpeg -ss 25.913 -t 38.545 -i shinji.mp3 -af "afade=t=out:st=37.10:d=1.44" -ar 48000 cut.wav
+ffmpeg -ss 25.884 -t 38.308 -i shinji.mp3 -af "afade=t=out:st=36.9:d=1.4,loudnorm=I=-14:TP=-1.5" -ar 48000 shinji-main.wav
+ffmpeg -ss 50.978 -t 15.0  -i adrenaline.mp3 -af "afade=t=out:st=14.4:d=0.6,loudnorm=I=-14:TP=-1.5" -ar 48000 adrenaline-teaser.wav
 ```
 
-The film at 129.2 BPM is 37.15 s, so it lands on the 37.5 s target almost exactly. The storyboard, `cues.json` and the
-cue sheet [cues-shinji-129bpm.md](cues-shinji-129bpm.md) are re-timed to it. Frame spans in `STORYBOARD.md` are the real
-seconds. The track's own silences are free hit points: at film seconds 6.1 (beat 13), 15.1 (beat 32.5) and 20.1 (beat 43)
-the music goes quiet and the picture can hold with it.
-
-If the owner wants the film at exactly 37.5 s with Adrenaline's faster tempo, add 2 bars to the plugin frame (88 beats is
-36.8 s).
+(The real cuts were made two-pass linear: Shinji measured -15.3 LUFS in, Adrenaline -13.1 LUFS in, both written at -14 LUFS, true peak under -1.5 dB.) The cuts sit outside
+git in `panoply-video-audio.noindex/cuts/`. The film is 36.92 s at 130 BPM, 38.31 s with the ring-out. The cue sheet is
+[cues-shinji-130bpm.md](cues-shinji-130bpm.md) and the raw hit and stop maps are `music-analysis/hits-shinji.json` and
+`music-analysis/hits-adrenaline-teaser.json`.
 
 ## License evidence
 
@@ -169,4 +170,5 @@ Only the analysis (`music-analysis/`) and the cue sheets are committed.
 | `music-analysis/analysis.json` | All numbers: metrics, CLAP label probabilities, ranking, edits |
 | `music-analysis/sources.json` | The page URL and license evidence of each track |
 | `music-analysis/audiomap-*.json` | The beat analyzer's output for the three picks (events removed to keep it small) |
-| `cues-shinji-129bpm.md` | The re-timed cue sheet, with the track second of every cue |
+| `cues-shinji-130bpm.md` | The cue sheet at the corrected 130 BPM, with the track second of every cue |
+| `music-analysis/hits-*.json` | Measured hits and stops of the two edits |
