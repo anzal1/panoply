@@ -46,6 +46,10 @@ sleep 2  # settle: the bar is created hidden at start, give it the chance to sho
 alive=false; kill -0 "$pid" 2>/dev/null && alive=true
 [ "$alive" = true ] || failed+=("the process is not alive after the window wait")
 [ -n "$wid" ] || failed+=("no visible window titled Panoply")
+# A build without a windowing backend starts headless: alive, silent, no window, ever.
+if [ -z "$wid" ] && ! strings "$BIN" | grep -q _NET_WM_STATE_MAXIMIZED_VERT; then
+  failed+=("the binary has no X11 backend (gpui_platform is built without its x11 and wayland features), so it runs headless")
+fi
 
 bar_before="$(mapped_bar "$pid")"
 [ -z "$bar_before" ] || failed+=("the command bar is mapped before the hotkey (window $bar_before)")

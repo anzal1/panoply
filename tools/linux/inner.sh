@@ -7,6 +7,7 @@ export CARGO_TARGET_DIR=/cache/target CARGO_BUILD_JOBS="${JOBS:-8}" PANOPLY_YES=
 export RUSTFLAGS="${RUSTFLAGS:-} -C link-arg=-fuse-ld=lld"
 export PANOPLY_ENGINES_DIR=/cache/engines PANOPLY_DATA_DIR=/tmp/panoply-data
 start=$SECONDS
+tests_failed=0
 step() { printf '\n--> %s\n' "$*"; step_start=$SECONDS; }
 done_step() { printf '    %ss\n' "$((SECONDS - step_start))"; }
 
@@ -31,11 +32,14 @@ finish() {
 trap finish EXIT
 
 step "syncing the repo into the work volume"
-mkdir -p /work /corpus
+mkdir -p /work
 rsync -a --delete --exclude .git --exclude '.DS_Store' --exclude 'target/' --exclude /tests/corpus/cache /src/ /work/
 cd /work
-if [ -z "$(ls -A /corpus 2>/dev/null)" ] && [ ! -e tests/corpus/cache ]; then mkdir -p tests/corpus/cache; fi
-[ -e tests/corpus/cache ] || ln -s /corpus tests/corpus/cache
+# The corpus kinds CI has (pdf, image), mounted read-only from the Mac's cache.
+rm -rf tests/corpus/cache && mkdir -p tests/corpus/cache
+for kind in pdf image; do
+  [ -d "/corpus/$kind" ] && ln -s "/corpus/$kind" "tests/corpus/cache/$kind"
+done
 done_step
 
 if [ -n "${PLAN:-}" ]; then
@@ -56,12 +60,12 @@ done_step
 if [ -n "${PLAN:-}" ]; then
   step "cargo nextest run $SCOPE (profile $NEXTEST_PROFILE)"
   # shellcheck disable=SC2086
-  nice -n 15 cargo nextest run $SCOPE --cargo-profile ci --profile "$NEXTEST_PROFILE" --lib --bins --tests --no-fail-fast --no-tests=pass
+  nice -n 15 cargo nextest run $SCOPE --cargo-profile ci --profile "$NEXTEST_PROFILE" --lib --bins --tests --no-fail-fast --no-tests=pass || tests_failed=1
   done_step
 
   step "timing tests, alone (profile ci-idle)"
   # shellcheck disable=SC2086
-  nice -n 15 cargo nextest run $SCOPE --cargo-profile ci --profile ci-idle --lib --bins --tests --no-fail-fast --no-tests=pass
+  nice -n 15 cargo nextest run $SCOPE --cargo-profile ci --profile ci-idle --lib --bins --tests --no-fail-fast --no-tests=pass || tests_failed=1
   done_step
 fi
 
@@ -72,4 +76,9 @@ if [ "${SMOKE:-0}" = 1 ]; then
   step "headless desktop smoke (Xvfb + openbox)"
   bash /work/tools/linux/smoke.sh "$CARGO_TARGET_DIR/ci/panoply-desktop" /out
   done_step
+fi
+
+if [ "$tests_failed" = 1 ]; then
+  echo "tests FAILED (see above)"
+  exit 1
 fi

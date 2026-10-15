@@ -120,6 +120,8 @@ if [ "$rebuild" = 1 ] || ! d image inspect "$tag" >/dev/null 2>&1; then
 fi
 
 # ---- the test corpus: the cache of this checkout, or of the first worktree --------------------------
+# Only the kinds CI fetches (pdf and image, see ci.yml): the video, audio and office files a Mac may have
+# generated need tools the container does not have, and CI never sees them.
 corpus=""
 if [ -e tests/corpus/cache ]; then
   corpus="$(cd tests/corpus/cache && pwd -P)"
@@ -128,7 +130,12 @@ else
   [ -d "$first/tests/corpus/cache" ] && corpus="$first/tests/corpus/cache"
 fi
 corpus_args=()
-[ -n "$corpus" ] && corpus_args=(-v "$corpus":/corpus:ro) || echo "[linux] no corpus cache found: corpus tests will fail as they do in CI without one"
+if [ -n "$corpus" ]; then
+  for kind in pdf image; do
+    [ -d "$corpus/$kind" ] && corpus_args+=(-v "$corpus/$kind":/corpus/$kind:ro)
+  done
+fi
+[ "${#corpus_args[@]}" -gt 0 ] || echo "[linux] no corpus cache found: corpus tests will fail as they do in CI without one"
 
 profile_nx=ci-core
 [ "$heavy" = 1 ] && profile_nx=ci
