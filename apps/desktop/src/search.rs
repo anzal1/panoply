@@ -282,8 +282,17 @@ fn word_hit(cx: &Context, tool: usize, word: &str) -> bool {
         t.id.replace(['.', '_'], " "),
         presets
     );
-    hay.split(|c: char| !c.is_alphanumeric())
-        .any(|w| w == word || (word.len() >= 3 && w.starts_with(word)))
+    // "photo" and "picture" are searched as "image" (see `intent`), so a tool that says photo
+    // must still answer to it.
+    let alts: &[&str] = if word == "image" {
+        &["image", "photo", "photos", "picture", "pictures"]
+    } else {
+        std::slice::from_ref(&word)
+    };
+    hay.split(|c: char| !c.is_alphanumeric()).any(|w| {
+        alts.iter()
+            .any(|a| w == *a || (a.len() >= 3 && w.starts_with(a)))
+    })
 }
 
 fn from_query(cx: &Context, q: &str) -> Results {
