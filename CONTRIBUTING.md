@@ -29,6 +29,17 @@ tip below) and prints the time it took, usually 1 to 3 minutes on a warm build f
 whole workspace, `--heavy` adds the slowest corpus and model tests that CI runs on Linux, `--plan` only
 prints what would run. It needs [cargo-nextest](https://nexte.st) (`cargo install cargo-nextest --locked`).
 
+**The Linux check.** Some errors only show on Linux (code behind `cfg(target_os = "linux")`, the
+`src/platform/other.rs` fallback, the GPUI libraries), and CI finds them after a 25-minute round trip.
+`tools/preflight-linux.sh` finds them on your Mac in minutes: it runs clippy for the whole workspace and the
+tests of the changed crates inside Ubuntu 24.04 in a small [colima](https://github.com/abiosoft/colima) VM
+(`brew install colima docker`; 4 CPUs, 4 GB, native arm64, no windows, stopped again when the check ends, `--keep`
+leaves it running). `tools/preflight.sh --linux` runs it after the macOS checks, and does so by itself when a
+changed file holds Linux-only code. `--smoke` also builds `panoply-desktop` and runs it headless under Xvfb and
+openbox (a window titled Panoply appears, the command bar is not mapped before the hotkey, screenshots are
+saved). Only one heavy check runs on the machine at a time: a second one prints "waiting for another check"
+(`tools/lib/heavy-lock.sh`). Details in [docs/CI.md](docs/CI.md).
+
 The same checks by hand:
 
 ```sh

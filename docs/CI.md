@@ -50,6 +50,19 @@ The linker is not changed: Rust has linked with `lld` on Linux since 1.90, so `m
 ## Changing CI
 
 * Run `tools/preflight.sh` before every push: the same fmt, clippy and nextest checks, for the crates you changed and the crates that depend on them.
+* Run `tools/preflight-linux.sh` (or `tools/preflight.sh --linux`) when you touch Linux-only code: see "The local Linux check" below.
 * Run `python3 -I tools/ci/changes.py --files < list.txt` to see which jobs a list of changed files would need.
 * Run `python3 -I tools/ci/check_docs.py` before pushing documentation.
 * Actions are pinned to a commit SHA with the version in a comment, like `release.yml`. Dependabot proposes updates monthly.
+
+## The local Linux check
+
+`tools/preflight-linux.sh` runs the Linux half of CI on a Mac, so a Linux-only compile or lint error costs minutes instead of a CI round trip.
+
+* **What runs.** `cargo clippy --workspace --exclude gpui-base --all-targets -- -D warnings` (the `clippy (ubuntu-latest)` job), then nextest with the `ci-core` profile and the `ci-idle` timing tests on the crates changed since `origin/main` and the crates that depend on them (the logic of `tools/preflight.sh`, shared in `tools/ci/changed_crates.py`). `--all` takes the whole workspace, `--heavy` adds the heavy tests, `--plan` prints the scope. Formatting is left to the macOS half.
+* **Where.** A colima VM (profile `panoply`, Apple Virtualization, native arm64, 4 CPUs, 4 GB; your own default VM is not touched) runs the image of `tools/linux/Dockerfile`: Ubuntu 24.04, the toolchain of `rust-toolchain.toml`, the apt packages of `.github/actions/linux-libs` (keep the two lists in step), cargo-nextest, and Xvfb, openbox and xdotool for the smoke. The repo is mounted read-only and synced to a work volume with `rsync -a`, which keeps modification times, so cargo rebuilds only what changed. Named volumes keep the cargo registry, the Linux target folder and the downloaded engines warm between runs. The image is rebuilt when the Dockerfile or `rust-toolchain.toml` change, or with `--rebuild` (a newer stable Rust).
+* **Cost.** Everything runs at `nice -n 15` with 8 cargo jobs (`PANOPLY_LINUX_JOBS`) on the 4 VM CPUs. The VM is stopped with `colima stop panoply` when the check ends (`--keep` skips that) and your docker context is put back. No window is ever opened on the Mac.
+* **One heavy check at a time.** `tools/preflight.sh` and `tools/preflight-linux.sh` take a machine-wide lock (`tools/lib/heavy-lock.sh`, a directory made with `mkdir` that holds the holder's PID, at `~/personal/.panoply-heavy.lock`) before they build. A second one prints "waiting for another check" and starts when the first ends. A lock whose process is gone is taken over.
+* **`--smoke`.** Builds `panoply-desktop` with the `ci` profile and runs it under Xvfb and openbox with software Vulkan (`tools/linux/smoke.sh`, after `.github/scripts/desktop-smoke-linux.sh`, which tests the released AppImage). It fails when no window titled Panoply becomes visible, when the 720 by 460 command bar is mapped before the hotkey, when the app panics or does not exit when its window is closed. Screenshots (xwd and png, before and after the hotkey) and `report.json` land in `~/.cache/panoply/linux-smoke`.
+* **Automatic.** `tools/preflight.sh` runs it after the macOS checks when a changed `.rs` file contains `target_os = "linux"` or is a `platform/other.rs` (vendored `patches/` do not count); `--linux` forces it, `--no-linux` skips it.
+* **What it does not cover.** CI is x86_64; the VM is aarch64, so an error that depends on the instruction set can still slip through. The engines and models the tests download are fetched by the tests themselves instead of once up front as in CI. Only the pdf and image corpus kinds are mounted (the ones CI fetches), so a video or audio file your Mac generated never reaches the tests. The link step uses lld (GNU ld was killed for lack of memory in the 4 GB VM).
