@@ -550,7 +550,9 @@ fn builtin_id(module: &Path) -> Option<String> {
 }
 
 fn run_module(module: &Path, files: Vec<PathBuf>, opts: &[String], out: Option<&Path>) -> ExitCode {
-    if builtin_id(module).is_none() && !module.exists() {
+    let text = module.to_string_lossy();
+    let looks_like_an_id = !text.contains(['/', '\\']) && !text.ends_with(".toml");
+    if builtin_id(module).is_none() && !module.exists() && looks_like_an_id {
         eprintln!(
             "There is no tool called {}. Run `panoply modules` to see the list.",
             module.display()

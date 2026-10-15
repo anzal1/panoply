@@ -188,6 +188,17 @@ fn run_explains_mistakes_in_plain_words_and_fails() {
 }
 
 #[test]
+fn a_built_in_with_no_file_or_a_mistyped_name_says_what_to_do() {
+    let (_, err, ok) = panoply_full(&["run", "image.compress"]);
+    assert!(!ok && err.contains("at least one file"), "{err}");
+    let (_, err, ok) = panoply_full(&["run", "nope.tool", "x.png"]);
+    assert!(
+        !ok && err.contains("There is no tool called nope.tool") && err.contains("panoply modules"),
+        "{err}"
+    );
+}
+
+#[test]
 fn modules_lists_community_modules() {
     let (out, ok) = panoply(&["modules"]);
     assert!(ok);
