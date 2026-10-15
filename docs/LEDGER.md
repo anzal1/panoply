@@ -24,7 +24,11 @@ line below is checked.
 
 - **User pass of every tool** (agent). Findings go to `docs/research/user-pass.md`, fixes on branches.
 - **Instant search engine** (agent). Index design and benchmark against the fastest tools, then the module.
-- **Disk map** (agent). Scanner benchmark, then the module and its view.
+- **Disk map** (agent, branch `feat/disk-map`). Scanner built and measured: a 440 GiB home folder (7.7 million
+  files) in 36 to 40 s, 9x faster than `du`, clones and hard links counted once, peak memory 287 MB. The
+  treemap view, the largest-items sidebar, the Review and move to trash flow with Undo, the Full Disk Access
+  explainer and `panoply disk <path>` are built. Left before the gate: a run on a real Windows PC, and the
+  view on a full disk by hand.
 - **Launch video pre-production** (agent). Track shortlist with licenses, beat map, storyboard.
 - **Windows CI speed-up** (paused). Next: lighter optimisation for workspace crates in the CI profile, then
   sccache.
