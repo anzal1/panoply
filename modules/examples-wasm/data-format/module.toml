@@ -7,7 +7,7 @@ id = "data.format"
 name = "Format JSON, YAML and TOML"
 version = "0.1.0"
 pattern = "A"
-summary = "Tidy, convert or check a JSON, YAML or TOML file. A mistake is reported with its line and column."
+summary = "Tidy, convert or check JSON, YAML and TOML files."
 
 [options.to]
 type = "choice"
