@@ -201,7 +201,7 @@ function Limit([string]$what) {
 }
 function Skip([string]$why) { $script:Cur.notes += "skipped: $why"; $script:Cur.status = 'skip' }
 function Note([string]$t) { $script:Cur.notes += $t; Write-Host "  note: $t" }
-function Data([string]$k, $v) { $script:Cur.data[$k] = $v }
+function Fact([string]$k, $v) { $script:Cur.data[$k] = $v }
 
 function Save-Report {
   $rep = [ordered]@{
@@ -535,11 +535,11 @@ Journey '1' 'First launch: window, home, no crash or blank window within 3 s' {
     }
     Start-Sleep -Milliseconds 100
   }
-  Data 'ms_to_window' $windowMs; Data 'ms_to_first_painted_frame' $paintMs
+  Fact 'ms_to_window' $windowMs; Fact 'ms_to_first_painted_frame' $paintMs
   Check 'the process is alive' (-not $app.proc.HasExited) "exit code $(if ($app.proc.HasExited) { $app.proc.ExitCode })"
   Check 'a window titled Panoply appears' ([bool]$main) "after $windowMs ms"
   if ($main) {
-    Data 'window' "$($main.x),$($main.y) $($main.w)x$($main.h) dpi $($main.dpi)"
+    Fact 'window' "$($main.x),$($main.y) $($main.w)x$($main.h) dpi $($main.dpi)"
     if ($paintMs -and $paintMs -le 3000) { Check 'first painted frame within 3 s' $true "$paintMs ms" }
     elseif ($paintMs -and $paintMs -le 10000) { Warn 'first painted frame took longer than 3 s' "$paintMs ms (cold runner, so a script note and not a verdict)" }
     else { Check 'the window is not blank' $false "flat=$($stat.flat) colours=$($stat.colours)" }
@@ -550,12 +550,12 @@ Journey '1' 'First launch: window, home, no crash or blank window within 3 s' {
     # Accessibility: does GPUI expose a UI Automation tree on Windows?
     $u = Uia-Dump $m2.hwnd (Join-Path $script:JDir 'uia-tree.json')
     $named = @($u.elements | Where-Object { $_.name }).Count
-    Data 'uia_elements' $u.count; Data 'uia_named_elements' $named
+    Fact 'uia_elements' $u.count; Fact 'uia_named_elements' $named
     Note "UI Automation: $($u.count) elements under the window, $named with a name, root '$($u.root)' ($($u.rootType))$(if ($u.timeout) { ', timed out' })"
   }
   $app.proc.Refresh()
   if (-not $app.proc.HasExited) { Check 'still alive after 6 s' $true } else { Check 'still alive after 6 s' $false "exit code $($app.proc.ExitCode)" }
-  if (Test-Path $app.err) { $e = Get-Content $app.err -Raw; if ($e) { Data 'stderr' $e.Substring(0, [Math]::Min(600, $e.Length)) } }
+  if (Test-Path $app.err) { $e = Get-Content $app.err -Raw; if ($e) { Fact 'stderr' $e.Substring(0, [Math]::Min(600, $e.Length)) } }
   Stop-App $app
 }
 
@@ -571,17 +571,17 @@ Journey '2' 'Hotkey, type "compress", Enter: the Compress image panel opens' {
   $bar = Get-Bar $app.proc
   Check 'the command bar appears on Ctrl+Alt+Space' ([bool]$bar)
   if ($bar) {
-    Data 'bar_rect' "$($bar.x),$($bar.y) $($bar.w)x$($bar.h)"
-    Data 'bar_has_focus_before_typing' ([W]::GetForegroundWindow().ToInt64() -eq $bar.hwnd)
+    Fact 'bar_rect' "$($bar.x),$($bar.y) $($bar.w)x$($bar.h)"
+    Fact 'bar_has_focus_before_typing' ([W]::GetForegroundWindow().ToInt64() -eq $bar.hwnd)
     if ([W]::GetForegroundWindow().ToInt64() -ne $bar.hwnd) { Note 'the bar did not hold keyboard focus after the hotkey; the script clicked it to focus, which a person would also have to do'; [void](Focus-Window $bar) }
     Type-Text 'compress'
     $barNow = Get-Bar $app.proc
     $before = Wait-Text $app.proc 'bar-typed' { Get-Bar $app.proc } 'compress' 6
-    Data 'rows_after_typing' ($before.text -replace '\s+', ' ')
+    Fact 'rows_after_typing' ($before.text -replace '\s+', ' ')
     Check 'typed text and result rows are visible' $before.ok ($before.text -replace '\s+', ' ')
     Press-Key 0x0D; Start-Sleep -Seconds 2
     $after = Wait-Text $app.proc 'bar-after-enter' { Get-Bar $app.proc } 'Choose files|Quality|Run|Options' 8
-    Data 'panel_text' ($after.text -replace '\s+', ' ')
+    Fact 'panel_text' ($after.text -replace '\s+', ' ')
     Check 'the Compress image panel opens (its title and controls)' ($after.ok -and $after.text -match 'Compress image') ($after.text -replace '\s+', ' ')
     if ($after.ok -and $after.text -notmatch 'Compress image') { Note 'a panel opened, but not titled Compress image' }
     $same = (Image-Stats $before.png); $now = (Image-Stats $after.png)
@@ -600,7 +600,7 @@ Journey '3' 'Open a PNG by command line, run "under 50 kb": an output under 50 K
   $d = Join-Path $Work 'j3'; Copy-Fixtures $d
   $png = Join-Path $d 'testpic.png'
   $origHash = (Get-FileHash $png -Algorithm SHA256).Hash; $origSize = (Get-Item $png).Length
-  Data 'input_bytes' $origSize
+  Fact 'input_bytes' $origSize
   $app = Launch-App @($png)
   $main = Wait-Main $app 20
   Check 'the app window opens with the file argument' ([bool]$main)
@@ -612,7 +612,7 @@ Journey '3' 'Open a PNG by command line, run "under 50 kb": an output under 50 K
   Start-Sleep -Milliseconds 400
   Type-Text 'under 50 kb'
   $q = Wait-Text $app.proc 'query' { Get-Main $app.proc } 'under 50' 6
-  Data 'rows_after_typing' ($q.text -replace '\s+', ' ')
+  Fact 'rows_after_typing' ($q.text -replace '\s+', ' ')
   Check 'the words typed reach the search box' $q.ok
   Press-Key 0x0D
   $out = $null; $presses = 1
@@ -624,12 +624,12 @@ Journey '3' 'Open a PNG by command line, run "under 50 kb": an output under 50 K
     }
   }
   if (-not $out) { $out = Find-NewFile $d 'testpic*' @('testpic.png', 'a.pdf', 'b.pdf', 'scan.pdf') 15 }
-  Data 'enter_presses' $presses
+  Fact 'enter_presses' $presses
   $done = Wait-Text $app.proc 'result-card' { Get-Main $app.proc } 'KB|MB|smaller|Undo|Done|saved' 8
-  Data 'result_card' ($done.text -replace '\s+', ' ')
+  Fact 'result_card' ($done.text -replace '\s+', ' ')
   Check 'an output file appeared next to the input' ([bool]$out)
   if ($out) {
-    Data 'output' $out.Name; Data 'output_bytes' $out.Length
+    Fact 'output' $out.Name; Fact 'output_bytes' $out.Length
     Check 'the output is under 50 KB' ($out.Length -lt 50 * 1024) "$($out.Length) bytes"
     Check 'the output is named (compressed)' ($out.Name -like '*(compressed*') $out.Name
   }
@@ -646,7 +646,7 @@ Journey '5' 'Undo on a result: the file goes to the Recycle Bin, not deleted' {
   $app = $s.app; $out = $s.out; $name = $out.Name; $size = $out.Length; $full = $out.FullName
   $main = Get-Main $app.proc
   [void](Focus-Window $main)
-  Data 'file' $name
+  Fact 'file' $name
   Press-Chord @(0x11) 0x5A   # Ctrl+Z on the result card
   Start-Sleep -Seconds 3
   $how = 'Ctrl+Z'
@@ -661,12 +661,12 @@ Journey '5' 'Undo on a result: the file goes to the Recycle Bin, not deleted' {
       Note 'Ctrl+Z did not undo the result; the Undo button did, if the file is gone'
     } else { Note 'Ctrl+Z did nothing and OCR could not find an Undo button' }
   }
-  Data 'undo_by' $how
+  Fact 'undo_by' $how
   [void](Shot 'after-undo' (Get-Main $app.proc))
   Check 'the output file is gone from the folder' (-not (Test-Path $full))
   Check 'the original is still there' (Test-Path (Join-Path $s.dir 'testpic.png'))
   $hits = In-RecycleBin $name $size
-  Data 'recycle_bin_hits' ($hits -join '; ')
+  Fact 'recycle_bin_hits' ($hits -join '; ')
   Check 'the Recycle Bin holds the output (it was not deleted for good)' ([bool]$hits) ($hits -join '; ')
   Stop-App $app
 }
@@ -686,7 +686,7 @@ Journey '4a' 'Merge two PDFs: one output with 5 pages' {
   Press-Chord @(0x11) 0x46; Start-Sleep -Milliseconds 400
   Type-Text 'merge pdf'
   $q = Wait-Text $app.proc 'query' { Get-Main $app.proc } 'merge' 6
-  Data 'rows_after_typing' ($q.text -replace '\s+', ' ')
+  Fact 'rows_after_typing' ($q.text -replace '\s+', ' ')
   Press-Key 0x0D
   $out = $null
   for ($i = 1; $i -le 3 -and -not $out; $i++) {
@@ -696,7 +696,7 @@ Journey '4a' 'Merge two PDFs: one output with 5 pages' {
   [void](Shot 'result' (Get-Main $app.proc))
   Check 'a merged PDF appeared next to the inputs' ([bool]$out)
   if ($out) {
-    $n = Py @('pages', $out.FullName); Data 'output' $out.Name; Data 'pages' $n
+    $n = Py @('pages', $out.FullName); Fact 'output' $out.Name; Fact 'pages' $n
     Check 'the merged PDF has 5 pages (2 + 3)' ($n -eq '5') "pages=$n"
   }
   Stop-App $app
@@ -716,7 +716,7 @@ Journey '4b' 'OCR a scanned PDF: the text becomes extractable' {
   Press-Chord @(0x11) 0x46; Start-Sleep -Milliseconds 400
   Type-Text 'ocr'
   $q = Wait-Text $app.proc 'query' { Get-Main $app.proc } 'ocr|text|search' 6
-  Data 'rows_after_typing' ($q.text -replace '\s+', ' ')
+  Fact 'rows_after_typing' ($q.text -replace '\s+', ' ')
   Press-Key 0x0D
   $out = $null; $presses = 1
   for ($i = 1; $i -le 5 -and -not $out; $i++) {
@@ -724,11 +724,11 @@ Journey '4b' 'OCR a scanned PDF: the text becomes extractable' {
     if (-not $out -and $i -lt 5) { [void](Shot "wait-$i" (Get-Main $app.proc)); Press-Key 0x0D; $presses++ }   # options, then a consent sheet if one comes up
   }
   if (-not $out) { $out = Find-NewFile $d 'scan*(*.pdf' @() 40 }
-  Data 'enter_presses' $presses
+  Fact 'enter_presses' $presses
   [void](Shot 'result' (Get-Main $app.proc))
   Check 'a searchable PDF appeared next to the scan' ([bool]$out)
   if ($out) {
-    $t = Py @('text', $out.FullName); Data 'output' $out.Name; Data 'extracted_text' ($t -replace '\s+', ' ')
+    $t = Py @('text', $out.FullName); Fact 'output' $out.Name; Fact 'extracted_text' ($t -replace '\s+', ' ')
     $words = Py @('words', $out.FullName, 'invoice,4812,total,350,thank,business'); $ok = ($script:PyExit -eq 0)
     Check 'the text can be extracted (at least two of the words on the page)' $ok "found: $words"
   }
@@ -801,7 +801,7 @@ Journey '7' 'Light and dark theme, 125% and 150% scaling' {
       Start-Sleep -Seconds 3
       $png = Shot "theme-$theme" (Get-Main $app.proc)
       $st = Image-Stats $png; $bright[$theme] = $st.brightness
-      Data "brightness_$theme" $st.brightness
+      Fact "brightness_$theme" $st.brightness
       Check "the window follows the system $theme theme" ($(if ($theme -eq 'light') { $st.brightness -gt 0.6 } else { $st.brightness -lt 0.35 })) "mean brightness $($st.brightness)"
       $t = Ocr $png; Check "text is readable in $theme mode (OCR finds words)" ($t.text.Length -gt 12) ($t.text -replace '\s+', ' ')
     }
@@ -830,7 +830,7 @@ Journey '7' 'Light and dark theme, 125% and 150% scaling' {
         $main = Get-Main $app.proc
         $png = Shot "scale-$pct" $main
         $expectDpi = [int](96 * $pct / 100)
-        Data "dpi_at_$pct" $main.dpi; Data "window_at_$pct" "$($main.w)x$($main.h)"
+        Fact "dpi_at_$pct" $main.dpi; Fact "window_at_$pct" "$($main.w)x$($main.h)"
         Check "the window runs at $expectDpi dpi" ($main.dpi -eq $expectDpi) "dpi $($main.dpi)"
         $sw = [W]::GetSystemMetrics(0); $sh = [W]::GetSystemMetrics(1)
         Check "the window fits the screen at $pct percent" (($main.x -ge -16) -and ($main.y -ge -16) -and ($main.x + $main.w -le $sw + 16) -and ($main.y + $main.h -le $sh + 16)) "$($main.x),$($main.y) $($main.w)x$($main.h) on $($sw)x$($sh)"
@@ -839,7 +839,7 @@ Journey '7' 'Light and dark theme, 125% and 150% scaling' {
         Press-Hotkey; Start-Sleep -Seconds 2
         $bar = Get-Bar $app.proc
         Check "the command bar opens at $pct percent" ([bool]$bar)
-        if ($bar) { [void](Shot "scale-$pct-bar" $bar); Data "bar_at_$pct" "$($bar.x),$($bar.y) $($bar.w)x$($bar.h) dpi $($bar.dpi)" }
+        if ($bar) { [void](Shot "scale-$pct-bar" $bar); Fact "bar_at_$pct" "$($bar.x),$($bar.y) $($bar.w)x$($bar.h) dpi $($bar.dpi)" }
       }
       Stop-App $app
     }
@@ -849,7 +849,7 @@ Journey '7' 'Light and dark theme, 125% and 150% scaling' {
     $scaleReport += "scale API unavailable: $($_.Exception.Message)"
     Limit "the display scale could not be read or changed on this runner: $($_.Exception.Message)"
   }
-  Data 'scaling' ($scaleReport -join ' | ')
+  Fact 'scaling' ($scaleReport -join ' | ')
   Note ($scaleReport -join ' | ')
 }
 
@@ -868,8 +868,8 @@ Journey '8' 'Memory and idle CPU after 60 s idle' {
   $p.Refresh(); $cpu60 = $p.TotalProcessorTime.TotalSeconds; $t60 = Get-Date
   $pct = [Math]::Round(($cpu60 - $cpu30) / ($t60 - $t30).TotalSeconds * 100, 2)
   $ws = [Math]::Round($p.WorkingSet64 / 1MB, 1); $priv = [Math]::Round($p.PrivateMemorySize64 / 1MB, 1)
-  Data 'idle_cpu_percent_of_one_core_30_to_60s' $pct; Data 'working_set_mb' $ws; Data 'private_mb' $priv
-  Data 'threads' $p.Threads.Count; Data 'handles' $p.HandleCount; Data 'cpu_seconds_total' ([Math]::Round($cpu60, 2))
+  Fact 'idle_cpu_percent_of_one_core_30_to_60s' $pct; Fact 'working_set_mb' $ws; Fact 'private_mb' $priv
+  Fact 'threads' $p.Threads.Count; Fact 'handles' $p.HandleCount; Fact 'cpu_seconds_total' ([Math]::Round($cpu60, 2))
   [void](Shot 'idle' (Get-Main $p))
   if ($pct -le 1.0) { Check 'idle CPU is at most 1% of a core between 30 s and 60 s' $true "$pct%" }
   elseif ($pct -le 5.0) { Warn 'idle CPU is above 1% of a core' "$pct% (the design target is 0%)" }
