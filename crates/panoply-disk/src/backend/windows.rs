@@ -63,8 +63,10 @@ pub(crate) fn parse_extd(buf: &[u8], sink: &mut dyn FnMut(&Entry<'_>)) {
         if HEADER + name_len <= r.len() {
             name_utf8.clear();
             let units = r[HEADER..HEADER + name_len]
-                .chunks_exact(2)
-                .map(|c| u16::from_le_bytes([c[0], c[1]]));
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .map(|c| u16::from_le_bytes(*c));
             for ch in char::decode_utf16(units) {
                 let mut tmp = [0u8; 4];
                 name_utf8
