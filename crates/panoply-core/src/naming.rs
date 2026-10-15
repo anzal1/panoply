@@ -156,10 +156,13 @@ mod plain_io_tests {
             "the disk is full"
         );
         assert_eq!(
-            plain_io(&Error::from_raw_os_error(13)),
+            plain_io(&Error::from(ErrorKind::PermissionDenied)),
             "Panoply does not have permission to write there"
         );
-        let other = plain_io(&Error::from_raw_os_error(5));
-        assert!(!other.contains("os error"), "{other}");
+        // The same code means different things on different systems; none of them may show it.
+        for code in [2, 5, 13, 28] {
+            let text = plain_io(&Error::from_raw_os_error(code));
+            assert!(!text.contains("os error"), "{code}: {text}");
+        }
     }
 }
