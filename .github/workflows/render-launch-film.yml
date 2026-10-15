@@ -1,0 +1,83 @@
+name: Render launch film
+
+# Renders a launch film picture (silent) from docs/launch on a public-repo runner. HTML frames, headless Chrome.
+# The licensed track is never fetched here; it is muxed in locally (docs/launch/PRODUCTION.md, "Audio").
+#
+# Start it with workflow_dispatch (once this file is on the default branch) or, until then, by pushing a change
+# to docs/launch/trigger/render.txt on the launch/video branch. That file holds three words:
+#     <project> <quality> <fps>      e.g.   video draft 30      projects: video, teaser, teaser-vertical
+on:
+  push:
+    branches: [launch/video]
+    paths: [docs/launch/trigger/render.txt]
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "video (the 38 s film), teaser (15 s, 16:9) or teaser-vertical (15 s, 9:16)"
+        type: choice
+        options: [video, teaser, teaser-vertical]
+        default: video
+      quality:
+        description: "draft for layout, looks for review, delivery for the master"
+        type: choice
+        options: [draft, looks, delivery]
+        default: draft
+      fps:
+        description: "frames per second"
+        type: choice
+        options: ["30", "60"]
+        default: "30"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-launch-film-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Settings
+        id: s
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.project }}" ]; then
+            echo "project=${{ inputs.project }}" >> "$GITHUB_OUTPUT"; echo "quality=${{ inputs.quality }}" >> "$GITHUB_OUTPUT"; echo "fps=${{ inputs.fps }}" >> "$GITHUB_OUTPUT"
+          else
+            read -r p q f < docs/launch/trigger/render.txt
+            echo "project=$p" >> "$GITHUB_OUTPUT"; echo "quality=$q" >> "$GITHUB_OUTPUT"; echo "fps=$f" >> "$GITHUB_OUTPUT"
+          fi
+      - name: GSAP (not committed, installed from npm)
+        run: |
+          npm install --no-save --prefix "$RUNNER_TEMP/gsap" gsap@3.15.0
+          mkdir -p docs/launch/video/assets/vendor
+          cp "$RUNNER_TEMP/gsap/node_modules/gsap/dist/gsap.min.js" docs/launch/video/assets/vendor/gsap.min.js
+      - name: Chrome for HyperFrames
+        working-directory: docs/launch/${{ steps.s.outputs.project }}
+        run: npx --yes hyperframes@0.8.160 browser ensure
+      - name: Check
+        working-directory: docs/launch/${{ steps.s.outputs.project }}
+        run: npx --yes hyperframes@0.8.160 check . --snapshots
+      - name: Render
+        working-directory: docs/launch/${{ steps.s.outputs.project }}
+        run: |
+          mkdir -p renders
+          /usr/bin/time -v npx --yes hyperframes@0.8.160 render . --quality "${{ steps.s.outputs.quality }}" --fps "${{ steps.s.outputs.fps }}" --output renders/picture.mp4 2>&1 | tee renders/render.log
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate,duration -of default=nw=1 renders/picture.mp4 | tee renders/probe.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: launch-${{ steps.s.outputs.project }}-${{ steps.s.outputs.quality }}-${{ steps.s.outputs.fps }}fps
+          path: |
+            docs/launch/${{ steps.s.outputs.project }}/renders/picture.mp4
+            docs/launch/${{ steps.s.outputs.project }}/renders/render.log
+            docs/launch/${{ steps.s.outputs.project }}/renders/probe.txt
+            docs/launch/${{ steps.s.outputs.project }}/snapshots
+          retention-days: 14

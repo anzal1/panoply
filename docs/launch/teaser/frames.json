@@ -1,0 +1,17 @@
+{
+  "id": "teaser",
+  "w": 1920,
+  "h": 1080,
+  "bpm": 146.0,
+  "bg": "#0c0c0f",
+  "frames": [
+    {
+      "id": "teaser",
+      "name": "teaser",
+      "src": "compositions/teaser.html",
+      "beats": 36,
+      "tail_beats": 0.5
+    }
+  ],
+  "total_s": 15.0
+}
