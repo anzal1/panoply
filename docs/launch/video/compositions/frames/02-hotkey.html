@@ -2,12 +2,124 @@
 <html><head><meta charset="UTF-8"></head><body>
 <template>
   <style>
-    #root { position: absolute; inset: 0; background: #0c0c0f; color: #ececf1; font: 700 96px Geist, system-ui; display: grid; place-items: center; }
+    @font-face { font-family: "Geist"; src: url("assets/fonts/Geist-Variable-latin.woff2") format("woff2"); font-weight: 100 900; }
+    @font-face { font-family: "Geist Mono"; src: url("assets/fonts/GeistMono-latin.woff2") format("woff2"); font-weight: 100 900; }
+
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: #fff; }
+    #f2-ground { position: absolute; inset: 0; background: #0c0c0f; }
+    /* brand blue, one flat colour plus a very faint centred lift (no linear gradient), revealed by a straight wipe from the bottom */
+    #f2-blue { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 55% at 50% 48%, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 100%), #2d6cdf; clip-path: inset(100% 0% 0% 0%); }
+
+    #f2-top { position: absolute; inset: 0; }
+    #f2-head { position: absolute; left: 0; right: 0; top: 84px; text-align: center; font-size: 116px; font-weight: 700; letter-spacing: -0.04em; line-height: 0.98; color: #fff; opacity: 0; }
+    .f2-caps { position: absolute; left: 0; right: 0; top: 232px; height: 104px; display: flex; justify-content: center; gap: 24px; }
+    #f2-caps-win { opacity: 0; }
+    .f2-cap-label { position: absolute; left: 0; right: 0; top: 122px; text-align: center; font-family: "Geist Mono", ui-monospace, monospace; font-size: 30px; font-weight: 500; color: rgba(255,255,255,.78); letter-spacing: 0; }
+    .f2-key { height: 104px; border-radius: 26px; display: flex; align-items: center; justify-content: center; font-size: 52px; font-weight: 600; letter-spacing: -0.02em; color: #fff;
+      background: rgba(255,255,255,.16); border: 2px solid rgba(255,255,255,.45);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 18px 40px rgba(8,24,70,.28); }
+
+    /* the camera: the plate group pushes in around the bar's centre */
+    #f2-push { position: absolute; left: 400px; top: 402px; width: 1120px; height: 716px; transform-origin: 50% 50%; }
+    #f2-open { position: absolute; inset: 0; transform-origin: 50% 50%; opacity: 0; }
+    #f2-plate { position: absolute; inset: 0; border-radius: 29.3px; overflow: hidden; background: #f1f2f5;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 100px rgba(8,24,70,.5); }
+    #f2-plate img { position: absolute; left: 0; top: 0; width: 1120px; height: 716px; display: block; }
+    .f2-demo { opacity: 0; }
+
+    /* the file chip, rebuilt from the app's chip (tile + name + size + x) */
+    #f2-chip { position: absolute; left: 784px; top: 16px; width: 317px; height: 56px; border-radius: 14px; background: #d4d4d6; opacity: 0; display: flex; align-items: center; }
+    #f2-chip .tile { position: absolute; left: 12px; top: 10px; width: 37px; height: 37px; border-radius: 9px; background: #c9badd; display: flex; align-items: center; justify-content: center; }
+    #f2-chip .tile svg { width: 22px; height: 22px; fill: none; stroke: #b04ae0; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    #f2-chip .name, #f2-chip .size, #f2-chip .x { position: absolute; top: 0; height: 56px; display: flex; align-items: center; font-size: 22px; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; }
+    #f2-chip .name { left: 62px; color: #1d1d1f; }
+    #f2-chip .size { left: 206px; color: #5c5c63; }
+    #f2-chip .x { left: 284px; font-size: 20px; color: #4a4a52; }
   </style>
-  <div id="root" data-composition-id="f2-hotkey" data-width="1920" data-height="1080"><div>2 hotkey</div></div>
+
+  <div id="root" data-composition-id="f2-hotkey" data-width="1920" data-height="1080">
+    <div id="f2-ground"></div>
+    <div id="f2-blue"></div>
+    <div id="f2-top">
+      <div id="f2-head">One hotkey. Any file.</div>
+      <div class="f2-caps" id="f2-caps-mac"><div class="f2-key" style="width:104px">&#x2325;</div><div class="f2-key" style="width:250px">Space</div><div class="f2-cap-label">macOS</div></div>
+      <div class="f2-caps" id="f2-caps-win"><div class="f2-key" style="width:150px">Ctrl</div><div class="f2-key" style="width:130px">Alt</div><div class="f2-key" style="width:250px">Space</div><div class="f2-cap-label">Windows and Linux</div></div>
+    </div>
+    <div id="f2-push">
+      <div id="f2-open">
+        <div id="f2-plate">
+          <img id="f2-rest" src="assets/captures/bar-rest-light.png" alt="">
+          <div id="f2-demos"></div>
+          <div id="f2-chip"><span class="tile"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><circle cx="10" cy="14" r="1.4"/><path d="m18 17-3-3-6 5"/></svg></span><span class="name">signature.png</span><span class="size">67 KB</span><span class="x">&#x2715;</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const tl = gsap.timeline({ paused: true });
-    window.__timelines["f2-hotkey"] = tl;
+    (() => {
+      const BEAT = 60 / 130, START = 16;
+      const at = (b) => (b - START) * BEAT;
+
+      /* constants the real captures may change */
+      const DEMO_LAST = 12;            /* demo-light-00 .. demo-light-12 (12 is the frame after Return) */
+      const TYPED_FIRST = 1;           /* first typed frame; the last typed frame is DEMO_LAST - 1 */
+      const TYPE_START = 20;           /* beat of typed frame TYPED_FIRST */
+      const TYPE_STEP = 0.25;          /* beats per typed frame (a 16th note); shrinks if more frames are captured */
+      const RETURN_BEAT = 23.5;        /* Return: cross-fade to the last frame */
+      const PUSH_START = 18, PUSH_END = 24, PUSH_SCALE = 1.06;
+      const CHIP_BEAT = 18, CHIP_LAND = 18.35, CHIP_DONE = 18.45;
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const holder = document.getElementById('f2-demos');
+      for (let k = 0; k <= DEMO_LAST; k++) {
+        const im = document.createElement('img');
+        im.id = 'f2-demo' + pad(k); im.className = 'f2-demo'; im.alt = '';
+        im.src = 'assets/captures/demo-light-' + pad(k) + '.png';
+        holder.appendChild(im);
+      }
+      const D = (k) => '#f2-demo' + pad(k);
+      const typed = DEMO_LAST - TYPED_FIRST;                     /* count of typed frames */
+      const step = Math.min(TYPE_STEP, (RETURN_BEAT - TYPE_START) / typed);
+
+      const tl = gsap.timeline({ paused: true });
+
+      /* the DROP (beat 16.0): straight wipe from the bottom edge, expo.out, done by 16.9 */
+      tl.fromTo('#f2-blue', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: at(16.9), ease: 'expo.out' }, 0);
+
+      /* keycaps are already down on the drop (fully formed at frame 0, no motion). Headline glides in, done at 16.5 */
+      tl.fromTo('#f2-head', { y: 28, opacity: 0 }, { y: 0, opacity: 1, duration: at(16.5), ease: 'expo.out' }, 0);
+
+      /* 16.5: the real bar plate opens in place */
+      tl.fromTo('#f2-open', { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: at(16.5) - at(16.1), ease: 'expo.out' }, at(16.1));
+
+      /* 17.0: keycaps cross-fade to the Windows / Linux hotkey */
+      /* A clean swap, never two rows at once: the Mac row is cut on beat 17 (a measured small hit) and the Windows and Linux row glides up into the same place. */
+      tl.set('#f2-caps-mac', { opacity: 0 }, at(17));
+      tl.fromTo('#f2-caps-win', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.2, ease: 'expo.out' }, at(17));
+
+      /* 18.0: file chip glides in from lower left onto the bar, then cross-fades into the captured frame that already shows it */
+      tl.fromTo('#f2-chip', { x: -170, y: 110, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: at(CHIP_LAND) - at(CHIP_BEAT), ease: 'expo.out' }, at(CHIP_BEAT));
+      tl.fromTo(D(0), { opacity: 0 }, { opacity: 1, duration: at(CHIP_DONE) - at(CHIP_LAND), ease: 'power1.inOut' }, at(CHIP_LAND));
+      tl.to('#f2-chip', { opacity: 0, duration: at(CHIP_DONE) - at(CHIP_LAND), ease: 'power1.inOut' }, at(CHIP_LAND));
+      tl.set('#f2-rest', { opacity: 0 }, at(CHIP_DONE));
+
+      /* slow push-in across the plate group, around the bar's centre, ending at 1.06 for frame 3 */
+      tl.fromTo('#f2-push', { scale: 1 }, { scale: PUSH_SCALE, duration: at(PUSH_END) - at(PUSH_START), ease: 'none' }, at(PUSH_START));
+
+      /* the typing: real captured frames, hard swap on each 16th note */
+      for (let k = TYPED_FIRST; k < DEMO_LAST; k++) {
+        tl.set(D(k), { opacity: 1 }, at(TYPE_START + (k - TYPED_FIRST) * step));
+      }
+
+      /* 23.5 Return: cross-fade to the last frame */
+      tl.fromTo(D(DEMO_LAST), { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'none' }, at(RETURN_BEAT));
+
+      /* camera drift on the headline and keycaps, so nothing sits fully still */
+      tl.fromTo('#f2-top', { y: 0 }, { y: -12, duration: at(24), ease: 'none' }, 0);
+
+      window.__timelines["f2-hotkey"] = tl;
+    })();
   </script>
 </template>
 </body></html>

@@ -2,11 +2,146 @@
 <html><head><meta charset="UTF-8"></head><body>
 <template>
   <style>
-    #root { position: absolute; inset: 0; background: #0c0c0f; color: #ececf1; font: 700 96px Geist, system-ui; display: grid; place-items: center; }
+    @font-face{font-family:"Geist";src:url("assets/fonts/Geist-Variable-latin.woff2") format("woff2");font-weight:100 900}
+    @font-face{font-family:"Geist Mono";src:url("assets/fonts/GeistMono-latin.woff2") format("woff2");font-weight:100 900}
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: #1d1d1f; }
+    #f4-ground { position: absolute; inset: 0; background: #2d6cdf; }
+    #f4-grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .16; mix-blend-mode: soft-light; pointer-events: none; }
+    #f4-cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
+
+    /* the real Home plate, 1500 wide at beat 40, radius 0.0105 * width */
+    #f4-plate { position: absolute; left: 210px; top: 74px; width: 1500px; height: 931px; border-radius: 15.75px; overflow: hidden;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); }
+    #f4-plate img { width: 100%; height: 100%; display: block; }
+
+    /* rebuilt search card */
+    #f4-card { position: absolute; left: 1120px; top: 372px; width: 720px; height: 652px; border-radius: 28px; background: #fff;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); overflow: hidden; }
+    #f4-field { position: absolute; left: 24px; top: 24px; width: 672px; height: 88px; border-radius: 22px; background: #eef0f3; display: flex; align-items: center; padding: 0 28px; gap: 20px; }
+    #f4-field svg { width: 38px; height: 38px; flex: none; stroke: #6b6b73; fill: none; stroke-width: 2; stroke-linecap: round; }
+    #f4-typed { position: relative; display: flex; align-items: center; font-size: 42px; font-weight: 500; letter-spacing: -0.015em; color: #1d1d1f; }
+    #f4-typed span { display: block; }
+    #f4-ph { position: absolute; left: 0; top: 0; white-space: nowrap; color: #8a8a92; font-size: 42px; font-weight: 500; letter-spacing: -0.015em; }
+    #f4-caret { display: block; width: 3px; height: 46px; border-radius: 2px; background: #0a84ff; margin-left: 3px; }
+    #f4-hl { position: absolute; left: 24px; top: 128px; width: 672px; height: 88px; border-radius: 18px; background: #dfe9fb; }
+    .f4-row { position: absolute; left: 24px; top: 128px; width: 672px; height: 88px; display: flex; align-items: center; gap: 22px; padding: 0 20px; }
+    .f4-ic { width: 56px; height: 56px; border-radius: 16px; flex: none; display: grid; place-items: center; background: color-mix(in srgb, var(--k) 16%, white); }
+    .f4-ic svg { width: 30px; height: 30px; stroke: var(--k); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .f4-nm { font-size: 34px; font-weight: 500; letter-spacing: -0.015em; line-height: 1.1; white-space: nowrap; }
+    .f4-fd { font-size: 30px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.15; color: #6b6b73; white-space: nowrap; }
+    #f4-foot { position: absolute; left: 24px; right: 24px; bottom: 20px; height: 52px; display: flex; align-items: center; }
+    #f4-ph-pill { font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 30px; letter-spacing: 0.02em; padding: 6px 20px; border-radius: 999px; background: #eef0f3; color: #54545b; border: 2px solid rgba(0,0,0,.08); line-height: 1.2; }
+
+    /* copy */
+    .f4-line { position: absolute; left: 0; right: 0; text-align: center; color: #fff; white-space: nowrap; font-weight: 700; font-size: 112px; letter-spacing: -0.04em; line-height: 0.98; }
+    #f4-l1 { top: 48px; } #f4-l2 { top: 166px; }
+    #f4-lat { position: absolute; right: 80px; top: 296px; height: 60px; padding: 0 28px; display: flex; align-items: center; justify-content: center; gap: 14px; border-radius: 999px; background: #0b1b44; color: #fff;
+      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 36px; letter-spacing: -0.01em; box-shadow: 0 10px 30px rgba(8,24,70,.35); }
+    #f4-lat i { display: block; width: 14px; height: 14px; border-radius: 50%; background: #30d158; }
+    #f4-slot { position: absolute; left: 56px; bottom: 28px; padding: 8px 18px; border-radius: 12px; background: rgba(11,27,68,.78); color: rgba(255,255,255,.88);
+      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 26px; letter-spacing: 0; line-height: 1.2; white-space: nowrap; }
   </style>
-  <div id="root" data-composition-id="f4-find" data-width="1920" data-height="1080"><div>4 find</div></div>
+  <div id="root" data-composition-id="f4-find" data-width="1920" data-height="1080">
+    <div id="f4-ground"></div>
+    <div id="f4-cam" data-layout-allow-overflow>
+      <div id="f4-plate"><img src="assets/captures/app-home-light.png" alt=""></div>
+      <div id="f4-card">
+        <div id="f4-field">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+          <div id="f4-typed"><div id="f4-ph">Search files</div><span id="f4-c1" style="opacity:0">t</span><span id="f4-c2" style="opacity:0">a</span><span id="f4-c3" style="opacity:0">x</span><span id="f4-caret"></span></div>
+        </div>
+        <div id="f4-hl"></div>
+        <div id="f4-rows" data-layout-allow-overlap></div>
+        <div id="f4-foot"><span id="f4-ph-pill">PLACEHOLDER</span></div>
+      </div>
+      <div class="f4-line" id="f4-l1">Every file on your disk.</div>
+      <div class="f4-line" id="f4-l2">Before you finish typing.</div>
+      <div id="f4-lat"><i></i><span id="f4-lat-txt"></span></div>
+    </div>
+    <img id="f4-grain" src="assets/f4-find/grain.png" alt="">
+  </div>
   <script>
+    const BEAT = 60 / 130, START = 40;
+    const at = b => (b - START) * BEAT;
+
+    const LATENCY_TEXT = "-- ms";      // placeholder: shows the measured keystroke time when instant search ships
+    const SHOW_SLOT_TAG = true;
+    const SLOT_TAG_TEXT = "SLOT 4: replace with the instant search capture";
+
+    document.getElementById('f4-lat-txt').textContent = LATENCY_TEXT;
+    if (SHOW_SLOT_TAG) {
+      const t = document.createElement('div');
+      t.id = 'f4-slot'; t.textContent = SLOT_TAG_TEXT;
+      document.getElementById('root').appendChild(t);
+    }
+
+    // generic file rows (invented names, nothing real)
+    const ICONS = {
+      pdf: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
+      img: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 9"/>',
+    };
+    const COL = { pdf: '#ff453a', img: '#bf5af2' };
+    const FILES = [
+      { n: 'Tax return 2025.pdf',    f: 'Documents / Taxes',   c: 'pdf' },   // 0
+      { n: 'Tax invoice March.pdf',  f: 'Downloads',           c: 'pdf' },   // 1
+      { n: 'Taxi receipt.png',       f: 'Pictures / Receipts', c: 'img' },   // 2
+      { n: 'Tenant agreement.pdf',   f: 'Documents / Home',    c: 'pdf' },   // 3
+      { n: 'Team photo.jpg',         f: 'Pictures / Work',     c: 'img' },   // 4
+    ];
+    // order (file index per slot) before typing, then after each letter; the dim flag marks rows that stop matching
+    const ORDERS = [
+      [4, 1, 3, 0, 2],   // before typing
+      [3, 4, 0, 2, 1],   // "t"
+      [0, 2, 3, 1, 4],   // "ta"
+      [0, 1, 2, 3, 4],   // "tax"
+    ];
+    const DIM_AT_TAX = [3, 4];
+    const ROW_H = 88;
+    const rowsEl = document.getElementById('f4-rows');
+    const rows = FILES.map((f, i) => {
+      const d = document.createElement('div');
+      d.className = 'f4-row'; d.id = 'f4-row' + i; d.style.setProperty('--k', COL[f.c]);
+      d.innerHTML = '<span class="f4-ic"><svg viewBox="0 0 24 24">' + ICONS[f.c] + '</svg></span><span><div class="f4-nm">' + f.n + '</div><div class="f4-fd">' + f.f + '</div></span>';
+      rowsEl.appendChild(d);
+      return d;
+    });
+    const slotY = (order, i) => order.indexOf(i) * ROW_H;
+
     const tl = gsap.timeline({ paused: true });
+    const land = (target, beat, from, extra = {}) =>
+      tl.fromTo(target, Object.assign({ opacity: 0 }, from), Object.assign({ opacity: 1, x: 0, y: 0, duration: 0.55, ease: 'expo.out' }, extra), at(beat) - 0.22);
+
+    // initial row positions
+    rows.forEach((r, i) => gsap.set(r, { y: slotY(ORDERS[0], i) }));
+
+    // plate: already on screen, centred, exactly as frame 3 ends. then it glides left and down.
+    tl.fromTo('#f4-plate', { x: 0, y: 0, scale: 1 }, { x: -320, y: 101, scale: 0.70, duration: 0.8, ease: 'expo.out', transformOrigin: '50% 50%' }, at(40.15));
+    // search card glides in from the right
+    tl.fromTo('#f4-card', { x: 300, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, ease: 'expo.out' }, at(40.25));
+
+    // three letters on three 16ths: 41, 41.25, 41.5
+    const TYPE = [41, 41.25, 41.5];
+    tl.set('#f4-ph', { opacity: 1 }, 0);
+    tl.set('#f4-ph', { opacity: 0 }, at(TYPE[0]));
+    ['#f4-c1', '#f4-c2', '#f4-c3'].forEach((c, k) => tl.set(c, { opacity: 1 }, at(TYPE[k])));
+
+    // the list re-sorts after each letter (0.2 s expo.out)
+    for (let k = 1; k < ORDERS.length; k++) {
+      rows.forEach((r, i) => {
+        tl.fromTo(r, { y: slotY(ORDERS[k - 1], i) }, { y: slotY(ORDERS[k], i), duration: 0.2, ease: 'expo.out' }, at(TYPE[k - 1]));
+      });
+    }
+    // rows that stop matching fade back once "tax" is typed
+    DIM_AT_TAX.forEach(i => tl.fromTo(rows[i], { opacity: 1 }, { opacity: 0.35, duration: 0.25, ease: 'expo.out' }, at(TYPE[2])));
+
+    // copy
+    land('#f4-l1', 44, { y: 40 });
+    land('#f4-l2', 46.5, { y: 40 });
+    land('#f4-lat', 46.5, { y: 18 }, { duration: 0.5 });
+
+    // slow camera drift across the scene
+    tl.fromTo('#f4-cam', { scale: 1 }, { scale: 1.025, duration: 8 * BEAT, ease: 'none' }, 0);
+
     window.__timelines["f4-find"] = tl;
   </script>
 </template>

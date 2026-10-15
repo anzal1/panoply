@@ -1,0 +1,59 @@
+{
+ "demo_frames": 13,
+ "run_frames": {
+  "dark": 6,
+  "light": 6
+ },
+ "plates": [
+  "app-home-dark.png",
+  "app-pdf-dark.png",
+  "bar-consent-dark.png",
+  "bar-options-dark.png",
+  "bar-pdf-dark.png",
+  "bar-rest-dark.png",
+  "bar-result-dark.png",
+  "bar-words-dark.png",
+  "demo-dark-00.png",
+  "demo-dark-01.png",
+  "demo-dark-02.png",
+  "demo-dark-03.png",
+  "demo-dark-04.png",
+  "demo-dark-05.png",
+  "demo-dark-06.png",
+  "demo-dark-07.png",
+  "demo-dark-08.png",
+  "demo-dark-09.png",
+  "demo-dark-10.png",
+  "demo-dark-11.png",
+  "demo-dark-12.png",
+  "app-home-light.png",
+  "app-pdf-light.png",
+  "bar-consent-light.png",
+  "bar-options-light.png",
+  "bar-pdf-light.png",
+  "bar-rest-light.png",
+  "bar-result-light.png",
+  "bar-words-light.png",
+  "demo-light-00.png",
+  "demo-light-01.png",
+  "demo-light-02.png",
+  "demo-light-03.png",
+  "demo-light-04.png",
+  "demo-light-05.png",
+  "demo-light-06.png",
+  "demo-light-07.png",
+  "demo-light-08.png",
+  "demo-light-09.png",
+  "demo-light-10.png",
+  "demo-light-11.png",
+  "demo-light-12.png"
+ ],
+ "run_frames_raw": {
+  "dark": 20,
+  "light": 23
+ },
+ "demo_frames_raw": {
+  "dark": 13,
+  "light": 13
+ }
+}

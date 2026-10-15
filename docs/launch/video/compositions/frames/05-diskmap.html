@@ -2,11 +2,255 @@
 <html><head><meta charset="UTF-8"></head><body>
 <template>
   <style>
-    #root { position: absolute; inset: 0; background: #0c0c0f; color: #ececf1; font: 700 96px Geist, system-ui; display: grid; place-items: center; }
+    @font-face{font-family:"Geist";src:url("assets/fonts/Geist-Variable-latin.woff2") format("woff2");font-weight:100 900}
+    @font-face{font-family:"Geist Mono";src:url("assets/fonts/GeistMono-latin.woff2") format("woff2");font-weight:100 900}
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: #1d1d1f; }
+    #f5-ground { position: absolute; inset: 0; background: #2d6cdf; }
+    #f5-grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .16; mix-blend-mode: soft-light; pointer-events: none; }
+    #f5-cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
+    .f5-line { position: absolute; left: 0; right: 0; top: 62px; text-align: center; color: #fff; white-space: nowrap; font-weight: 700; font-size: 112px; letter-spacing: -0.04em; line-height: 0.98; }
+
+    #f5-cardwrap { position: absolute; left: 260px; top: 240px; width: 1400px; height: 760px; border-radius: 28px;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); }
+    #f5-card { position: absolute; inset: 0; border-radius: 28px; background: #fff; overflow: hidden; }
+    #f5-zoom { position: absolute; inset: 0; }
+
+    #f5-head { position: absolute; left: 32px; top: 28px; width: 1336px; height: 64px; display: flex; align-items: center; }
+    #f5-disk { width: 52px; height: 52px; border-radius: 14px; background: #e3e5ea; display: grid; place-items: center; flex: none; margin-right: 18px; }
+    #f5-disk i { display: block; width: 26px; height: 8px; border-radius: 4px; background: #9a9ca6; }
+    #f5-name { font-size: 46px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+    #f5-spacer { flex: 1; }
+    #f5-freedchip { font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 34px; color: #1c8a3f; background: rgba(48,209,88,.16); border-radius: 999px; padding: 6px 22px; margin-right: 28px; font-variant-numeric: tabular-nums; opacity: 0; white-space: nowrap; }
+    #f5-usedtxt { font-size: 36px; font-weight: 500; letter-spacing: -0.015em; color: #5a5a62; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    #f5-usedtxt b { font-weight: 700; color: #1d1d1f; }
+
+    #f5-bar { position: absolute; left: 32px; top: 108px; width: 1336px; height: 32px; border-radius: 12px; background: #e9eaee; overflow: hidden; }
+    #f5-usedstrip { position: absolute; left: 0; top: 0; bottom: 0; display: flex; gap: 2px; clip-path: inset(0% 0% 0% 0%); }
+    #f5-usedstrip i { display: block; height: 100%; }
+    #f5-freedstrip { position: absolute; top: 0; bottom: 0; background: #30d158; clip-path: inset(0% 100% 0% 0%); }
+
+    #f5-map { position: absolute; left: 32px; top: 168px; width: 1336px; height: 560px; }
+    .f5-r { position: absolute; border-radius: 10px; overflow: hidden; }
+    .f5-lab { position: absolute; left: 14px; top: 10px; right: 10px; font-size: 30px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.12; }
+    .f5-lab small { display: block; font-size: 30px; font-weight: 500; opacity: .85; letter-spacing: -0.01em; }
+    #f5-kids { position: absolute; background: #fff; border-radius: 10px; overflow: hidden; opacity: 0; }
+    .f5-k { position: absolute; border-radius: 10px; overflow: hidden; color: rgba(10,20,40,.9); }
+    .f5-k .f5-lab { font-size: 16px; left: 8px; top: 6px; }
+    .f5-k .f5-lab small { font-size: 16px; }
+    #f5-ring { position: absolute; inset: 0; border-radius: 10px; border: 3px solid #0b1b44; opacity: 0; }
+
+    #f5-sheet { position: absolute; left: 320px; top: 215px; width: 760px; height: 330px; border-radius: 28px; background: #fff; opacity: 0;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 28px 80px rgba(10,20,50,.32); }
+    #f5-sheet .ic { position: absolute; left: 40px; top: 40px; width: 76px; height: 76px; border-radius: 22px; background: rgba(255,69,58,.14); display: grid; place-items: center; }
+    #f5-sheet .ic svg { width: 40px; height: 40px; stroke: #ff453a; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+    #f5-sheet .t { position: absolute; left: 140px; top: 40px; right: 36px; font-size: 44px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+    #f5-sheet .s { position: absolute; left: 140px; top: 100px; right: 36px; font-size: 32px; font-weight: 500; color: #5a5a62; letter-spacing: -0.015em; line-height: 1.25; }
+    #f5-sheet .btn { position: absolute; bottom: 36px; height: 76px; border-radius: 20px; display: grid; place-items: center; font-size: 34px; font-weight: 600; letter-spacing: -0.015em; }
+    #f5-sheet .ghost { right: 322px; width: 220px; background: #eef0f3; color: #1d1d1f; }
+    #f5-sheet .pri { right: 40px; width: 262px; background: #0a84ff; color: #fff; }
+
+    #f5-slot { position: absolute; left: 56px; bottom: 28px; padding: 8px 18px; border-radius: 12px; background: rgba(11,27,68,.78); color: rgba(255,255,255,.88);
+      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 26px; line-height: 1.2; white-space: nowrap; }
   </style>
-  <div id="root" data-composition-id="f5-diskmap" data-width="1920" data-height="1080"><div>5 diskmap</div></div>
+  <div id="root" data-composition-id="f5-diskmap" data-width="1920" data-height="1080">
+    <div id="f5-ground"></div>
+    <div id="f5-cam" data-layout-allow-overflow>
+      <div class="f5-line" id="f5-title">See what is eating your space.</div>
+      <div id="f5-cardwrap">
+        <div id="f5-card" data-layout-allow-occlusion>
+          <div id="f5-zoom" data-layout-allow-overflow data-layout-allow-overlap data-layout-allow-occlusion>
+            <div id="f5-head">
+              <span id="f5-disk"><i></i></span><span id="f5-name">Macintosh HD</span><span id="f5-spacer"></span>
+              <span id="f5-freedchip"></span>
+              <span id="f5-usedtxt"><b id="f5-used"></b> GB used of 500 GB</span>
+            </div>
+            <div id="f5-bar"><div id="f5-usedstrip"></div><div id="f5-freedstrip"></div></div>
+            <div id="f5-map"></div>
+          </div>
+          <div id="f5-sheet" data-layout-allow-overlap>
+            <div class="ic"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6 7l1 12.5h10L18 7"/><path d="M10 11v5M14 11v5"/></svg></div>
+            <div class="t" id="f5-sheet-t"></div>
+            <div class="s">You can put it back from the Trash.</div>
+            <div class="btn ghost">Cancel</div>
+            <div class="btn pri">Move to Trash</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <img id="f5-grain" src="assets/f5-diskmap/grain.png" alt="">
+  </div>
   <script>
+    const BEAT = 60 / 130, START = 48;
+    const at = b => (b - START) * BEAT;
+
+    const SHOW_SLOT_TAG = true;
+    const SLOT_TAG_TEXT = "SLOT 5: replace with the disk map capture";
+    // PLACEHOLDER: the freed number. The real value comes from the scan and trash run on the demo machine.
+    const FREED = "38 GB";
+    const FREED_GB = parseInt(FREED, 10);
+    const USED_GB = 412, DISK_GB = 500;   // placeholder disk numbers, same status as FREED
+
+    if (SHOW_SLOT_TAG) {
+      const t = document.createElement('div');
+      t.id = 'f5-slot'; t.setAttribute('data-layout-allow-occlusion', ''); t.setAttribute('data-layout-allow-overlap', ''); t.textContent = SLOT_TAG_TEXT;
+      document.getElementById('root').appendChild(t);
+    }
+
+    // ---- seeded data: the biggest folder is the sum of its children, the largest child is the freed one
+    let seed = 20261014;
+    const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+    const KIDS = [
+      { n: 'Raw footage', v: FREED_GB, a: .92 }, { n: 'Exports', v: 11, a: .78 }, { n: 'Proxies', v: 6, a: .66 },
+      { n: 'Trips', v: 3, a: .54 }, { n: 'Old', v: 2, a: .44 },
+    ];
+    const PARENT = KIDS.reduce((a, k) => a + k.v, 0);
+    const OTHERS_TOTAL = USED_GB - PARENT, CAP = Math.floor(PARENT * 0.62);
+    let vals = Array.from({ length: 21 }, () => 0.22 + Math.pow(rnd(), 2.2));
+    for (let it = 0; it < 8; it++) {
+      const sum = vals.reduce((a, b) => a + b, 0);
+      vals = vals.map(v => Math.min(CAP, Math.max(3, v * OTHERS_TOTAL / sum)));
+    }
+    vals = vals.map(Math.round).sort((a, b) => b - a);
+    vals[1] += OTHERS_TOTAL - vals.reduce((a, b) => a + b, 0);   // exact total
+    const ORDER = [  // rank order, big to small
+      ['Applications', 'files'], ['Photos Library', 'image'], ['Developer', 'files'], ['Backups', 'files'], ['Screen recordings', 'video'],
+      ['Scanned documents', 'pdf'], ['Downloads', 'files'], ['Music', 'files'], ['Camera uploads', 'image'], ['Drone clips', 'video'],
+      ['Mail', 'files'], ['Design exports', 'image'], ['Manuals', 'pdf'], ['Video exports', 'video'], ['Wallpapers', 'image'],
+      ['Invoices', 'pdf'], ['Screenshots', 'image'], ['Paper archive', 'pdf'], ['ID scans', 'id'], ['Passport photos', 'id'], ['Forms', 'id'],
+    ];
+    const items = [{ n: 'Movies', c: 'video', v: PARENT }].concat(vals.map((v, i) => ({ n: ORDER[i][0], c: ORDER[i][1], v })));
+    const CAT = { pdf: [255, 69, 58], image: [191, 90, 242], video: [255, 120, 40], id: [255, 159, 10], files: [26, 132, 243] };
+    const INK = { pdf: '#fff', image: '#fff', files: '#fff', video: 'rgba(10,20,40,.9)', id: 'rgba(10,20,40,.9)' };
+
+    function squarify(list, x, y, w, h) {
+      const total = list.reduce((a, b) => a + b.v, 0), sc = w * h / total;
+      let rest = list.map(it => Object.assign({}, it, { a: it.v * sc }));
+      const out = []; let rx = x, ry = y, rw = w, rh = h;
+      const worst = (row, side) => {
+        const s = row.reduce((a, b) => a + b.a, 0);
+        let mx = 0, mn = 1e18; row.forEach(r => { mx = Math.max(mx, r.a); mn = Math.min(mn, r.a); });
+        return Math.max(side * side * mx / (s * s), s * s / (side * side * mn));
+      };
+      while (rest.length) {
+        const side = Math.min(rw, rh); const row = [rest[0]]; let i = 1;
+        while (i < rest.length && worst(row.concat(rest[i]), side) <= worst(row, side)) { row.push(rest[i]); i++; }
+        const s = row.reduce((a, b) => a + b.a, 0);
+        if (rw >= rh) { const cw = s / rh; let cy = ry; row.forEach(r => { const ch = r.a / cw; out.push(Object.assign({}, r, { x: rx, y: cy, w: cw, h: ch })); cy += ch; }); rx += cw; rw -= cw; }
+        else { const chh = s / rw; let cx = rx; row.forEach(r => { const cw2 = r.a / chh; out.push(Object.assign({}, r, { x: cx, y: ry, w: cw2, h: chh })); cx += cw2; }); ry += chh; rh -= chh; }
+        rest = rest.slice(row.length);
+      }
+      return out;
+    }
+
+    const MAP_W = 1336, MAP_H = 560, MAP_X = 32, MAP_Y = 168;
+    const rects = squarify(items, 0, 0, MAP_W, MAP_H);
+    const mapEl = document.getElementById('f5-map');
+    const rectEls = rects.map((r, i) => {
+      const [R, G, B] = CAT[r.c];
+      const d = document.createElement('div');
+      d.className = 'f5-r'; d.id = 'f5-r' + i; d.setAttribute('data-layout-allow-occlusion', '');
+      d.style.cssText = `left:${(r.x + 1).toFixed(2)}px;top:${(r.y + 1).toFixed(2)}px;width:${(r.w - 2).toFixed(2)}px;height:${(r.h - 2).toFixed(2)}px;background:rgba(${R},${G},${B},.85);color:${INK[r.c]}`;
+      if (r.w > 200 && r.h > 112) d.innerHTML = `<div class="f5-lab" id="f5-lab${i}" data-layout-allow-occlusion>${r.n}<small data-layout-allow-occlusion>${r.v} GB</small></div>`;
+      mapEl.appendChild(d);
+      return d;
+    });
+
+    // the biggest rectangle (index 0) splits into its folders
+    const P = rects[0];
+    const kidsEl = document.createElement('div');
+    kidsEl.id = 'f5-kids';
+    kidsEl.style.cssText = `left:${(P.x + 1).toFixed(2)}px;top:${(P.y + 1).toFixed(2)}px;width:${(P.w - 2).toFixed(2)}px;height:${(P.h - 2).toFixed(2)}px`;
+    mapEl.appendChild(kidsEl);
+    const kidRects = squarify(KIDS, 0, 0, P.w - 2, P.h - 2);
+    const kidEls = kidRects.map((k, i) => {
+      const d = document.createElement('div');
+      d.className = 'f5-k'; d.id = 'f5-k' + i;
+      d.style.cssText = `left:${(k.x + 1).toFixed(2)}px;top:${(k.y + 1).toFixed(2)}px;width:${(k.w - 2).toFixed(2)}px;height:${(k.h - 2).toFixed(2)}px;background:rgba(255,120,40,${k.a})`;
+      d.innerHTML = (k.w > 40 && k.h > 40 ? `<div class="f5-lab">${k.n}<small>${k.v} GB</small></div>` : '') + (i === 0 ? '<div id="f5-ring"></div>' : '');
+      kidsEl.appendChild(d);
+      return d;
+    });
+
+    // ---- disk bar
+    const catTotals = {}; items.forEach(it => { catTotals[it.c] = (catTotals[it.c] || 0) + it.v; });
+    const strip = document.getElementById('f5-usedstrip');
+    strip.style.width = (USED_GB / DISK_GB * 100) + '%';
+    ['pdf', 'image', 'id', 'files', 'video'].forEach(c => {
+      const [R, G, B] = CAT[c], s = document.createElement('i');
+      s.style.cssText = `flex:${catTotals[c]} 1 0;background:rgba(${R},${G},${B},.85)`;
+      strip.appendChild(s);
+    });
+    const freedStrip = document.getElementById('f5-freedstrip');
+    freedStrip.style.left = ((USED_GB - FREED_GB) / DISK_GB * 100) + '%';
+    freedStrip.style.width = (FREED_GB / DISK_GB * 100) + '%';
+    document.getElementById('f5-used').textContent = USED_GB;
+    document.getElementById('f5-freedchip').textContent = '0 GB freed';
+    document.getElementById('f5-sheet-t').textContent = `Move ${FREED} to the Trash?`;
+
+    // ---- camera zoom target: the biggest rectangle, about 2.2x (limited so it always fits the card)
+    const CARD_W = 1400, CARD_H = 760;
+    const RX = MAP_X + P.x + P.w / 2, RY = MAP_Y + P.y + P.h / 2;
+    // camera: scale about the card origin and pan so the rectangle is centred, clamped so the card is never left empty
+    const ZOOM = Math.min(2.2, 0.9 * CARD_W / P.w, 0.9 * CARD_H / P.h);
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const ZX = clamp(CARD_W / 2 - ZOOM * RX, CARD_W * (1 - ZOOM), 0);
+    const ZY = clamp(CARD_H / 2 - ZOOM * RY, CARD_H * (1 - ZOOM), 0);
+    gsap.set('#f5-zoom', { transformOrigin: '0px 0px' });
+
     const tl = gsap.timeline({ paused: true });
+    const land = (target, beat, from, extra = {}) =>
+      tl.fromTo(target, Object.assign({ opacity: 0 }, from), Object.assign({ opacity: 1, x: 0, y: 0, duration: 0.55, ease: 'expo.out' }, extra), at(beat) - 0.22);
+
+    // card sits centred until the line arrives, then glides down to make room
+    gsap.set('#f5-cardwrap', { y: -80 });
+    gsap.set('#f5-title', { opacity: 0 });
+    tl.fromTo('#f5-cardwrap', { y: -80 }, { y: 0, duration: 0.6, ease: 'expo.out' }, at(54) - 0.3);
+    land('#f5-title', 54, { y: 40 });
+
+    // 48.0 to 49.9: 22 rectangles grow from their corners on 8ths (four slots, expo.out 0.4 s each)
+    const slots = [48, 48.5, 49, 49.5];
+    rectEls.forEach((el, i) => {
+      const r = rects[i], cx = MAP_W / 2, cy = MAP_H / 2;
+      const ox = (r.x + r.w / 2) < cx ? '100%' : '0%', oy = (r.y + r.h / 2) < cy ? '100%' : '0%';  // corner nearest the map centre
+      const slot = Math.min(3, Math.floor(i / 5.5)), within = i - Math.ceil(slot * 5.5);
+      tl.fromTo(el, { scale: 0, opacity: 0, transformOrigin: `${ox} ${oy}` }, { scale: 1, opacity: 1, duration: 0.4, ease: 'expo.out', transformOrigin: `${ox} ${oy}` }, at(slots[slot]) + Math.max(0, within) * 0.035);
+    });
+
+    // 50.0 camera drills into the biggest rectangle, which splits into its folders
+    tl.fromTo('#f5-zoom', { scale: 1, x: 0, y: 0 }, { scale: ZOOM, x: ZX, y: ZY, duration: 0.7, ease: 'expo.out' }, at(50));
+    tl.fromTo('#f5-lab0', { opacity: 1 }, { opacity: 0, duration: 0.2, ease: 'power3.in' }, at(50.1));
+    tl.fromTo('#f5-kids', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'expo.out' }, at(50.25));
+    kidEls.forEach((el, i) => {
+      const k = kidRects[i], ox = i % 2 ? '100%' : '0%', oy = i < 2 ? '0%' : '100%';
+      tl.fromTo(el, { scale: 0.9, opacity: 0, transformOrigin: `${ox} ${oy}` }, { scale: 1, opacity: 1, duration: 0.45, ease: 'expo.out', transformOrigin: `${ox} ${oy}` }, at(50.25) + i * 0.06);
+    });
+    // the folder about to go gets a ring
+    tl.fromTo('#f5-ring', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'expo.out' }, at(51.3));
+
+    // the folder labels are only legible while zoomed in, so they leave as the camera pulls back
+    tl.fromTo('.f5-k .f5-lab', { opacity: 1 }, { opacity: 0, duration: 0.25, ease: 'power3.in', immediateRender: false }, at(52.6));
+
+    // 52.0 trash confirm sheet glides in
+    land('#f5-sheet', 52, { y: -40 }, { duration: 0.5 });
+    // 52.5 sheet leaves, the folder dissolves (opacity, scale down 4 percent)
+    tl.fromTo('#f5-sheet', { opacity: 1, y: 0 }, { opacity: 0, y: 12, duration: 0.3, ease: 'power3.in', immediateRender: false }, at(52.5));
+    tl.fromTo(kidEls[0], { opacity: 1, scale: 1, transformOrigin: '50% 50%' }, { opacity: 0, scale: 0.96, duration: 0.4, ease: 'power3.in', transformOrigin: '50% 50%', immediateRender: false }, at(52.5));
+    // camera eases back out to the whole disk
+    tl.fromTo('#f5-zoom', { scale: ZOOM, x: ZX, y: ZY }, { scale: 1, x: 0, y: 0, duration: 0.75, ease: 'expo.out', immediateRender: false }, at(52.6));
+    // the freed number counts up, the used number counts down, the bar gives the space back
+    const st = { used: USED_GB, freed: 0 };
+    const usedEl = document.getElementById('f5-used'), freedEl = document.getElementById('f5-freedchip');
+    tl.fromTo('#f5-freedchip', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'expo.out' }, at(52.8));
+    tl.to(st, { used: USED_GB - FREED_GB, freed: FREED_GB, duration: 0.8, ease: 'power2.out', onUpdate() {
+      usedEl.textContent = Math.round(st.used);
+      freedEl.textContent = Math.round(st.freed) + ' GB freed';
+    } }, at(52.8));
+    tl.fromTo('#f5-usedstrip', { clipPath: 'inset(0% 0% 0% 0%)' }, { clipPath: `inset(0% ${(FREED_GB / USED_GB * 100).toFixed(3)}% 0% 0%)`, duration: 0.8, ease: 'power2.out' }, at(52.8));
+    tl.fromTo('#f5-freedstrip', { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.8, ease: 'power2.out' }, at(52.8));
+
+    // slow camera drift over the whole scene
+    tl.fromTo('#f5-cam', { scale: 1 }, { scale: 1.02, duration: 8 * BEAT, ease: 'none' }, 0);
+
     window.__timelines["f5-diskmap"] = tl;
   </script>
 </template>
