@@ -80,6 +80,42 @@ fn control_for(spec: &OptionSpec) -> Control {
     }
 }
 
+/// The option that decides what a tool does, or that a tool cannot run without, in the order they
+/// should be asked. They are always shown, ahead of format, quality and the rest, so a person never
+/// has to open "More options" to say which country, which area, how big or which pages.
+const PINNED: &[&str] = &[
+    "country",
+    "own_content",
+    "rect",
+    "mask",
+    "to",
+    "result",
+    "target",
+    "mode",
+    "scale",
+    "longest",
+    "width",
+    "height",
+    "percent",
+    "under",
+    "under_mb",
+    "max_size",
+    "max_kb",
+    "keep",
+    "remove",
+    "every",
+    "ranges",
+    "drop",
+    "extract",
+    "action",
+    "preset",
+    "languages",
+];
+
+fn pin_index(key: &str) -> usize {
+    PINNED.iter().position(|k| *k == key).unwrap_or(usize::MAX)
+}
+
 /// Options people reach for first, and options that are rarely touched. The manifest keeps
 /// options in a sorted map, so the order has to come from what the names say.
 fn priority(key: &str) -> u8 {
@@ -137,7 +173,7 @@ impl Form {
                 default: spec.default.clone(),
             })
             .collect();
-        fields.sort_by_key(|f| (priority(&f.key), rank(&f.control)));
+        fields.sort_by_key(|f| (pin_index(&f.key), priority(&f.key), rank(&f.control)));
         Form {
             manifest: manifest.clone(),
             fields,
@@ -352,7 +388,11 @@ pub fn display(control: &Control, v: Option<&Value>) -> String {
 
 /// "under_size" reads as "under size"; everything else stays as the manifest wrote it.
 pub fn humanize_value(v: &str) -> String {
-    v.replace('_', " ")
+    match v {
+        // "Os" in a segmented control is not a word. The engine the system itself provides.
+        "os" => "System".to_string(),
+        _ => v.replace('_', " "),
+    }
 }
 
 /// A JSON number that prints as an integer when it is one.
@@ -484,8 +524,47 @@ default = false
         let chips = f.chips_with_defaults(3);
         assert_eq!(chips[0], ("Limit".to_string(), "50KB".to_string()));
         assert_eq!(humanize_value("under_size"), "under size");
+        assert_eq!(humanize_value("os"), "System");
         assert_eq!(chips.len(), 3);
         assert!(chips.iter().any(|(l, v)| l == "Mode" && v == "fast"));
+    }
+
+    #[test]
+    fn the_option_a_tool_cannot_run_without_is_never_folded_away() {
+        let c = crate::catalog::Catalog::with_dirs(&[]);
+        let must_show: &[(&str, &[&str])] = &[
+            ("id.passport_photo", &["country"]),
+            ("image.erase", &["rect"]),
+            ("image.remove_watermark", &["own_content", "rect"]),
+            ("image.remove_background", &["result"]),
+            ("image.resize", &["mode", "longest"]),
+            ("image.upscale", &["scale"]),
+            ("image.compress", &["target", "max_size"]),
+            ("image.convert", &["to"]),
+            ("media.trim", &["keep"]),
+            ("media.compress", &["under"]),
+            ("pdf.compress", &["target", "under_mb"]),
+            ("pdf.split", &["mode", "every"]),
+            ("pdf.organize", &["keep", "delete"]),
+        ];
+        for (id, keys) in must_show {
+            let t = c
+                .tools()
+                .iter()
+                .find(|t| t.id == *id)
+                .unwrap_or_else(|| panic!("no tool {id}"));
+            let f = Form::from_manifest(&t.manifest);
+            for k in *keys {
+                assert!(
+                    f.primary().iter().any(|p| p.key == *k),
+                    "{id}: {k} is folded under More options, primary is {:?}",
+                    f.primary()
+                        .iter()
+                        .map(|p| p.key.as_str())
+                        .collect::<Vec<_>>()
+                );
+            }
+        }
     }
 
     #[test]
