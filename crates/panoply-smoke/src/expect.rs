@@ -120,6 +120,12 @@ pub const RULES: &[Rule] = &[
         },
     },
     Rule {
+        id: "too much text for a QR code",
+        says: "too much text for one QR code",
+        why: "A QR code holds about 2,900 characters at most. A line longer than that (an SVG or a document handed over as text) cannot be one code, and the message names the line and says to shorten it.",
+        when: |s| s.module == "image.qr_code",
+    },
+    Rule {
         id: "too large or too small to upscale",
         says: "",
         why: "Upscaling a picture that is already large would not help and would not fit the memory limit, and upscaling one that is already sharp gains little.",
