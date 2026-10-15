@@ -39,7 +39,7 @@
     .win .lines i{display:block;height:14px;border-radius:7px;background:rgba(128,128,140,.3);margin-top:14px}
     .win .two{display:flex;gap:14px}
 
-    #tz-scrim{background:radial-gradient(ellipse 62% 58% at 50% 50%,rgba(12,12,15,.97) 0%,rgba(12,12,15,.93) 55%,rgba(12,12,15,.30) 100%)}
+    #tz-scrim{background:radial-gradient(ellipse 62% 58% at 50% 50%,rgba(12,12,15,1) 0%,rgba(12,12,15,1) 62%,rgba(12,12,15,.30) 100%)}
     #tz-deep{background:#0c0c0f;opacity:0}
     #tz-pwords{position:absolute;left:0;right:0;top:50%;margin-top:-190px;height:380px;text-align:center;font-size:184px}
     #tz-pwords .row{display:block;height:190px;line-height:190px;white-space:nowrap}
@@ -101,9 +101,9 @@
     #tz-mtitle{position:absolute;left:36px;top:30px;font-size:36px;line-height:44px;font-weight:700;letter-spacing:-0.025em}
     #tz-mhead{position:absolute;left:36px;top:104px;height:48px;font-size:34px;line-height:48px;color:#54545b;white-space:nowrap;letter-spacing:-0.012em}
     #tz-mhead .hl{display:inline-block;height:48px;padding:0 10px;margin:0 -10px;border-radius:12px;background:rgba(10,132,255,0)}
-    #tz-mhead .rb{display:inline-block;height:48px;overflow:hidden;vertical-align:top}
-    #tz-mhead .rc{display:block}
-    #tz-mhead .rc i{display:block;height:48px;font-style:normal}
+    #tz-mhead .sw{display:inline-grid;font-variant-numeric:tabular-nums}
+    #tz-mhead .sw i{grid-area:1/1;font-style:normal}
+    #tz-mhead .sw i+i{opacity:0}
     #tz-mrule{position:absolute;left:0;right:0;top:172px;height:1px;background:rgba(0,0,0,.08)}
     #tz-mlist{position:absolute;left:0;top:173px;width:1120px;height:527px;overflow:hidden}
     #tz-mscroll{position:absolute;left:0;top:0;width:1120px;height:3780px}
@@ -198,7 +198,7 @@
         <div id="tz-fan"></div>
         <div id="tz-mwin">
           <div id="tz-mtitle">Modules</div>
-          <div id="tz-mhead"><span class="hl" id="tz-mhl"><span class="rb"><span class="rc" id="tz-r1"><i>31</i><i>32</i></span></span> installed, <span class="rb"><span class="rc" id="tz-r2"><i>0</i><i>1</i></span></span> from the community.</span></div>
+          <div id="tz-mhead"><span class="hl" id="tz-mhl"><span class="sw" id="tz-r1"><i>31</i><i>32</i></span> installed, <span class="sw" id="tz-r2"><i>0</i><i>1</i></span> from the community.</span></div>
           <div id="tz-mrule"></div>
           <div id="tz-mlist"><div id="tz-mscroll"></div></div>
         </div>
@@ -328,7 +328,7 @@
       const entering = [1, 4, 6, 7, 10, 11, 13, 16];         // one per half beat, beats 0.5 to 4.0
       entering.forEach((wi, n) => enter(wins[wi], at(0.5 + n * 0.5) - F, { y: 26, s: 1.05 }));
       /* the wall drifts and then freezes with the music at beat 4.39 */
-      /* the scrim is at full strength from frame 0: its centre (.97) holds the words, no window text shows through */
+      /* the scrim is at full strength from frame 0: its centre is solid (1.0) under the words, no window text shows through */
       tl.fromTo('#tz-wall', { scale: 1, x: 0 }, { scale: 1.035, x: -26, duration: at(4.39), ease: 'power1.out' }, 0);
 
       /* the four words on beats 0, 1, 2, 3 (Upload. is already down on frame 0) */
@@ -427,9 +427,10 @@
       /* ONE monotone count, 1 to tools.count, ending exactly on beat 15 (the strongest hit); never below the cards on screen */
       land('#tz-count', 14, { y: 30 });
       /* one counter, one tween: 2 on beat 14, then 3, 4, 5 as the cards land (14.25, 14.5, 14.75), then 5 to tools.count, locked on beat 15 */
-      const cnt2 = $('tz-cnt2'), cp = { p: 0 };
-      const cval = p => p <= 0.75 ? 2 + 3 * (p / 0.75) : 5 + (TOTAL - 5) * (1 - Math.pow(1 - (p - 0.75) / 0.25, 2));
-      tl.to(cp, { p: 1, duration: at(15) - at(14), ease: 'none', onUpdate: () => { cnt2.textContent = String(Math.round(cval(cp.p))); } }, at(14));
+      const cnt2 = $('tz-cnt2'), cp = { p: 0 }, RAMP = 0.4;
+      const cval = t => t < at(14.25) ? 2 : t < at(14.5) ? 3 : t < at(14.75) ? 4 : t < at(15) ? 5 : 5 + (TOTAL - 5) * (1 - Math.pow(1 - Math.min(1, (t - at(15)) / RAMP), 2));
+      /* the number follows the cards on screen: 2, 3, 4, 5 as the first five land, then it runs up WITH the ripple and locks 0.4 s after beat 15, when the cards are in */
+      tl.to(cp, { p: 1, duration: at(15) + RAMP - at(14), ease: 'none', onUpdate: () => { cnt2.textContent = String(Math.round(cval(at(14) + cp.p * (at(15) + RAMP - at(14))))); } }, at(14));
 
       /* categories, listed at the left, light in a quick row from the 16.5 hit */
       const cats = $('tz-cats');
@@ -472,27 +473,27 @@
       const WC_CY = 335 + 173 + (mrows.length * RPITCH - SCROLL_END) + 50;   /* page y of its tile centre */
 
       land('#tz-mwin', 18.25, { x: 150, y: 0, dur: 0.45 });
-      /* folder AND the three file chips land together on 18.5, all three readable; then they drop in on 19, 19.5 and 20 */
-      tl.fromTo('#tz-fold', { y: 40 }, { y: 0, duration: 0.4, ease: XO }, at(18.5) - F);
-      tl.fromTo('#tz-fold', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: P1O }, at(18.5) - F);   /* fully there in 0.1 s so the three names can be read */
+      /* folder AND the three file chips land together on 18.1, all three readable; then each drops so it LANDS on 19, 19.5 and 20 */
+      tl.fromTo('#tz-fold', { y: 40 }, { y: 0, duration: 0.4, ease: XO }, at(18.1) - F);
+      tl.fromTo('#tz-fold', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: P1O }, at(18.1) - F);   /* fully there in 0.1 s so the three names can be read */
       const chipIn = (id, b, n, top) => {
-        tl.fromTo(id, { y: 0 }, { y: 108 - top, duration: 0.3, ease: 'power2.in' }, at(b));   /* leaves ON the beat, ends behind the folder's front */
-        tl.set('#tz-fc' + n, { opacity: 1 }, at(b) + 0.2);
-        tl.set('#tz-fc' + (n - 1), { opacity: 0 }, at(b) + 0.2);
+        tl.fromTo(id, { y: 0 }, { y: 108 - top, duration: 0.18, ease: 'power2.in' }, at(b) - 0.18);   /* accelerates in, ends behind the folder's front exactly ON the beat */
+        tl.set('#tz-fc' + n, { opacity: 1 }, at(b));
+        tl.set('#tz-fc' + (n - 1), { opacity: 0 }, at(b));
       };
       chipIn('#tz-c1', 19, 1, -108); chipIn('#tz-c2', 19.5, 2, -176); chipIn('#tz-c3', 20, 3, -244);
       /* the list slides to its end (a fast scroll, softened by a short blur), the folder follows into the new row, which lands last on 21.1 */
       tl.fromTo('#tz-mscroll', { y: 0 }, { y: -SCROLL_END, duration: at(21.1) - at(20.3), ease: 'power2.inOut' }, at(20.3));
       tl.fromTo('#tz-mscroll', { filter: 'blur(0px)' }, { filter: 'blur(8px)', duration: 0.12, ease: 'power1.in', immediateRender: false }, at(20.3));
       tl.to('#tz-mscroll', { filter: 'blur(0px)', duration: at(21.1) - at(20.3) - 0.12, ease: 'power2.out' }, at(20.3) + 0.12);
-      tl.to('#tz-fold .front b, #tz-fold .front span', { opacity: 0, duration: 0.15, ease: 'none' }, at(20.5));
-      tl.to('#tz-fold', { x: 834 - 395, y: WC_CY - (680 + 145), scale: 0.2, duration: 0.5, ease: XO }, at(20.5));
+      tl.to('#tz-fold .front b, #tz-fold .front span', { opacity: 0, duration: 0.15, ease: 'none' }, at(20.35));
+      tl.to('#tz-fold', { x: 834 - 395, y: WC_CY - (680 + 145), scale: 0.2, duration: 0.45, ease: XO }, at(20.35));
       out('#tz-fold', 21.1);
       /* the new row lands and both header numbers flip on the same beat (21.1) */
       enter('#tz-mwc', at(21.1), { x: -20, y: 0, dur: 0.4 });
       tl.to('#tz-mwc .rowbg', { backgroundColor: 'rgba(10,132,255,0.10)', duration: 0.25, ease: P1O }, at(21.1));
-      tl.to('#tz-r1', { y: -48, duration: 0.4, ease: XO }, at(21.1));
-      tl.to('#tz-r2', { y: -48, duration: 0.4, ease: XO }, at(21.1));
+      /* the two numbers swap in place on the beat, no rolling half digits */
+      ['#tz-r1', '#tz-r2'].forEach(id => { tl.set(id + ' i:first-child', { opacity: 0 }, at(21.1)); tl.set(id + ' i:last-child', { opacity: 1 }, at(21.1)); });
       tl.to('#tz-mhl', { backgroundColor: 'rgba(10,132,255,0.14)', duration: 0.25, ease: P1O }, at(21.1));
       out('#tz-fan', 21.6);
       tl.to('#tz-mwin', { x: -360, duration: 0.5, ease: XO }, at(21.6));
@@ -502,7 +503,7 @@
       /* ============================================================ 5. THE WALL, beats 24 to 28 */
       const w2 = $('tz-wall2');
       const TW = 324, TH = 270, TGX = 24, TX0 = 102, TY0 = 340;
-      const tileTimes = Array.from({ length: 10 }, (_, n) => 24 + n * 0.2);   /* every tile is fully in by beat 26.4, then the wall holds to the cut on 28 */
+      const tileTimes = Array.from({ length: 10 }, (_, n) => n < 5 ? 24 + n * 0.2 : 25 + (n - 5) * 0.2);   /* row two starts ON the +16 dB hit (10.26 s, beat 25); every tile is fully in by beat 26.4 */
       for (let n = 0; n < 10; n++) {
         const col = n % 5, row = Math.floor(n / 5), x = TX0 + col * (TW + TGX), y = TY0 + row * (TH + TGX);
         const real = n === 0 ? 'Slugify lines' : n === 1 ? 'Word count' : '';
@@ -526,7 +527,7 @@
       $('tz-efan').innerHTML = fanSVG('tz-f2');
       enter('#tz-efan', at(32.5) - F, { y: 24, s: 0.92, dur: 0.45 });
       openFan('tz-f2', 32.5, 0.6);
-      land('#tz-ename', 32.5, { y: 40, dur: 0.45 });
+      land('#tz-ename', 32.5, { y: 40, dur: 0.2 });   /* the wordmark settles on 13.56 s */
       enter('#tz-eline', at(32.5) + 0.12, { y: 26 });
       land('#tz-eurl', 34, { y: 20 });
       /* a drift that settles into the still hold */

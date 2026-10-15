@@ -1,2 +1,2 @@
-teaser,teaser-vertical looks 60
-# run 9: both teasers after pass-3 review fixes (P0 frame overlap, chips, modules list, 1.8x push)
+teaser looks 60
+# run 10: 16:9 teaser after review 4 P1 fixes (chips land on beat, solid scrim, header swap, counter follows cards)
