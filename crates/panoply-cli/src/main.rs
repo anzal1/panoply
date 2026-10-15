@@ -5,7 +5,7 @@ mod vision_cmd;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use clap::{Parser, Subcommand};
@@ -295,6 +295,41 @@ enum ImageTool {
 }
 
 /// Run a built-in module. Says first when its manifest declares network access.
+/// Progress lines on stderr. Slow jobs only (after the 300 ms budget), and one line per ten percent
+/// or per new step, so a log or a pipe gets ten lines for a picture instead of seventy.
+#[derive(Clone)]
+pub(crate) struct Progress(Arc<Mutex<ProgressState>>);
+
+struct ProgressState {
+    started: Instant,
+    last_bucket: i32,
+    last_label: String,
+}
+
+impl Progress {
+    pub(crate) fn new() -> Self {
+        Progress(Arc::new(Mutex::new(ProgressState {
+            started: Instant::now(),
+            last_bucket: -1,
+            last_label: String::new(),
+        })))
+    }
+
+    pub(crate) fn show(&self, fraction: f32, label: &str) {
+        let mut s = self.0.lock().unwrap_or_else(|p| p.into_inner());
+        if s.started.elapsed() <= Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS) {
+            return;
+        }
+        let pct = (fraction * 100.0).round() as i32;
+        let bucket = pct / 10;
+        if bucket != s.last_bucket || label != s.last_label {
+            s.last_bucket = bucket;
+            s.last_label = label.to_string();
+            eprintln!("{pct:>3}%  {label}");
+        }
+    }
+}
+
 pub(crate) fn run_builtin(
     spec: &JobSpec,
     out: Option<&Path>,
@@ -515,6 +550,21 @@ fn builtin_id(module: &Path) -> Option<String> {
 }
 
 fn run_module(module: &Path, files: Vec<PathBuf>, opts: &[String], out: Option<&Path>) -> ExitCode {
+    if builtin_id(module).is_none() && !module.exists() {
+        eprintln!(
+            "There is no tool called {}. Run `panoply modules` to see the list.",
+            module.display()
+        );
+        return ExitCode::from(2);
+    }
+    if builtin_id(module).is_some() && files.is_empty() {
+        eprintln!(
+            "Give {} at least one file, for example: panoply run {} photo.jpg",
+            module.display(),
+            module.display()
+        );
+        return ExitCode::from(2);
+    }
     let result = (|| {
         let (registry, module_id, options) = match builtin_id(module) {
             Some(id) => {
@@ -540,14 +590,11 @@ fn run_module(module: &Path, files: Vec<PathBuf>, opts: &[String], out: Option<&
             options,
         };
         // Progress is for jobs that take a while: stay quiet under 300 ms.
-        let started = Instant::now();
-        let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+        let progress = crate::Progress::new();
         models_cmd::show_network_notice(&registry, &spec.module_id);
         registry.run_job(&spec, out, CancelToken::new(), move |event| {
-            if let JobEvent::Progress { fraction, label } = event
-                && started.elapsed() > slow
-            {
-                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+            if let JobEvent::Progress { fraction, label } = event {
+                progress.show(fraction, &label);
             }
         })
     })();
@@ -773,17 +820,14 @@ fn pdf(tool: PdfTool) -> ExitCode {
         inputs: files,
         options: Value::Object(o),
     };
-    let started = Instant::now();
-    let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+    let progress = crate::Progress::new();
     report(run_builtin(
         &spec,
         out.out.as_deref(),
         CancelToken::new(),
         move |event| {
-            if let JobEvent::Progress { fraction, label } = event
-                && started.elapsed() > slow
-            {
-                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+            if let JobEvent::Progress { fraction, label } = event {
+                progress.show(fraction, &label);
             }
         },
     ))
@@ -817,13 +861,10 @@ fn image(tool: ImageTool) -> ExitCode {
         inputs: files,
         options: serde_json::Value::Object(o),
     };
-    let started = Instant::now();
-    let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+    let progress = crate::Progress::new();
     let result = run_builtin(&spec, out.as_deref(), CancelToken::new(), move |event| {
-        if let JobEvent::Progress { fraction, label } = event
-            && started.elapsed() > slow
-        {
-            eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+        if let JobEvent::Progress { fraction, label } = event {
+            progress.show(fraction, &label);
         }
     });
     match result {
@@ -1100,17 +1141,14 @@ fn media_run(
         inputs: files,
         options: serde_json::Value::Object(o),
     };
-    let started = Instant::now();
-    let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+    let progress = crate::Progress::new();
     report(run_builtin(
         &spec,
         out.out.as_deref(),
         CancelToken::new(),
         move |event| {
-            if let JobEvent::Progress { fraction, label } = event
-                && started.elapsed() > slow
-            {
-                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+            if let JobEvent::Progress { fraction, label } = event {
+                progress.show(fraction, &label);
             }
         },
     ))
@@ -1617,17 +1655,14 @@ fn id_cmd(tool: IdTool) -> ExitCode {
         inputs: files,
         options: Value::Object(o),
     };
-    let started = Instant::now();
-    let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+    let progress = crate::Progress::new();
     report(run_builtin(
         &spec,
         out.out.as_deref(),
         CancelToken::new(),
         move |event| {
-            if let JobEvent::Progress { fraction, label } = event
-                && started.elapsed() > slow
-            {
-                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+            if let JobEvent::Progress { fraction, label } = event {
+                progress.show(fraction, &label);
             }
         },
     ))

@@ -6,7 +6,6 @@
 
 use std::path::PathBuf;
 use std::process::ExitCode;
-use std::time::{Duration, Instant};
 
 use clap::Subcommand;
 use panoply_core::{CancelToken, JobEvent, JobSpec};
@@ -134,13 +133,10 @@ fn run_job(
         inputs: files,
         options: Value::Object(options),
     };
-    let started = Instant::now();
-    let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+    let progress = crate::Progress::new();
     let result = crate::run_builtin(&spec, out.as_deref(), CancelToken::new(), move |event| {
-        if let JobEvent::Progress { fraction, label } = event
-            && started.elapsed() > slow
-        {
-            eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+        if let JobEvent::Progress { fraction, label } = event {
+            progress.show(fraction, &label);
         }
     });
     match result {
