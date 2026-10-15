@@ -1,0 +1,62 @@
+{
+ "note": "Level jumps (RMS rise over 30 ms) of the edit, in film seconds and beats. Complements hits-*.json, which is spectral-flux based and under-rates sustained sub-bass hits.",
+ "bpm": 146.0,
+ "start": 50.978,
+ "hits": [
+  {
+   "t": 3.293,
+   "beat": 8.01,
+   "jump_db": 63.2
+  },
+  {
+   "t": 3.702,
+   "beat": 9.01,
+   "jump_db": 38.8
+  },
+  {
+   "t": 4.121,
+   "beat": 10.03,
+   "jump_db": 22.5
+  },
+  {
+   "t": 4.52,
+   "beat": 11.0,
+   "jump_db": 32.8
+  },
+  {
+   "t": 4.939,
+   "beat": 12.02,
+   "jump_db": 42.2
+  },
+  {
+   "t": 6.585,
+   "beat": 16.02,
+   "jump_db": 12.7
+  },
+  {
+   "t": 6.994,
+   "beat": 17.02,
+   "jump_db": 13.9
+  },
+  {
+   "t": 9.449,
+   "beat": 22.99,
+   "jump_db": 10.4
+  },
+  {
+   "t": 10.277,
+   "beat": 25.01,
+   "jump_db": 20.2
+  },
+  {
+   "t": 11.514,
+   "beat": 28.02,
+   "jump_db": 14.3
+  },
+  {
+   "t": 13.569,
+   "beat": 33.02,
+   "jump_db": 13.0
+  }
+ ]
+}

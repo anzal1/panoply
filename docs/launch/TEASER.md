@@ -17,6 +17,7 @@ The beat analyzer reported 143.6 BPM. It quantizes beats to 23 ms frames and tha
 | Edit | start at track second **50.978**, length **15.0 s** (36 beats plus 0.205 s), fade the last 0.6 s. The drop then lands on **beat 8** (3.288 s) |
 | Measured hits in the edit (beat, strength) | 8 (.88, the drop), 9 (.76), 11 (.71), 12 (.85), **15 (1.00, the strongest)**, 16.5 (.58), then only small ones: 22, 30, 32.5 (.33), 34 (.37) |
 | Measured stops | **beats 4.39 to 7.92, a 1.45 s hard stop right before the drop**, and a short one at 8.54 to 8.93 |
+| Measured loud level jumps (the sub-bass hits, found by RMS, which the onset detector under-rates) | **6.987 s (beat 17.0), +15 dB, the loudest hit after the drop**; 7.63 s (beat 18.6); 8.22 s (beat 20.0); the drop itself at 3.288 s. Quiet gaps at 6.40 to 6.58 s and 6.70 to 6.78 s |
 
 Data: `music-analysis/hits-adrenaline-teaser.json`. Cut file (outside git): `panoply-video-audio.noindex/cuts/adrenaline-teaser.wav`.
 
