@@ -214,8 +214,10 @@ j_2() { # Hotkey, type compress, Enter
     key Return; sleep 2
     wait_text bar-after-enter bar 'Choose files|Quality|Run|Options' 8
     data panel_text "$(one_line "$WT_TEXT")"
-    check "the Compress image panel opens (its title and controls)" "$(ok_if x 'echo "$WT_TEXT" | grep -Eiq "Compress image" && [ "$WT_OK" = 1 ]')" "$(one_line "$WT_TEXT")"
-    echo "$WT_TEXT" | grep -Eiq 'Compress image' || [ "$WT_OK" != 1 ] || note "a panel opened, but not titled Compress image"
+    local which; which="$(echo "$WT_TEXT" | grep -Eio 'Compress (image|PDF|video)' | head -1)"
+    check "a Compress panel opens (its title and controls)" "$(ok_if x '[ "$WT_OK" = 1 ] && [ -n "$which" ]')" "$(one_line "$WT_TEXT")"
+    data panel_title "${which:-none}"
+    [ "$which" = "Compress image" ] || [ -z "$which" ] || note "the word compress matches three tools (image, PDF, video); Enter opened: $which"
     check "the bar window is still on screen" "$(ok_if x 'bar_mapped')"
     key Escape; sleep 1
   fi
@@ -334,10 +336,13 @@ j_4b() {
   wait_text query main 'ocr|text|search' 6
   data rows_after_typing "$(one_line "$WT_TEXT")"
   key Return
-  local out="" presses=1 i
-  for i in 1 2 3 4 5; do
-    out="$(find_new "$d" 'scan*(*.pdf' 8)" && break
-    shot "wait-$i" main >/dev/null; [ "$i" -lt 5 ] && { key Return; presses=$((presses + 1)); }   # options, then a consent sheet if one comes up
+  local out="" presses=1 i t0; t0=$(date +%s)
+  # OCR asks to download its models and the runtime, one consent sheet each: say yes (Return) while one shows.
+  for i in $(seq 1 14); do
+    out="$(find_new "$d" 'scan*(*.pdf' 6)" && break
+    wait_text "wait-$i" main 'Download the|Not now' 1
+    if [ "$WT_OK" = 1 ]; then key Return; presses=$((presses + 1)); fi
+    [ $(( $(date +%s) - t0 )) -ge 200 ] && break
   done
   [ -n "$out" ] || out="$(find_new "$d" 'scan*(*.pdf' 60)"
   data enter_presses "$presses"
