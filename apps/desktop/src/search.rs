@@ -267,12 +267,20 @@ fn article(noun: &str) -> &'static str {
 /// Words of a tool that a query word can match: name, summary, category.
 fn word_hit(cx: &Context, tool: usize, word: &str) -> bool {
     let t = cx.catalog.tool(tool);
+    // The services a preset names (WhatsApp, Discord, Gmail), so "whatsapp" finds Compress video.
+    let presets = t
+        .manifest
+        .options
+        .get("preset")
+        .map(|o| o.values.join(" ").replace('_', " "))
+        .unwrap_or_default();
     let hay = format!(
-        "{} {} {} {}",
+        "{} {} {} {} {}",
         t.name.to_lowercase(),
         t.summary.to_lowercase(),
         t.category.label().to_lowercase(),
-        t.id.replace(['.', '_'], " ")
+        t.id.replace(['.', '_'], " "),
+        presets
     );
     hay.split(|c: char| !c.is_alphanumeric())
         .any(|w| w == word || (word.len() >= 3 && w.starts_with(word)))
@@ -356,6 +364,24 @@ fn from_query(cx: &Context, q: &str) -> Results {
         }
         if score > 0 {
             scored.push((score * 10 + rank.min(9), tool, matched));
+        }
+    }
+    // Nothing matched every word. People type "passport photo india", "resize to 800px" or
+    // "loudness -16": a country, a size or a level next to the name of what they want. Match on the
+    // words that name something (not numbers, not "to"), when more than half of them are found.
+    if scored.is_empty() && best_rows.is_empty() {
+        let content: Vec<&String> = intent
+            .words
+            .iter()
+            .filter(|w| w.chars().count() >= 3 && !w.chars().any(|c| c.is_ascii_digit()))
+            .collect();
+        if !content.is_empty() {
+            for &(tool, rank) in &pool {
+                let hits = content.iter().filter(|w| word_hit(cx, tool, w)).count();
+                if hits > 0 && hits * 2 > content.len() {
+                    scored.push(((10 + hits as i32 * 6) * 10 + rank.min(9), tool, Vec::new()));
+                }
+            }
         }
     }
     scored.sort_by(|a, b| {
@@ -738,6 +764,31 @@ mod tests {
         assert!(titles(&r).contains(&"Compress image".to_string()));
         let footer = r.footer.unwrap();
         assert!(footer.contains("tools fit a PNG image"), "{footer}");
+    }
+
+    #[test]
+    fn a_name_with_a_country_a_size_or_a_level_next_to_it_still_finds_the_tool() {
+        let c = cat();
+        let photo = [png("me.jpg", 400_000)];
+        let r = search(&cx(&c, &photo, &[]), "passport photo india");
+        assert_eq!(titles(&r)[0], "Passport photo", "{:?}", titles(&r));
+        let r = search(&cx(&c, &photo, &[]), "resize to 800px");
+        assert!(
+            titles(&r).iter().any(|t| t.starts_with("Resize")),
+            "{:?}",
+            titles(&r)
+        );
+        let r = search(&cx(&c, &[], &[]), "whatsapp");
+        assert!(
+            titles(&r).contains(&"Compress video".to_string()),
+            "{:?}",
+            titles(&r)
+        );
+        // A request for something Panoply does not do stays empty rather than guessing.
+        let r = search(&cx(&c, &[], &[]), "pdf to word");
+        assert!(r.is_empty(), "{:?}", titles(&r));
+        let r = search(&cx(&c, &[], &[]), "zzzqx");
+        assert!(r.is_empty());
     }
 
     #[test]
