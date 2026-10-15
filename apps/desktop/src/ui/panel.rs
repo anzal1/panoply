@@ -215,6 +215,7 @@ impl ToolPanel {
             est_token: 0,
             phase: Phase::Options,
             declined: false,
+            cancelled_note: false,
             job: None,
             _subs: subs,
         };
@@ -519,8 +520,8 @@ impl ToolPanel {
         });
         self.job = Some(job);
         self.declined = false;
-        self.phase = Phase::Running {
         self.cancelled_note = false;
+        self.phase = Phase::Running {
             started: Instant::now(),
             fraction: 0.0,
             label: "Starting".into(),
@@ -625,6 +626,7 @@ impl ToolPanel {
                     }
                     Err(f) => {
                         if f.cancelled || std::mem::take(&mut self.declined) {
+                            self.cancelled_note = f.cancelled;
                             self.phase = Phase::Options;
                         } else {
                             self.phase = Phase::Failed(f);
@@ -1430,8 +1432,6 @@ impl ToolPanel {
                     t,
                 ))
             })
-            .when_some(
-                blocker.filter(|_| !self.files.is_empty() || !self.tool.takes_files()),
             .when(self.cancelled_note, |d| {
                 d.child(
                     notice(
@@ -1445,6 +1445,8 @@ impl ToolPanel {
                     .aria_label("Cancelled. Nothing was written."),
                 )
             })
+            .when_some(
+                blocker.filter(|_| !self.files.is_empty() || !self.tool.takes_files()),
                 |d, b| d.child(notice("triangle-alert", t.warn, b, t)),
             );
         div()
@@ -1862,8 +1864,6 @@ impl ToolPanel {
         };
         let outputs: Vec<PathBuf> = done.outputs.iter().take(5).cloned().collect();
         let last = outputs.len().saturating_sub(1);
-        let card_body = div()
-            .id("result-card")
         // A tool that answers with text (Image to text) has the text itself as its headline. It
         // belongs in a text block under a short title, not in the title.
         let text_answer = done.after_bytes.is_none()
@@ -1891,6 +1891,8 @@ impl ToolPanel {
         } else {
             result_notes(&done.notes, &headline)
         };
+        let card_body = div()
+            .id("result-card")
             .role(Role::Group)
             .aria_label(format!("Result: {headline}"))
             .flex()
@@ -1922,6 +1924,15 @@ impl ToolPanel {
                             }),
                     ),
             )
+            .when(text_answer, |d| {
+                d.child(
+                    card(t)
+                        .p(px(14.))
+                        .ramp(ty::BODY)
+                        .text_color(t.ink)
+                        .child(headline.clone()),
+                )
+            })
             .when_some(done.after_bytes.filter(|_| !fully_undone), |d, after| {
                 d.child(
                     div()
@@ -1947,13 +1958,19 @@ impl ToolPanel {
                     ),
                 )
             })
-            .children(
-                done.notes
-                    .iter()
-                    .filter(|n| !n.contains(&headline) && !n.contains(": wrote "))
-                    .take(6)
-                    .map(|n| div().ramp(ty::BODY).text_color(t.ink2).child(n.clone())),
-            )
+            .children(shown_notes.iter().map(|(n, important)| {
+                div()
+                    .ramp(ty::BODY)
+                    .text_color(if *important { t.warn } else { t.ink2 })
+                    .when(*important, |d| d.font_weight(FontWeight::MEDIUM))
+                    .child(n.clone())
+            }))
+            .when(hidden_notes > 0, |d| {
+                d.child(div().ramp(ty::SMALL).text_color(t.ink2).child(format!(
+                    "and {hidden_notes} more {}",
+                    if hidden_notes == 1 { "line" } else { "lines" }
+                )))
+            })
             .when(!outputs.is_empty() && !fully_undone, |d| {
                 d.child(
                     div()
@@ -2107,5 +2124,64 @@ impl Render for ToolPanel {
             .child(rule(t))
             .child(body)
             .child(footer)
+    }
+}
+
+/// The report lines a result card shows. Warnings and failures always come first and are always
+/// shown, so a "2 warnings" headline never hides what the warnings are; the rest fill what is left
+/// up to a screenful. The second number is how many lines did not fit.
+pub(crate) fn result_notes(notes: &[String], headline: &str) -> (Vec<(String, bool)>, usize) {
+    const ROOM: usize = 8;
+    let is_warning = |n: &str| {
+        let l = n.to_ascii_lowercase();
+        l.contains(": warn:")
+            || l.contains(": fail:")
+            || l.starts_with("warn:")
+            || l.starts_with("fail:")
+    };
+    let candidates: Vec<&String> = notes
+        .iter()
+        .filter(|n| !n.contains(headline) && !n.contains(": wrote "))
+        .collect();
+    let warnings: Vec<(String, bool)> = candidates
+        .iter()
+        .filter(|n| is_warning(n))
+        .map(|n| ((*n).clone(), true))
+        .collect();
+    let room = ROOM.saturating_sub(warnings.len()).max(3);
+    let mut rest = candidates.iter().filter(|n| !is_warning(n));
+    // The module's own summary line (the first one) leads, then what needs attention, then the
+    // rest.
+    let mut out: Vec<(String, bool)> = Vec::new();
+    if candidates.first().is_some_and(|n| !is_warning(n)) {
+        out.extend(rest.by_ref().take(1).map(|n| ((*n).clone(), false)));
+    }
+    out.extend(warnings);
+    out.extend(rest.by_ref().take(room).map(|n| ((*n).clone(), false)));
+    let hidden = rest.count();
+    (out, hidden)
+}
+
+#[cfg(test)]
+mod result_notes_tests {
+    use super::result_notes;
+
+    #[test]
+    fn warnings_are_never_cut_even_after_many_passes() {
+        let mut notes = vec!["a.jpg: India passport photo, 2 warnings".to_string()];
+        for i in 0..10 {
+            notes.push(format!("a.jpg: pass: Check {i}. fine"));
+        }
+        notes.push("a.jpg: warn: Lighting. uneven".to_string());
+        notes.push("a.jpg: warn: Neutral expression. mouth open".to_string());
+        let (shown, hidden) = result_notes(&notes, "1.6 MB to 236 KB");
+        assert!(
+            shown[0].0.contains("2 warnings") && !shown[0].1,
+            "the summary leads"
+        );
+        assert!(shown[1].0.contains("warn: Lighting") && shown[1].1);
+        assert!(shown[2].0.contains("warn: Neutral") && shown[2].1);
+        assert!(shown.len() >= 5, "room is left for the other lines");
+        assert_eq!(shown.len() + hidden, 13);
     }
 }
