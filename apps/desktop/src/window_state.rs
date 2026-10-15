@@ -116,7 +116,7 @@ pub fn first_frame(
     };
     let w = size.0.min(d.2 - 80.0).max(min.0);
     let h = size.1.min(d.3 - 140.0).max(min.1);
-    let x = origin.0.min(d.0 + d.2 - w).max(d.0);
+    let x = origin.0.min(d.0 + d.2 - w - FRAME.0).max(d.0);
     let y = origin.1.min(d.1 + d.3 - h - 48.0).max(d.1);
     Saved {
         x,
