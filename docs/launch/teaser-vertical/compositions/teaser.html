@@ -37,7 +37,7 @@
     .tv-win .field { margin-top: 16px; height: 58px; border-radius: 12px; border: 2px solid rgba(128,128,140,.45); display: flex; align-items: center; padding: 0 18px; opacity: .8; font-size: 30px; }
     .tv-win .banner { padding: 16px 20px; border-radius: 12px; background: var(--k); color: #fff; font-weight: 700; font-size: 32px; line-height: 1.15; }
     .tv-win .lines i { display: block; height: 12px; border-radius: 6px; background: rgba(128,128,140,.3); margin-top: 13px; }
-    #tv-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12,12,15,.78) 0px, rgba(12,12,15,.94) 200px, rgba(12,12,15,.94) 1000px, rgba(12,12,15,.2) 1320px, rgba(12,12,15,.2) 1920px); }
+    #tv-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12,12,15,.9) 0px, rgba(12,12,15,.96) 160px, rgba(12,12,15,.96) 1040px, rgba(12,12,15,.2) 1340px, rgba(12,12,15,.2) 1920px); }
     #tv-deep { position: absolute; inset: 0; background: #0c0c0f; opacity: 0; }
     #tv-words .w { position: absolute; left: 120px; font-size: 190px; font-weight: 700; letter-spacing: -0.04em; line-height: 0.98; white-space: nowrap; color: #ececf1; }
     #tv-w1 { top: 240px; } #tv-w2 { top: 426px; } #tv-w3 { top: 612px; } #tv-w4 { top: 798px; color: #ff6961 !important; }
@@ -66,7 +66,7 @@
     .tv-chip .on { position: absolute; inset: -2px; border-radius: 999px; background: #fff; color: #1d1d1f; display: flex; align-items: center; gap: 10px; padding: 0 16px; opacity: 0; }
     .tv-chip .on i { background: var(--k); }
     #tv-board { position: absolute; left: 120px; top: 512px; width: 840px; }
-    #tv-fade { position: absolute; left: 0; top: 1320px; width: 1080px; height: 600px; background: linear-gradient(180deg, rgba(45,108,223,0) 0px, #2d6cdf 160px, #2d6cdf 600px); }
+    #tv-fade { opacity: 0; position: absolute; left: 0; top: 1320px; width: 1080px; height: 600px; background: linear-gradient(180deg, rgba(45,108,223,0) 0px, #2d6cdf 160px, #2d6cdf 600px); }
     .tv-tc { position: absolute; width: 408px; height: 110px; border-radius: 30px; background: #fff; border: 2px solid rgba(0,0,0,.07); box-shadow: 0 14px 34px rgba(8,24,70,.2); display: flex; align-items: center; gap: 16px; padding: 0 20px 0 22px; color: #1d1d1f; }
     .tv-tc .tic { position: relative; width: 64px; height: 64px; border-radius: 18px; flex: none; background: #eceef1; }
     .tv-tc .tic .lit { position: absolute; inset: 0; border-radius: 18px; display: grid; place-items: center; opacity: 0; background: color-mix(in srgb, var(--k) 16%, white); }
@@ -85,7 +85,7 @@
     #tv-folder .ftab { position: absolute; left: 0; top: 0; width: 150px; height: 84px; border-radius: 24px 24px 0 0; background: rgba(255,255,255,.5); }
     #tv-folder .ffront { position: absolute; left: 0; top: 100px; width: 360px; height: 180px; border-radius: 28px; background: #fff; box-shadow: 0 -8px 28px rgba(8,24,70,.16), 0 18px 40px rgba(8,24,70,.22); }
     #tv-folder .ffront .tv-fansvg { position: absolute; left: 28px; top: 28px; width: 84px; height: 84px; }
-    .tv-fchip { position: absolute; left: 10px; width: 340px; height: 76px; border-radius: 22px; background: #fff; color: #1d1d1f; display: flex; align-items: center; gap: 16px; padding: 0 22px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 30px; font-weight: 500; box-shadow: 0 10px 26px rgba(8,24,70,.2); white-space: nowrap; }
+    .tv-fchip { position: absolute; left: -30px; width: 420px; height: 72px; border-radius: 22px; background: #fff; color: #1d1d1f; display: flex; align-items: center; gap: 16px; padding: 0 22px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 32px; font-weight: 500; box-shadow: 0 10px 26px rgba(8,24,70,.2); white-space: nowrap; }
     .tv-fchip u { width: 30px; height: 38px; border-radius: 6px; display: block; flex: none; background: #2d6cdf; opacity: .85; }
     #tv-mod { position: absolute; left: 120px; top: 790px; width: 840px; height: 690px; border-radius: 28px; background: #f6f7f9; box-shadow: 0 0 0 1.5px rgba(255,255,255,.4), 0 36px 90px rgba(8,24,70,.45); font-family: "Geist", system-ui, sans-serif; color: #1d1d1f; }
     #tv-mod .mt { position: absolute; left: 28px; top: 28px; font-size: 40px; font-weight: 700; letter-spacing: -0.03em; line-height: 48px; }
@@ -96,8 +96,10 @@
     #tv-mod .mtile svg { width: 34px; height: 34px; fill: none; stroke: var(--k); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     #tv-mod .mx { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
     #tv-mod .mn { font-size: 38px; font-weight: 600; letter-spacing: -0.02em; line-height: 42px; }
-    #tv-mod .mi { font-size: 34px; font-weight: 500; letter-spacing: -0.02em; line-height: 38px; color: #5b5b63; white-space: nowrap; }
-    #tv-mod .mslot { position: absolute; left: 28px; width: 784px; height: 112px; border-radius: 20px; border: 3px dashed rgba(0,0,0,.2); }
+    #tv-mod .mi { font-size: 30px; font-weight: 500; letter-spacing: -0.02em; line-height: 38px; color: #5b5b63; white-space: nowrap; }
+    #tv-mod .mlist { position: absolute; left: 0; top: 176px; width: 840px; height: 502px; overflow: hidden; border-radius: 0 0 28px 28px; }
+    #tv-mod .mscroll { position: absolute; left: 0; top: 0; width: 840px; height: 3960px; }
+    #tv-mod .mbd { position: absolute; right: 20px; top: 12px; height: 44px; padding: 0 20px; border-radius: 22px; background: rgba(0,0,0,.06); color: #54545b; font-size: 28px; line-height: 44px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
 
     /* ---------------------------------------------------------------- wall */
     #tv-wall .hl { font-size: 160px; }
@@ -180,12 +182,8 @@
       <div id="tv-fan"></div>
       <div id="tv-mod">
         <div class="mt">Modules</div>
-        <div class="mh"><b id="tv-hc">31</b> installed. Every module runs with only the files you choose.</div>
-        <div class="mrow" id="tv-mr0" style="top:186px"><span class="mtile" style="--k:#1a84f3"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><span class="mx"><span class="mn">Hash files</span><span class="mi">files.hash · Chosen files only</span></span></div>
-        <div class="mrow" id="tv-mr1" style="top:308px"><span class="mtile" style="--k:#ff9f0a"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.7 1.8-2.4 3-2.4s2.4.7 3 2.4M14.5 10h4M14.5 14h3"/></svg></span><span class="mx"><span class="mn">Print sheet</span><span class="mi">id.print_sheet · Chosen files only</span></span></div>
-        <div class="mrow" id="tv-mr2" style="top:430px"><span class="mtile" style="--k:#ff9f0a"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.7 1.8-2.4 3-2.4s2.4.7 3 2.4M14.5 10h4M14.5 14h3"/></svg></span><span class="mx"><span class="mn">Signature cleaner</span><span class="mi">id.signature_cleaner · Chosen files only</span></span></div>
-        <div class="mslot" id="tv-mslot" style="top:552px"></div>
-        <div class="mrow" id="tv-mr3" style="top:552px"><span class="mtile" style="--k:#2d6cdf"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/></svg></span><span class="mx"><span class="mn">Word count</span><span class="mi">text.word_count · Chosen files only</span></span></div>
+        <div class="mh"><b id="tv-hc">31</b> installed, <b id="tv-hc2">0</b> from the community.</div>
+        <div class="mlist"><div class="mscroll" id="tv-mscroll"></div></div>
       </div>
       <div id="tv-folder">
         <div class="fback"></div><div class="ftab"></div>
@@ -222,7 +220,7 @@
 
   <script>
     /* ------------------------------------------------------------ constants */
-    const BEAT = 60 / 146, START = 0;
+    const BEAT = 60 / 146, START = 0, F = 1 / 60;   /* one frame at 60 fps */
     const at = b => (b - START) * BEAT;
 
     /* the capture's own numbers: assets/captures/bar-result-light.png reads "67 KB to 43 KB, 35% smaller" */
@@ -320,8 +318,8 @@
     });
 
     /* ------------------------------------------------------------ plugin: three file chips */
-    const FCH = ["module.toml", "word_count.wasm", "module.wit"];
-    FCH.forEach((n, i) => $("tv-fchips").appendChild(html(`<div class="tv-fchip" id="tv-fch${i}" style="top:0"><u></u>${n}</div>`)));
+    const FCH = ["module.toml", "src/lib.rs", "wit/module.wit"];
+    FCH.forEach((n, i) => $("tv-fchips").appendChild(html(`<div class="tv-fchip" id="tv-fch${i}" style="top:${[-90, -170, -250][i]}px"><u></u>${n}</div>`)));
 
     /* ------------------------------------------------------------ the community wall: two real modules, the rest wait for you */
     const REAL = [
@@ -340,6 +338,18 @@
       slots.push(el);
     }
 
+    /* the real Modules list (apps/desktop/src/ui/app.rs, modules_page): catalog order is by id, so it opens on Hash files,
+       Passport photo, Print sheet, Signature cleaner, all "Built in"; the community module sorts last */
+    const RH = 122, RTOP = 10, MLIST_H = 502;
+    const mrows = tools.tools.slice().sort((a, b) => a.id.localeCompare(b.id));
+    const rowHTML = (i, name, id, glyph, col, badge) =>
+      `<div class="mrow" id="tv-mrow${i}" style="top:${RTOP + i * RH}px"><span class="mtile" style="--k:${col}"><svg viewBox="0 0 24 24">${glyph}</svg></span><span class="mx"><span class="mn">${name}</span><span class="mi">${id} · Chosen files only</span></span><span class="mbd">${badge}</span></div>`;
+    mrows.forEach((t, i) => $("tv-mscroll").appendChild(html(rowHTML(i, t.name, t.id, IC[t.category], COL[t.category], "Built in"))));
+    $("tv-mscroll").appendChild(html(rowHTML(mrows.length, "Word count", "text.word_count", IC.pdf, "#1a84f3", "Community, sandboxed")));
+    $("tv-mrow" + mrows.length).id = "tv-mwc";
+    const SCROLL_END = RTOP + mrows.length * RH + 112 - (MLIST_H - 14);          /* Word count is the last row, 14 px above the bottom edge */
+    const WC_CY = 790 + 176 + (RTOP + mrows.length * RH - SCROLL_END) + 56;      /* page y of its tile centre */
+
     $("tv-endline").textContent = END_LINE;
 
     /* ------------------------------------------------------------ grain, painted once from the seeded LCG */
@@ -355,7 +365,7 @@
     document.querySelectorAll("#root .layer, #tv-end, #tv-board, #tv-bar, #tv-mod, #tv-folder").forEach(n => n.setAttribute("data-layout-allow-overflow", ""));
 
     /* ------------------------------------------------------------ timeline */
-    gsap.set("#tv-bar", { transformOrigin: "50% 0%" });
+    gsap.set("#tv-bar", { transformOrigin: "0% 0%" });
     const tl = gsap.timeline({ paused: true });
     const EO = "expo.out";
     /* entrance: transform on its own expo.out tween (0.3 to 0.45 s), opacity on its own power1.out 0.25 s tween, both start ON the beat */
@@ -366,8 +376,8 @@
       tl.fromTo(sel, from, to, t);
       tl.fromTo(sel, { opacity: 0 }, { opacity: o.to === undefined ? 1 : o.to, duration: 0.25, ease: "power1.out", stagger: o.s || 0 }, t);
     };
-    /* ONE TRANSITION RULE: the outgoing content fades to 0 in 0.15 s (power1.in), ENDING on the beat; the next thing starts on that same beat */
-    const out = (sel, endBeat, d = 0.15) => tl.to(sel, { opacity: 0, duration: d, ease: "power1.in", overwrite: "auto" }, at(endBeat) - d);
+    /* ONE TRANSITION RULE: the outgoing content fades to 0 in 0.15 s (power1.in), ENDING one frame before the beat; the next thing starts on that same beat */
+    const out = (sel, endBeat, d = 0.15) => tl.to(sel, { opacity: 0, duration: d, ease: "power1.in", overwrite: "auto" }, at(endBeat) - d - F);   /* ends one frame BEFORE the beat: old and new never share a frame */
     const wipe = (sel, b, d = 0.45) => tl.fromTo(sel, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: d, ease: EO }, at(b));
 
     /* camera drift, one slow scale per scene layer (the tool grid holds still from beat 15 to the cut) */
@@ -407,9 +417,9 @@
     en("#tv-keys1", 8.0, { y: -28, d: 0.4 });
     en("#tv-bar", 8.0, { y: 40, d: 0.45, sc: 0.97 });
 
-    /* ---- beat 9 (HIT .76): the file chip lands visibly ON 3.70 s (a 0.2 s move that ends on the beat and holds) */
-    tl.fromTo("#tv-chipslice", { y: -30 }, { y: 0, duration: 0.2, ease: "power2.out" }, at(9) - 0.2);
-    tl.fromTo("#tv-chipslice", { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "power1.out" }, at(9) - 0.2);
+    /* ---- beat 9 (HIT .76): the file chip lands ON 3.70 s, power3.in over 0.18 s ending exactly on the beat */
+    tl.fromTo("#tv-chipslice", { y: -120 }, { y: 0, duration: 0.18, ease: "power3.in" }, at(9) - 0.18);
+    tl.fromTo("#tv-chipslice", { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "power1.out" }, at(9) - 0.18);
 
     /* ---- beats 9.25 to 11.75: "under 50 kb" typed on 16ths from the real frames, all eleven */
     for (let k = 1; k <= 11; k++) {
@@ -419,8 +429,10 @@
     tl.set("#tv-rest", { opacity: 0 }, at(9.25));
     tl.set("#tv-chipslice", { opacity: 0 }, at(9.25));
     /* a slow push toward the query, easing out on Return, then a drift (the bar reads at phone size) */
-    tl.fromTo("#tv-bar", { scale: 1 }, { scale: 1.24, duration: at(12) - at(9), ease: "power1.out", immediateRender: false }, at(9));
-    tl.to("#tv-bar", { scale: 1.255, duration: at(13.75) - at(12), ease: "none" }, at(12));
+    tl.fromTo("#tv-bar", { scale: 1 }, { scale: 1.8, duration: at(12) - at(9), ease: "power1.out", immediateRender: false }, at(9));
+    /* on Return the camera eases back to 1.25x, centred, so the whole result card reads; the strip below stays clear of the bar */
+    tl.to("#tv-bar", { scale: 1.25, x: -105, duration: 0.5, ease: EO }, at(12));
+    tl.to("#tv-bar", { scale: 1.265, x: -112, duration: at(13.75) - at(12) - 0.5, ease: "none" }, at(12) + 0.5);
 
     /* ---- beat 12 (HIT .85): the Return keycap lands on 11.75 and presses on 12, "One hotkey." stays until 12, then a hard swap to the result */
     out("#tv-keys1", 11.75);
@@ -431,12 +443,13 @@
     tl.set("#tv-result", { opacity: 1 }, at(12));
     en("#tv-pct-wrap", 12, { y: 56, d: 0.4 });
     tl.fromTo("#tv-pct", { textContent: 0 }, { textContent: RESULT.pct, snap: { textContent: 1 }, duration: 0.12, ease: "power1.out" }, at(12));
-    en("#tv-strip", 12, { y: 24, d: 0.4 });
+    en("#tv-strip", 12.5, { y: 24, d: 0.4 });   /* after the camera has pulled back, so it never sits under the bar */
 
     /* ---- beat 13.75: the payoff has rested 0.45 s; it fades out ENDING on 13.75, then the tools start on that beat */
     out("#tv-pct-wrap, #tv-strip, #tv-bar, #tv-keys2", 13.75);
 
     /* ---- beats 13.75 to 15: cards two per half beat, the count follows the cards, the ripple starts on 15 (6.167 s) and the count locks there */
+    tl.to("#tv-fade", { opacity: 1, duration: 0.25, ease: "power1.out" }, at(13.75));
     en("#tv-chips", 13.75, { y: 24, d: 0.35 });
     en("#tv-tools-h", 13.75, { y: 50, d: 0.45 });
     [[0, 1, 13.75], [2, 3, 14.25]].forEach(([a, b2, bt]) => [a, b2].forEach(ci => {
@@ -468,8 +481,8 @@
 
     /* ---- beat 17.0 (6.987 s, the loudest jump): ALL categories light together; then the grid holds still until the cut on 18 */
     CATS.forEach((c) => {
-      tl.to("#tv-chip-" + c + " .on", { opacity: 1, duration: 0.2, ease: "power1.out" }, at(17));
-      cards.filter(x => x.cat === c).forEach(x => tl.to(x.lit, { opacity: 1, duration: 0.2, ease: "power1.out" }, at(17)));
+      tl.to("#tv-chip-" + c + " .on", { opacity: 1, duration: 0.08, ease: "power1.out" }, at(17));
+      cards.filter(x => x.cat === c).forEach(x => tl.to(x.lit, { opacity: 1, duration: 0.08, ease: "power1.out" }, at(17)));
     });
     out("#tv-tools", 18.0);
 
@@ -478,31 +491,35 @@
     en("#tv-fan", 18, { y: 40, d: 0.4 });
     tl.fromTo("#tv-f1-a", { rotation: 0, svgOrigin: PIVOT }, { rotation: -20, svgOrigin: PIVOT, duration: 0.45, ease: EO }, at(18.05));
     tl.fromTo("#tv-f1-b", { rotation: 0, svgOrigin: PIVOT }, { rotation: 20, svgOrigin: PIVOT, duration: 0.45, ease: EO }, at(18.05));
-    en("#tv-folder", 18.25, { y: 60, d: 0.45 });
+    /* the folder AND the three file chips land together on 18.5, all three readable; then they drop in on 19, 19.5 and 20 */
+    tl.fromTo("#tv-folder", { y: 60 }, { y: 0, duration: 0.45, ease: EO }, at(18.5));
+    tl.fromTo("#tv-folder", { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "power1.out" }, at(18.5));   /* fully there in 0.1 s so the three names can be read */
+    const CH_TOP = [-90, -170, -250];
     FCH.forEach((n, i) => {
-      const ox = [-150, 0, 150][i], bt = 18.75 + i * 0.5;
-      tl.fromTo("#tv-fch" + i, { x: ox, y: -300 }, { x: 0, y: 96 - i * 6, duration: 0.45, ease: EO }, at(bt));
-      tl.fromTo("#tv-fch" + i, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: "power1.out" }, at(bt));
+      tl.fromTo("#tv-fch" + i, { y: 0 }, { y: 104 - CH_TOP[i], duration: 0.3, ease: "power2.in" }, at(19 + i * 0.5));   /* leaves ON the beat, ends behind the folder's front */
     });
-    /* the live Modules list arrives with an empty slot; the folder flies into the slot, and on arrival the Word count row lands and the count flips 31 to 32 */
-    en("#tv-mod", 20.25, { y: 140, d: 0.45 });
-    tl.set("#tv-mr3", { opacity: 0 }, 0);
-    tl.to("#tv-folder", { x: -364, y: 158, scale: 0.2, duration: 0.45, ease: EO }, at(20.75));
+    /* the live Modules list arrives, slides to its end, the folder follows into the new row, which lands last on 21.1 */
+    en("#tv-mod", 19.6, { y: 140, d: 0.45 });
+    tl.set("#tv-mwc", { opacity: 0 }, 0);
+    tl.fromTo("#tv-mscroll", { y: 0 }, { y: -SCROLL_END, duration: at(21.1) - at(20.3), ease: "power2.inOut" }, at(20.3));
+    tl.fromTo("#tv-mscroll", { filter: "blur(0px)" }, { filter: "blur(8px)", duration: 0.12, ease: "power1.in", immediateRender: false }, at(20.3));
+    tl.to("#tv-mscroll", { filter: "blur(0px)", duration: at(21.1) - at(20.3) - 0.12, ease: "power2.out" }, at(20.3) + 0.12);
+    tl.to("#tv-folder", { x: 200 - 540, y: WC_CY - 1240, scale: 0.2, duration: 0.45, ease: EO }, at(20.45));
     out("#tv-folder", 21.1);
-    en("#tv-mr3", 21.1, { y: 24, d: 0.4 });
-    tl.to("#tv-mslot", { opacity: 0, duration: 0.2, ease: "power1.out" }, at(21.1));
+    en("#tv-mwc", 21.1, { y: 24, d: 0.4 });
     tl.fromTo("#tv-hc", { textContent: 31 }, { textContent: 32, snap: { textContent: 1 }, duration: 0.12, ease: "none" }, at(21.1));
+    tl.fromTo("#tv-hc2", { textContent: 0 }, { textContent: 1, snap: { textContent: 1 }, duration: 0.12, ease: "none" }, at(21.1));
     out("#tv-plug", 24.0);
 
     /* ---- beats 24 to 28: the wall of example slots, tiles arrive until beat 27 */
     en("#tv-wall-h .ln", 24, { y: 50, d: 0.45, s: 0.08 });
-    slots.forEach((el, i) => en(el, 24 + i * 0.43, { y: 44, d: 0.4, sc: 0.97 }));
+    slots.forEach((el, i) => en(el, 24 + i * 0.25, { y: 44, d: 0.4, sc: 0.97 }));   /* the last tile is fully in by 26.35, the wall holds to the cut on 28 */
     out("#tv-wall", 28.0);
 
     /* ---- beats 28 to 32.5: one blue ground, the three phrases stack and stay */
     en("#tv-st1 span", 28, { y: 50, d: 0.45 });
-    en("#tv-st2 span", 29.5, { y: 50, d: 0.45, s: 0.06 });
-    en("#tv-st3 span", 31, { y: 50, d: 0.45, s: 0.06 });
+    en("#tv-st2 span", 29, { y: 50, d: 0.45, s: 0.06 });
+    en("#tv-st3 span", 30, { y: 50, d: 0.45, s: 0.06 });
     out("#tv-stack", 32.5);
 
     /* ---- beat 32.5 (HIT .33): the end card. The fan opens, the name settles. beat 34: the url */

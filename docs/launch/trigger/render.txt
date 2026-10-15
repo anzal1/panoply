@@ -1,2 +1,2 @@
-teaser-vertical looks 60
-# run 8: vertical teaser after pass-2 fixes
+teaser,teaser-vertical looks 60
+# run 9: both teasers after pass-3 review fixes (P0 frame overlap, chips, modules list, 1.8x push)
