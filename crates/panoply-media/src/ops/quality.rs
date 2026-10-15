@@ -52,10 +52,10 @@ pub fn measure(
     let seconds = window.min(duration).max(0.5);
     let start = ((duration - seconds) / 2.0).max(0.0);
     let use_vmaf = engine.has_filter("libvmaf");
-    // Four threads hold four frames of float planes at the comparison size each; eight on a 4K
-    // picture cost 3 GB.
+    // Each thread holds frames of float planes at the comparison size; eight of them on a 4K
+    // picture cost 3 GB. Two keep the check under a second of extra time on a clip this short.
     let threads = std::thread::available_parallelism()
-        .map(|n| n.get().min(4))
+        .map(|n| n.get().min(2))
         .unwrap_or(2);
     let sub = 3; // every third frame: enough for a stable mean, a third of the cost
     // Both pictures are compared at no more than 1080p, the size VMAF's model is made for. At the
