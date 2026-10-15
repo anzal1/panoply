@@ -276,7 +276,7 @@ fn markdown_to_html_makes_a_printable_page() {
     let module = build_module("markdown-to-html");
     let module = module.to_str().unwrap();
     let d = scratch("markdown");
-    let notes = fixture("markdown-to-html", "notes.md", &d);
+    let notes = fixture("markdown-to-html", "notes.markdown", &d);
     let (out, err, ok) = panoply_full(&[
         "run",
         module,

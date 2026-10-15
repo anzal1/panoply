@@ -38,7 +38,7 @@ carries its own print rules (black on white, page size, no split code blocks or 
    `src/lib.rs` is 35 lines of glue. 9 unit tests cover a full README, anchors, the contents list,
    escaping and the script policy.
 4. `cargo build --release --target wasm32-wasip2` (about 20 s cold, 317 KB).
-5. `panoply run` on `tests/fixtures/notes.md`, then printed to PDF from a headless browser to check the print rules.
+5. `panoply run` on `tests/fixtures/notes.markdown`, then printed to PDF from a headless browser to check the print rules.
 
 ## Tests
 
