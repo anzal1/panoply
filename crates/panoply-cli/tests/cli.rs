@@ -194,3 +194,155 @@ fn modules_lists_community_modules() {
     assert!(out.contains("text.slugify_lines") && out.contains("text.word_count"));
     assert!(out.contains("community"));
 }
+
+// ---- the community plugins: real inputs through the real sandbox ----------------------------
+
+/// Copy a real input from a module's `tests/fixtures` into a scratch folder and return its path.
+fn fixture(module: &str, name: &str, to: &Path) -> PathBuf {
+    let from = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../modules/examples-wasm")
+        .join(module)
+        .join("tests/fixtures")
+        .join(name);
+    let dest = to.join(name);
+    std::fs::copy(&from, &dest).unwrap_or_else(|e| panic!("{}: {e}", from.display()));
+    dest
+}
+
+#[test]
+fn data_format_tidies_converts_and_checks() {
+    let module = build_module("data-format");
+    let module = module.to_str().unwrap();
+    let d = scratch("dataformat");
+    let pkg = fixture("data-format", "package.json", &d);
+    let (out, err, ok) = panoply_full(&["run", module, pkg.to_str().unwrap(), "--opt", "indent=4"]);
+    assert!(ok && out.contains("package (formatted).json"), "{out}{err}");
+    let tidy = std::fs::read_to_string(d.join("package (formatted).json")).unwrap();
+    assert!(
+        tidy.starts_with("{\n    \"name\": \"left-pad\",\n    \"version\""),
+        "{tidy}"
+    );
+
+    let compose = fixture("data-format", "docker-compose.yml", &d);
+    let (out, err, ok) =
+        panoply_full(&["run", module, compose.to_str().unwrap(), "--opt", "to=toml"]);
+    assert!(
+        ok && out.contains("docker-compose (toml).toml"),
+        "{out}{err}"
+    );
+    let toml = std::fs::read_to_string(d.join("docker-compose (toml).toml")).unwrap();
+    assert!(
+        toml.contains("[services.web]") && toml.contains("image = \"nginx:1.27\""),
+        "{toml}"
+    );
+
+    let cargo = fixture("data-format", "Cargo.toml", &d);
+    let (out, err, ok) = panoply_full(&[
+        "run",
+        module,
+        cargo.to_str().unwrap(),
+        "--opt",
+        "to=json",
+        "--opt",
+        "sort_keys=true",
+    ]);
+    assert!(ok, "{out}{err}");
+    let json: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(d.join("Cargo (json).json")).unwrap())
+            .unwrap();
+    assert_eq!(json["bin"].as_array().unwrap().len(), 2);
+    assert_eq!(json["package"]["released"], "2026-10-16");
+
+    let (out, _, ok) = panoply_full(&[
+        "run",
+        module,
+        cargo.to_str().unwrap(),
+        "--opt",
+        "check_only=true",
+    ]);
+    assert!(ok && out == "Cargo.toml: valid TOML\n", "{out}");
+
+    let broken = fixture("data-format", "broken.json", &d);
+    let (_, err, ok) = panoply_full(&["run", module, broken.to_str().unwrap()]);
+    assert!(
+        !ok && err.contains("broken.json is not valid JSON. Line 3, column 14"),
+        "{err}"
+    );
+    std::fs::remove_dir_all(&d).unwrap();
+}
+
+#[test]
+fn markdown_to_html_makes_a_printable_page() {
+    let module = build_module("markdown-to-html");
+    let module = module.to_str().unwrap();
+    let d = scratch("markdown");
+    let notes = fixture("markdown-to-html", "notes.md", &d);
+    let (out, err, ok) = panoply_full(&[
+        "run",
+        module,
+        notes.to_str().unwrap(),
+        "--opt",
+        "toc=true",
+        "--opt",
+        "paper=Letter",
+    ]);
+    assert!(ok && out.contains("notes (html).html"), "{out}{err}");
+    let html = std::fs::read_to_string(d.join("notes (html).html")).unwrap();
+    assert!(html.contains("<title>Trip notes: Goa, December</title>"));
+    assert!(html.contains("size: Letter"));
+    assert!(html.contains("<a href=\"#budget\">Budget</a>"));
+    assert!(html.contains("Cost (INR)</th>"));
+    assert!(html.contains("<pre><code class=\"language-rust\">"));
+    assert!(html.contains("type=\"checkbox\""));
+    // No script can run on the page, whatever the Markdown held.
+    assert!(html.contains("default-src 'none'"));
+    std::fs::remove_dir_all(&d).unwrap();
+}
+
+#[test]
+fn qr_code_makes_real_pngs_and_svgs() {
+    let module = build_module("qr-code");
+    let module = module.to_str().unwrap();
+    let d = scratch("qr");
+    let links = fixture("qr-code", "links.txt", &d);
+    let (out, err, ok) = panoply_full(&["run", module, links.to_str().unwrap()]);
+    assert!(ok, "{out}{err}");
+    for n in 1..=3 {
+        let bytes = std::fs::read(d.join(format!("links (qr {n}).png"))).unwrap();
+        assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
+    }
+    let contact = fixture("qr-code", "contact.txt", &d);
+    let (out, err, ok) = panoply_full(&[
+        "run",
+        module,
+        contact.to_str().unwrap(),
+        "--opt",
+        "format=svg",
+        "--opt",
+        "lines=whole_file",
+    ]);
+    assert!(ok && out.contains("contact (qr).svg"), "{out}{err}");
+    let svg = std::fs::read_to_string(d.join("contact (qr).svg")).unwrap();
+    assert!(svg.starts_with("<svg ") && svg.contains("<path"));
+    // Colours a phone cannot read are refused before anything is written.
+    let (_, err, ok) = panoply_full(&[
+        "run",
+        module,
+        contact.to_str().unwrap(),
+        "--opt",
+        "dark=#999999",
+        "--opt",
+        "light=#aaaaaa",
+    ]);
+    assert!(!ok && err.contains("too close in colour"), "{err}");
+    std::fs::remove_dir_all(&d).unwrap();
+}
+
+#[test]
+fn modules_lists_the_community_plugins() {
+    let (out, ok) = panoply(&["modules"]);
+    assert!(ok);
+    for id in ["data.format", "doc.markdown_to_html", "image.qr_code"] {
+        assert!(out.contains(id), "{id} missing from:\n{out}");
+    }
+}

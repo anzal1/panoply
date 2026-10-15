@@ -329,6 +329,27 @@ mod tests {
     }
 
     #[test]
+    fn the_community_plugins_are_community_and_sit_in_the_right_category() {
+        let examples =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../modules/examples-wasm");
+        let c = Catalog::with_dirs(&[examples]);
+        if c.index_of("image.qr_code").is_none() {
+            return; // wasm examples not built on this machine
+        }
+        for (id, category) in [
+            ("image.qr_code", Category::Images),
+            ("doc.markdown_to_html", Category::Documents),
+            ("data.format", Category::Developer),
+        ] {
+            let i = c
+                .index_of(id)
+                .unwrap_or_else(|| panic!("{id} is not in the catalog"));
+            assert!(matches!(c.tool(i).source, Source::Community(_)), "{id}");
+            assert_eq!(c.tool(i).category, category, "{id}");
+        }
+    }
+
+    #[test]
     fn a_broken_module_folder_is_a_note_not_a_crash() {
         let dir = std::env::temp_dir().join(format!("panoply-cat-{}", std::process::id()));
         let m = dir.join("broken");

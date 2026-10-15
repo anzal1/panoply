@@ -9,7 +9,11 @@ impl Guest for Module {
         for file in &inputs {
             let bytes = host::read_all(file.handle)?;
             let text = String::from_utf8_lossy(&bytes);
-            let (lines, words, chars) = (text.lines().count(), text.split_whitespace().count(), text.chars().count());
+            let (lines, words, chars) = (
+                text.lines().count(),
+                text.split_whitespace().count(),
+                text.chars().count(),
+            );
             report.push(Output::Note(format!(
                 "{}: {lines} lines, {words} words, {chars} characters, {} bytes",
                 file.name,

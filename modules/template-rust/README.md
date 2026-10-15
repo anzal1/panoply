@@ -163,5 +163,10 @@ A few small tips:
 
 ## Examples
 
-`modules/examples-wasm/` has two finished modules built from this template:
-`slugify-lines` (pattern A) and `word-count` (pattern I).
+`modules/examples-wasm/` has finished modules built from this template. Start with the two small
+ones, `slugify-lines` (pattern A) and `word-count` (pattern I). Three real tools show a crate doing
+the hard part, each with a README that says how it was made:
+
+- `markdown-to-html`: Markdown to one page that prints to PDF (pulldown-cmark).
+- `data-format`: tidy, convert and check JSON, YAML and TOML.
+- `qr-code`: links or text in a file to PNG or SVG QR codes.
