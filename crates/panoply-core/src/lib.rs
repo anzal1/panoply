@@ -20,4 +20,4 @@ pub use cancel::CancelToken;
 pub use job::{JobEvent, JobId, JobSpec};
 pub use naming::unique_output_path;
 pub use sniff::{FamilyHint, Sniffed, sniff, sniff_bytes};
-pub use trash::{TrashError, move_to_trash};
+pub use trash::{TrashError, move_to_trash, put_back, trash_item};

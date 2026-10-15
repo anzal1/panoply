@@ -32,11 +32,29 @@ pub(super) fn data_home() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("/tmp/.local/share"))
 }
 
-pub(super) fn trash(path: &Path) -> Result<(), TrashError> {
+pub(super) fn trash(path: &Path) -> Result<PathBuf, TrashError> {
     if std::env::var_os("HOME").is_none() && std::env::var_os("XDG_DATA_HOME").is_none() {
         return Err(TrashError::failed("there is no home folder"));
     }
-    trash_in(path, &data_home().join("Trash"), effective_uid()).map(|_| ())
+    trash_in(path, &data_home().join("Trash"), effective_uid())
+}
+
+/// Remove the `.trashinfo` record of an item that was taken out of `<trash>/files/` again, so the
+/// file manager does not list an item that is no longer there. Does nothing for a path that is not
+/// inside a trash `files` folder.
+pub(super) fn forget(trashed: &Path) {
+    let (Some(files), Some(name)) = (trashed.parent(), trashed.file_name()) else {
+        return;
+    };
+    if files.file_name() != Some(OsStr::new("files")) {
+        return;
+    }
+    let Some(trash) = files.parent() else {
+        return;
+    };
+    let mut info_name = name.to_os_string();
+    info_name.push(".trashinfo");
+    let _ = fs::remove_file(trash.join("info").join(info_name));
 }
 
 /// Trash `path` into `home_trash` (or the trash of its own drive). Returns where the item went.
@@ -406,6 +424,52 @@ mod tests {
         assert!(matches!(e, TrashError::Failed { .. }), "{e}");
         assert_eq!(read(&src), "keep me");
         assert!(fs::read_dir(home.join("info")).unwrap().next().is_none());
+        fs::remove_dir_all(d).unwrap();
+    }
+
+    #[test]
+    fn put_back_restores_the_item_and_removes_its_info_file() {
+        let d = temp_dir("panoply-fd-putback");
+        let home = d.join("Trash");
+        let src = d.join("keep.txt");
+        fs::write(&src, "body").unwrap();
+        let at = trash_in(&src, &home, UID).unwrap();
+        let info = home.join("info/keep.txt.trashinfo");
+        assert!(info.exists());
+
+        super::super::move_back(&at, &src).unwrap();
+        forget(&at);
+
+        assert_eq!(read(&src), "body");
+        assert!(!at.exists());
+        assert!(!info.exists(), "the info file must go with the item");
+        fs::remove_dir_all(d).unwrap();
+    }
+
+    #[test]
+    fn put_back_refused_keeps_the_info_file() {
+        let d = temp_dir("panoply-fd-putback-busy");
+        let home = d.join("Trash");
+        let src = d.join("keep.txt");
+        fs::write(&src, "old").unwrap();
+        let at = trash_in(&src, &home, UID).unwrap();
+        fs::write(&src, "new").unwrap();
+
+        assert!(super::super::move_back(&at, &src).is_err());
+
+        assert_eq!(read(&at), "old");
+        assert_eq!(read(&src), "new");
+        assert!(home.join("info/keep.txt.trashinfo").exists());
+        fs::remove_dir_all(d).unwrap();
+    }
+
+    #[test]
+    fn forget_ignores_a_path_outside_a_files_folder() {
+        let d = temp_dir("panoply-fd-forget");
+        fs::create_dir_all(d.join("info")).unwrap();
+        fs::write(d.join("info/x.trashinfo"), "keep").unwrap();
+        forget(&d.join("x"));
+        assert!(d.join("info/x.trashinfo").exists());
         fs::remove_dir_all(d).unwrap();
     }
 }

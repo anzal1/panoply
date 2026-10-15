@@ -1,5 +1,6 @@
 //! The `panoply` command line. Short, plain output.
 
+mod disk_cmd;
 mod models_cmd;
 mod vision_cmd;
 
@@ -106,6 +107,8 @@ enum Command {
         #[command(subcommand)]
         cmd: Option<models_cmd::ModelsCmd>,
     },
+    /// What is using the space under a folder: panoply disk ~/Downloads [--top 15] [--files 10] [--depth 2] [--json]
+    Disk(disk_cmd::DiskArgs),
     /// Print the version
     Version,
 }
@@ -329,6 +332,7 @@ fn main() -> ExitCode {
         Command::Id { tool } => id_cmd(tool),
         Command::Vision(cmd) => vision_cmd::run(cmd),
         Command::Models { cmd } => models_cmd::run(cmd),
+        Command::Disk(args) => disk_cmd::run(args),
         Command::Version => {
             println!("panoply {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
