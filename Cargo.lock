@@ -5252,6 +5252,7 @@ dependencies = [
  "objc2 0.6.5",
  "panoply-convert",
  "panoply-core",
+ "panoply-disk",
  "panoply-host",
  "panoply-manifest",
  "panoply-wasm",

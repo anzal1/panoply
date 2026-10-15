@@ -15,6 +15,7 @@ use gpui_base::input::{Input as KitInput, InputEvent, InputState};
 
 use super::Hub;
 use super::chrome;
+use super::disk::DiskView;
 use super::live;
 use super::panel::{PanelEvent, ToolPanel};
 use super::theme::{Theme, is_dark, radius, sp, tile_colors, ty};
@@ -44,6 +45,8 @@ pub(crate) enum Route {
     History,
     Nearby,
     Modules,
+    /// The disk map: what is using the space.
+    Disk,
     Settings,
     Category(Category),
     /// Tools for a search or for dropped files.
@@ -63,6 +66,8 @@ pub(crate) struct AppView {
     results: Results,
     selected: usize,
     pub(crate) panel: Option<Entity<ToolPanel>>,
+    /// The disk map page. It lives as long as the window, so a scan survives a visit to another page.
+    disk: Entity<DiskView>,
     _panel_sub: Option<Subscription>,
     drag_active: bool,
     /// The downloadable models and engines, read from disk when the Modules page opens.
@@ -108,6 +113,7 @@ impl AppView {
         // before anything is clicked.
         let focus = cx.focus_handle();
         window.focus(&focus, cx);
+        let disk = cx.new(DiskView::new);
         Self {
             hub,
             route: Route::Home,
@@ -118,6 +124,7 @@ impl AppView {
             results: Results::default(),
             selected: 0,
             panel: None,
+            disk,
             _panel_sub: None,
             drag_active: false,
             downloads: Vec::new(),
@@ -191,6 +198,12 @@ impl AppView {
             &self.query,
         );
         self.selected = 0;
+    }
+
+    /// The disk map page, for the review renders.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn disk_view(&self) -> Entity<DiskView> {
+        self.disk.clone()
     }
 
     pub(crate) fn go(&mut self, route: Route, cx: &mut Context<Self>) {
@@ -398,6 +411,9 @@ impl AppView {
             "up" if self.route == Route::Results => {
                 self.selected = self.selected.saturating_sub(1);
                 cx.notify();
+            }
+            "backspace" if self.route == Route::Disk => {
+                self.disk.update(cx, |d, cx| d.go_up(cx));
             }
             "escape" => {
                 if !self.query.is_empty() || !self.files.is_empty() {
@@ -609,7 +625,7 @@ fn empty_state(
 }
 
 /// The 52 pt toolbar zone at the top of a page: the title, and anything for the right.
-fn toolbar(title: &str, trailing: Option<AnyElement>, t: Theme) -> Div {
+pub(super) fn toolbar(title: &str, trailing: Option<AnyElement>, t: Theme) -> Div {
     div()
         .flex()
         .flex_col()
@@ -783,6 +799,17 @@ impl AppView {
                 None,
                 t,
                 go(Route::Nearby),
+            ))
+            .child(side_item(
+                "nav-disk",
+                "Disk map",
+                "hard-drive",
+                t.ink2,
+                None,
+                route == Route::Disk,
+                None,
+                t,
+                go(Route::Disk),
             ))
             .child(side_item(
                 "nav-modules",
@@ -1770,6 +1797,12 @@ impl Render for AppView {
             (Route::Home, _) => self.home(t, cx),
             (Route::Results, _) => self.results_page(t, cx),
             (Route::Category(c), _) => self.category_page(c, t, cx),
+            (Route::Disk, _) => div()
+                .flex_1()
+                .min_w_0()
+                .h_full()
+                .child(self.disk.clone())
+                .into_any_element(),
             (Route::Modules, _) => self.modules_page(t, cx),
             (Route::History, _) => self.history_page(t, cx),
             (Route::Settings, _) => self.settings_page(t, cx),

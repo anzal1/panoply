@@ -4,6 +4,7 @@
 pub(crate) mod app;
 pub(crate) mod bar;
 pub(crate) mod chrome;
+pub(crate) mod disk;
 pub(crate) mod icons;
 pub(crate) mod live;
 pub(crate) mod panel;
