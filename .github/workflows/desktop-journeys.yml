@@ -1,0 +1,151 @@
+name: Desktop journeys
+
+# Scripted user journeys on real desktops, on GitHub's free hosted runners (this repo is public, so they cost
+# nothing). Where Desktop smoke only starts the app and looks at it, this uses it: the hotkey, typing into the
+# command bar, opening a file, running tools, Undo, the tray, Quit, themes, display scale, idle cost. Every
+# journey records pass or fail, the seconds it took and screenshots (an artifact per OS, and a table in the run
+# summary).
+#
+#   windows-latest  an interactive session. Keyboard and mouse input through user32, screenshots, OCR with
+#                   Windows.Media.Ocr (tesseract from Chocolatey only when the runner has no OCR language),
+#                   UI Automation probe, the Recycle Bin through the shell.
+#   ubuntu-latest   Xvfb + openbox + software Vulkan. xdotool, ImageMagick, tesseract, the freedesktop trash.
+#
+# It tests the shipped files, as Desktop smoke does: the .msi is installed for real and the .AppImage is run.
+#
+# Run by hand: Actions > Desktop journeys > Run workflow, or
+#   gh workflow run desktop-journeys.yml -f tag=v0.1.2-beta
+# `run_id` takes a Release workflow run instead of a tag. `only` runs some journeys (1,2,3,5,4a,4b,6,7,8).
+# `ref` of the dispatch picks the version of the scripts, so a branch can be tried before it is merged.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to test (empty: the latest prerelease)"
+        type: string
+        default: ""
+      run_id:
+        description: "Instead of a release: the id of a Release workflow run whose artifacts to test"
+        type: string
+        default: ""
+      only:
+        description: "Journeys to run, comma separated (empty: all). Ids: 1 2 3 5 4a 4b 6 7 8"
+        type: string
+        default: ""
+
+concurrency:
+  group: desktop-journeys-${{ github.ref }}-${{ inputs.tag }}-${{ inputs.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tag: ${{ steps.r.outputs.tag }}
+    steps:
+      - id: r
+        shell: bash
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_RUN: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -n "$INPUT_RUN" ]; then echo "tag=" >> "$GITHUB_OUTPUT"; echo "Journeys on the artifacts of run $INPUT_RUN" | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; fi
+          tag="$INPUT_TAG"
+          if [ -z "$tag" ]; then
+            tag="$(gh release list --limit 30 --json tagName,isPrerelease,isDraft \
+              --jq '[.[] | select(.isDraft | not)] | (map(select(.isPrerelease)) + .)[0].tagName')"
+          fi
+          [ -n "$tag" ] || { echo "::error::no release found"; exit 1; }
+          n="$(gh release view "$tag" --json assets --jq '[.assets[].name | select(endswith(".msi") or endswith(".AppImage"))] | length')"
+          [ "$n" -ge 4 ] || { echo "::error::release $tag has no msi or AppImage files"; exit 1; }
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Journeys on release $tag" | tee -a "$GITHUB_STEP_SUMMARY"
+
+  windows:
+    needs: resolve
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Download the release files
+        shell: bash
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p dl
+          if [ -n "$RUN_ID" ]; then
+            gh run download "$RUN_ID" --name pkg-windows-x64 --dir dl
+            rm -f dl/*selftest* dl/panoply-cli-*
+          else
+            gh release download "$TAG" --dir dl --pattern '*-windows-x64.msi' --pattern SHA256SUMS
+            (cd dl && sha256sum -c SHA256SUMS --ignore-missing)
+          fi
+          ls -l dl
+      - name: Test tools (Python packages, on the runner only)
+        shell: powershell
+        run: python -m pip install --disable-pip-version-check pillow pypdf
+      - name: Run the journeys
+        shell: powershell
+        env:
+          ONLY: ${{ inputs.only }}
+        run: ./.github/scripts/desktop-journeys-windows.ps1 -Dir dl -Out out -Only "$env:ONLY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: journeys-windows
+          path: out
+          if-no-files-found: warn
+
+  linux:
+    needs: resolve
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Download the release files
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p dl
+          if [ -n "$RUN_ID" ]; then
+            gh run download "$RUN_ID" --name pkg-linux-x64 --dir dl
+            rm -f dl/panoply-cli-* dl/*.tar.gz
+          else
+            gh release download "$TAG" --dir dl --pattern '*-linux-x64.AppImage' --pattern SHA256SUMS
+            (cd dl && sha256sum -c SHA256SUMS --ignore-missing)
+          fi
+          ls -l dl
+      - name: Desktop and test packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb openbox x11-utils x11-xserver-utils xdotool wmctrl \
+            imagemagick dbus-x11 libvulkan1 mesa-vulkan-drivers vulkan-tools libxkbcommon-x11-0 libxcb-xkb1 \
+            fontconfig fonts-dejavu-core fonts-noto-core fonts-noto-color-emoji fonts-cantarell \
+            tesseract-ocr tesseract-ocr-eng poppler-utils python3-venv
+          python3 -m venv "$RUNNER_TEMP/jv"
+          "$RUNNER_TEMP/jv/bin/pip" install --disable-pip-version-check pillow pypdf
+      - name: Run the journeys
+        env:
+          PY: ${{ runner.temp }}/jv/bin/python
+          ONLY: ${{ inputs.only }}
+        run: bash ./.github/scripts/desktop-journeys-linux.sh dl out "$ONLY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: journeys-linux
+          path: out
+          if-no-files-found: warn
