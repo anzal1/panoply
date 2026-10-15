@@ -22,8 +22,8 @@ Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polis
 | | Found | Fixed on this branch | Open |
 |---|---:|---:|---:|
 | P0 | 0 | 0 | 0 |
-| P1 | 12 | 6 | 6 |
-| P2 | 31 | 9 | 22 |
+| P1 | 13 | 7 | 6 |
+| P2 | 32 | 9 | 23 |
 
 No P0: nothing crashed, hung, lost an original or left a half-written file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
 
@@ -138,6 +138,14 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 - **Direction.** Treat a detection on a face (the face detector is already in the app) as not a watermark, report "no watermark found" when the best candidate is small and sits on skin, and run the detector on the large low-contrast mark class before the "text at the top" class. A test picture with a watermark belongs in the corpus; the beta smoke matrix has none, which is why this was not seen before.
 - **Screenshot.** `user-pass/remove-watermark-auto-before-after.jpg` (original left, result right), `user-pass/remove-watermark-rect-and-auto-crops.jpg` (top original, middle auto, bottom by hand).
 
+### UP-44 The command bar answers "No tools match" to natural requests (fixed)
+
+- **Tool.** Command bar (hotkey, and the search box on Home), the way most people start.
+- **Steps.** Type `passport photo india` with a photo on the bar; `resize to 800px` with a photo; `loudness -16` with a sound; `trim 0:02-0:06` with a video; `split every 1` with a PDF; `whatsapp` with a video. 60 queries were run against a real catalog and real files.
+- **Expected.** The tool, with the number or the country as a hint.
+- **Happened.** "No tools match ..." for all six (and "resize 800", "under 2mb" aside). `passport` alone worked. The matcher needed every typed word to be in a tool's name or summary, so one extra word (a country, a size, a level, a time range) cancelled the match, and the services named in presets (WhatsApp, Discord, Gmail) were not searchable at all.
+- **Fix.** `from_query` in `apps/desktop/src/search.rs`: when nothing matches every word, match on the words that name something (not numbers, not "to") when more than half are found; service names from the `preset` option are searched. A request Panoply cannot do (`pdf to word`) still answers "No tools match". Test `a_name_with_a_country_a_size_or_a_level_next_to_it_still_finds_the_tool`.
+
 ---
 
 ## P2
@@ -175,6 +183,7 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 | UP-41 | Upscale | 4x is far better than bicubic but the skin is smooth and painterly and the flag's stars melt into a pattern. Fine for a profile picture, not for a print. The card does not say it is a model's guess. | Open |
 | UP-42 | Modules | Network tools show a "Network" pill and the words "Uses the network" in the same row; the pill adds nothing and the page is crowded on a narrow window. | Open |
 | UP-43 | Compress, Convert, Resize and the other picture tools | An animated GIF or WebP stops with "Choose \"first frame\" (animation=first) to keep one picture ... Panoply does not write animated files yet." That is the command-line spelling in an app window, the option is under More options, and KNOWN-LIMITATIONS says animated inputs "use the first frame and say so". One of the two should change. | Open |
+| UP-45 | Command bar | With an MP3 on the bar the first suggestion is "Compress video", then "Convert video or audio". The tool names say video for sound files. | Open |
 
 ---
 
