@@ -118,6 +118,35 @@ pub struct Context<'a> {
     pub now: u64,
 }
 
+/// A search that remembers what it showed a moment ago, for a person typing. Typing "under 50 kb"
+/// passes through "u", "under" and "under 5", which match nothing by themselves; the bar must not
+/// flash "No tools match" in between, so while the query is plainly unfinished the last answer
+/// stays on screen. A query that is not a way to finish (a typo, "under 50 kbx") gets the empty
+/// state at once.
+#[derive(Default)]
+pub struct Typing {
+    files: Vec<std::path::PathBuf>,
+    last: Results,
+}
+
+impl Typing {
+    /// Rows for the query as typed so far.
+    pub fn search(&mut self, cx: &Context, query: &str) -> Results {
+        let files: Vec<std::path::PathBuf> = cx.files.iter().map(|f| f.path.clone()).collect();
+        if files != self.files {
+            self.files = files;
+            self.last = Results::default();
+        }
+        let r = search(cx, query);
+        let q = query.trim();
+        if r.is_empty() && !q.is_empty() && !self.last.is_empty() && intent::is_unfinished(q) {
+            return self.last.clone();
+        }
+        self.last = r.clone();
+        r
+    }
+}
+
 fn tool_row(cx: &Context, tool: usize, subtitle: String) -> Row {
     let t = cx.catalog.tool(tool);
     Row {
@@ -393,10 +422,16 @@ fn from_query(cx: &Context, q: &str) -> Results {
             }
         }
     }
-    scored.sort_by(|a, b| {
-        b.0.cmp(&a.0)
-            .then_with(|| cx.catalog.tool(a.1).name.cmp(&cx.catalog.tool(b.1).name))
-    });
+    if q_chars.len() < 3 && intent.size.is_none() {
+        // One or two letters match many names, and the best of them changes with every keystroke.
+        // Keep the catalog's own order, so each letter only removes rows and never reorders them.
+        scored.sort_by_key(|s| s.1);
+    } else {
+        scored.sort_by(|a, b| {
+            b.0.cmp(&a.0)
+                .then_with(|| cx.catalog.tool(a.1).name.cmp(&cx.catalog.tool(b.1).name))
+        });
+    }
 
     let mut tool_rows: Vec<Row> = Vec::new();
     for (n, (_, tool, matched)) in scored.iter().enumerate() {
@@ -773,6 +808,44 @@ mod tests {
         assert!(titles(&r).contains(&"Compress image".to_string()));
         let footer = r.footer.unwrap();
         assert!(footer.contains("tools fit a PNG image"), "{footer}");
+    }
+
+    #[test]
+    fn typing_under_50_kb_never_flashes_no_tools_and_never_reorders() {
+        let c = cat();
+        for files in [Vec::new(), vec![png("signature.png", 312_000)]] {
+            for phrase in ["under 50 kb", "make this under 50 kb"] {
+                let mut typing = Typing::default();
+                let mut prev: Option<Vec<String>> = None;
+                let mut seen_rows = false;
+                for end in 1..=phrase.len() {
+                    let q = &phrase[..end];
+                    let r = typing.search(&cx(&c, &files, &[]), q);
+                    let now = titles(&r);
+                    if seen_rows && intent::is_unfinished(q) {
+                        assert!(!now.is_empty(), "{q:?} flashed the empty state");
+                    }
+                    // Up to two letters, rows only drop out; the ones that stay keep their order.
+                    if q.trim().len() <= 2
+                        && let Some(p) = &prev
+                    {
+                        let kept: Vec<&String> = p.iter().filter(|t| now.contains(t)).collect();
+                        let order: Vec<&String> = now.iter().filter(|t| p.contains(t)).collect();
+                        assert_eq!(kept, order, "{q:?} reordered {p:?} into {now:?}");
+                    }
+                    seen_rows |= !now.is_empty();
+                    prev = Some(now);
+                }
+                let end = typing.search(&cx(&c, &files, &[]), phrase);
+                assert_eq!(titles(&end), titles(&search(&cx(&c, &files, &[]), phrase)));
+                // A query that is not a way to finish gets the empty state straight away.
+                let q = "make this under 50 kbx";
+                let typo = typing.search(&cx(&c, &files, &[]), q);
+                assert_eq!(titles(&typo), titles(&search(&cx(&c, &files, &[]), q)));
+                let junk = typing.search(&cx(&c, &files, &[]), "zzzqx");
+                assert!(junk.is_empty());
+            }
+        }
     }
 
     #[test]

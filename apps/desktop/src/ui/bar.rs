@@ -145,6 +145,7 @@ pub(crate) struct Bar {
     pub(crate) panel: Option<Entity<ToolPanel>>,
     _panel_sub: Option<Subscription>,
     pub(crate) results: Results,
+    typing: search::Typing,
     list: ListLayout,
     pub(crate) selected: usize,
     glide: bool,
@@ -253,6 +254,7 @@ impl Bar {
             panel: None,
             _panel_sub: None,
             results: Results::default(),
+            typing: search::Typing::default(),
             list: ListLayout::default(),
             selected: 0,
             glide: false,
@@ -290,7 +292,7 @@ impl Bar {
     fn rebuild(&mut self, cx: &App) {
         let history = self.recents(cx);
         self.glide = false;
-        self.results = search::search(
+        self.results = self.typing.search(
             &search::Context {
                 catalog: &self.hub.catalog,
                 files: &self.files,

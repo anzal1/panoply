@@ -61,6 +61,7 @@ pub(crate) struct AppView {
     query: String,
     files: Vec<FileProfile>,
     results: Results,
+    typing: search::Typing,
     selected: usize,
     pub(crate) panel: Option<Entity<ToolPanel>>,
     _panel_sub: Option<Subscription>,
@@ -114,6 +115,7 @@ impl AppView {
             query: String::new(),
             files: Vec::new(),
             results: Results::default(),
+            typing: search::Typing::default(),
             selected: 0,
             panel: None,
             _panel_sub: None,
@@ -179,7 +181,7 @@ impl AppView {
 
     fn rebuild(&mut self, cx: &App) {
         let history = self.recents(cx);
-        self.results = search::search(
+        self.results = self.typing.search(
             &search::Context {
                 catalog: &self.hub.catalog,
                 files: &self.files,
