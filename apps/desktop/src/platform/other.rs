@@ -183,28 +183,63 @@ pub(crate) fn stop_watchers() {
     }
 }
 
+/// How an attempt to focus the command bar went.
+#[cfg(target_os = "linux")]
+pub(crate) enum Focus {
+    /// The bar has the keyboard now. Carries the window that had it before, for
+    /// [`x11_restore_focus`].
+    Taken(Option<u32>),
+    /// The window is not on screen yet (or the server refused); try again shortly.
+    NotYet,
+    /// Wayland, or no X server to talk to: nothing to do.
+    Unavailable,
+}
+
 /// Give keyboard focus to the command bar. On X11 the bar is an override-redirect pop-up, which the
 /// window manager never focuses and `_NET_ACTIVE_WINDOW` cannot reach, so without this Escape goes to
-/// whatever had focus before. Returns the window that had it, for [`x11_restore_focus`]. Wayland
-/// and every failure return `None`.
+/// whatever had focus before. The server refuses to focus a window that is not viewable, so this
+/// checks that first, checks the request's reply, and reads the focus back to be sure it stuck. Any
+/// failure is printed, so the smoke test's log shows it.
 #[cfg(target_os = "linux")]
-pub(crate) fn x11_take_focus(window: &Window) -> Option<u32> {
+pub(crate) fn x11_take_focus(window: &Window) -> Focus {
     use raw_window_handle::{HasWindowHandle, RawWindowHandle};
     use x11rb::CURRENT_TIME;
     use x11rb::connection::Connection;
-    use x11rb::protocol::xproto::{ConnectionExt, InputFocus};
-    let id = match HasWindowHandle::window_handle(window).ok()?.as_raw() {
-        RawWindowHandle::Xcb(h) => h.window.get(),
-        RawWindowHandle::Xlib(h) => u32::try_from(h.window).ok()?,
-        _ => return None,
+    use x11rb::protocol::xproto::{ConnectionExt, InputFocus, MapState};
+    let id = match HasWindowHandle::window_handle(window).map(|h| h.as_raw()) {
+        Ok(RawWindowHandle::Xcb(h)) => h.window.get(),
+        Ok(RawWindowHandle::Xlib(h)) => match u32::try_from(h.window) {
+            Ok(id) => id,
+            Err(_) => return Focus::Unavailable,
+        },
+        _ => return Focus::Unavailable,
     };
-    let (conn, _) = x11rb::connect(None).ok()?;
-    let prev = conn.get_input_focus().ok()?.reply().ok()?.focus;
-    conn.set_input_focus(InputFocus::POINTER_ROOT, id, CURRENT_TIME)
-        .ok()?;
-    conn.flush().ok()?;
-    // The previous focus is only worth handing back when it was a real window.
-    (prev > 1).then_some(prev)
+    let Ok((conn, _)) = x11rb::connect(None) else {
+        eprintln!("command bar focus: no X11 connection");
+        return Focus::Unavailable;
+    };
+    let attempt = || -> Result<Focus, Box<dyn std::error::Error>> {
+        let attrs = conn.get_window_attributes(id)?.reply()?;
+        if attrs.map_state != MapState::VIEWABLE {
+            return Ok(Focus::NotYet);
+        }
+        let prev = conn.get_input_focus()?.reply()?.focus;
+        conn.set_input_focus(InputFocus::POINTER_ROOT, id, CURRENT_TIME)?
+            .check()?;
+        conn.flush()?;
+        if conn.get_input_focus()?.reply()?.focus != id {
+            return Ok(Focus::NotYet);
+        }
+        // The previous focus is only worth handing back when it was a real window.
+        Ok(Focus::Taken((prev > 1).then_some(prev)))
+    };
+    match attempt() {
+        Ok(f) => f,
+        Err(e) => {
+            eprintln!("command bar focus failed: {e}");
+            Focus::NotYet
+        }
+    }
 }
 
 /// Hand focus back to the window [`x11_take_focus`] saw, so the app window keeps its keyboard.

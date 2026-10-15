@@ -575,9 +575,7 @@ impl Bar {
         })
         .detach();
         #[cfg(target_os = "linux")]
-        {
-            self.prev_focus = platform::x11_take_focus(window);
-        }
+        self.take_x11_focus(window, cx);
         window.focus(&self.focus, cx);
         self.anim = Some(VisAnim {
             showing: true,
@@ -589,6 +587,37 @@ impl Bar {
         });
         cx.notify();
         self.schedule_vis(window, cx);
+    }
+
+    /// X11 only: the bar's window is not viewable for the first few milliseconds after it is created,
+    /// and the server will not focus it until it is, so keep trying for about a second.
+    #[cfg(target_os = "linux")]
+    fn take_x11_focus(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        cx.spawn_in(window, async move |this, cx| {
+            for _ in 0..50 {
+                let done = this.update_in(cx, |bar, window, _| {
+                    if !bar.is_visible_phase() {
+                        return true;
+                    }
+                    match platform::x11_take_focus(window) {
+                        platform::Focus::Taken(prev) => {
+                            bar.prev_focus = prev;
+                            true
+                        }
+                        platform::Focus::Unavailable => true,
+                        platform::Focus::NotYet => false,
+                    }
+                });
+                if !matches!(done, Ok(false)) {
+                    return;
+                }
+                cx.background_executor()
+                    .timer(std::time::Duration::from_millis(20))
+                    .await;
+            }
+            eprintln!("command bar focus: gave up after 50 tries");
+        })
+        .detach();
     }
 
     pub(crate) fn hide(&mut self, window: &mut Window, cx: &mut Context<Self>) {

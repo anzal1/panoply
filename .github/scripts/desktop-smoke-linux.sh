@@ -89,6 +89,8 @@ for scenario in default compositor; do
   sleep 2
   import -window root "$OUT/$P-bar-after-hotkey.png"
   bar_after_hotkey=$(bar_mapped)
+  { echo "focus window: $(xdotool getwindowfocus 2>&1)"; xwininfo -root -tree | grep ' 720x460+'; xprop -root _NET_ACTIVE_WINDOW; } >"$OUT/focus-after-hotkey-$scenario.txt" 2>&1 || true
+  cat "$OUT/focus-after-hotkey-$scenario.txt"
   wmctrl -lG >"$OUT/wmctrl-after-hotkey-$scenario.txt" 2>&1 || true
   xwininfo -root -tree >"$OUT/xwininfo-tree-after-hotkey-$scenario.txt" 2>&1 || true
   alive_after_hotkey=false; [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && alive_after_hotkey=true
@@ -117,12 +119,9 @@ for scenario in default compositor; do
   [ -n "$wid" ] || failed+=("no visible window titled Panoply")
   [ "${bar_at_start:-0}" = 0 ] || failed+=("command bar on screen before the hotkey")
   [ "${bar_after_hotkey:-0}" != 0 ] || failed+=("command bar did not show on the hotkey")
-  # Escape does not hide the bar on X11 yet (UI-AUDIT 59, fixed in v0.1.3), and the two checks after it
-  # follow from that. Reported as warnings until then, so the release smoke still guards the rest.
-  [ "${bar_after_escape:-0}" = 0 ] || echo "::warning::command bar still on screen after Escape"
-  [ "${bar_second_show:-0}" != 0 ] || echo "::warning::command bar did not show on the second hotkey"
-  [ "${bar_after_toggle:-0}" = 0 ] || echo "::warning::command bar still on screen after the hotkey toggled it off"
-  if $exited && [ "$code" != 0 ]; then failed+=("exit code $code after close"); fi
+  [ "${bar_after_escape:-0}" = 0 ] || failed+=("command bar still on screen after Escape")
+  [ "${bar_second_show:-0}" != 0 ] || failed+=("command bar did not show on the second hotkey")
+  [ "${bar_after_toggle:-0}" = 0 ] || failed+=("command bar still on screen after the hotkey toggled it off")
   runs+=("$(python3 -I - "$scenario" "$alive" "$wid" "$title" "$geom" "$frame" "$motif" "$mem_mb" "$alive_after_hotkey" "$exited" "$code" "$t_window" "$bar_at_start" "$bar_after_hotkey" "$bar_after_escape" "$bar_second_show" "$bar_after_toggle" "$bar_first_show_ms" "$bar_second_show_ms" <<'PY'
 import json, sys
 k = ["scenario","alive","window_id","title","geometry","frame_extents","motif_hints","memory_mb","alive_after_hotkey","exited_after_close","exit_code","seconds_to_window","bar_at_start","bar_after_hotkey","bar_after_escape","bar_second_show","bar_after_toggle","bar_first_show_ms","bar_second_show_ms"]
