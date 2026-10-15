@@ -1,0 +1,179 @@
+# User pass
+
+Every tool used the way a person would use it, with real files, awkward files and every panel state. This is the log of that pass on macOS (Apple Silicon, macOS 26.6, release build of `qa/user-pass`). Windows and Linux are covered by the desktop smoke workflow, see "Windows and Linux" at the end.
+
+How it was done, so it can be repeated:
+
+- **CLI.** `panoply run <tool>` and the tool commands over `tests/corpus/cache` (pictures, PDFs, audio, video) plus awkward inputs made for the pass: an empty file, a truncated JPEG, PDF and MP4, a PDF named `.jpg`, a JPEG named `.png`, random bytes named `.png`, a 1 by 1 and a 16 by 16 PNG, a file name in four scripts, a read-only folder and a 3 MB disk image that is full. 170 jobs, each timed with `/usr/bin/time -l` for peak memory.
+- **App path.** `panoply-desktop --selfcheck-userpass --manifest FILE --out DIR` (new, dev only, `--features snapshot`, `apps/desktop/src/selfcheck.rs`). It opens the offscreen app window, opens each tool on real files with real options, presses Run through the same job path as the Return key, and saves the options, running, done, failed or cancelled screen at 2x in light and dark. 49 scenarios cover all 31 tools. Nothing is shown on screen.
+- **Judging.** Result pictures and PDF pages were opened as PNGs and looked at, next to the original at 100% where quality was the question.
+
+Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polish.
+
+## Counts
+
+| | Found | Fixed on this branch | Open |
+|---|---:|---:|---:|
+| P0 | 0 | 0 | 0 |
+| P1 | 12 | 6 | 6 |
+| P2 | 29 | 6 | 23 |
+
+No P0: nothing crashed, hung, lost an original or wrote a half-finished file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
+
+What held up, for the record: Remove background (hair, flag patch and collar edges are clean on a portrait, `user-pass/cutout-on-dark.jpg`), Upscale (`user-pass/upscale-nearest-bicubic-model.jpg`), the six passport portraits (`user-pass/passport-six-portraits.jpg`), HEIC compress (54% smaller, indistinguishable at 100%), EXIF orientation (all eight orientations resize to the same picture), strip metadata (GPS and camera tags really gone), passport framing and background on six portraits, signature cleaning, OCR text selectable after the pass, 300 MB PDF compress in 5 s at 17 MB peak, a 3 hour FLAC converted in 7 s, a 20,000 by 20,000 PNG compressed in 0.6 s at 23 MB, cancel on video, erase and OCR returns in under 100 ms.
+
+---
+
+## P1
+
+### UP-01 The option a tool cannot run without is folded under "More options" (fixed)
+
+- **Tools.** Passport photo (country), Erase object (area or mask), Remove watermark (the "these are my pictures" confirmation and the area), Resize image (longest side, width), Upscale (scale), Remove background (result), Compress video (size limit when a codec is preset).
+- **Steps.** Open Passport photo with a photo, add nothing, look at the panel.
+- **Expected.** The thing you must say is on screen: which country.
+- **Happened.** The four options shown were Print resolution, Cut-out engine, Document and Engine. Country sat under "More options (12)". Pressing Run gives "That did not work: Say which country's rule to use, for example country=IN". Same shape for the others: Resize shows Height and Quality and hides Longest side; Erase shows Format, Quality and Keep metadata and hides the area.
+- **Cause.** `Form::from_manifest` ranks fields by a keyword list; none of these names were on it.
+- **Fix.** `PINNED` in `apps/desktop/src/form.rs` names the deciding options in order, and a test (`the_option_a_tool_cannot_run_without_is_never_folded_away`) checks 13 tools.
+- **Screenshot.** Before: `user-pass/passport-options-before.png`, `user-pass/resize-options-before.png`, `user-pass/passport-nocountry-error.png`. After: `user-pass/passport-options-after.png`, `user-pass/resize-options-after.png`.
+
+### UP-02 A result card hides its warnings (fixed)
+
+- **Tool.** Passport photo (any tool with a long report).
+- **Steps.** Passport photo on `fisher.jpg`, country IN, Run.
+- **Expected.** "2 warnings" names the two warnings.
+- **Happened.** The card said "2 warnings, no failures" and then listed six lines, every one starting "pass:". The two `warn:` lines (Neutral expression, Lighting) were the 8th and 11th lines and the card showed only the first six. The warnings were only in the CLI output and the report file.
+- **Fix.** `result_notes` in `apps/desktop/src/ui/panel.rs`: warnings and failures first, in the warning colour, then as many other lines as fit, then "and N more lines". Unit test `warnings_are_never_cut_even_after_many_passes`.
+- **Screenshot.** Before `user-pass/passport-done-before.png`, after `user-pass/passport-done-after.png`.
+
+### UP-03 Images to PDF writes a blank page from a cut-off JPEG and says it worked (fixed)
+
+- **Tool.** Images to PDF (CLI `panoply pdf from`, app).
+- **Steps.** `panoply pdf from corrupt-truncated.jpg` (a JPEG cut at 3 kB).
+- **Expected.** The plain "This JPEG is incomplete" that every other picture tool gives.
+- **Happened.** Exit 0, "1 page, 4 KB. 1 JPEG stored without re-encoding." The page is white. The header was readable so the bytes were embedded as they were.
+- **Fix.** `write_jpeg` in `crates/panoply-pdf/src/images_in.rs` refuses a JPEG with no end-of-image marker after the scan. Test `a_jpeg_cut_short_is_refused_not_written_as_a_blank_page`.
+- **Screenshot.** `user-pass/images-to-pdf-blank-page.png` (the whole page).
+
+### UP-04 Image to text shows the recognised text as a 17 pt title (fixed)
+
+- **Tool.** Image to text (app).
+- **Steps.** Image to text on a photographed invoice, Run.
+- **Expected.** A short title and the text in a readable block.
+- **Happened.** The whole text was the card's title: bold, large, every table cell on its own line, the green tick floating mid-list beside "48,000.00", and the confidence line ("30 words, 99% mean confidence") pushed to the very bottom.
+- **Fix.** When a tool answers with text (no output file, a long or multi-line headline) the card shows the summary line as the title and the text in a card below it.
+- **Screenshot.** Before `user-pass/image-to-text-done-before.png`, after `user-pass/image-to-text-done-after.png`.
+
+### UP-05 Keeping pages past the end of a PDF blames the wrong thing (fixed)
+
+- **Tool.** Organize PDF pages.
+- **Steps.** `panoply pdf pages irs-f1040-2022.pdf --keep 5-9` (the PDF has 2 pages).
+- **Expected.** "This PDF has 2 pages."
+- **Happened.** "Every page would be removed. Keep at least one page." The module had worked out that pages 5 to 9 are past the end and then threw the note away.
+- **Fix.** The error names the page count and the pages that do not exist. Corpus test `keeping_pages_past_the_end_says_so_instead_of_blaming_the_keep_list`.
+
+### UP-06 A full disk or a locked folder shows the operating system's words (fixed)
+
+- **Tools.** Every tool that writes (PDF engine, picture tools, video and audio, ID photos).
+- **Steps.** Compress a PDF into a 3 MB disk image that has 1 MB free; compress a picture in a read-only folder.
+- **Expected.** A sentence a person can act on.
+- **Happened.** PDF: ": No space left on device (os error 28)" (a leading colon, no subject, an error number). Pictures: "Could not write /path/photo (compressed).jpg (Permission denied (os error 13))". No partial file was left behind in either case, which is right.
+- **Fix.** `panoply_core::naming::plain_io` turns the error kind into words ("the disk is full", "Panoply does not have permission to write there") and drops the "(os error N)" tail; the picture, ID and media writers and the PDF error mapping use it. Unit test `system_wording_and_codes_never_reach_a_person`.
+
+### UP-07 The privacy line says "Uses the network" on tools that, on this computer, never do (open)
+
+- **Tools.** 22 of 31: every media tool (including Video and audio info, which only reads a file), every OCR and PDF tool, the AI picture tools, Passport photo.
+- **Steps.** Open Video and audio info on a Mac that has `ffmpeg`, or Passport photo on a Mac.
+- **Expected.** FLOWS.md capability 11: every screen states where the work ran. "Processed on this computer" when nothing leaves it.
+- **Happened.** The header chip says "Uses the network" and a banner above the files says "Downloads the video engine (about 140 MB) once" or "Only on Windows and Linux, ... A Mac uses Apple Vision and downloads nothing." The CLI prints the same line to stderr before every run, including the tenth run of a model that is already on disk. The result card then says "Processed on this computer", which contradicts the header. A person reading the chip would think a photo of their passport goes online.
+- **Cause.** The line comes from the static `network = true` in each manifest. It does not know the platform or what is already on disk.
+- **Direction.** Decide per run: show the banner only when an item the tool needs is missing on this machine (the consent sheet already knows), and make the chip "Downloads once, first use" in that case. Needs the manifest to list the items per platform, so not done here.
+- **Screenshot.** `user-pass/passport-options-before.png`, `user-pass/extract-audio-error.png`.
+
+### UP-08 The result card never shows the result (open)
+
+- **Tools.** All picture tools, passport photo, print sheet, PDF to images, cutout, erase, upscale.
+- **Expected.** FLOWS.md shared capability 8 and the tuned-transform pattern: before and after you can see. Passport photo is "preview with head guides".
+- **Happened.** After Run the card shows two size tiles ("Before 1.2 MB, After 7.7 MB") and the file name. To see a cutout, an erased area or a passport crop you have to press Open and leave the app. For tools whose point is not a size (print sheet "209% bigger", cutout "547% bigger", normalize "13% smaller", strip metadata "about the same size") the tiles say something unhelpful or alarming.
+- **Direction.** A thumbnail of the first output (and a before and after slider for the picture tools), and size tiles only where size is the goal.
+- **Screenshot.** `user-pass/sheet-done.png`, `user-pass/unmark-done.png`.
+
+### UP-09 "Smallest that still looks good" returned VMAF 52 and 59 and the card says nothing (open)
+
+- **Tool.** Compress video, default options.
+- **Steps.** `panoply run media.compress phone-clip-vid20240601.webm` and `camera-clip-mvi0131.ogv`.
+- **Expected.** Either quality that looks good (every other clip scored VMAF 88 to 96) or a warning.
+- **Happened.** The notes read "Goal: the smallest that still looks good ... Quality VMAF 59.5" and "... VMAF 52.6". Those are visibly degraded. The result saved 32% and 65%. No warning, no suggestion to keep the original.
+- **Direction.** Below a floor (say VMAF 80) say so in plain words and offer the original, or raise the bit rate until the floor is met, as the image path does with its similarity floor.
+
+### UP-10 Compress video of one 5 second 4K clip peaked at 3.5 GB resident (open)
+
+- **Tool.** Compress video, default (VideoToolbox HEVC).
+- **Steps.** `/usr/bin/time -l panoply run media.compress 4k-hevc-5s.mp4`.
+- **Expected.** FLOWS.md: "constant for video and audio regardless of length (streamed)", and KNOWN-LIMITATIONS lists about 1.3 GB for software AV1 at 1080p as the worst case.
+- **Happened.** Resident set 3,579 MB (ffmpeg child process; the 1080p clips measured 0.5 to 0.9 GB). A person on a 8 GB Mac would feel it.
+- **Direction.** Cap the decode and encode queues (`-threads`, `-extra_hw_frames`, fewer in-flight frames) and re-measure; add a 4K clip to the beta smoke budget table.
+
+### UP-11 The "Compress image" similarity floor lets smooth gradients block (open)
+
+- **Tool.** Compress image, default.
+- **Steps.** `day-earth-smiled.jpg` (9000 by 3500). Result: 5.0 MB to 268 KB at quality 21, similarity 0.979.
+- **Expected.** "Clean" at the size a person would zoom to.
+- **Happened.** At fit-to-screen it is indistinguishable. At 100% the smooth blue sky shows 8 by 8 blocking and a banded halo. The similarity score (SSIM on luminance) passes at 0.979 because the picture is mostly black.
+- **Direction.** A second gate on smooth regions (a block-edge or banding measure) before accepting a very low quality, or a floor of about 40.
+- **Screenshot.** `user-pass/compress-image-blocking-100pct.jpg` (original left, result right, bottom row at 100%).
+
+### UP-38 Remove watermark (auto) leaves a clear watermark and edits the subject's mouth (open)
+
+- **Tool.** Remove watermark, default options, "These are my pictures" on.
+- **Steps.** A portrait with a large semi-transparent white "SAMPLE" mark across the middle (the case KNOWN-LIMITATIONS says it finds: white letters over a picture). Run with the defaults.
+- **Expected.** The mark is gone, or the card says nothing was found.
+- **Happened.** "found text at the top (17% x 5% of the picture) ... 1 mark cleaned (0.48% of the picture changed)". The changed area is the subject's chin and mouth (pixels 500 to 800, 200 to 400); the watermark is untouched. The card is the green success state. Naming the area by hand (`--rect`) removes it but leaves a garbled patch, see UP-39.
+- **Direction.** Treat a detection on a face (the face detector is already in the app) as not a watermark, report "no watermark found" when the best candidate is small and sits on skin, and run the detector on the large low-contrast mark class before the "text at the top" class. A test picture with a watermark belongs in the corpus; the beta smoke matrix has none, which is why this was not seen before.
+- **Screenshot.** `user-pass/remove-watermark-auto-before-after.jpg` (original left, result right), `user-pass/remove-watermark-rect-and-auto-crops.jpg` (top original, middle auto, bottom by hand).
+
+---
+
+## P2
+
+| ID | Tool | What happened | Status |
+|---|---|---|---|
+| UP-12 | Every tool | Two options that do not apply to the chosen target are shown anyway: Compress image with Target "Smallest" shows "Stay under" and "Quality". The options form has no "only when" rule. | Open |
+| UP-13 | Compress image, Signature cleaner, Compress video | The first keyboard focus lands in a field that is not the main one (Stay under, Height, Largest shorter side) with a blue ring, instead of on Run or the first option that matters. | Fixed (first focus goes to the first option shown, or the panel) |
+| UP-14 | Remove background | The Engine choice reads "Auto / Os / Model". "Os" is not a word; "System / Model". Result, the main choice, is the last of the four shown. | Fixed ("System"; the order is fixed by UP-01) |
+| UP-15 | Passport photo | Country is a free-text box with no list and no marker that it is required; Run is enabled without it and the error says "country=IN", the command-line spelling, in a window with no command line. | Open |
+| UP-16 | Passport photo | A 16 by 16 picture answers "No face was found" where FLOWS.md says "very low resolution (refuse and say why)". | Open |
+| UP-17 | Passport photo, Print sheet | The size tiles read "1.6 MB to 236 KB, 85% smaller" for a passport photo and "1.2 MB to 3.7 MB, 209% bigger" for a print sheet. | Open (see UP-08) |
+| UP-18 | App | Cancelling a running job returns to the options with no sign that it was cancelled. | Fixed ("Cancelled. Nothing was written.") |
+| UP-19 | Convert, Resize, Compress, Passport | A PDF named `.jpg` says "This file is not an image Panoply can read. Check that it is a JPEG, PNG..." though the bytes are a PDF and Panoply knows it. Say "This is a PDF. Use PDF to images." | Open |
+| UP-20 | Convert image | An SVG says "not an image Panoply can read" (SVG is on the limitations page, the message should say SVG is not supported yet). | Open |
+| UP-21 | App | Every failure is titled "That did not work", and the next step "Check the file and the options, then try again." is printed under messages that already say what to do ("Make it smaller first, or leave it as it is."). | Open |
+| UP-22 | Resize to exact KB | "The picture was reduced from 3200 x 4000" for a file that is 3684 x 4605: it reports its own pre-shrunk working copy as the original. | Open |
+| UP-23 | Resize to exact KB | With no size or limits set it re-encodes the picture and writes `jemison (3200x4000, 1665KB).jpg`, a copy that is the same size. It should ask for a limit. | Open |
+| UP-24 | Resize to exact KB | Anchor "top" is ignored when the shape differs by more than 15% (it pads instead); the card says why, but the option stays selectable. | Open |
+| UP-25 | Strip metadata | "Private" (the default) removes exactly what "GPS" removes (location) and keeps camera make, model, software and date. The name promises more. | Open |
+| UP-26 | Images and PDF | A file reached through a symlink gets its result next to the real file, not next to the link the person chose. Found by accident: a run through symlinks wrote results into the corpus cache. | Open |
+| UP-27 | CLI | `panoply run image.compress` with no file exits 0 and prints nothing. | Fixed |
+| UP-28 | CLI | `panoply run nope.tool` says "This module could not be loaded: Could not read nope.tool ... (os error 2). Reinstall the module". It is a typo, not a broken install. | Fixed |
+| UP-29 | Home, command bar | The search box says "Search 31 tools and files" and "your files". There is no file search yet (it is on the launch gate), so a person who types a file name finds nothing. Say "tools" until the index ships. | Open |
+| UP-30 | CLI | When stderr is not a terminal every percent is a new line (`28% Encoding`, `29% Encoding`, ...). 40 lines for one picture. Print progress only on a terminal, or one line per ten percent. | Fixed (one line per ten percent or step) |
+| UP-31 | Compress PDF | "Under 1 MB" on a scan took 26 s and finished at 1.9 MB with similarity 0.865 (the floor elsewhere is 0.97). It says it could not reach the size; it could say it stopped at a quality it does not recommend. | Open |
+| UP-32 | Trim | A 4 second cut at "auto" precision re-encodes all 240 frames ("0 frames copied untouched"), so it is not lossless. The card says so. | Open |
+| UP-33 | Compress video | The default writes HEVC in an MP4 on a Mac. That plays on Apple devices and not in every browser or in WhatsApp web. Documented in KNOWN-LIMITATIONS, but the result card does not say it. | Open |
+| UP-34 | Convert audio | A truncated MP3 converts to a WAV 18 s long from 30 s. The card warns ("Heads up"), which is good; it comes first but is not styled as a warning. | Open |
+| UP-35 | Compress image | A tiny file ("already well compressed, 69 bytes against 69, nothing was written") is correct, but exits 0 with no output, so a batch script cannot tell it from a success. | Open |
+| UP-36 | Settings | Every row looks like a control (Appearance, Reduce Motion, Network) and none can be changed; the page is a status list. A person looking for a dark-mode switch finds none. | Open |
+| UP-37 | Find, Nearby | The empty pages say "comes in a later phase". "Phase" is the plan's word, not the person's; Nearby also says sharing is not here while `panoply share` works. | Open |
+| UP-39 | Erase object, Remove watermark | A 500 by 400 pixel fill (on a 2400 by 3000 picture) shows a hard rectangular seam and stretched texture; the fill model works at 512 and the area is scaled up. Small areas on plain backgrounds are fine. | Open |
+| UP-40 | Remove background | A small piece of the old background survives in the gap between the arm and the torso (white and orange, lower left of the cutout). Edges, hair and the flag patch are otherwise clean. | Open |
+| UP-41 | Upscale | 4x is far better than bicubic but the skin is smooth and painterly and the flag's stars melt into a pattern. Fine for a profile picture, not for a print. The card does not say it is a model's guess. | Open |
+
+---
+
+## Windows and Linux
+
+The tools themselves were run on macOS only; the desktop smoke workflow opens the shipped app on a real desktop and does not drive tools. Run 38708566257 (Desktop smoke, latest prerelease v0.1.2-beta, 2026-10-15):
+
+- **Windows (Server 2025, 1920 by 1080): pass.** The installed app starts, shows a window titled Panoply and a notification-area icon, the command bar opens centred (736 by 468 at 22% from the top), the process holds 42.8 MB and 0.3 s of CPU, dark theme is followed, closing the window keeps the tray icon and Quit from the tray exits.
+- **Linux (Ubuntu 24.04, Xvfb, openbox, lavapipe): fail, a known one.** The window opens in 0.5 to 1.5 s at 1160 by 720 with 171 to 181 MB, but both scenarios end with "command bar still on screen after the hotkey toggled it off". This is the hotkey race that the LEDGER lists as "Ready for the next release (v0.1.3)". The shipped v0.1.2-beta AppImage still has it. Until v0.1.3 is tagged, Linux fails the launch gate's real-desktops line.
+- Also on Linux: `exited_after_close` is false in both scenarios (the process stays after its window is closed). The smoke script does not count it as a failure; whether that is intended should be decided and written down.
+- **Not covered, needs a person at a real machine** (the gate already says so): HEIC, RAW and JPEG XL on Windows and Linux (refused in plain words by design), Windows OCR, the hardware video encoders (Media Foundation, NVENC, VA-API), the ffmpeg download path, and every state of every panel on Windows and Linux. The offscreen renderer in this pass is macOS only.
