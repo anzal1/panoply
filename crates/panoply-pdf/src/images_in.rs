@@ -305,6 +305,16 @@ fn write_icc<W: Write>(w: &mut PdfWriter<W>, profile: &[u8], n: usize) -> Result
     Ok(Obj::Array(vec![Obj::name("ICCBased"), Obj::r(id)]))
 }
 
+/// True when the picture data is followed by an end-of-image marker. A JPEG cut short still has a
+/// readable header, so storing its bytes as they are would write a page with half a picture or
+/// none.
+fn jpeg_is_complete(b: &[u8]) -> bool {
+    let Some(sos) = b.windows(2).position(|w| w == [0xFF, 0xDA]) else {
+        return false;
+    };
+    b[sos..].windows(2).any(|w| w == [0xFF, 0xD9])
+}
+
 fn write_jpeg<W: Write>(
     w: &mut PdfWriter<W>,
     name: &str,
@@ -316,6 +326,11 @@ fn write_jpeg<W: Write>(
             "{name} is a JPEG that could not be read. It may be damaged."
         ))
     })?;
+    if !jpeg_is_complete(b) {
+        return Err(PdfError::BadInput(format!(
+            "{name} is an incomplete JPEG: the file ends before the picture does, so the page would be blank. Download or export it again from the original."
+        )));
+    }
     if info.precision != 8 {
         return Err(PdfError::Unsupported(format!(
             "{name} is a {}-bit JPEG, which PDF cannot hold. Convert it to a normal JPG first.",
@@ -676,6 +691,24 @@ mod tests {
         assert_eq!(found.unwrap(), j);
         // Spec bar: the PDF is the picture plus under 2% structure for a normal-sized photo.
         assert!(pdf.len() < j.len() + 1500, "{} vs {}", pdf.len(), j.len());
+    }
+
+    #[test]
+    fn a_jpeg_cut_short_is_refused_not_written_as_a_blank_page() {
+        let j = jpeg_bytes(160, 120);
+        let cut = j[..j.len() / 2].to_vec();
+        let mut out = Vec::new();
+        let err = images_to_pdf(
+            &mut out,
+            1,
+            &mut |_| Ok(("cut.jpg".to_string(), cut.clone())),
+            &ImageOptions::default(),
+            &CancelToken::new(),
+            &mut |_, _| {},
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("incomplete JPEG"), "{err}");
+        assert!(jpeg_is_complete(&j));
     }
 
     #[test]
