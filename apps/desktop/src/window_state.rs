@@ -52,29 +52,40 @@ pub fn save(name: &str, s: &Saved) {
     }
 }
 
-/// Fit a saved frame to the displays that exist now. The size stays between `min` and the
-/// largest display; the position is moved so that the top edge of the window (where the title
-/// and the traffic lights are) is on a display and at least 120 points of it are reachable.
+/// Room kept around a window that was saved or opened on a display, in points: the frame the
+/// system draws outside the client area (about 15 by 7 points on Windows) and a margin so the
+/// close button and the bottom edge stay on screen.
+const EDGE: f32 = 32.0;
+
+/// What the system frame adds to the right of and below the client area, in points, so a window
+/// moved against the right or bottom edge keeps its outer frame on the display too.
+const FRAME: (f32, f32) = (16.0, 8.0);
+
+/// Fit a saved frame to the displays that exist now, all in points (the unit GPUI reports display
+/// bounds in, so a 1920 by 1080 screen at 150% scaling is 1280 by 720). The frame is moved onto
+/// the display that holds most of its top edge (else the first one) and shrunk to fit it, never
+/// below `min`, so the whole window, close button included, is reachable. That covers a monitor
+/// that was unplugged and a display scale that was raised since the frame was saved.
 /// With no displays the frame is returned unchanged.
 pub fn fit(saved: Saved, min: (f32, f32), displays: &[Display]) -> Saved {
     let Some(&first) = displays.first() else {
         return saved;
     };
-    let biggest = displays
-        .iter()
-        .fold((first.2, first.3), |m, d| (m.0.max(d.2), m.1.max(d.3)));
-    let w = saved.w.clamp(min.0, biggest.0.max(min.0));
-    let h = saved.h.clamp(min.1, biggest.1.max(min.1));
     // The display holding most of the window's top edge, else the first one.
-    let cx = saved.x + w / 2.0;
+    let cx = saved.x + saved.w / 2.0;
     let home = displays
         .iter()
         .copied()
         .find(|d| cx >= d.0 && cx < d.0 + d.2 && saved.y >= d.1 - 1.0 && saved.y < d.1 + d.3)
         .unwrap_or(first);
-    let reach = 120.0f32.min(w);
-    let x = saved.x.clamp(home.0 - w + reach, home.0 + home.2 - reach);
-    let y = saved.y.clamp(home.1, (home.1 + home.3 - 60.0).max(home.1));
+    let w = saved.w.min(home.2 - EDGE).max(min.0);
+    let h = saved.h.min(home.3 - EDGE).max(min.1);
+    let x = saved
+        .x
+        .clamp(home.0, (home.0 + home.2 - w - FRAME.0).max(home.0));
+    let y = saved
+        .y
+        .clamp(home.1, (home.1 + home.3 - h - FRAME.1).max(home.1));
     Saved {
         x,
         y,
@@ -176,7 +187,50 @@ mod tests {
         let tiny = fit(s(10.0, 10.0, 100.0, 100.0), (860.0, 560.0), &[D1]);
         assert_eq!((tiny.w, tiny.h), (860.0, 560.0));
         let huge = fit(s(10.0, 10.0, 9000.0, 9000.0), (860.0, 560.0), &[D1]);
-        assert_eq!((huge.w, huge.h), (1512.0, 982.0));
+        assert_eq!((huge.w, huge.h), (1512.0 - EDGE, 982.0 - EDGE));
+    }
+
+    /// A 1920 by 1080 screen at 150% scaling is 1280 by 720 points. The frame saved at 100% (1160 by
+    /// 720 at 180,90, which is 1740 by 1080 physical pixels at 150%) used to come back as it was and
+    /// ran off the right and bottom edges, with the close button out of sight.
+    #[test]
+    fn a_frame_saved_at_100_percent_fits_the_same_screen_at_150_percent() {
+        let scale = 1.5;
+        let physical = (1920.0f32, 1080.0f32);
+        // The work area: the 40 pixel taskbar is not part of it.
+        let points: Display = (0.0, 0.0, physical.0 / scale, (physical.1 - 40.0) / scale);
+        let f = fit(s(180.0, 90.0, 1160.0, 720.0), (860.0, 560.0), &[points]);
+        assert!(f.x >= 0.0 && f.y >= 0.0, "{f:?}");
+        assert!(f.x + f.w <= points.2 && f.y + f.h <= points.3, "{f:?}");
+        // In physical pixels, with the system frame (15 by 7 points) on top of it, above the taskbar.
+        let (right, bottom) = ((f.x + f.w + 15.0) * scale, (f.y + f.h + 7.0) * scale);
+        assert!(
+            right <= physical.0 && bottom <= physical.1 - 40.0,
+            "{right} x {bottom}"
+        );
+        // The same frame at 100% (1920 by 1080 points) is left alone.
+        let big: Display = (0.0, 0.0, 1920.0, 1080.0);
+        let g = fit(s(180.0, 90.0, 1160.0, 720.0), (860.0, 560.0), &[big]);
+        assert_eq!(g, s(180.0, 90.0, 1160.0, 720.0));
+    }
+
+    /// The first launch on that screen: the default frame shrinks to the points, not the pixels.
+    #[test]
+    fn first_launch_at_150_percent_on_1080p_fits_in_points_and_pixels() {
+        let scale = 1.5;
+        let points: Display = (0.0, 0.0, 1920.0 / scale, 1040.0 / scale);
+        let f = first_frame((180.0, 90.0), (1160.0, 720.0), (860.0, 560.0), &[points]);
+        let (right, bottom) = ((f.x + f.w + 15.0) * scale, (f.y + f.h + 7.0) * scale);
+        assert!(
+            right <= 1920.0 && bottom <= 1040.0,
+            "{f:?} -> {right} x {bottom}"
+        );
+    }
+
+    #[test]
+    fn a_window_partly_off_the_right_edge_is_pulled_back_whole() {
+        let f = fit(s(1000.0, 300.0, 1160.0, 600.0), (860.0, 560.0), &[D1]);
+        assert_eq!((f.x, f.y), (1512.0 - 1160.0 - FRAME.0, 300.0));
     }
 
     #[test]

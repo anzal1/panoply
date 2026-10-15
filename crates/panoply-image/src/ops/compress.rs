@@ -514,6 +514,26 @@ fn compress_one(io: &dyn Io, path: &std::path::Path, opts: &Opts) -> Result<Opti
     let mut tried: Vec<String> = Vec::new();
     let mut kinds = kinds;
     let mut fell_back = false;
+    // Under a size with a format that cannot trade quality for bytes (a PNG photograph, TIFF, GIF)
+    // and no format asked for: when it cannot fit, JPG (WebP when the picture has transparency) is
+    // tried next, then WebP. They are told apart from the format the user asked for, which is kept.
+    let mut size_fallbacks: Vec<Vec<Kind>> = match mode {
+        Mode::UnderSize(_)
+            if forced.is_none()
+                && !shootout
+                && matches!(info.format, Format::Png | Format::Tiff | Format::Gif) =>
+        {
+            if has_alpha {
+                vec![vec![Kind::WebpLossy]]
+            } else {
+                vec![vec![Kind::Jpeg], vec![Kind::WebpLossy]]
+            }
+        }
+        _ => Vec::new(),
+    };
+    size_fallbacks.reverse(); // popped from the end, in the order above
+    let mut in_size_fallback = false;
+    let mut smallest_seen: Option<(Kind, u64)> = None;
     loop {
         for (n, kind) in kinds.iter().enumerate() {
             check_cancel(io)?;
@@ -654,7 +674,10 @@ fn compress_one(io: &dyn Io, path: &std::path::Path, opts: &Opts) -> Result<Opti
                 Ok(c) => cands.push(c),
                 Err(ImageError::Cancelled) => return Err(ImageError::Cancelled),
                 Err(e) => {
-                    if kinds.len() == 1 && !matches!(kind, Kind::Heic | Kind::Avif) {
+                    if kinds.len() == 1
+                        && !in_size_fallback
+                        && !matches!(kind, Kind::Heic | Kind::Avif)
+                    {
                         return Err(e);
                     }
                     tried.push(format!("{} not possible ({e})", kind.label()));
@@ -684,6 +707,28 @@ fn compress_one(io: &dyn Io, path: &std::path::Path, opts: &Opts) -> Result<Opti
             kinds.retain(|k| !matches!(k, Kind::Avif | Kind::PngLossless | Kind::PngLossy));
             continue;
         }
+        // Under a size, nothing fits, and the kept format cannot get smaller: try the next format.
+        if let Mode::UnderSize(max) = mode {
+            if let Some(c) = cands.iter().min_by_key(|c| c.bytes.len())
+                && smallest_seen.is_none_or(|(_, b)| (c.bytes.len() as u64) < b)
+            {
+                smallest_seen = Some((c.kind, c.bytes.len() as u64));
+            }
+            if cands.iter().all(|c| c.bytes.len() as u64 > max)
+                && let Some(next) = size_fallbacks.pop()
+            {
+                io.note(format!(
+                    "{name}: {} cannot get under {}, so {} is tried instead",
+                    info.format.label(),
+                    human_bytes(max),
+                    next[0].format().label()
+                ));
+                cands.clear();
+                kinds = next;
+                in_size_fallback = true;
+                continue;
+            }
+        }
         break;
     }
     // Under a size: only candidates that fit count.
@@ -691,6 +736,20 @@ fn compress_one(io: &dyn Io, path: &std::path::Path, opts: &Opts) -> Result<Opti
         cands.retain(|c| c.bytes.len() as u64 <= max);
     }
     let Some(best) = cands.iter().min_by_key(|c| c.bytes.len()) else {
+        if let Mode::UnderSize(max) = mode {
+            let floor = match smallest_seen {
+                Some((k, b)) => format!(
+                    "the smallest it gets is {} as {}",
+                    human_bytes(b),
+                    k.label()
+                ),
+                None => tried.last().cloned().unwrap_or_default(),
+            };
+            return Err(ImageError::Failed(format!(
+                "{name} cannot get under {}: {floor}. Make the picture smaller first, or allow a larger size.",
+                human_bytes(max)
+            )));
+        }
         return Err(ImageError::Failed(format!(
             "{name} could not be compressed with these settings. Try a larger size or another format."
         )));

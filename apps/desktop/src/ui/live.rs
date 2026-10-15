@@ -266,7 +266,9 @@ fn open_app_window(cx: &mut App, files: Vec<PathBuf>) {
         .displays()
         .iter()
         .map(|d| {
-            let b = d.bounds();
+            // The visible part (without a taskbar or menu bar), in points like the window's own
+            // bounds: GPUI divides the monitor's pixels by its scale factor.
+            let b = d.visible_bounds();
             (
                 b.origin.x.as_f32(),
                 b.origin.y.as_f32(),
