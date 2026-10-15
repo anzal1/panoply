@@ -519,14 +519,29 @@ fn nothing_is_resident_between_jobs() {
 #[test]
 fn the_wit_files_in_every_module_project_match_the_host() {
     let want = panoply_wasm::MODULE_WIT;
-    for rel in [
-        "modules/template-rust/wit/module.wit",
-        "modules/examples-wasm/slugify-lines/wit/module.wit",
-        "modules/examples-wasm/word-count/wit/module.wit",
-        "crates/panoply-wasm/tests/fixtures/adversary/wit/module.wit",
-        "crates/panoply-wasm/tests/fixtures/netcaller/wit/module.wit",
-    ] {
-        let got = std::fs::read_to_string(repo().join(rel)).unwrap();
+    // Every module project under modules/examples-wasm, so a new community module is checked too.
+    let mut rels: Vec<String> = std::fs::read_dir(repo().join("modules/examples-wasm"))
+        .unwrap()
+        .flatten()
+        .filter(|e| e.path().join("wit/module.wit").is_file())
+        .map(|e| {
+            format!(
+                "modules/examples-wasm/{}/wit/module.wit",
+                e.file_name().to_string_lossy()
+            )
+        })
+        .collect();
+    assert!(rels.len() >= 5, "found only {rels:?}");
+    rels.extend(
+        [
+            "modules/template-rust/wit/module.wit",
+            "crates/panoply-wasm/tests/fixtures/adversary/wit/module.wit",
+            "crates/panoply-wasm/tests/fixtures/netcaller/wit/module.wit",
+        ]
+        .map(String::from),
+    );
+    for rel in rels {
+        let got = std::fs::read_to_string(repo().join(&rel)).unwrap();
         assert_eq!(
             got, want,
             "{rel} has drifted from crates/panoply-wasm/wit/module.wit"
