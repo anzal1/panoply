@@ -80,6 +80,11 @@ export CARGO_INCREMENTAL=0 PANOPLY_YES=1 CARGO_TERM_COLOR=always
 # The Windows SDK and CRT cache of cargo-xwin. Keep it where cargo-xwin puts it by default, outside the
 # repository, so nothing of Microsoft's can end up in a commit.
 export XWIN_CACHE_DIR="${XWIN_CACHE_DIR:-$HOME/Library/Caches/cargo-xwin}"
+# C dependencies built by clang-cl (cc-rs): mozjpeg-sys never defines HAVE_INTRIN_H, so under clang-cl
+# _BitScanForward64 is undeclared; libwebp-sys compiles its SSE4.1 files without the SSE4.1 flag, which
+# clang-cl does not pass on by itself. Both are set here, not in the code. Local checking builds only.
+# cargo-xwin owns CFLAGS_x86_64_pc_windows_msvc and overwrites it; CL_FLAGS is its extra flags variable.
+export CL_FLAGS="${CL_FLAGS:+$CL_FLAGS }-DHAVE_INTRIN_H -msse4.1"
 mkdir -p "$CARGO_TARGET_DIR"
 
 # ---- the heavy build lock ------------------------------------------------------------------------
@@ -94,6 +99,9 @@ step() { printf '\n==> %s\n' "$*"; step_start=$SECONDS; }
 done_step() { printf '    %ss\n' "$((SECONDS - step_start))"; }
 
 # ---- what changed --------------------------------------------------------------------------------
+base="$(git merge-base origin/main HEAD 2> /dev/null || echo HEAD)"
+changed="$({ git diff --name-only "$base"; git ls-files --others --exclude-standard; } | sort -u)"
+[ -z "$changed" ] && echo "nothing has changed since origin/main"
 # The same crate selection as tools/preflight.sh and tools/preflight-linux.sh (tools/ci/changed_crates.py).
 plan="$(printf '%s\n' "$changed" | ALL="$all" python3 -I tools/ci/changed_crates.py)"
 
