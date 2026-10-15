@@ -11,7 +11,7 @@
 //! - Windows asks the shell (`IFileOperation`) to recycle the item, and refuses drives that have no
 //!   Recycle Bin.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[cfg(target_os = "macos")]
 mod mac;
@@ -42,6 +42,12 @@ pub enum TrashError {
     #[error("the {TRASH_NAME} would not take it ({why}), so the file was left where it is")]
     Failed {
         /// The reason the system gave.
+        why: String,
+    },
+    /// An item could not be put back where it came from. The item stays in the trash.
+    #[error("it could not be put back ({why}), so it was left in the {TRASH_NAME}")]
+    PutBack {
+        /// The plain reason: something is in the way, or the system refused.
         why: String,
     },
 }
@@ -80,31 +86,121 @@ impl From<TrashError> for std::io::Error {
 /// Move `path` (a file, a link or a folder) to the Trash or Recycle Bin.
 ///
 /// On success the item is no longer at `path` and the user can put it back from the system trash. On
-/// error the item is untouched and [`TrashError`] says why in plain words.
+/// error the item is untouched and [`TrashError`] says why in plain words. Use [`trash_item`] when
+/// the caller wants to know where the item went.
 pub fn move_to_trash(path: &Path) -> Result<(), TrashError> {
+    trash_item(path).map(|_| ())
+}
+
+/// Like [`move_to_trash`], and also returns where the item is now, when the system says. That
+/// location is what [`put_back`] needs for a real Undo.
+///
+/// macOS gives the new place in the Trash, Linux the item's path under `Trash/files`. Windows does
+/// not say, so it returns `None` and the item can only be restored from the Recycle Bin window.
+pub fn trash_item(path: &Path) -> Result<Option<PathBuf>, TrashError> {
     if path.symlink_metadata().is_err() {
         return Err(TrashError::NotFound);
     }
     os_trash(path)
 }
 
+/// Move an item back out of the trash to `original`, where [`trash_item`] took it from.
+///
+/// It refuses, and leaves the item in the trash, when something already exists at `original`, so
+/// nothing is overwritten. A missing parent folder is made again. On Linux the item's `.trashinfo`
+/// record is removed too.
+pub fn put_back(trashed: &Path, original: &Path) -> Result<(), TrashError> {
+    move_back(trashed, original)?;
+    os_forget_record(trashed);
+    Ok(())
+}
+
+fn put_back_failed(why: impl std::fmt::Display) -> TrashError {
+    TrashError::PutBack {
+        why: why.to_string(),
+    }
+}
+
+/// The rename half of [`put_back`]: checks, then moves the item.
+fn move_back(trashed: &Path, original: &Path) -> Result<(), TrashError> {
+    if trashed.symlink_metadata().is_err() {
+        return Err(put_back_failed(
+            "it is no longer in the trash, it may have been emptied or restored by hand",
+        ));
+    }
+    if original.symlink_metadata().is_ok() {
+        return Err(put_back_failed(
+            "something with the same name is already in its old folder",
+        ));
+    }
+    if let Some(parent) = original.parent()
+        && !parent.as_os_str().is_empty()
+        && !parent.exists()
+    {
+        std::fs::create_dir_all(parent).map_err(|e| put_back_failed(plain_io(&e)))?;
+    }
+    match std::fs::rename(trashed, original) {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::CrossesDevices => copy_back(trashed, original),
+        Err(e) => Err(put_back_failed(plain_io(&e))),
+    }
+}
+
+/// A plain file that sits on another drive than its old folder (the Linux copy fallback put it in the
+/// home trash): copy it back, and remove the trashed copy only when the copy is whole.
+fn copy_back(trashed: &Path, original: &Path) -> Result<(), TrashError> {
+    let is_file = trashed
+        .symlink_metadata()
+        .map(|m| m.is_file())
+        .unwrap_or(false);
+    if !is_file {
+        return Err(put_back_failed(
+            "it is on another drive and is not a plain file",
+        ));
+    }
+    if let Err(e) = std::fs::copy(trashed, original) {
+        let _ = std::fs::remove_file(original);
+        return Err(put_back_failed(plain_io(&e)));
+    }
+    std::fs::remove_file(trashed).map_err(|e| put_back_failed(plain_io(&e)))
+}
+
+/// An I/O error as plain words: no trailing full stop and no "(os error 13)".
+fn plain_io(e: &std::io::Error) -> String {
+    let mut s = e.to_string().trim().trim_end_matches('.').to_string();
+    if let Some(i) = s.rfind(" (os error ")
+        && s.ends_with(')')
+    {
+        s.truncate(i);
+    }
+    s
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
+fn os_forget_record(trashed: &Path) {
+    freedesktop::forget(trashed);
+}
+
+#[cfg(not(all(unix, not(target_os = "macos"))))]
+fn os_forget_record(_trashed: &Path) {}
+
 #[cfg(target_os = "macos")]
-fn os_trash(path: &Path) -> Result<(), TrashError> {
+fn os_trash(path: &Path) -> Result<Option<PathBuf>, TrashError> {
     mac::trash(path)
 }
 
 #[cfg(all(unix, not(target_os = "macos")))]
-fn os_trash(path: &Path) -> Result<(), TrashError> {
-    freedesktop::trash(path)
+fn os_trash(path: &Path) -> Result<Option<PathBuf>, TrashError> {
+    freedesktop::trash(path).map(Some)
 }
 
 #[cfg(windows)]
-fn os_trash(path: &Path) -> Result<(), TrashError> {
-    win::trash(path)
+fn os_trash(path: &Path) -> Result<Option<PathBuf>, TrashError> {
+    win::trash(path).map(|()| None)
 }
 
 #[cfg(not(any(unix, windows)))]
-fn os_trash(_path: &Path) -> Result<(), TrashError> {
+fn os_trash(_path: &Path) -> Result<Option<PathBuf>, TrashError> {
     Err(TrashError::NoTrash)
 }
 
@@ -178,6 +274,78 @@ mod tests {
         assert_eq!(std::fs::read_to_string(&found).unwrap(), body);
         remove_from_system_trash(&found, &name);
         let _ = std::fs::remove_dir(&dir);
+    }
+
+    /// A real round trip through the public calls: trash a temp file, learn where it went, put it
+    /// back, and leave the system trash as it was found.
+    #[test]
+    fn trash_item_says_where_and_put_back_restores_it() {
+        let name = unique("panoply-trash-undo", "txt");
+        let dir = trash_test_dir();
+        let path = dir.join(&name);
+        std::fs::write(&path, "undo me").unwrap();
+
+        let at = trash_item(&path).expect("trashed");
+        assert!(!path.exists());
+        if cfg!(windows) {
+            assert!(at.is_none(), "Windows does not say where");
+            let found = find_in_system_trash(&path, &name).expect("in the Recycle Bin");
+            remove_from_system_trash(&found, &name);
+        } else {
+            let at = at.expect("macOS and Linux say where the item went");
+            assert_eq!(std::fs::read_to_string(&at).unwrap(), "undo me");
+            put_back(&at, &path).expect("put back");
+            assert!(!at.exists());
+            assert_eq!(std::fs::read_to_string(&path).unwrap(), "undo me");
+            std::fs::remove_file(&path).unwrap();
+        }
+        let _ = std::fs::remove_dir(&dir);
+    }
+
+    #[test]
+    fn put_back_refuses_when_something_is_in_the_way_and_keeps_both() {
+        let d = temp_dir("panoply-putback-busy");
+        let trashed = d.join("trashed.txt");
+        let original = d.join("original.txt");
+        std::fs::write(&trashed, "from the trash").unwrap();
+        std::fs::write(&original, "new file").unwrap();
+
+        let e = put_back(&trashed, &original).unwrap_err();
+
+        assert!(matches!(e, TrashError::PutBack { .. }), "{e}");
+        let text = e.to_string();
+        assert!(text.contains("already in its old folder"), "{text}");
+        assert!(!text.contains("os error"), "{text}");
+        assert_eq!(std::fs::read_to_string(&trashed).unwrap(), "from the trash");
+        assert_eq!(std::fs::read_to_string(&original).unwrap(), "new file");
+        std::fs::remove_dir_all(d).unwrap();
+    }
+
+    #[test]
+    fn put_back_of_an_item_that_left_the_trash_says_so() {
+        let d = temp_dir("panoply-putback-gone");
+        let e = put_back(&d.join("gone"), &d.join("original")).unwrap_err();
+        assert!(e.to_string().contains("no longer in the trash"), "{e}");
+        assert!(!d.join("original").exists());
+        std::fs::remove_dir_all(d).unwrap();
+    }
+
+    #[test]
+    fn put_back_makes_a_missing_folder_again_and_moves_a_folder_whole() {
+        let d = temp_dir("panoply-putback-dir");
+        let trashed = d.join("pages");
+        std::fs::create_dir(&trashed).unwrap();
+        std::fs::write(trashed.join("1.png"), "p").unwrap();
+        let original = d.join("old").join("deeper").join("pages");
+
+        put_back(&trashed, &original).unwrap();
+
+        assert!(!trashed.exists());
+        assert_eq!(
+            std::fs::read_to_string(original.join("1.png")).unwrap(),
+            "p"
+        );
+        std::fs::remove_dir_all(d).unwrap();
     }
 
     /// Where the test file is made. Linux uses a folder beside the home trash so the move is a
