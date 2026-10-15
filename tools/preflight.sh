@@ -9,6 +9,11 @@
 #     tools/preflight.sh --linux    also the Linux check in a local VM (tools/preflight-linux.sh); it runs by
 #                                   itself when a changed file holds Linux-only code (cfg(target_os = "linux"),
 #                                   or src/platform/other.rs). --no-linux skips it.
+#     tools/preflight.sh --windows  also the Windows check, cross compiled on this Mac with cargo-xwin
+#                                   (tools/preflight-windows.sh, no VM); it runs by itself when a changed file
+#                                   holds Windows-only code (cfg(windows), target_os = "windows", a cfg(windows)
+#                                   section of a Cargo.toml, or src/platform/other.rs). --no-windows skips it.
+#                                   When cargo-xwin is not installed it is skipped with a note.
 #
 # What it runs, the same way CI does (docs/CI.md):
 #   cargo fmt --all --check
@@ -34,6 +39,7 @@ all=0
 heavy=0
 plan_only=0
 linux=auto
+windows=auto
 for a in "$@"; do
   case "$a" in
     --all) all=1 ;;
@@ -41,6 +47,8 @@ for a in "$@"; do
     --plan) plan_only=1 ;;
     --linux) linux=1 ;;
     --no-linux) linux=0 ;;
+    --windows) windows=1 ;;
+    --no-windows) windows=0 ;;
     -h | --help) sed -n '2,/^set -euo/p' "$0" | grep '^#' | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown option: $a (see --help)" >&2; exit 2 ;;
   esac
@@ -117,7 +125,8 @@ fi
 # gpui-base is a vendored copy that is not linted, so it does not count.
 linux_code="$(printf '%s\n' "$changed" | grep -E '\.rs$' | grep -v '^apps/desktop/patches/' | while read -r f; do
   [ -f "$f" ] || continue
-  case "$f" in */platform/other.rs) echo "$f"; continue ;; esac
+  # (not a `case`: macOS bash 3.2 cannot parse its `)` inside $( ))
+  if [[ "$f" == */platform/other.rs ]]; then echo "$f"; continue; fi
   grep -qE 'target_os *= *"linux"' "$f" && echo "$f"
 done || true)"
 if [ "$linux" = auto ]; then
@@ -129,7 +138,32 @@ if [ "$linux" = auto ]; then
   fi
 fi
 
+# Windows-only code among the changed files? Then the Windows check runs too (unless --no-windows). A
+# Cargo.toml counts: a dependency missing from its cfg(windows) section only fails on Windows.
+windows_code="$(printf '%s\n' "$changed" | grep -E '(\.rs|Cargo\.toml)$' | grep -v '^apps/desktop/patches/' | while read -r f; do
+  [ -f "$f" ] || continue
+  # (not a `case`: macOS bash 3.2 cannot parse its `)` inside $( ))
+  if [[ "$f" == */platform/other.rs ]]; then echo "$f"; continue; fi
+  grep -qE 'cfg\(windows\)|target_os *= *"windows"|cfg\(target_os = "windows"\)' "$f" && echo "$f"
+done || true)"
+if [ "$windows" = auto ]; then
+  if [ -n "$windows_code" ]; then
+    windows=1
+    echo "windows: Windows-only code changed ($(printf '%s' "$windows_code" | head -1)$([ "$(printf '%s\n' "$windows_code" | wc -l)" -gt 1 ] && echo ' and more')), the Windows check will run"
+  else
+    windows=0
+  fi
+fi
+# The Windows check needs cargo-xwin (cargo install cargo-xwin --locked) and llvm and lld from Homebrew.
+if [ "$windows" = 1 ]; then
+  if ! PATH="/opt/homebrew/opt/llvm/bin:/opt/homebrew/opt/lld/bin:$PATH" bash -c 'for t in cargo-xwin clang-cl lld-link; do command -v "$t" > /dev/null || exit 1; done'; then
+    echo "windows: skipped, cargo-xwin, clang-cl or lld-link is not installed (see docs/CI.md, the local Windows check)"
+    windows=0
+  fi
+fi
+
 if [ "$plan_only" = 1 ]; then
+  [ "$windows" = 1 ] && echo "windows: tools/preflight-windows.sh would run after the macOS checks"
   [ "$linux" = 1 ] && echo "linux: tools/preflight-linux.sh would run after the macOS checks"
   exit 0
 fi
@@ -168,6 +202,14 @@ if [ "$linux" = 1 ]; then
   [ "$heavy" = 1 ] && lflags+=(--heavy)
   # This script holds the heavy lock; the Linux script sees PANOPLY_HEAVY_LOCK_HELD and does not wait for it.
   tools/preflight-linux.sh ${lflags[@]+"${lflags[@]}"}
+fi
+
+if [ "$windows" = 1 ]; then
+  step "Windows check (tools/preflight-windows.sh)"
+  wflags=()
+  [ "$all" = 1 ] && wflags+=(--all)
+  # This script holds the heavy lock; the Windows script sees PANOPLY_HEAVY_LOCK_HELD and does not wait for it.
+  tools/preflight-windows.sh ${wflags[@]+"${wflags[@]}"}
 fi
 
 printf '\npreflight passed in %ss\n' "$((SECONDS - start))"

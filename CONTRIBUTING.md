@@ -40,6 +40,17 @@ openbox (a window titled Panoply appears, the command bar is not mapped before t
 saved). Only one heavy check runs on the machine at a time: a second one prints "waiting for another check"
 (`tools/lib/heavy-lock.sh`). Details in [docs/CI.md](docs/CI.md).
 
+**The Windows check.** Windows-only errors (the `cfg(windows)` code, a dependency missing from a `cfg(windows)`
+section of a `Cargo.toml`, the `src/platform/other.rs` fallback) are found on your Mac, with no VM, by
+`tools/preflight-windows.sh`: `cargo xwin clippy --target x86_64-pc-windows-msvc -- -D warnings` for the changed
+crates and the crates that depend on them (`--all` for the workspace, `--build` also links `panoply-desktop.exe`,
+which is never run). One time setup: `brew install llvm lld`, `cargo install cargo-xwin --locked`,
+`rustup target add x86_64-pc-windows-msvc`. The first run downloads Microsoft's C runtime and Windows SDK into
+`~/Library/Caches/cargo-xwin`: Microsoft's files under Microsoft's license, for local development builds only,
+never committed and never redistributed. `tools/preflight.sh --windows` runs it after the macOS checks, and does
+so by itself when a changed file holds Windows-only code; it is skipped with a note when cargo-xwin is not
+installed, and `--no-windows` skips it. Details in [docs/CI.md](docs/CI.md).
+
 The same checks by hand:
 
 ```sh
