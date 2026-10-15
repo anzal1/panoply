@@ -1,0 +1,74 @@
+# DRAFT. Not active. Copy to .github/workflows/render-launch-film.yml once docs/launch/video exists.
+# Renders the silent picture of the launch film on a public-repo runner, so it is free and never runs on the owner's Mac.
+# The licensed track is never fetched here (see docs/launch/PRODUCTION.md, "Audio").
+name: Render launch film
+
+on:
+  workflow_dispatch:
+    inputs:
+      quality:
+        description: draft for layout, looks for review, delivery for the master
+        type: choice
+        options: [draft, looks, delivery]
+        default: draft
+      fps:
+        description: frames per second
+        type: choice
+        options: ["30", "60"]
+        default: "30"
+      tag:
+        description: release tag the captures belong to (artifact launch-captures-<tag>)
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: render-launch-film
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: docs/launch/video
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/launch/video/package-lock.json
+
+      - run: npm ci
+      - run: npx hyperframes browser ensure
+
+      # tools.json and claims.json come from the tag, so the film cannot show a tool or a number the build does not have.
+      - run: node ../tools/build-data.mjs --repo ${{ github.workspace }} --out data
+
+      - name: Fetch the real app captures
+        uses: actions/download-artifact@v4
+        with:
+          name: launch-captures-${{ inputs.tag }}
+          path: docs/launch/video/assets/captures
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ vars.CAPTURES_RUN_ID }}
+
+      - run: npx hyperframes check . --snapshots --strict
+
+      # No `track` variable: the picture is silent. Muxing the licensed track happens locally in seconds.
+      - run: npx hyperframes render . --quality ${{ inputs.quality }} --fps ${{ inputs.fps }} --strict --output renders/picture.mp4
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: launch-film-picture-${{ inputs.quality }}-${{ inputs.fps }}fps
+          path: |
+            docs/launch/video/renders/picture.mp4
+            docs/launch/video/snapshots/**
+          retention-days: 14

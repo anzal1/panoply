@@ -1,0 +1,23 @@
+{
+  "note": "All times in beats from the first video downbeat (bar 1 beat 1 = 0). 4/4. Fractions are 16ths (0.25). Scene lengths are in bars, so the cut re-times itself to any tempo between 120 and 150 BPM: node tools/cues.mjs --bpm <bpm>",
+  "bars": 20,
+  "tail_beats": 3,
+  "scenes": [
+    { "id": "pain",    "name": "Cold open, the upload chaos", "start": 0,  "bars": 4, "pacing": "accelerating onsets, filtered build",
+      "cues": [ ["first window",0],["windows on every beat",1],["windows on 8ths",4],["Upload.",4],["Wait.",6],["Sign up.",8],["Pay.",10],["Everything freezes, scrim in",12],["Your file just left your computer.",12.5],["hard stop, silence",15.5] ] },
+    { "id": "hotkey",  "name": "The hotkey",                  "start": 16, "bars": 2, "pacing": "DROP on beat 16",
+      "cues": [["DROP: keycaps land, ground turns brand blue",16],["bar opens",16.5],["file lands on the bar",18],["tool list sorts in on 16ths",18.5],["first typed character",20],["last typed character (11 on 16ths)",22.75],["understood chip",23],["Return",23.5]] },
+    { "id": "tools",   "name": "The tools fly in",            "start": 24, "bars": 4, "pacing": "one tile per beat, then 8ths",
+      "cues": [["result card, 35 percent smaller",24],["first tile",26],["tile per beat",27],["tiles on 8ths",32],["counter locks at the real tool count",36],["categories light in a row",37],["resolve to the real Home screen",39]] },
+    { "id": "find",    "name": "Instant search (placeholder)","start": 40, "bars": 2, "pacing": "keystrokes on 16ths",
+      "cues": [["Find view in",40],["type three letters",41],["results reflow per keystroke",41.25],["latency pill (measured)",43],["Every file on your disk.",44],["Before you finish typing.",46]] },
+    { "id": "diskmap", "name": "Disk map (placeholder)",      "start": 48, "bars": 2, "pacing": "rects grow on 8ths",
+      "cues": [["treemap grows",48],["drill into the biggest block",50],["Move to trash",52],["freed counter",53],["See what is eating your space.",54]] },
+    { "id": "plugins", "name": "The moat, community plugins", "start": 56, "bars": 3, "pacing": "build to a fill",
+      "cues": [["UI recedes into the fan",56],["Anyone can add a tool.",57],["folder: module.toml",58],["folder: tool.wasm",59],["folder: icon",60],["module slides into Modules",61],["community badge counts up",62],["wall of community tools",63],["Built by the people.",65],["drum fill",67]] },
+    { "id": "promise", "name": "Free, open source, on device","start": 68, "bars": 2, "pacing": "one phrase per two beats",
+      "cues": [["Free.",68],["Open source.",70],["On your device.",72],["macOS Windows Linux",74]] },
+    { "id": "end",     "name": "End card",                    "start": 76, "bars": 1, "pacing": "final hit then ring out",
+      "cues": [["fan mark + Panoply land on the downbeat",76],["url",77],["hold, track rings out",78]] }
+  ]
+}

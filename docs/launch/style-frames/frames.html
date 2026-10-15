@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Panoply launch style frames</title>
+<meta name="viewport" content="width=1920">
+<!--
+  One file, nine stills. Pick the option and the scene with the query string:
+    frames.html?opt=a|b|c&scene=pain|beat|end
+  render.mjs (next to this file) loops over all nine and writes PNGs. Silent, headless, no window.
+  Every product pixel is a real app render from docs/design/review/after. Nothing here is a mock of the UI.
+-->
+<style>
+@font-face { font-family: "Geist"; src: url("../fonts/Geist-Variable-latin.woff2") format("woff2"); font-weight: 100 900; }
+@font-face { font-family: "Geist Mono"; src: url("../fonts/GeistMono-latin.woff2") format("woff2"); font-weight: 100 900; }
+
+:root {
+  /* the app's palette, from apps/desktop/src/ui/theme.rs and the renders */
+  --app-win: #1c1c1f; --app-side: #161619; --app-ink: #ececf1; --app-ink2: #b6b6be; --app-ink3: #96969e;
+  --blue: #0a84ff; --mark-blue: #2d6cdf; --mark-grey-a: #727884; --mark-grey-b: #808692;
+  --pdf: #ff453a; --img: #bf5af2; --vid: #ff7828; --id: #ff9f0a; --files: #1a84f3; --good: #30d158;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; }
+body { font-family: "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; font-feature-settings: "ss01" 0; }
+#stage { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--bg); color: var(--ink); }
+
+/* ------------------------------------------------ the three options */
+body.a { --bg: #0c0c0f; --ink: #ececf1; --ink2: #a9a9b3; --ink3: #6f6f78; --hair: rgba(255,255,255,.12); --warn: #ff6961; --card: #1c1c1f; --cardink: #ececf1; }
+body.b { --bg: #f3f4f6; --ink: #1d1d1f; --ink2: #54545b; --ink3: #8a8a92; --hair: rgba(0,0,0,.09); --warn: #e5342b; --card: #ffffff; --cardink: #1d1d1f; }
+body.c { --bg: #2d6cdf; --ink: #ffffff; --ink2: rgba(255,255,255,.80); --ink3: rgba(255,255,255,.55); --hair: rgba(255,255,255,.28); --warn: #0b1b44; --card: #ffffff; --cardink: #1d1d1f; }
+
+.abs { position: absolute; }
+.mono { font-family: "Geist Mono", ui-monospace, monospace; }
+.h1 { font-weight: 700; letter-spacing: -0.04em; line-height: 0.98; }
+.fan { position: absolute; }
+.fan svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+/* soft grain over everything, baked once, so flat grounds do not band in H.264 */
+#grain { position: absolute; inset: 0; pointer-events: none; opacity: .16; mix-blend-mode: soft-light; }
+body.b #grain { opacity: .12; }
+
+/* ------------------------------------------------ pain scene: tab chaos, nobody named */
+.win { position: absolute; width: 560px; height: 380px; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; font-size: 20px; }
+.win .bar { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px; }
+.win .bar i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+.win .bar .url { margin-left: 14px; height: 24px; flex: 1; border-radius: 12px; }
+.win .body { flex: 1; padding: 26px 30px; position: relative; }
+body.a .win { background: #1e1e22; color: #e4e4ea; box-shadow: 0 30px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.07); }
+body.a .win .bar { background: #2a2a30; } body.a .win .bar i { background: #4a4a52; } body.a .win .bar .url { background: #1a1a1e; }
+body.b .win, body.c .win { background: #fff; color: #1d1d1f; box-shadow: 0 30px 70px rgba(20,30,60,.22), 0 0 0 1px rgba(0,0,0,.06); }
+body.b .win .bar, body.c .win .bar { background: #eceef1; } body.b .win .bar i, body.c .win .bar i { background: #c9ccd2; } body.b .win .bar .url, body.c .win .bar .url { background: #fff; }
+.win h4 { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.win p { color: inherit; opacity: .62; font-size: 19px; margin-top: 10px; line-height: 1.35; }
+.win .btn { display: inline-block; margin-top: 18px; padding: 12px 22px; border-radius: 10px; color: #fff; font-weight: 600; font-size: 20px; background: var(--k); }
+.win .drop { margin-top: 18px; height: 160px; border-radius: 14px; border: 3px dashed var(--k); display: grid; place-items: center; text-align: center; font-weight: 600; font-size: 26px; }
+.win .prog { margin-top: 22px; height: 16px; border-radius: 8px; background: rgba(128,128,140,.25); overflow: hidden; }
+.win .prog b { display: block; height: 100%; width: 43%; background: var(--k); border-radius: 8px; }
+.win .file { display: flex; align-items: center; gap: 14px; font-weight: 600; font-size: 22px; }
+.win .file u { width: 38px; height: 46px; border-radius: 6px; background: var(--k); display: block; opacity: .9; }
+.win .price { font-size: 72px; font-weight: 800; letter-spacing: -0.04em; margin-top: 12px; color: var(--k); }
+.win .price small { font-size: 22px; font-weight: 600; opacity: .6; letter-spacing: 0; }
+.win .page { position: absolute; left: 30px; top: 22px; width: 190px; height: 240px; background: rgba(128,128,140,.2); border-radius: 6px; overflow: hidden; }
+.win .page em { position: absolute; left: -30px; top: 100px; width: 280px; transform: rotate(-32deg); font-style: normal; font-weight: 800; font-size: 34px; color: var(--k); opacity: .75; letter-spacing: .04em; }
+.win .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 14px; width: 270px; }
+.win .grid i { display: block; aspect-ratio: 1; background: rgba(128,128,140,.3); border-radius: 4px; }
+.win .field { margin-top: 18px; height: 50px; border-radius: 10px; border: 2px solid rgba(128,128,140,.45); display: flex; align-items: center; padding: 0 16px; opacity: .8; }
+.win .banner { margin-top: 0; padding: 14px 18px; border-radius: 10px; background: var(--k); color: #fff; font-weight: 700; font-size: 22px; }
+.win .lines i { display: block; height: 11px; border-radius: 6px; background: rgba(128,128,140,.3); margin-top: 11px; }
+.win .two { display: flex; gap: 12px; }
+
+#pain-layer { position: absolute; inset: 0; }
+#scrim { position: absolute; inset: 0; }
+body.a #scrim { background: radial-gradient(ellipse 62% 58% at 50% 50%, rgba(12,12,15,.97) 0%, rgba(12,12,15,.93) 55%, rgba(12,12,15,.30) 100%); }
+body.b #scrim { background: radial-gradient(ellipse 62% 58% at 50% 50%, rgba(243,244,246,.98) 0%, rgba(243,244,246,.94) 55%, rgba(243,244,246,.35) 100%); }
+body.c #scrim { background: radial-gradient(ellipse 62% 58% at 50% 50%, rgba(45,108,223,.98) 0%, rgba(45,108,223,.94) 55%, rgba(45,108,223,.38) 100%); }
+body.a #pain-layer { filter: saturate(.8); }
+#pain-copy { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; }
+#pain-copy .h1 { font-size: 184px; line-height: 1.0; }
+#pain-copy .w { display: inline-block; }
+#pain-copy .w1 { opacity: .38; } #pain-copy .w2 { opacity: .55; } #pain-copy .w3 { opacity: .75; } #pain-copy .w4 { color: var(--warn); }
+body.c #pain-copy .w4 { color: #fff; text-decoration: underline; text-decoration-thickness: 10px; text-underline-offset: 14px; }
+#pain-sub { margin-top: 34px; font-size: 44px; font-weight: 500; color: var(--ink2); letter-spacing: -0.015em; }
+
+/* ------------------------------------------------ shared product bits */
+.shot { position: absolute; display: block; }
+.shot img { width: 100%; height: 100%; display: block; }
+.keycap { position: absolute; border-radius: 26px; display: grid; place-items: center; font-weight: 600; letter-spacing: -0.02em; }
+.tag { position: absolute; font-size: 30px; font-weight: 500; color: var(--ink2); letter-spacing: -0.01em; }
+.chip { display: inline-block; padding: 10px 24px; border-radius: 999px; font-size: 28px; font-weight: 500; border: 2px solid var(--hair); color: var(--ink2); }
+
+/* option B: tool pills */
+.row { position: absolute; display: flex; gap: 22px; white-space: nowrap; }
+.pill { display: flex; align-items: center; gap: 20px; height: 108px; padding: 0 38px 0 22px; border-radius: 30px; background: #fff; border: 2px solid rgba(0,0,0,.07); box-shadow: 0 14px 40px rgba(20,30,60,.10); font-size: 40px; font-weight: 600; letter-spacing: -0.02em; color: #1d1d1f; }
+.pill .ic { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: color-mix(in srgb, var(--k) 16%, white); }
+.pill .ic svg { width: 34px; height: 34px; stroke: var(--k); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pill.hot { background: #dfe9fb; border-color: rgba(10,132,255,.35); }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script>
+const q = new URLSearchParams(location.search);
+const opt = q.get('opt') || 'a', scene = q.get('scene') || 'beat';
+document.body.className = opt;
+const S = document.getElementById('stage');
+const IMG = '../../design/review/after/';
+const ASSET = '../../assets/';
+const $ = (h) => { const t = document.createElement('template'); t.innerHTML = h.trim(); return t.content.firstChild; };
+const add = (h) => { const n = $(h); S.appendChild(n); return n; };
+
+/* the fan mark: the same path as docs/assets/panoply-mark.svg, three cards about one pivot */
+const CARD = 'M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z';
+const fanSVG = (a, b, c) => `<svg viewBox="0 0 544 544" fill="none"><path d="${CARD}" transform="rotate(-20 272.788 612.197)" fill="${a}"/><path d="${CARD}" transform="rotate(20 272.788 612.197)" fill="${b}"/><path d="${CARD}" fill="${c}"/></svg>`;
+const fan = (x, y, size, cols) => add(`<div class="fan" style="left:${x}px;top:${y}px;width:${size}px;height:${size}px">${fanSVG(...cols)}</div>`);
+const FAN_NATIVE = ['#727884', '#808692', '#2d6cdf'];
+const FAN_ONBLUE = ['rgba(255,255,255,.42)', 'rgba(255,255,255,.62)', '#ffffff'];
+
+const grain = () => {
+  const c = document.createElement('canvas'); c.id = 'grain'; c.width = 480; c.height = 270;
+  c.style.width = '1920px'; c.style.height = '1080px';
+  const g = c.getContext('2d'), d = g.createImageData(480, 270);
+  let s = 12345; const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+  for (let i = 0; i < d.data.length; i += 4) { const v = 128 + (r() - .5) * 90; d.data[i] = d.data[i+1] = d.data[i+2] = v; d.data[i+3] = 255; }
+  g.putImageData(d, 0, 0); S.appendChild(c);
+};
+
+/* radius of the real bar renders: the corner is flattened to a desktop colour, so we round it ourselves */
+const barRound = (w) => `border-radius:${(w * 0.0262).toFixed(1)}px`;
+const winRound = (w) => `border-radius:${(w * 0.0105).toFixed(1)}px`;
+
+/* ================================================= PAIN */
+function pain() {
+  const K = ['#e5484d', '#3e63dd', '#30a46c', '#f76b15', '#8e4ec6', '#d6409f'];
+  const T = [
+    (k) => `<div class="drop" style="--k:${k}">Drop your PDF here<br><span style="font-weight:500;font-size:18px;opacity:.6">Max 25 MB. 2 free tasks per day.</span></div><span class="btn" style="--k:${k}">Select file</span>`,
+    (k) => `<div class="file" style="--k:${k}"><u></u>scan_final_v3.pdf</div><div class="prog" style="--k:${k}"><b></b></div><p>Uploading to our servers... 43%<br>Please do not close this tab.</p>`,
+    (k) => `<h4>Daily limit reached</h4><p>Upgrade to keep going.</p><div class="price" style="--k:${k}">$9<small> / month, billed yearly</small></div><span class="btn" style="--k:${k}">Go Premium</span>`,
+    (k) => `<div class="page" style="--k:${k}"><em>WATERMARK</em></div><div style="margin-left:240px"><h4>Your file is ready</h4><p>Sign up to remove the watermark.</p><span class="btn" style="--k:${k}">Create account</span></div>`,
+    (k) => `<h4>Select all squares with traffic lights</h4><div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="btn" style="--k:${k};position:absolute;right:30px;bottom:22px">Verify</span>`,
+    (k) => `<h4>Where should we send your file?</h4><div class="field">you@email.com</div><span class="btn" style="--k:${k}">Email me the link</span><p>You agree to our weekly newsletter.</p>`,
+    (k) => `<h4>We value your privacy</h4><div class="lines"><i style="width:92%"></i><i style="width:84%"></i><i style="width:60%"></i></div><div class="two"><span class="btn" style="--k:#888">Manage</span><span class="btn" style="--k:${k}">Accept all</span></div>`,
+    (k) => `<div class="banner" style="--k:${k}">File too large. Max 25 MB.</div><div class="file" style="--k:${k};margin-top:26px"><u></u>lease_signed.pdf, 41 MB</div><p>Try Premium for files up to 100 MB.</p>`,
+  ];
+  const layer = add('<div id="pain-layer"></div>');
+  let n = 0;
+  const xs = [-150, 300, 750, 1200, 1620], ys = [-90, 285, 660];
+  const rot = [-3.2, 2.4, -1.4, 3.1, -2.2, 1.6, -3.4, 2.8, -0.8, 3.3, -2.6, 1.1, -1.9, 2.2, -3.0];
+  const off = [[0,20],[-30,-10],[20,0],[10,-30],[0,25],[-20,15],[25,-20],[-10,10],[15,25],[-25,0],[20,-15],[0,0],[-15,30],[30,-5],[-10,-20]];
+  ys.forEach((y, ri) => xs.forEach((x, ci) => {
+    const i = ri * xs.length + ci, k = K[i % K.length];
+    const w = $(`<div class="win" style="left:${x + off[i][0]}px;top:${y + off[i][1]}px;transform:rotate(${rot[i]}deg) scale(${1 + ((i * 7) % 5) * 0.04})"><div class="bar"><i></i><i></i><i></i><span class="url"></span></div><div class="body">${T[(i * 3 + ri) % T.length](k)}</div></div>`);
+    layer.appendChild(w);
+  }));
+  add('<div id="scrim"></div>');
+  add(`<div id="pain-copy"><div class="h1"><span class="w w1">Upload.</span> <span class="w w2">Wait.</span><br><span class="w w3">Sign up.</span> <span class="w w4">Pay.</span></div><div id="pain-sub">Just to shrink one PDF.</div></div>`);
+}
+
+/* ================================================= BEAT */
+function beatA() {
+  /* Midnight: the hotkey moment */
+  add(`<div class="abs" style="left:50%;top:700px;width:1500px;height:900px;margin-left:-750px;background:radial-gradient(closest-side, rgba(10,132,255,.38), rgba(10,132,255,0) 100%)"></div>`);
+  add(`<div class="abs h1" style="left:0;right:0;top:84px;text-align:center;font-size:116px">One hotkey. Any file.</div>`);
+  const kc = (x, label, w) => add(`<div class="keycap" style="left:${x}px;top:262px;width:${w}px;height:104px;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.18);box-shadow:0 0 0 1px rgba(0,0,0,.4) inset, 0 18px 50px rgba(10,132,255,.25);color:#ececf1;font-size:52px">${label}</div>`);
+  kc(960 - 189, '&#x2325;', 104);
+  kc(960 - 189 + 104 + 24, 'Space', 250);
+  /* the real bar render, bleeding off the bottom */
+  const w = 1120, h = Math.round(w * 920 / 1440);
+  add(`<div class="shot" style="left:${(1920 - w) / 2}px;top:402px;width:${w}px;height:${h}px;${barRound(w)};overflow:hidden;box-shadow:0 0 0 1.5px rgba(255,255,255,.14), 0 40px 120px rgba(0,0,0,.7)"><img src="${IMG}bar-pdf-dark.png"></div>`);
+}
+
+function pillSVG(cat) {
+  const p = {
+    pdf: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
+    img: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 9"/>',
+    vid: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 4v16M16 4v16M3 9h5M3 15h5M16 9h5M16 15h5"/>',
+    id: '<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.7 1.8-2.4 3-2.4s2.4.7 3 2.4M14.5 10h4M14.5 14h3"/>',
+  }[cat];
+  return `<svg viewBox="0 0 24 24">${p}</svg>`;
+}
+const COL = { pdf: '#ff453a', img: '#bf5af2', vid: '#ff7828', id: '#ff9f0a' };
+const TOOLS = [
+  ['Compress PDF', 'pdf'], ['Remove background', 'img'], ['Passport photo', 'id'], ['Trim video', 'vid'], ['Merge PDF', 'pdf'], ['Convert image', 'img'],
+  ['Image to text', 'img'], ['Compress video', 'vid'], ['Signature cleaner', 'id'], ['Split PDF', 'pdf'], ['Resize to exact KB', 'img'], ['Extract audio', 'vid'],
+  ['OCR', 'pdf'], ['Upscale', 'img'], ['Print sheet', 'id'], ['HDR to SDR', 'vid'], ['PDF to images', 'pdf'], ['Strip metadata', 'img'],
+  ['Normalize loudness', 'vid'], ['Organize PDF pages', 'pdf'], ['Erase object', 'img'], ['Repair video', 'vid'], ['Images to PDF', 'pdf'], ['Resize image', 'img'],
+];
+function beatB() {
+  /* Paper: the tools fly in. Calm tilted rows, one pill lit */
+  const wrap = add(`<div class="abs" style="left:0;top:0;width:1920px;height:1080px;overflow:hidden"></div>`);
+  const rows = [[860, -20], [1000, -150], [1140, -60], [1280, -210]];
+  const board = $(`<div class="abs" style="left:880px;top:-60px;width:1500px;height:1700px;transform:rotate(-9deg);transform-origin:0 0"></div>`);
+  wrap.appendChild(board);
+  let ti = 0;
+  for (let r = 0; r < 7; r++) {
+    const row = $(`<div class="row" style="left:${-[40, 170, 20, 220, 90, 260, 0][r]}px;top:${r * 150}px"></div>`);
+    for (let c = 0; c < 4; c++) {
+      const [name, cat] = TOOLS[ti++ % TOOLS.length];
+      const hot = r === 3 && c === 1;
+      row.insertAdjacentHTML('beforeend', `<div class="pill${hot ? ' hot' : ''}" style="--k:${COL[cat]}"><span class="ic">${pillSVG(cat)}</span>${name}</div>`);
+    }
+    board.appendChild(row);
+  }
+  /* fade the left edge of the board into the ground so the headline stays clean */
+  add(`<div class="abs" style="left:700px;top:0;width:420px;height:1080px;background:linear-gradient(90deg, #f3f4f6 0%, rgba(243,244,246,0) 100%)"></div>`);
+  add(`<div class="abs h1" style="left:108px;top:340px;font-size:124px;white-space:nowrap">31 tools.<br>Zero uploads.</div>`);
+  add(`<div class="abs" style="left:116px;top:650px;font-size:42px;font-weight:500;color:var(--ink2);letter-spacing:-0.015em;line-height:1.3;width:640px">PDF, images, video, audio and text from pictures. One hotkey away.</div>`);
+  fan(112, 92, 92, FAN_NATIVE);
+  add(`<div class="abs" style="left:222px;top:104px;font-size:62px;font-weight:700;letter-spacing:-0.035em">Panoply</div>`);
+}
+
+function beatC() {
+  /* Fan: the brand mark opens into three real screens */
+  add(`<div class="abs" style="left:50%;top:90px;width:1500px;margin-left:-750px;text-align:center" ><div class="h1" style="font-size:128px">Every file tool.<br>One app.</div></div>`);
+  const cards = [
+    { src: 'app-home-light.png', ar: 2320 / 1440, rot: -16, bar: false, r: winRound },
+    { src: 'app-tool-result-dark.png', ar: 2320 / 1440, rot: 16, bar: false, r: winRound },
+    { src: 'bar-pdf-light.png', ar: 1440 / 920, rot: 0, bar: true, r: barRound },
+  ];
+  const py = 1500; /* pivot far below the cards, as in the icon */
+  const px = 960;
+  cards.forEach((c, i) => {
+    const w = 880, h = Math.round(w / c.ar);
+    const y = 450;
+    add(`<div class="shot" style="left:${px - w / 2}px;top:${y}px;width:${w}px;height:${h}px;transform-origin:${w / 2}px ${py - y}px;transform:rotate(${c.rot}deg);${c.r(w)};overflow:hidden;box-shadow:0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.55)"><img src="${IMG}${c.src}"></div>`);
+  });
+}
+
+/* ================================================= END */
+function endA() {
+  add(`<div class="abs" style="left:50%;top:420px;width:1400px;height:900px;margin-left:-700px;background:radial-gradient(closest-side, rgba(45,108,223,.35), rgba(45,108,223,0) 100%)"></div>`);
+  fan(960 - 120, 150, 240, FAN_NATIVE);
+  add(`<div class="abs h1" style="left:0;right:0;top:420px;text-align:center;font-size:190px">Panoply</div>`);
+  add(`<div class="abs" style="left:0;right:0;top:640px;text-align:center;font-size:56px;font-weight:500;letter-spacing:-0.02em;color:var(--ink2)">Free. Open source. On your device.</div>`);
+  add(`<div class="abs" style="left:0;right:0;top:800px;text-align:center"><span class="chip">macOS</span>&nbsp;&nbsp;<span class="chip">Windows</span>&nbsp;&nbsp;<span class="chip">Linux</span></div>`);
+  add(`<div class="abs mono" style="left:0;right:0;top:920px;text-align:center;font-size:36px;color:var(--ink3);letter-spacing:-0.01em">github.com/anzal1/panoply</div>`);
+}
+function endB() {
+  fan(112, 92, 92, FAN_NATIVE);
+  add(`<div class="abs" style="left:222px;top:104px;font-size:62px;font-weight:700;letter-spacing:-0.035em">Panoply</div>`);
+  add(`<div class="abs h1" style="left:108px;top:290px;font-size:134px;white-space:nowrap">Free.<br>Open source.<br>On your device.</div>`);
+  add(`<div class="abs mono" style="left:116px;top:944px;font-size:36px;color:var(--ink3)">github.com/anzal1/panoply</div>`);
+  const w = 900, h = Math.round(w * 1440 / 2320);
+  add(`<div class="shot" style="left:1150px;top:300px;width:${w}px;height:${h}px;transform:rotate(-4deg);${winRound(w)};overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.08), 0 50px 120px rgba(20,30,60,.28)"><img src="${IMG}app-home-light.png"></div>`);
+  add(`<div class="abs" style="left:1100px;top:944px;font-size:30px;font-weight:500;color:var(--ink2)">macOS &nbsp;&nbsp;Windows &nbsp;&nbsp;Linux</div>`);
+}
+function endC() {
+  add(`<div class="abs" style="left:0;top:0;width:1920px;height:1080px;background:radial-gradient(ellipse 70% 70% at 50% 42%, rgba(255,255,255,.10), rgba(255,255,255,0) 100%)"></div>`);
+  fan(960 - 230, 70, 460, FAN_ONBLUE);
+  add(`<div class="abs h1" style="left:0;right:0;top:560px;text-align:center;font-size:190px">Panoply</div>`);
+  add(`<div class="abs" style="left:0;right:0;top:775px;text-align:center;font-size:56px;font-weight:500;letter-spacing:-0.02em;color:var(--ink2)">Free. Open source. On your device.</div>`);
+  add(`<div class="abs mono" style="left:0;right:0;top:925px;text-align:center;font-size:36px;color:var(--ink2)">github.com/anzal1/panoply</div>`);
+}
+
+const table = { pain: { a: pain, b: pain, c: pain }, beat: { a: beatA, b: beatB, c: beatC }, end: { a: endA, b: endB, c: endC } };
+document.fonts.load('700 100px Geist').then(() => document.fonts.load('500 40px "Geist Mono"')).finally(() => {
+  table[scene][opt]();
+  grain();
+  document.body.dataset.ready = '1';
+});
+</script>
+</body>
+</html>

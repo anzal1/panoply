@@ -1,0 +1,7 @@
+# the licensed track and its cuts never go into git (see MUSIC.md)
+video/assets/track*
+video/assets/*.wav
+video/assets/*.mp3
+video/renders/
+video/node_modules/
+video/snapshots/
