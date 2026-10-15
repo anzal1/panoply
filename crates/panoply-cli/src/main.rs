@@ -418,11 +418,13 @@ fn examples_dir(name: &str) -> Option<PathBuf> {
             .map(PathBuf::from)
             .filter(|_| name == "examples"),
         Some(PathBuf::from("modules").join(name)),
-        Some(
+        // The source tree this binary was built from: for `cargo run` while developing. A release
+        // build must not look there (on the CI runner that folder exists and holds the examples).
+        cfg!(debug_assertions).then(|| {
             PathBuf::from(env!("CARGO_MANIFEST_DIR"))
                 .join("../../modules")
-                .join(name),
-        ),
+                .join(name)
+        }),
     ];
     candidates.into_iter().flatten().find(|p| p.is_dir())
 }
