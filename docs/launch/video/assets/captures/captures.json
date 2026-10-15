@@ -55,5 +55,13 @@
  "demo_frames_raw": {
   "dark": 13,
   "light": 13
+ },
+ "composited": {
+  "frames": [
+   "demo-light-07",
+   "demo-light-08",
+   "demo-light-09"
+  ],
+  "why": "the real app shows No tools match for the partial queries under 5 and under 50; these frames keep the results of demo-light-06 and take the real search row. Remove when the app is fixed and re-captured."
  }
 }

@@ -2,12 +2,566 @@
 <html><head><meta charset="UTF-8"></head><body>
 <template>
   <style>
-    #root { position: absolute; inset: 0; background: #0c0c0f; color: #ececf1; font: 700 96px Geist, system-ui; display: grid; place-items: center; }
+    @font-face{font-family:"Geist";src:url("assets/fonts/Geist-Variable-latin.woff2") format("woff2");font-weight:100 900}
+    @font-face{font-family:"Geist Mono";src:url("assets/fonts/GeistMono-latin.woff2") format("woff2");font-weight:100 900}
+
+    #root{position:absolute;inset:0;overflow:hidden;font-family:"Geist",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#fff}
+    #root *{box-sizing:border-box}
+    #root .fill{position:absolute;inset:0}
+    #root .abs{position:absolute}
+    #root .mono{font-family:"Geist Mono",ui-monospace,monospace}
+    #root .h1{font-weight:700;letter-spacing:-0.04em;line-height:1}
+
+    /* ------------------------------------------------ pain wall (Midnight, unbranded) */
+    .wslot{position:absolute;width:640px;height:450px}
+    .win{width:640px;height:450px;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;font-size:30px;background:#1e1e22;color:#e4e4ea;box-shadow:0 34px 90px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.07)}
+    .win .bar{height:54px;flex:none;display:flex;align-items:center;gap:10px;padding:0 22px;background:#2a2a30}
+    .win .bar i{width:14px;height:14px;border-radius:50%;background:#4a4a52;display:block}
+    .win .bar .url{margin-left:16px;height:30px;flex:1;border-radius:15px;background:#1a1a1e}
+    .win .body{flex:1;padding:24px 30px;position:relative}
+    .win h4{font-size:40px;font-weight:700;letter-spacing:-0.02em;line-height:1.08}
+    .win p{opacity:.62;font-size:30px;margin-top:12px;line-height:1.3}
+    .win .btn{display:inline-block;margin-top:22px;padding:12px 26px;border-radius:12px;color:#fff;font-weight:600;font-size:30px;background:var(--k)}
+    .win .drop{margin-top:4px;height:160px;border-radius:16px;border:4px dashed var(--k);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:600;font-size:36px}
+    .win .drop small{font-weight:500;font-size:30px;opacity:.6;margin-top:6px}
+    .win .prog{margin-top:26px;height:20px;border-radius:10px;background:rgba(128,128,140,.25);overflow:hidden}
+    .win .prog b{display:block;height:100%;width:43%;background:var(--k);border-radius:10px}
+    .win .file{display:flex;align-items:center;gap:14px;font-weight:600;font-size:32px}
+    .win .file u{width:44px;height:54px;border-radius:7px;background:var(--k);display:block;opacity:.9}
+    .win .price{font-size:84px;font-weight:800;letter-spacing:-0.04em;margin-top:8px;color:var(--k)}
+    .win .price small{font-size:30px;font-weight:600;opacity:.6;letter-spacing:0}
+    .win .page{position:absolute;left:30px;top:22px;width:170px;height:260px;background:rgba(128,128,140,.2);border-radius:8px;overflow:hidden}
+    .win .page em{position:absolute;left:-30px;top:120px;width:300px;transform:rotate(-32deg);font-style:normal;font-weight:800;font-size:36px;color:var(--k);opacity:.75;letter-spacing:.04em}
+    .win .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;width:210px}
+    .win .grid i{display:block;aspect-ratio:1;background:rgba(128,128,140,.3);border-radius:5px}
+    .win .field{margin-top:20px;height:64px;border-radius:12px;border:3px solid rgba(128,128,140,.45);display:flex;align-items:center;padding:0 18px;opacity:.8}
+    .win .banner{padding:14px 20px;border-radius:12px;background:var(--k);color:#fff;font-weight:700;font-size:32px}
+    .win .lines i{display:block;height:14px;border-radius:7px;background:rgba(128,128,140,.3);margin-top:14px}
+    .win .two{display:flex;gap:14px}
+
+    #tz-scrim{background:radial-gradient(ellipse 62% 58% at 50% 50%,rgba(12,12,15,.97) 0%,rgba(12,12,15,.93) 55%,rgba(12,12,15,.30) 100%)}
+    #tz-deep{background:#0c0c0f;opacity:0}
+    #tz-pwords{position:absolute;left:0;right:0;top:50%;margin-top:-190px;height:380px;text-align:center;font-size:184px}
+    #tz-pwords .row{display:block;height:190px;line-height:190px;white-space:nowrap}
+    #tz-pwords .w{display:inline-block}
+    #tz-w4{color:#ff6961}
+    #tz-pline{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 160px;text-align:center;font-size:156px;line-height:1.03;opacity:0}
+    #tz-pline span{display:block;white-space:nowrap}
+    #tz-pline b{color:#ff6961;font-weight:700}
+
+    /* ------------------------------------------------ blue scenes */
+    #tz-bground{background:#2d6cdf}
+    .hd{position:absolute;left:0;right:0;top:44px;text-align:center;white-space:nowrap;font-size:150px}
+    .hd.m{font-size:128px}
+    .keys{position:absolute;top:214px;left:0;right:0;height:92px;display:flex;justify-content:center;gap:20px}
+    .key{height:92px;border-radius:24px;display:flex;align-items:center;justify-content:center;gap:14px;font-weight:600;font-size:44px;letter-spacing:-0.02em;color:#fff;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.55);box-shadow:0 14px 34px rgba(10,30,92,.32)}
+    .key svg{width:46px;height:46px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+    #tz-keys2{opacity:0}
+    #tz-plate{position:absolute;left:400px;top:326px;width:1120px;height:715px;border-radius:29.4px;overflow:hidden;box-shadow:0 0 0 1.5px rgba(255,255,255,.4),0 40px 110px rgba(8,24,70,.5);background:#f1f2f5}
+    #tz-plate img{position:absolute;left:0;top:0;width:1120px;height:715px;display:block;opacity:0}
+    #tz-chipwrap{position:absolute;left:1184px;top:341.6px;width:317px;height:56px;opacity:0}
+    #tz-chipshadow{position:absolute;inset:0;border-radius:28px;box-shadow:0 18px 36px rgba(10,30,92,.35)}
+    #tz-chipclip{position:absolute;inset:0;border-radius:28px;overflow:hidden}
+    #tz-chipclip img{position:absolute;left:-784px;top:-15.6px;width:1120px;height:715px;display:block}
+    #tz-hres{opacity:0}
+    #tz-hres .num{display:inline-block;width:1.2em;text-align:right;font-variant-numeric:tabular-nums}
+
+    /* tools scene */
+    .pill{position:absolute;width:300px;height:96px;border-radius:28px;background:#fff;box-shadow:0 12px 30px rgba(10,30,90,.22);display:flex;align-items:center;gap:12px;padding:0 12px 0 16px;color:#1d1d1f;font-size:30px;font-weight:500;letter-spacing:-0.02em;line-height:1.08;opacity:0}
+    .pill .ic{position:relative;flex:none;width:52px;height:52px;border-radius:15px;background:color-mix(in srgb,var(--k) 16%,white)}
+    .pill .tb{position:absolute;inset:0;border-radius:15px;background:var(--k);opacity:0}
+    .pill .ic svg{position:absolute;left:11px;top:11px;width:30px;height:30px;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+    .pill .g0{stroke:var(--k)} .pill .g1{stroke:#fff;opacity:0}
+    .pill .ring{position:absolute;inset:0;border-radius:28px;border:3px solid var(--k);opacity:0}
+    .pill .nm{flex:1;min-width:0}
+    #tz-count{position:absolute;left:80px;top:120px;opacity:0}
+    #tz-count .n{font-size:330px;font-weight:700;letter-spacing:-0.055em;line-height:.9;font-variant-numeric:tabular-nums}
+    #tz-count .t{font-size:120px;font-weight:700;letter-spacing:-0.04em;line-height:1;margin-top:8px;opacity:.85}
+    #tz-cats{position:absolute;left:80px;top:640px;width:480px;opacity:0}
+    .cat{display:flex;align-items:center;gap:18px;height:66px;font-size:40px;font-weight:600;letter-spacing:-0.02em;color:rgba(255,255,255,.55);opacity:0}
+    .cat i{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.35);display:block;flex:none}
+    .cat b{font-weight:600}
+    .cat em{margin-left:auto;font-style:normal;font-family:"Geist Mono",monospace;font-size:34px;font-weight:500;opacity:.9}
+
+    /* plugin scene */
+    #tz-fan{position:absolute;left:295px;top:240px;width:200px;height:200px;opacity:0}
+    #tz-fan svg{width:100%;height:100%;display:block;overflow:visible}
+    #tz-fold{position:absolute;left:175px;top:630px;width:440px;height:290px;opacity:0}
+    #tz-fold .back{position:absolute;inset:0;border-radius:30px;background:rgba(255,255,255,.5)}
+    #tz-fold .tab{position:absolute;left:0;top:-34px;width:170px;height:60px;border-radius:22px 22px 0 0;background:rgba(255,255,255,.5)}
+    #tz-fold .front{position:absolute;left:0;top:90px;width:440px;height:200px;border-radius:30px;background:#fff;box-shadow:0 -8px 24px rgba(10,30,92,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#1d1d1f}
+    #tz-fold .front b{font-family:"Geist Mono",monospace;font-size:34px;font-weight:600;letter-spacing:-0.02em}
+    #tz-fold .front span{font-size:30px;font-weight:500;color:#54545b}
+    .chip{position:absolute;left:90px;top:-180px;width:260px;height:64px;border-radius:20px;background:#fff;box-shadow:0 14px 30px rgba(10,30,92,.28);display:flex;align-items:center;gap:12px;padding:0 18px;font-family:"Geist Mono",monospace;font-size:30px;font-weight:500;color:#1d1d1f;opacity:0}
+    .chip svg{width:30px;height:30px;stroke:#2d6cdf;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+    #tz-mwin{position:absolute;left:760px;top:335px;width:1120px;height:700px;border-radius:28px;overflow:hidden;background:#fafafb;box-shadow:0 0 0 1.5px rgba(255,255,255,.4),0 36px 100px rgba(8,24,70,.5);opacity:0}
+    #tz-mwin img{position:absolute;display:block;width:3016px;height:1872px;left:-624px;top:-26px}
+    #tz-mlist{position:absolute;left:0;top:270px;width:1120px;height:430px;overflow:hidden;background:#fafafb}
+    #tz-mslide{position:absolute;left:0;top:0;width:1120px;height:430px;overflow:hidden}
+    #tz-mslide img{left:-624px;top:-296px}
+    #tz-mpatch{position:absolute;left:17px;top:150px;width:1110px;height:96px;background:#fafafb}
+    #tz-mhead{position:absolute;left:42px;top:176px;height:44px;font-size:31px;line-height:44px;color:#54545b;white-space:nowrap;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;letter-spacing:-0.005em}
+    #tz-mhead .rb{display:inline-block;height:44px;overflow:hidden;vertical-align:top}
+    #tz-mhead .rc{display:block}
+    #tz-mhead .rc i{display:block;height:44px;font-style:normal}
+    #tz-mhl{position:absolute;left:27px;top:172px;width:555px;height:52px;border-radius:12px;background:rgba(10,132,255,.14);opacity:0}
+    #tz-mrow{position:absolute;left:73px;top:308px;width:1000px;height:83px;opacity:0}
+    #tz-mrow .tile{position:absolute;left:0;top:0;width:83px;height:83px;border-radius:18px;background:#d2e6fc;display:flex;align-items:center;justify-content:center}
+    #tz-mrow .tile svg{width:44px;height:44px;stroke:#0a84ff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    #tz-mrow .nm{position:absolute;left:138px;top:-4px;font-size:35px;line-height:42px;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;white-space:nowrap}
+    #tz-mrow .sb{position:absolute;left:138px;top:41px;font-size:31px;line-height:42px;color:#54545b;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;white-space:nowrap}
+    #tz-mrow .pl{position:absolute;left:770px;top:19px;height:46px;padding:0 20px;border-radius:23px;background:#dfe9fb;color:#1a5fd0;font-size:30px;line-height:46px;font-weight:600;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;white-space:nowrap}
+
+    /* wall */
+    #tz-wall2{opacity:0}
+    .slot{position:absolute;width:232px;height:160px;border-radius:26px;border:3px dashed rgba(255,255,255,.42);opacity:0}
+    .wc{position:absolute;width:232px;height:160px;border-radius:26px;background:#fff;box-shadow:0 12px 28px rgba(10,30,92,.22);padding:20px 18px;opacity:0;display:flex;flex-direction:column;gap:14px}
+    .wc .wi{position:relative;width:56px;height:56px;border-radius:16px;flex:none;background:color-mix(in srgb,var(--k) 16%,white)}
+    .wc .wi svg{position:absolute;left:13px;top:13px;width:30px;height:30px;fill:none;stroke:var(--k);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+    .wc .sk{height:16px;border-radius:8px;background:rgba(29,29,31,.1)}
+    .wc .sk.s{width:62%}
+    .wc .rn{font-size:30px;font-weight:600;letter-spacing:-0.02em;line-height:1.05;color:#1d1d1f}
+
+    /* phrases and end */
+    .ph{position:absolute;inset:0}
+    .ph .g{position:absolute;inset:0}
+    .ph .tx{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-0.045em;font-size:200px;line-height:1;white-space:nowrap}
+    #tz-end{position:absolute;inset:0}
+    #tz-endcam{position:absolute;inset:0}
+    #tz-efan{position:absolute;left:770px;top:48px;width:380px;height:380px;opacity:0}
+    #tz-efan svg{width:100%;height:100%;display:block;overflow:visible}
+    #tz-ename{position:absolute;left:0;right:0;top:452px;text-align:center;font-size:196px;opacity:0}
+    #tz-eline{position:absolute;left:0;right:0;top:700px;text-align:center;font-size:68px;font-weight:500;letter-spacing:-0.025em;color:rgba(255,255,255,.88);opacity:0}
+    #tz-eurl{position:absolute;left:0;right:0;top:860px;text-align:center;font-size:44px;color:rgba(255,255,255,.8);letter-spacing:-0.01em;opacity:0}
+    #tz-grain{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;opacity:.13;mix-blend-mode:soft-light}
   </style>
-  <div id="root" data-composition-id="teaser" data-width="1920" data-height="1080"><div>teaser</div></div>
+
+  <div id="root" data-composition-id="teaser" data-width="1920" data-height="1080">
+    <div id="tz-gmid" class="fill" style="background:#0c0c0f"></div>
+
+    <!-- 1. Midnight cold open -->
+    <div id="tz-pain" class="fill">
+      <div id="tz-wall" class="fill" data-layout-ignore data-layout-allow-overflow data-layout-allow-occlusion></div>
+      <div id="tz-scrim" class="fill"></div>
+      <div id="tz-deep" class="fill"></div>
+      <div id="tz-pwords" class="h1">
+        <div class="row"><span class="w" id="tz-w1">Upload.</span> <span class="w" id="tz-w2" style="opacity:0">Wait.</span></div>
+        <div class="row"><span class="w" id="tz-w3" style="opacity:0">Sign up.</span> <span class="w" id="tz-w4" style="opacity:0">Pay.</span></div>
+      </div>
+      <div id="tz-pline" class="h1"><div><span>Your file just left</span><span>your <b>computer.</b></span></div></div>
+    </div>
+
+    <!-- 2. Brand blue from the drop -->
+    <div id="tz-blue" class="fill">
+      <div id="tz-bground" class="fill"></div>
+
+      <div id="tz-cam1" class="fill">
+        <div id="tz-hhot" class="hd h1">One hotkey.</div>
+        <div id="tz-hres" class="hd h1"><span class="num" id="tz-cnt">0</span>% smaller.</div>
+        <div id="tz-keys1" class="keys">
+          <div class="key" style="width:112px"><svg viewBox="0 0 24 24"><path d="M3 6h5.5l7 12H21M14 6h7"/></svg></div>
+          <div class="key" style="width:240px">Space</div>
+        </div>
+        <div id="tz-keys2" class="keys">
+          <div class="key" id="tz-retkey" style="width:280px"><svg viewBox="0 0 24 24"><path d="M20 5v7a2 2 0 0 1-2 2H5M9 10l-4 4 4 4"/></svg>Return</div>
+        </div>
+        <div id="tz-plate">
+          <img id="tz-i-rest" src="assets/captures/bar-rest-light.png">
+          <img id="tz-i-00" src="assets/captures/demo-light-00.png">
+          <img id="tz-i-01" src="assets/captures/demo-light-01.png">
+          <img id="tz-i-02" src="assets/captures/demo-light-02.png">
+          <img id="tz-i-03" src="assets/captures/demo-light-03.png">
+          <img id="tz-i-04" src="assets/captures/demo-light-04.png">
+          <img id="tz-i-05" src="assets/captures/demo-light-05.png">
+          <img id="tz-i-06" src="assets/captures/demo-light-06.png">
+          <img id="tz-i-07" src="assets/captures/demo-light-07.png">
+          <img id="tz-i-08" src="assets/captures/demo-light-08.png">
+          <img id="tz-i-09" src="assets/captures/demo-light-09.png">
+          <img id="tz-i-10" src="assets/captures/demo-light-10.png">
+          <img id="tz-i-11" src="assets/captures/demo-light-11.png">
+          <img id="tz-i-res" src="assets/captures/bar-result-light.png">
+        </div>
+        <div id="tz-chipwrap"><div id="tz-chipshadow"></div><div id="tz-chipclip"><img src="assets/captures/demo-light-00.png"></div></div>
+      </div>
+
+      <div id="tz-cam2" class="fill">
+        <div id="tz-grid" class="fill"></div>
+        <div id="tz-count" class="h1"><div class="n" id="tz-cnt2">3</div><div class="t">tools.</div></div>
+        <div id="tz-cats"></div>
+      </div>
+
+      <div id="tz-cam3" class="fill">
+        <div id="tz-hplug" class="hd m h1" style="opacity:0">Anyone can add a tool.</div>
+        <div id="tz-fan"></div>
+        <div id="tz-mwin">
+          <img src="assets/captures/app-modules-light.png">
+          <div id="tz-mlist"><div id="tz-mslide"><img src="assets/captures/app-modules-light.png"></div></div>
+          <div id="tz-mpatch"></div>
+          <div id="tz-mhl"></div>
+          <div id="tz-mhead"><span class="rb"><span class="rc" id="tz-r1"><i>31</i><i>32</i></span></span> installed, <span class="rb"><span class="rc" id="tz-r2"><i>0</i><i>1</i></span></span> from the community</div>
+          <div id="tz-mrow">
+            <div class="tile"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></div>
+            <div class="nm">Slugify lines</div>
+            <div class="sb">text.slugify_lines  ·  Chosen files only</div>
+            <div class="pl">Community</div>
+          </div>
+        </div>
+        <div id="tz-fold">
+          <div class="back"></div><div class="tab"></div>
+          <div class="chip" id="tz-c1"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>module.toml</div>
+          <div class="chip" id="tz-c2"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>tool.wasm</div>
+          <div class="chip" id="tz-c3"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>icon.svg</div>
+          <div class="front"><b>slugify-lines</b><span class="fc" style="position:relative;display:block;height:36px;width:200px;text-align:center"><span id="tz-fc0" style="position:absolute;left:0;right:0">0 files</span><span id="tz-fc1" style="position:absolute;left:0;right:0;opacity:0">1 file</span><span id="tz-fc2" style="position:absolute;left:0;right:0;opacity:0">2 files</span><span id="tz-fc3" style="position:absolute;left:0;right:0;opacity:0">3 files</span></span></div>
+        </div>
+      </div>
+
+      <div id="tz-cam4" class="fill">
+        <div id="tz-hwall" class="hd m h1" style="opacity:0">Built by the people.</div>
+        <div id="tz-wall2" class="fill"></div>
+      </div>
+    </div>
+
+    <!-- 3. Three phrases, one ground each -->
+    <div id="tz-ph1" class="ph"><div class="g" style="background:#f3f4f6"></div><div class="tx h1" id="tz-t1" style="color:#0c0c0f">Free.</div></div>
+    <div id="tz-ph2" class="ph"><div class="g" style="background:#0c0c0f"></div><div class="tx h1" id="tz-t2" style="color:#ececf1">Open source.</div></div>
+    <div id="tz-ph3" class="ph"><div class="g" style="background:#1f4fb0"></div><div class="tx h1" id="tz-t3" style="color:#fff">On your device.</div></div>
+
+    <!-- 4. End card -->
+    <div id="tz-end">
+      <div class="g fill" id="tz-eground" style="background:#2d6cdf"></div>
+      <div id="tz-endcam">
+        <div id="tz-efan"></div>
+        <div id="tz-ename" class="h1">Panoply</div>
+        <div id="tz-eline"></div>
+        <div id="tz-eurl" class="mono">github.com/anzal1/panoply</div>
+      </div>
+    </div>
+
+    <canvas id="tz-grain" width="480" height="270"></canvas>
+  </div>
+
   <script>
-    const tl = gsap.timeline({ paused: true });
-    window.__timelines["teaser"] = tl;
+  (function () {
+    const BEAT = 60 / 146, START = 0;
+    const at = b => (b - START) * BEAT;
+    const RESULT = { from: "67 KB", to: "43 KB", pct: 35 };      // equals the capture bar-result-light.png
+    const END_LINE = "Coming soon.";
+
+    /* fallback copy of assets/data/tools.json, used only if the fetch fails */
+    const TOOLS_FALLBACK = {count:31,tools:[["Passport photo","id"],["Print sheet","id"],["Signature cleaner","id"],["Erase object","image"],["Remove background","image"],["Remove watermark","image"],["Upscale","image"],["Compress image","image"],["Convert image","image"],["Resize to exact KB","image"],["Resize image","image"],["Strip metadata","image"],["Compress video","media"],["Convert video or audio","media"],["Extract audio","media"],["HDR to SDR","media"],["Video and audio info","media"],["Normalize loudness","media"],["Repair video","media"],["Streams","media"],["Stereo to mono","media"],["Trim video or audio","media"],["Image to text","image"],["OCR","pdf"],["Compress PDF","pdf"],["Images to PDF","pdf"],["Merge PDF","pdf"],["Organize PDF pages","pdf"],["Split PDF","pdf"],["PDF to images","pdf"],["Hash files","files"]].map(t=>({name:t[0],category:t[1]}))};
+
+    function build(DATA) {
+      const $ = id => document.getElementById(id);
+      const tl = gsap.timeline({ paused: true });
+      const XO = 'expo.out', PI = 'power3.in';
+      const html = (el, h) => { el.insertAdjacentHTML('beforeend', h); };
+      let seed = 20260915;
+      const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+
+      /* launch date, optional project variable */
+      let launch = '';
+      try { const v = window.__hyperframes && window.__hyperframes.getVariables ? window.__hyperframes.getVariables() : null; if (v && v.launchDate) launch = String(v.launchDate).trim(); } catch (e) {}
+      $('tz-eline').textContent = launch ? 'Coming ' + launch : END_LINE;
+
+      /* entrances land on the beat: expo.out is 97 percent done at half its duration, so it starts half a duration early */
+      const land = (sel, b, o = {}) => {
+        const d = o.dur || 0.55;
+        return tl.fromTo(sel, { opacity: 0, x: o.x || 0, y: o.y === undefined ? 26 : o.y, scale: o.s || 1 },
+          { opacity: 1, x: 0, y: 0, scale: 1, duration: d, ease: XO }, at(b) - d * (o.lead === undefined ? 0.5 : o.lead));
+      };
+      const leave = (sel, b, o = {}) => {
+        const d = o.dur || 0.28;
+        return tl.to(sel, { opacity: 0, y: o.y === undefined ? -28 : o.y, x: o.x || 0, scale: o.s || 1, duration: d, ease: PI, stagger: o.stagger || 0 }, at(b) - (o.end ? d : 0));
+      };
+      const wipe = (sel, b, d = 0.62) => tl.fromTo(sel, { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 -3% 0 0)', duration: d, ease: XO }, at(b));
+      const count = (el, from, to, b, d, ease) => {
+        const o = { v: from };
+        el.textContent = String(from);
+        tl.to(o, { v: to, duration: d, ease: ease || 'power2.out', onUpdate: () => { el.textContent = String(Math.round(o.v)); } }, at(b));
+      };
+      const drift = (sel, b0, b1, from, to, x0, x1, ease) =>
+        tl.fromTo(sel, { scale: from, x: x0 || 0 }, { scale: to, x: x1 || 0, duration: at(b1) - at(b0), ease: ease || 'none' }, at(b0));
+
+      /* the fan mark, same path as docs/assets/panoply-mark.svg, three cards about one pivot */
+      const CARD = 'M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z';
+      const PIVOT = '272.788 612.197';
+      const fanSVG = (id) => `<svg viewBox="0 0 544 544" fill="none"><path id="${id}-l" d="${CARD}" fill="rgba(255,255,255,.42)"/><path id="${id}-r" d="${CARD}" fill="rgba(255,255,255,.62)"/><path id="${id}-c" d="${CARD}" fill="#ffffff"/></svg>`;
+      const openFan = (id, b, d) => {
+        gsap.set([`#${id}-l`, `#${id}-r`], { svgOrigin: PIVOT });
+        tl.fromTo(`#${id}-l`, { rotation: 0 }, { rotation: -20, duration: d, ease: XO }, at(b));
+        tl.fromTo(`#${id}-r`, { rotation: 0 }, { rotation: 20, duration: d, ease: XO }, at(b));
+      };
+
+      /* ============================================================ 1. PAIN WALL */
+      const K = ['#e5484d', '#3e63dd', '#30a46c', '#f76b15', '#8e4ec6', '#d6409f'];
+      const T = [
+        k => `<div class="drop" style="--k:${k}">Drop your PDF here<small>Max 25 MB. 2 free tasks per day.</small></div><span class="btn" style="--k:${k}">Select file</span>`,
+        k => `<div class="file" style="--k:${k}"><u></u>scan_final_v3.pdf</div><div class="prog" style="--k:${k}"><b></b></div><p>Uploading to our servers... 43%<br>Please do not close this tab.</p>`,
+        k => `<h4>Daily limit reached</h4><p>Upgrade to keep going.</p><div class="price" style="--k:${k}">$9<small> / month, billed yearly</small></div>`,
+        k => `<div class="page" style="--k:${k}"><em>WATERMARK</em></div><div style="margin-left:215px"><h4>Your file is ready</h4><p>Sign up to remove the watermark.</p><span class="btn" style="--k:${k}">Create account</span></div>`,
+        k => `<h4>Select all squares with traffic lights</h4><div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="btn" style="--k:${k};position:absolute;right:30px;bottom:24px">Verify</span>`,
+        k => `<h4>Where should we send your file?</h4><div class="field">you@email.com</div><span class="btn" style="--k:${k}">Email me the link</span>`,
+        k => `<h4>We value your privacy</h4><div class="lines"><i style="width:92%"></i><i style="width:84%"></i><i style="width:60%"></i></div><div class="two" style="margin-top:20px"><span class="btn" style="--k:#888">Manage</span><span class="btn" style="--k:${k}">Accept all</span></div>`,
+        k => `<div class="banner" style="--k:${k}">File too large. Max 25 MB.</div><div class="file" style="--k:${k};margin-top:30px"><u></u>lease_signed.pdf, 41 MB</div><p>Try Premium for files up to 100 MB.</p>`,
+      ];
+      const xs = [-170, 160, 490, 820, 1150, 1480], ys = [-90, 270, 630];
+      const rot0 = [-3.2, 2.4, -1.4, 3.1, -2.2, 1.6, -3.4, 2.8, -0.8, 3.3, -2.6, 1.1, -1.9, 2.2, -3.0];
+      const off0 = [[0,20],[-30,-10],[20,0],[10,-30],[0,25],[-20,15],[25,-20],[-10,10],[15,25],[-25,0],[20,-15],[0,0],[-15,30],[30,-5],[-10,-20]];
+      const rot = Array.from({ length: 18 }, (_, i) => rot0[(i * 4) % 15]);
+      const off = Array.from({ length: 18 }, (_, i) => off0[(i * 7 + 2) % 15]);
+      const wall = $('tz-wall');
+      const wins = [];
+      ys.forEach((y, ri) => xs.forEach((x, ci) => {
+        const i = ri * 6 + ci, k = K[i % K.length];
+        wall.insertAdjacentHTML('beforeend',
+          `<div class="wslot" style="left:${x + off[i][0]}px;top:${y + off[i][1]}px;transform:rotate(${rot[i]}deg) scale(${1.1 + ((i * 7) % 5) * 0.035})"><div class="win" id="tz-win${i}"><div class="bar"><i></i><i></i><i></i><span class="url"></span></div><div class="body">${T[(i * 3 + ri) % T.length](k)}</div></div></div>`);
+        wins[i] = $('tz-win' + i);
+      }));
+      const initial = [0, 5, 12, 17, 2, 3, 8, 9, 14, 15];   // already there on frame 0
+      const entering = [1, 4, 6, 7, 10, 11, 13, 16];         // one per half beat, beats 0.5 to 4.0
+      entering.forEach((wi, n) => {
+        const b = 0.5 + n * 0.5, d = 0.38;
+        tl.fromTo(wins[wi], { opacity: 0, y: 26, scale: 1.05 }, { opacity: 1, y: 0, scale: 1, duration: d, ease: XO }, at(b) - d * 0.5);
+      });
+      /* wall drifts and then freezes with the music at beat 4.39 */
+      tl.fromTo('#tz-wall', { scale: 1, x: 0 }, { scale: 1.035, x: -26, duration: at(4.39), ease: 'power1.out' }, 0);
+
+      /* the four words on beats 0, 1, 2, 3 */
+      const pw = (id, b) => tl.fromTo(id, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.42, ease: XO }, at(b) - 0.21);
+      pw('#tz-w2', 1); pw('#tz-w3', 2); pw('#tz-w4', 3);
+      tl.to('#tz-w1', { opacity: 0.55, duration: 0.3, ease: XO }, at(1) - 0.1);
+      tl.to('#tz-w1', { opacity: 0.45, duration: 0.3, ease: XO }, at(2) - 0.1);
+      tl.to('#tz-w2', { opacity: 0.6, duration: 0.3, ease: XO }, at(2) - 0.1);
+      tl.to('#tz-w1', { opacity: 0.38, duration: 0.3, ease: XO }, at(3) - 0.1);
+      tl.to('#tz-w2', { opacity: 0.55, duration: 0.3, ease: XO }, at(3) - 0.1);
+      tl.to('#tz-w3', { opacity: 0.75, duration: 0.3, ease: XO }, at(3) - 0.1);
+
+      /* STOP, beat 4.39 to 7.92: the scrim deepens, the words leave, one line glides in and holds */
+      tl.to('#tz-deep', { opacity: 0.6, duration: 0.5, ease: XO }, at(4.39));
+      tl.to('#tz-pwords', { opacity: 0, y: -34, duration: 0.34, ease: PI }, at(4.39));
+      tl.fromTo('#tz-pline', { opacity: 0, y: 34 }, { opacity: 1, y: 0, duration: 0.8, ease: XO }, at(4.9));
+
+      /* ============================================================ 2. THE DROP, beat 8 */
+      wipe('#tz-blue', 8, 0.55);
+      /* once the blue ground has covered it, the cold open is switched off (nothing hidden is left rendering) */
+      tl.set('#tz-pain', { opacity: 0 }, at(8) + 0.6);
+      drift('#tz-cam1', 8, 14.6, 1, 1.045, 0, -10);
+
+      /* the bar opens in place */
+      tl.fromTo('#tz-i-rest', { opacity: 0 }, { opacity: 1, duration: 0.01 }, at(8.05));
+      tl.fromTo('#tz-plate', { opacity: 0, scale: 0.96, y: 18 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: XO }, at(8.05));
+
+      /* a file chip lands on the bar on beat 9 (pixel-exact crop of the captured chip) */
+      tl.fromTo('#tz-chipwrap', { opacity: 0, x: 240, y: -100 }, { opacity: 1, x: 0, y: 0, duration: 0.36, ease: XO }, at(9) - 0.36);
+      tl.to('#tz-chipshadow', { opacity: 0, duration: 0.12, ease: 'none' }, at(9) - 0.12);
+      tl.set('#tz-i-rest', { opacity: 0 }, at(9));
+      tl.set('#tz-i-00', { opacity: 1 }, at(9));
+      tl.set('#tz-chipwrap', { opacity: 0 }, at(9) + 0.001);
+
+      /* "under 50 kb" on 16ths, frame k at beat 9.25 + (k - 1) * 0.25 */
+      const pad = n => (n < 10 ? '0' : '') + n;
+      for (let k = 1; k <= 11; k++) {
+        const b = 9.25 + (k - 1) * 0.25;
+        tl.set('#tz-i-' + pad(k), { opacity: 1 }, at(b));
+        tl.set('#tz-i-' + pad(k - 1), { opacity: 0 }, at(b));
+      }
+
+      /* Return on beat 12: the key presses, the real result lands, 35 percent counts up */
+      $('tz-hres').setAttribute('aria-label', RESULT.from + ' to ' + RESULT.to + ', ' + RESULT.pct + '% smaller');
+      leave('#tz-keys1', 11.3, { dur: 0.22, y: -10 });
+      tl.fromTo('#tz-keys2', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: XO }, at(11.75));
+      tl.to('#tz-retkey', { backgroundColor: 'rgba(255,255,255,1)', color: '#2d6cdf', borderColor: 'rgba(255,255,255,1)', duration: 0.1, ease: 'none' }, at(12));
+      leave('#tz-hhot', 12, { dur: 0.22, y: -34, end: true });
+      tl.fromTo('#tz-hres', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: XO }, at(12));
+      count($('tz-cnt'), 0, RESULT.pct, 12, 0.55, 'power2.out');
+      /* the real result is a hard cut on the hit, with a small settle of the plate */
+      tl.set('#tz-i-res', { opacity: 1 }, at(12));
+      tl.set('#tz-i-11', { opacity: 0 }, at(12));
+      tl.fromTo('#tz-plate', { scale: 0.985 }, { scale: 1, duration: 0.5, ease: XO, immediateRender: false }, at(12));
+
+      /* the bar shrinks away */
+      const barOut = 13.2;
+      tl.to('#tz-plate', { opacity: 0, scale: 0.62, y: 70, duration: 0.4, ease: PI }, at(barOut));
+      leave('#tz-keys2', barOut, { dur: 0.3, y: 30 });
+      leave('#tz-hres', 13.4, { dur: 0.26, y: -34 });
+
+      /* ============================================================ 3. THE TOOLS */
+      const CATS = [['pdf', 'PDF', '#ff453a'], ['id', 'ID and forms', '#ff9f0a'], ['image', 'Images', '#bf5af2'], ['media', 'Video', '#ff7828'], ['files', 'Files', '#1a84f3']];
+      const GLYPH = {
+        pdf: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
+        image: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 9"/>',
+        media: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 4v16M16 4v16M3 9h5M3 15h5M16 9h5M16 15h5"/>',
+        id: '<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.7 1.8-2.4 3-2.4s2.4.7 3 2.4M14.5 10h4M14.5 14h3"/>',
+        files: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+      };
+      const colOf = c => CATS.find(x => x[0] === c)[2];
+      const sorted = CATS.flatMap(c => DATA.tools.filter(t => t.category === c[0]));
+      const TOTAL = DATA.count;
+      const grid = $('tz-grid');
+      const GX = 624, GY = 107, PW = 300, PH = 96, GAPX = 16, GAPY = 14;
+      const pills = sorted.map((t, i) => {
+        const col = Math.floor(i / 8), row = i % 8, k = colOf(t.category);
+        const x = GX + col * (PW + GAPX), y = GY + row * (PH + GAPY);
+        grid.insertAdjacentHTML('beforeend',
+          `<div class="pill" id="tz-p${i}" style="left:${x}px;top:${y}px;--k:${k}"><span class="ic"><i class="tb"></i><svg class="g0" viewBox="0 0 24 24">${GLYPH[t.category]}</svg><svg class="g1" viewBox="0 0 24 24">${GLYPH[t.category]}</svg></span><span class="nm">${t.name}</span><i class="ring"></i></div>`);
+        return { el: $('tz-p' + i), cat: t.category, cx: x + PW / 2, cy: y + PH / 2, i };
+      });
+      const early = pills.filter(p => p.i >= 24 && p.i <= 28);      // five cards, one per half beat, beats 12.5 to 14.5
+      const later = pills.filter(p => !early.includes(p));
+      early.forEach((p, n) => {
+        const d = 0.4;
+        tl.fromTo(p.el, { opacity: 0, x: 150, y: 56 }, { opacity: 1, x: 0, y: 0, duration: d, ease: XO }, at(12.5 + n * 0.5) - d * 0.5);
+      });
+      /* one ripple on beat 15, the strongest hit: centre cards land on the beat, the rest follow in a quick wave */
+      later.forEach(p => {
+        const dist = Math.hypot(p.cx - 1248, p.cy - 540), d = 0.5;
+        const dx = (p.cx - 1248) / (dist || 1), dy = (p.cy - 540) / (dist || 1);
+        tl.fromTo(p.el, { opacity: 0, x: dx * 70, y: dy * 70 + 30, scale: 0.94 }, { opacity: 1, x: 0, y: 0, scale: 1, duration: d, ease: XO }, at(15) + dist * 0.00042 - d * 0.5);
+      });
+
+      /* the counter locks on tools.count */
+      tl.fromTo('#tz-count', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: XO }, at(13.5) - 0.2);
+      count($('tz-cnt2'), 3, 4, 14, 0.12, 'none');
+      count($('tz-cnt2'), 4, TOTAL, 14.3, 0.45, 'expo.out');
+
+      /* categories, listed at the left, light in a row from the 16.5 hit */
+      const cats = $('tz-cats');
+      CATS.forEach((c, i) => {
+        const n = DATA.tools.filter(t => t.category === c[0]).length;
+        cats.insertAdjacentHTML('beforeend', `<div class="cat" id="tz-cat${i}"><i></i><b>${c[1]}</b><em>${n}</em></div>`);
+      });
+      tl.set('#tz-cats', { opacity: 1 }, 0);
+      CATS.forEach((c, i) => tl.fromTo('#tz-cat' + i, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.45, ease: XO }, at(13.7 + i * 0.1) - 0.2));
+      CATS.forEach((c, i) => {
+        const b = 16.5 + i * 0.2, lit = pills.filter(p => p.cat === c[0]).map(p => p.el);
+        const t0 = at(b);
+        tl.to('#tz-cat' + i, { color: '#ffffff', duration: 0.3, ease: XO }, t0);
+        tl.to('#tz-cat' + i + ' i', { backgroundColor: c[2], duration: 0.3, ease: XO }, t0);
+        lit.forEach((el, n) => {
+          const tt = t0 + n * 0.012;
+          tl.to(el.querySelector('.tb'), { opacity: 1, duration: 0.32, ease: XO }, tt);
+          tl.to(el.querySelector('.g1'), { opacity: 1, duration: 0.32, ease: XO }, tt);
+          tl.to(el.querySelector('.g0'), { opacity: 0, duration: 0.32, ease: XO }, tt);
+          tl.to(el.querySelector('.ring'), { opacity: 1, duration: 0.32, ease: XO }, tt);
+        });
+      });
+      drift('#tz-cam2', 12.5, 18.0, 1, 1.03, 0, -12);
+
+      /* the grid pulls back, the left column leaves */
+      tl.to(pills.map(p => p.el), { opacity: 0, scale: 0.95, duration: 0.26, ease: PI, stagger: 0.003 }, at(17.25));
+      leave('#tz-count', 17.4, { dur: 0.26, y: -24 });
+      leave('#tz-cats', 17.4, { dur: 0.26, y: 24 });
+
+      /* ============================================================ 4. ANYONE CAN ADD A TOOL, beats 18 to 24 */
+      $('tz-fan').innerHTML = fanSVG('tz-f1');
+      land('#tz-hplug', 18, { dur: 0.6, y: 30, lead: 0.17 });
+      tl.fromTo('#tz-fan', { opacity: 0, scale: 0.9, y: 20 }, { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: XO }, at(18) - 0.1);
+      openFan('tz-f1', 17.95, 0.75);
+      land('#tz-mwin', 18.4, { dur: 0.7, x: 150, y: 0, lead: 0.15 });
+      land('#tz-fold', 18.6, { dur: 0.6, y: 40, lead: 0.3 });
+      /* three file chips draw into the folder, beats 19, 19.5, 20 */
+      const chipIn = (id, b, n) => {
+        tl.fromTo(id, { opacity: 0, y: 0 }, { opacity: 1, duration: 0.14, ease: 'none' }, at(b) - 0.3);
+        tl.fromTo(id, { y: 0 }, { y: 285, duration: 0.5, ease: XO }, at(b) - 0.3);
+        tl.set('#tz-fc' + n, { opacity: 1 }, at(b));
+        tl.set('#tz-fc' + (n - 1), { opacity: 0 }, at(b));
+      };
+      tl.set('#tz-c1,#tz-c2,#tz-c3', { y: 0 }, 0);
+      chipIn('#tz-c1', 19, 1); chipIn('#tz-c2', 19.5, 2); chipIn('#tz-c3', 20, 3);
+      /* the folder slides into the Modules list, the list makes room, the row settles */
+      tl.to('#tz-fold .front b, #tz-fold .front span', { opacity: 0, duration: 0.15, ease: 'none' }, at(20.5));
+      tl.to('#tz-fold', { x: 492, y: -90, scale: 0.2, duration: 0.7, ease: XO }, at(20.5));
+      tl.to('#tz-mslide', { y: 135, duration: 0.5, ease: XO }, at(21.0));
+      tl.fromTo('#tz-mrow', { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: XO }, at(21.1));
+      tl.to('#tz-fold', { opacity: 0, duration: 0.18, ease: 'none' }, at(21.18));
+      /* header patched to "32 installed, 1 from the community", counted up */
+      tl.to('#tz-fan', { opacity: 0, y: -20, duration: 0.3, ease: PI }, at(21.15));
+      tl.to('#tz-mwin', { x: -360, duration: 0.7, ease: XO }, at(21.3));
+      tl.to('#tz-mhl', { opacity: 1, duration: 0.3, ease: XO }, at(21.9));
+      tl.to('#tz-r1', { y: -44, duration: 0.55, ease: XO }, at(21.8));
+      tl.to('#tz-r2', { y: -44, duration: 0.55, ease: XO }, at(21.8));
+      drift('#tz-cam3', 18, 23.6, 1, 1.03, 0, -10);
+      /* exit before the wall */
+      tl.to('#tz-cam3', { opacity: 0, y: -24, duration: 0.26, ease: PI }, at(23.1));
+
+      /* ============================================================ 5. THE WALL, beats 24 to 30 */
+      const w2 = $('tz-wall2');
+      const COLS = 7, ROWS = 4, SW = 232, SH = 160, SGX = 20, SGY = 20, WX = 88, WY = 320;
+      const REAL = { 0: 'Slugify lines', 9: 'Word count' };
+      const catKeys = ['pdf', 'image', 'media', 'id', 'files'];
+      const slots = [];
+      for (let n = 0; n < COLS * ROWS; n++) {
+        const col = n % COLS, row = Math.floor(n / COLS);
+        const x = WX + col * (SW + SGX), y = WY + row * (SH + SGY);
+        const ck = catKeys[Math.floor(rnd() * 5)], k = colOf(ck);
+        w2.insertAdjacentHTML('beforeend', `<div class="slot" id="tz-s${n}" style="left:${x}px;top:${y}px"></div>`);
+        const real = REAL[n];
+        w2.insertAdjacentHTML('beforeend',
+          `<div class="wc" id="tz-wc${n}" style="left:${x}px;top:${y}px;--k:${real ? '#1a84f3' : k}"><div class="wi"><svg viewBox="0 0 24 24">${real ? GLYPH.pdf : GLYPH[ck]}</svg></div>${real ? `<div class="rn">${real}</div>` : '<div class="sk"></div><div class="sk s"></div>'}</div>`);
+        slots.push(n);
+      }
+      tl.set('#tz-wall2', { opacity: 1 }, 0);
+      land('#tz-hwall', 24, { dur: 0.6, y: 30, lead: 0.2 });
+      tl.fromTo('.slot', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: XO, stagger: 0.012 }, at(23.9));
+      /* cards fill their slots, faster and faster into the end of the wall (the two real ones go first) */
+      const order = [0, 9].concat(slots.filter(n => n !== 0 && n !== 9).map(n => ({ n, r: rnd() })).sort((a, b) => a.r - b.r).map(o => o.n));
+      order.forEach((n, i) => {
+        const x = i / (order.length - 1);
+        const b = 24.4 + 4.8 * (1 - Math.pow(1 - x, 1.55));
+        tl.fromTo('#tz-wc' + n, { opacity: 0, y: 30, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: XO }, at(b) - 0.22);
+      });
+      drift('#tz-cam4', 24, 30.1, 1.055, 1, 0, 0, 'none');
+
+      /* ============================================================ 6. THREE PHRASES, one ground each */
+      const PHR = [['tz-ph1', 'tz-t1', 30], ['tz-ph2', 'tz-t2', 30 + 2.5 / 3], ['tz-ph3', 'tz-t3', 30 + 5 / 3]];
+      PHR.forEach(([ph, t, b]) => {
+        wipe('#' + ph, b, 0.6);
+        tl.fromTo('#' + t, { x: 70 }, { x: 0, duration: 0.5, ease: XO }, at(b) + 0.02);
+        tl.fromTo('#' + t, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'none' }, at(b) + 0.02);
+        const prev = { 'tz-ph1': '#tz-blue', 'tz-ph2': '#tz-ph1', 'tz-ph3': '#tz-ph2' }[ph];
+        tl.set(prev, { opacity: 0 }, at(b) + 0.6);
+        const prevT = { 'tz-ph2': '#tz-t1', 'tz-ph3': '#tz-t2' }[ph];
+        if (prevT) tl.to(prevT, { opacity: 0, x: -50, duration: 0.2, ease: PI }, at(b));
+        tl.fromTo('#' + t, { scale: 1 }, { scale: 1.03, duration: at(2.5 / 3), ease: 'none' }, at(b) + 0.03);
+      });
+
+      /* ============================================================ 7. END CARD, beat 32.5 */
+      $('tz-efan').innerHTML = fanSVG('tz-f2');
+      wipe('#tz-end', 32.5, 0.62);
+      tl.set('#tz-ph3', { opacity: 0 }, at(32.5) + 0.6);
+      tl.fromTo('#tz-efan', { opacity: 0, scale: 0.92, y: 24 }, { opacity: 1, scale: 1, y: 0, duration: 0.7, ease: XO }, at(32.5) + 0.02);
+      openFan('tz-f2', 32.5, 0.9);
+      tl.fromTo('#tz-ename', { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.8, ease: XO }, at(32.5) + 0.12);
+      tl.fromTo('#tz-eline', { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.7, ease: XO }, at(32.5) + 0.28);
+      tl.fromTo('#tz-eurl', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: XO }, at(34) - 0.15);
+      /* a drift that settles into the still hold */
+      tl.fromTo('#tz-endcam', { scale: 1.03 }, { scale: 1, duration: at(34.2) - at(32.5), ease: 'power2.out' }, at(32.5));
+
+      /* ============================================================ grain, painted once from a seeded LCG */
+      (function () {
+        const c = $('tz-grain'), g = c.getContext('2d'), d = g.createImageData(480, 270);
+        let s = 12345; const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+        for (let i = 0; i < d.data.length; i += 4) { const v = 128 + (r() - 0.5) * 90; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+        g.putImageData(d, 0, 0);
+      })();
+
+      window.__timelines["teaser"] = tl;
+    }
+
+    /* read the real tools.json synchronously so the timeline registers in the same tick (fallback copy if it cannot be read) */
+    let DATA = TOOLS_FALLBACK;
+    try {
+      const x = new XMLHttpRequest();
+      x.open('GET', 'assets/data/tools.json', false);
+      x.send(null);
+      if (x.status === 200 || x.status === 0) {
+        const j = JSON.parse(x.responseText);
+        if (j && Array.isArray(j.tools) && j.tools.length) DATA = { count: j.count || j.tools.length, tools: j.tools };
+      }
+    } catch (e) {}
+    window.__tzToolsSource = DATA === TOOLS_FALLBACK ? 'fallback' : 'tools.json';
+    build(DATA);
+  })();
   </script>
 </template>
 </body></html>
