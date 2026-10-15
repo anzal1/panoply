@@ -577,13 +577,28 @@ Journey '2' 'Hotkey, type "compress", Enter: a Compress panel opens' {
     Type-Text 'compress'
     # The typed word has to land in the search box: the placeholder goes away and the Suggested list changes.
     $before = $null; $landed = $false
-    for ($k = 1; $k -le 6 -and -not $landed; $k++) {
+    for ($k = 1; $k -le 5 -and -not $landed; $k++) {
       Start-Sleep -Milliseconds 1200
       $before = Wait-Text $app.proc "bar-typed-$k" { Get-Bar $app.proc } 'compress' 3
       $landed = ($before.text -notmatch 'Search 31 tools')
     }
     Fact 'rows_after_typing' ($before.text -replace '\s+', ' ')
     Check 'the typed word replaces the placeholder in the search box' $landed ($before.text -replace '\s+', ' ')
+    if (-not $landed) {
+      # What does a person do next? Click into the search box and type again. Say which of the two was needed.
+      $b2 = Get-Bar $app.proc
+      Mouse-Click ($b2.x + 200) ($b2.y + 34); Start-Sleep -Milliseconds 500
+      Type-Text 'compress'
+      for ($k = 1; $k -le 4 -and -not $landed; $k++) {
+        Start-Sleep -Milliseconds 1200
+        $before = Wait-Text $app.proc "bar-typed-click-$k" { Get-Bar $app.proc } 'compress' 3
+        $landed = ($before.text -notmatch 'Search 31 tools')
+      }
+      Fact 'typed_after_clicking_the_search_box' $landed
+      if ($landed) { Note 'typing did nothing right after the hotkey and worked after a click into the search box: the bar does not put keyboard focus in its search field' }
+      else { Note 'typing did not reach the bar even after a click into the search box' }
+    }
+    Fact 'rows_after_typing_final' ($before.text -replace '\s+', ' ')
     Check 'typed text and result rows are visible' $before.ok ($before.text -replace '\s+', ' ')
     Press-Key 0x0D; Start-Sleep -Seconds 2
     $after = Wait-Text $app.proc 'bar-after-enter' { Get-Bar $app.proc } 'Choose files|Quality|Run|Options' 8

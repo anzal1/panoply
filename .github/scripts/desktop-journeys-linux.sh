@@ -209,13 +209,27 @@ j_2() { # Hotkey, type compress, Enter
     local bid; bid="$(bar_id)"; xdotool windowfocus "$bid" 2>/dev/null; sleep 0.3
     type_text "compress"
     # The typed word has to land in the search box: the placeholder goes away and the Suggested list changes.
-    local k landed=0
-    for k in 1 2 3 4 5 6; do
+    local k landed=0 g bx by
+    for k in 1 2 3 4 5; do
       sleep 1.2; wait_text "bar-typed-$k" bar 'compress' 3
-      echo "$WT_TEXT" | grep -Eiq 'Search 31 tools' || { landed=1; break; }
+      [ -n "$(echo "$WT_TEXT" | tr -d '[:space:]')" ] && ! echo "$WT_TEXT" | grep -Eiq 'Search 31 tools' && { landed=1; break; }
     done
     data rows_after_typing "$(one_line "$WT_TEXT")"
     check "the typed word replaces the placeholder in the search box" "$landed" "$(one_line "$WT_TEXT")"
+    if [ "$landed" != 1 ]; then
+      # What does a person do next? Click into the search box and type again. Say which of the two was needed.
+      g="$(geom_of bar)"; bx="${g#*+}"; bx="${bx%%+*}"; by="${g##*+}"
+      xdotool mousemove $(( bx + 200 )) $(( by + 34 )) click 1; sleep 0.5
+      type_text "compress"
+      for k in 1 2 3 4; do
+        sleep 1.2; wait_text "bar-typed-click-$k" bar 'compress' 3
+        [ -n "$(echo "$WT_TEXT" | tr -d '[:space:]')" ] && ! echo "$WT_TEXT" | grep -Eiq 'Search 31 tools' && { landed=1; break; }
+      done
+      data typed_after_clicking_the_search_box "$landed"
+      if [ "$landed" = 1 ]; then note "typing did nothing right after the hotkey and worked after a click into the search box: the bar does not put keyboard focus in its search field"
+      else note "typing did not reach the bar even after a click into the search box (or the bar never painted)"; fi
+    fi
+    data rows_after_typing_final "$(one_line "$WT_TEXT")"
     check "typed text and result rows are visible" "$WT_OK" "$(one_line "$WT_TEXT")"
     key Return; sleep 2
     wait_text bar-after-enter bar 'Choose files|Quality|Run|Options' 8
