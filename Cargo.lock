@@ -5205,6 +5205,7 @@ dependencies = [
  "clap",
  "panoply-convert",
  "panoply-core",
+ "panoply-disk",
  "panoply-host",
  "panoply-manifest",
  "panoply-mcp",
