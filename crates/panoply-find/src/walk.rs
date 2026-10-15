@@ -102,6 +102,8 @@ struct Ctx<'a> {
     dirs_excluded: AtomicU64,
     errors: AtomicU64,
     root_dev: u64,
+    /// Entries read so far, for a caller that shows progress.
+    progress: Option<&'a AtomicU64>,
 }
 
 #[cfg(all(unix, target_os = "macos"))]
@@ -283,6 +285,16 @@ pub(crate) fn read_entries(
 
 /// Walks `roots` and returns the finished segment. Roots that cannot be read are counted as errors.
 pub fn walk(roots: &[PathBuf], opts: &WalkOptions) -> io::Result<(Segment, WalkStats)> {
+    walk_with_progress(roots, opts, None)
+}
+
+/// [`walk`], adding the number of entries read to `progress` as the scan goes (a count that only
+/// grows, safe to poll from another thread, for an "indexing, 412,000 files so far" line).
+pub fn walk_with_progress(
+    roots: &[PathBuf],
+    opts: &WalkOptions,
+    progress: Option<&AtomicU64>,
+) -> io::Result<(Segment, WalkStats)> {
     let threads = if opts.threads == 0 {
         std::thread::available_parallelism().map_or(4, |n| n.get())
     } else {
@@ -305,6 +317,7 @@ pub fn walk(roots: &[PathBuf], opts: &WalkOptions) -> io::Result<(Segment, WalkS
         dirs_excluded: AtomicU64::new(0),
         errors: AtomicU64::new(0),
         root_dev,
+        progress,
     };
     let t0 = Instant::now();
     pool.scope(|s| {
@@ -468,6 +481,9 @@ fn visit<'s>(ctx: &'s Ctx<'s>, scope: &rayon::Scope<'s>, path: PathBuf, batch_id
         return;
     }
     ctx.dirs_read.fetch_add(1, Ordering::Relaxed);
+    if let Some(p) = ctx.progress {
+        p.fetch_add((a.ents.len() - e0) as u64, Ordering::Relaxed);
+    }
     if never_index {
         // The folder asked not to be indexed: drop what was read and do not descend.
         a.ents.truncate(e0);

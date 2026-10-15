@@ -21,7 +21,18 @@ use crate::ui::app::{AppView, Route};
 use crate::ui::bar::{Bar, BarMode};
 use crate::ui::icons::Icons;
 use crate::ui::live::{app_window_options_at, bar_window_options};
-use crate::ui::{Hub, Recents};
+use crate::ui::{FindStatus, Hub, Recents};
+
+mod find;
+pub(crate) use find::run_find;
+
+/// The file index parts of a hub for runs that do not look at files: switched off, so nothing
+/// ever scans and the bar and Find page show their "unavailable" state.
+fn find_off(cx: &mut App) -> (crate::finder::Finder, Entity<FindStatus>) {
+    let f = crate::finder::Finder::off();
+    let st = f.state();
+    (f, cx.new(|_| FindStatus { state: st }))
+}
 
 struct Drv<'a> {
     cx: &'a mut AsyncApp,
@@ -299,7 +310,8 @@ pub(crate) fn run(out: PathBuf) {
         let catalog_ms = t_catalog.elapsed().as_secs_f64() * 1000.0;
         let now = crate::units::now_secs();
         let recents = cx.new(|_| Recents { entries: seeded_recents(now, Path::new("/Users/me/Documents")), loaded: true });
-        let hub = Hub { catalog, history: History::at(work.join("history.jsonl")), recents };
+        let (finder, find_status) = find_off(cx);
+        let hub = Hub { catalog, history: History::at(work.join("history.jsonl")), recents, finder, find_status };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
         let bar = cx
@@ -747,10 +759,13 @@ pub(crate) fn run_idle(hold_secs: u64) {
             entries: Vec::new(),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(std::env::temp_dir().join("panoply-idle-history.jsonl")),
             recents,
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
@@ -850,10 +865,13 @@ pub(crate) fn run_review(out: PathBuf) {
             entries: seeded_recents(now, Path::new("/Users/me/Documents")),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(work.join("history.jsonl")),
             recents: recents.clone(),
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
@@ -1543,10 +1561,13 @@ pub(crate) fn run_frames(out: PathBuf) {
                 .collect(),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(work.join("history.jsonl")),
             recents,
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();

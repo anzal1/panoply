@@ -16,6 +16,7 @@ use super::widgets::{
     focus_border, icon, keycap, snap,
 };
 use super::{Hub, Recents};
+use crate::finder::{self, FileHit};
 use crate::platform::{self, Panel};
 use crate::profile::{FileProfile, expand_paths, files_label};
 use crate::search::{self, Action, Results, Row};
@@ -31,6 +32,15 @@ const HEADER: f32 = 28.0;
 const ROW: f32 = 44.0;
 const CHIP_ROW: f32 = 40.0;
 const VIEWPORT: f32 = HEIGHT - SEARCH_ROW - FOOTER;
+/// The footer label for showing a file in the file manager. A constant, so the key handler can
+/// match on it.
+const SHOW_FILE: &str = if cfg!(target_os = "macos") {
+    "Show in Finder"
+} else if cfg!(windows) {
+    "Show in Explorer"
+} else {
+    "Show in folder"
+};
 
 // Critically damped spring, about 220 ms to settle.
 const OMEGA: f32 = 2.0 * std::f32::consts::PI / 0.22;
@@ -145,6 +155,12 @@ pub(crate) struct Bar {
     pub(crate) panel: Option<Entity<ToolPanel>>,
     _panel_sub: Option<Subscription>,
     pub(crate) results: Results,
+    /// Files from the index shown under the tools (at most [`finder::BAR_FILES`]).
+    file_hits: Vec<FileHit>,
+    /// Bumped for every query; a file answer for an older number is dropped.
+    file_gen: u64,
+    /// True from a keystroke until its file answer arrives.
+    files_pending: bool,
     list: ListLayout,
     pub(crate) selected: usize,
     glide: bool,
@@ -209,6 +225,9 @@ impl Bar {
                         cx.notify();
                     }
                 }
+                // Return on a file is handled by the key handler (Return opens, Command+Return
+                // shows it), which also sees this key; one of the two must not act.
+                InputEvent::PressEnter { .. } if bar.selected_is_file() => {}
                 InputEvent::PressEnter { .. } => bar.activate(window, cx),
                 _ => {}
             },
@@ -248,6 +267,9 @@ impl Bar {
             panel: None,
             _panel_sub: None,
             results: Results::default(),
+            file_hits: Vec::new(),
+            file_gen: 0,
+            files_pending: false,
             list: ListLayout::default(),
             selected: 0,
             glide: false,
@@ -282,7 +304,7 @@ impl Bar {
         r.entries.clone()
     }
 
-    fn rebuild(&mut self, cx: &App) {
+    fn rebuild(&mut self, cx: &mut Context<Self>) {
         let history = self.recents(cx);
         self.glide = false;
         self.results = search::search(
@@ -294,9 +316,122 @@ impl Bar {
             },
             &self.query,
         );
+        // Tools are in place and drawn from this call on. Files come after them: the ones from the
+        // last keystroke stay until the index answers, so the list does not blink.
+        let wanted = self.wants_files();
+        if !wanted {
+            self.file_hits.clear();
+        }
+        finder::append_files(&mut self.results, &self.file_hits, now_secs());
         self.list = layout(&self.results);
         self.selected = 0;
         self.snap_to_selection();
+        self.search_files(wanted, cx);
+    }
+
+    /// Files are looked up for a typed query of two letters or more, when no files are dropped on
+    /// the bar and the words were not read as a request ("make this under 50 kb").
+    fn wants_files(&self) -> bool {
+        self.files.is_empty()
+            && self.query.trim().chars().count() >= 2
+            && self.results.understood.is_none()
+    }
+
+    /// Ask the index for files on a worker and put them under the tools when it answers. The tool
+    /// rows never wait for this.
+    fn search_files(&mut self, wanted: bool, cx: &mut Context<Self>) {
+        self.file_gen += 1;
+        let ready = matches!(self.hub.finder.state(), finder::State::Ready { .. });
+        if !wanted || !ready {
+            self.files_pending = false;
+            return;
+        }
+        self.files_pending = true;
+        let generation = self.file_gen;
+        let service = self.hub.finder.clone();
+        let q = self.query.trim().to_string();
+        cx.spawn(async move |this, cx| {
+            let hits = cx
+                .background_executor()
+                .spawn(async move { service.search(&q, finder::BAR_FILES) })
+                .await;
+            let _ = this.update(cx, |bar, cx| {
+                if bar.file_gen != generation {
+                    return;
+                }
+                bar.files_pending = false;
+                bar.file_hits = hits;
+                bar.put_files_under_tools(cx);
+            });
+        })
+        .detach();
+    }
+
+    /// Replace the Files section in place. The tool rows keep their places and the selection stays
+    /// on the row it was on.
+    fn put_files_under_tools(&mut self, cx: &mut Context<Self>) {
+        let selected = self.selected;
+        finder::append_files(&mut self.results, &self.file_hits, now_secs());
+        self.list = layout(&self.results);
+        self.selected = selected.min(self.results.len().saturating_sub(1));
+        self.pill_target = self.list.row_ys.get(self.selected).copied().unwrap_or(0.0);
+        self.pill = SpringState {
+            position: self.pill_target,
+            velocity: 0.0,
+        };
+        let max_y = (self.list.content_height - VIEWPORT).max(0.0);
+        self.scroll_target = self.scroll_target.min(max_y);
+        self.scroll = SpringState {
+            position: self.scroll_target,
+            velocity: 0.0,
+        };
+        cx.notify();
+    }
+
+    /// True when the chosen row is a file from the index.
+    fn selected_is_file(&self) -> bool {
+        matches!(
+            self.results.get(self.selected).map(|r| &r.action),
+            Some(Action::OpenFile { .. })
+        )
+    }
+
+    /// Open the chosen file with its default app, or show it in the file manager. On a worker.
+    fn open_selected_file(&mut self, reveal: bool, cx: &mut Context<Self>) {
+        let Some(Action::OpenFile { path }) = self.results.get(self.selected).map(|r| r.action.clone())
+        else {
+            return;
+        };
+        self.flash_at = Some(Instant::now());
+        cx.spawn(async move |this, cx| {
+            let name = path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            let r = cx
+                .background_executor()
+                .spawn(async move {
+                    if !path.exists() {
+                        return Err("is gone");
+                    }
+                    let r = if reveal {
+                        platform::reveal_path(&path)
+                    } else {
+                        platform::open_path(&path)
+                    };
+                    r.map_err(|_| "could not be opened")
+                })
+                .await;
+            match r {
+                Ok(()) => {
+                    let _ = this.update_in(cx, |bar, window, cx| bar.hide(window, cx));
+                }
+                Err(why) => {
+                    let _ = this.update(cx, |bar, cx| bar.say(format!("{name} {why}."), cx));
+                }
+            }
+        })
+        .detach();
     }
 
     fn snap_to_selection(&mut self) {
@@ -361,6 +496,29 @@ impl Bar {
         }
         let to = (self.selected as i32 + delta).clamp(0, n as i32 - 1) as usize;
         self.select(to, cx);
+    }
+
+    /// Choose a row and scroll to it (the snapshot renderer).
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn select_row(&mut self, i: usize, cx: &mut Context<Self>) {
+        self.select(i, cx);
+        self.pill = SpringState {
+            position: self.pill_target,
+            velocity: 0.0,
+        };
+        self.scroll = SpringState {
+            position: self.scroll_target,
+            velocity: 0.0,
+        };
+    }
+
+    /// The titles of the sections now in the list, and whether a file answer is still on its way.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn section_titles(&self) -> (Vec<String>, bool) {
+        (
+            self.results.sections.iter().map(|s| s.title.clone()).collect(),
+            self.files_pending,
+        )
     }
 
     fn select(&mut self, i: usize, cx: &mut Context<Self>) {
@@ -431,6 +589,7 @@ impl Bar {
         self.flash_at = Some(Instant::now());
         match row.action {
             Action::Unavailable(why) => self.say(why, cx),
+            Action::OpenFile { .. } => self.open_selected_file(false, cx),
             Action::OpenTool { tool, preset } => {
                 let files = self.files.clone();
                 self.open_tool(tool, files, preset, instant, window, cx);
@@ -531,6 +690,7 @@ impl Bar {
             "down" => self.move_sel(1, cx),
             "n" if m.control => self.move_sel(1, cx),
             "p" if m.control => self.move_sel(-1, cx),
+            "enter" if self.selected_is_file() => self.open_selected_file(m.secondary(), cx),
             "enter" => self.activate(window, cx),
             "tab" => self.activate_with(false, window, cx),
             "k" if m.secondary() => self.activate_with(false, window, cx),
@@ -761,32 +921,7 @@ impl Bar {
     }
 
     fn highlighted(name: &str, matched: &[usize]) -> StyledText {
-        let mut runs: Vec<(std::ops::Range<usize>, HighlightStyle)> = vec![];
-        if !matched.is_empty() {
-            let offs: Vec<usize> = name
-                .char_indices()
-                .map(|(b, _)| b)
-                .chain(std::iter::once(name.len()))
-                .collect();
-            let mut i = 0;
-            while i < matched.len() {
-                let mut j = i;
-                while j + 1 < matched.len() && matched[j + 1] == matched[j] + 1 {
-                    j += 1;
-                }
-                if matched[j] + 1 < offs.len() {
-                    runs.push((
-                        offs[matched[i]]..offs[matched[j] + 1],
-                        HighlightStyle {
-                            font_weight: Some(FontWeight::SEMIBOLD),
-                            ..Default::default()
-                        },
-                    ));
-                }
-                i = j + 1;
-            }
-        }
-        StyledText::new(name.to_string()).with_highlights(runs)
+        super::widgets::matched_text(name, matched)
     }
 
     fn render_row(
@@ -1140,7 +1275,13 @@ impl Render for Bar {
 
         let dragging = self.drag_active;
         let trimmed = self.query.trim().to_string();
-        let list_body: AnyElement = if self.results.is_empty() {
+        let searched_files = self.wants_files()
+            && matches!(self.hub.finder.state(), finder::State::Ready { .. });
+        let list_body: AnyElement = if self.results.is_empty() && self.files_pending {
+            // The tools had nothing and the index has not answered yet: a blank list for a few
+            // milliseconds, not a "nothing found" that is about to change.
+            div().size_full().into_any_element()
+        } else if self.results.is_empty() {
             div()
                 .size_full()
                 .flex()
@@ -1167,6 +1308,8 @@ impl Render for Bar {
                         .text_color(t.ink)
                         .child(if trimmed.is_empty() {
                             "No tools".to_string()
+                        } else if searched_files {
+                            format!("No tools or files match \u{201C}{trimmed}\u{201D}")
                         } else {
                             format!("No tools match \u{201C}{trimmed}\u{201D}")
                         }),
@@ -1189,7 +1332,7 @@ impl Render for Bar {
         let list = div()
             .id("results")
             .role(Role::ListBox)
-            .aria_label("Tools")
+            .aria_label("Tools and files")
             .relative()
             .flex_1()
             .w_full()
@@ -1249,6 +1392,11 @@ impl Render for Bar {
             let c = cmd();
             let keys = if self.results.is_empty() {
                 Vec::new()
+            } else if self.selected_is_file() {
+                vec![
+                    ("Open", vec!["\u{21B5}"]),
+                    (SHOW_FILE, vec![c, "\u{21B5}"]),
+                ]
             } else if has_chips {
                 vec![("Edit option", vec!["\u{21E5}"]), ("Run", vec!["\u{21B5}"])]
             } else if !self.files.is_empty() {
@@ -1329,6 +1477,7 @@ impl Render for Bar {
                                     "Actions" | "Edit option" => {
                                         bar.activate_with(false, window, cx)
                                     }
+                                    SHOW_FILE => bar.open_selected_file(true, cx),
                                     _ => bar.activate(window, cx),
                                 })
                                 .ok();
@@ -1339,6 +1488,7 @@ impl Render for Bar {
                                         "Actions" | "Edit option" => {
                                             bar.activate_with(false, window, cx)
                                         }
+                                        SHOW_FILE => bar.open_selected_file(true, cx),
                                         _ => bar.activate(window, cx),
                                     })
                                     .ok();
