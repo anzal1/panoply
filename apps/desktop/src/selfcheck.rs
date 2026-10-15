@@ -989,6 +989,29 @@ pub(crate) fn run_review(out: PathBuf) {
                         &mut log,
                         &mut times,
                     );
+                    // The review panel with three picks and the Full Disk Access note. Nothing is
+                    // moved: the render only draws the panel, and the tree is a temp folder.
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| {
+                            v.pick_named(&["Movies", "Downloads", "Library"], cx);
+                            v.preview_fda_banner(true, cx);
+                            v.show_review(true, cx);
+                        });
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-review",
+                        &file("disk-map-review"),
+                        &mut log,
+                        &mut times,
+                    );
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.show_review(false, cx));
+                    });
                     d.change(app_win, |a, _, cx| {
                         let dv = a.disk_view();
                         dv.update(cx, |v, cx| {

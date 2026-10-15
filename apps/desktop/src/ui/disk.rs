@@ -11,7 +11,7 @@
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use gpui::prelude::*;
@@ -22,11 +22,14 @@ use panoply_disk::{
 };
 
 use super::chrome;
+use super::disk_pick::Picks;
 use super::theme::{Rgb, Theme, is_dark, radius, sp, tint, ty};
 use super::widgets::{
-    ButtonKind, Ramp, button, button_ex, caption, focus_border, icon, icon_button, notice, tip,
+    ButtonKind, Ramp, button, button_ex, caption, focus_border, icon, icon_button, progress_bar,
+    rule, tip,
 };
 use crate::catalog::Category;
+use crate::disk_review::{FdaExplainer, ReviewItem, fda_settings_url};
 use crate::units::format_bytes;
 
 /// Width of the right-hand list.
@@ -36,7 +39,7 @@ const APP_SIDEBAR: f32 = 232.0;
 /// Height of the path bar and of the legend row.
 const BAR_H: f32 = 28.0;
 /// Height of the Full Disk Access banner, gap included.
-const BANNER_H: f32 = 48.0;
+const BANNER_H: f32 = 140.0;
 /// How many rows the "in this folder" list shows.
 const LIST_ROWS: usize = 9;
 /// How many rows the "largest files" list shows.
@@ -169,6 +172,19 @@ pub(crate) struct DiskView {
     fda_preview: bool,
     /// The map's width at the last frame, so the legend row can match it.
     map_w: f32,
+    /// What is picked for the Trash, and the review panel's state.
+    picks: Picks,
+    /// A move or an undo is running on a worker thread.
+    busy: Option<Busy>,
+    /// The person closed the Full Disk Access banner.
+    fda_dismissed: bool,
+}
+
+/// A move or undo in flight.
+struct Busy {
+    done: Arc<AtomicUsize>,
+    total: usize,
+    undoing: bool,
 }
 
 impl DiskView {
@@ -189,6 +205,9 @@ impl DiskView {
             scroll: ScrollHandle::new(),
             fda_preview: false,
             map_w: 600.0,
+            picks: Picks::new(),
+            busy: None,
+            fda_dismissed: false,
         }
     }
 
@@ -277,6 +296,7 @@ impl DiskView {
         self.selected = None;
         self.layout = None;
         self.anim = None;
+        self.picks = Picks::new();
         self.phase = Phase::Done;
         cx.notify();
     }
@@ -383,8 +403,12 @@ impl DiskView {
         }
     }
 
-    fn tile_clicked(&mut self, idx: usize, bounds: Rect, cx: &mut Context<Self>) {
+    fn tile_clicked(&mut self, idx: usize, bounds: Rect, pick: bool, cx: &mut Context<Self>) {
         if self.anim.is_some() {
+            return;
+        }
+        if pick {
+            self.pick_tile(idx, cx);
             return;
         }
         let (Some(scan), Some((_, _, tiles))) = (self.scan.clone(), self.layout.clone()) else {
@@ -413,7 +437,141 @@ impl DiskView {
         self.drill_into(node, rect, bounds, cx);
     }
 
-    /// Arrow keys and Enter on the map.
+    /// What the review list needs to know about an entry. Folded small files and merged tiles have no
+    /// path of their own, so they cannot be picked.
+    fn review_item(&self, node: NodeId) -> Option<ReviewItem> {
+        let tree = &self.scan.as_ref()?.tree;
+        match tree.kind(node) {
+            Kind::Dir | Kind::File | Kind::Symlink => Some(ReviewItem::new(
+                tree.path(node),
+                tree.size(node),
+                tree.kind(node) == Kind::Dir,
+            )),
+            _ => None,
+        }
+    }
+
+    /// True when the entry is on the review list.
+    fn is_picked(&self, node: NodeId) -> bool {
+        self.review_item(node)
+            .is_some_and(|i| self.picks.contains(&i.path))
+    }
+
+    /// Put an entry on the review list, or take it off.
+    fn pick_node(&mut self, node: NodeId, cx: &mut Context<Self>) {
+        if self.busy.is_some() {
+            return;
+        }
+        if let Some(item) = self.review_item(node) {
+            self.picks.toggle(item);
+            cx.notify();
+        }
+    }
+
+    fn pick_tile(&mut self, idx: usize, cx: &mut Context<Self>) {
+        let node = self
+            .layout
+            .as_ref()
+            .and_then(|(_, _, tiles)| tiles.get(idx))
+            .filter(|t| !t.is_more())
+            .map(|t| t.node);
+        if let Some(n) = node {
+            self.pick_node(n, cx);
+        }
+    }
+
+    // ---- review and move ----
+
+    fn open_review(&mut self, cx: &mut Context<Self>) {
+        if self.picks.count() > 0 || self.picks.list.can_undo() {
+            self.picks.open = true;
+            cx.notify();
+        }
+    }
+
+    fn close_review(&mut self, cx: &mut Context<Self>) {
+        self.picks.open = false;
+        cx.notify();
+    }
+
+    /// Move the picks to the Trash on a worker thread. The mover is the real one; the list never
+    /// deletes anything for good.
+    fn start_move(&mut self, cx: &mut Context<Self>) {
+        if self.busy.is_some() || !self.picks.can_move() {
+            return;
+        }
+        self.run_job(false, cx);
+    }
+
+    fn start_undo(&mut self, cx: &mut Context<Self>) {
+        if self.busy.is_some() || !self.picks.list.can_undo() {
+            return;
+        }
+        self.run_job(true, cx);
+    }
+
+    fn run_job(&mut self, undoing: bool, cx: &mut Context<Self>) {
+        let done = Arc::new(AtomicUsize::new(0));
+        let total = if undoing {
+            self.picks.list.moved().len()
+        } else {
+            self.picks.list.len()
+        };
+        self.busy = Some(Busy {
+            done: done.clone(),
+            total,
+            undoing,
+        });
+        let mut picks = std::mem::replace(&mut self.picks, Picks::new());
+        picks.open = true;
+        let (tx, rx) = futures::channel::oneshot::channel();
+        std::thread::spawn(move || {
+            if undoing {
+                picks.run_undo(|trashed, original| {
+                    done.fetch_add(1, Ordering::Relaxed);
+                    panoply_core::put_back(trashed, original)
+                });
+            } else {
+                picks.run_move(panoply_core::trash_item, |pr| {
+                    done.store(pr.done, Ordering::Relaxed)
+                });
+            }
+            let _ = tx.send(picks);
+        });
+        cx.spawn(async move |this, cx| {
+            if let Ok(picks) = rx.await {
+                let _ = this.update(cx, |v, cx| {
+                    v.picks = picks;
+                    v.busy = None;
+                    cx.notify();
+                });
+            }
+        })
+        .detach();
+        cx.spawn(async move |this, cx| {
+            loop {
+                cx.background_executor()
+                    .timer(Duration::from_millis(120))
+                    .await;
+                let alive = this
+                    .update(cx, |v, cx| {
+                        let live = v.busy.is_some();
+                        if live {
+                            cx.notify();
+                        }
+                        live
+                    })
+                    .unwrap_or(false);
+                if !alive {
+                    break;
+                }
+            }
+        })
+        .detach();
+        cx.notify();
+    }
+
+    /// Arrow keys, Space and Enter on the map.
     fn on_map_key(&mut self, ev: &KeyDownEvent, bounds: Rect, cx: &mut Context<Self>) -> bool {
         let Some((_, _, tiles)) = self.layout.clone() else {
             return false;
@@ -448,9 +606,14 @@ impl DiskView {
                 };
                 self.selected = Some(top[prev]);
             }
+            "space" => {
+                if let Some(s) = self.selected {
+                    self.pick_tile(s, cx);
+                }
+            }
             "enter" => {
                 if let Some(s) = self.selected {
-                    self.tile_clicked(s, bounds, cx);
+                    self.tile_clicked(s, bounds, false, cx);
                 }
             }
             _ => return false,
@@ -484,6 +647,7 @@ impl DiskView {
 
     fn banner_shown(&self) -> bool {
         matches!(self.phase, Phase::Done)
+            && !self.fda_dismissed
             && (self.fda_preview
                 || self
                     .scan
@@ -546,26 +710,83 @@ impl DiskView {
 
     // ---- pieces ----
 
-    /// The slot for the Full Disk Access explainer. Unit B fills it with the real explainer; for now
-    /// it is one calm line.
-    fn fda_banner(&self, t: Theme) -> Option<AnyElement> {
+    /// The slot for the Full Disk Access explainer: B's wording, a button that opens the settings pane
+    /// on macOS, and a way to close it.
+    fn fda_banner(&self, t: Theme, cx: &mut Context<Self>) -> Option<AnyElement> {
         if !self.banner_shown() {
             return None;
         }
+        let ex = FdaExplainer::if_needed(true)?;
+        let mac = cfg!(target_os = "macos");
+        let steps = ex.steps.iter().enumerate().map(|(i, s)| {
+            div()
+                .ramp(ty::SMALL)
+                .text_color(t.ink2)
+                .child(format!("{}. {s}", i + 1))
+        });
         Some(
             div()
                 .id("disk-fda-banner")
                 .role(Role::Group)
-                .aria_label("Full Disk Access is off")
+                .aria_label(ex.title)
+                .flex()
+                .flex_row()
+                .items_start()
                 .flex_none()
+                .gap(px(10.))
                 .h(px(BANNER_H - sp::S))
+                .px(px(sp::M))
+                .py(px(10.))
                 .overflow_hidden()
-                .child(notice(
-                    "triangle-alert",
-                    t.warn,
-                    "Some folders were not counted. Full Disk Access would let Panoply read them.",
-                    t,
-                ))
+                .rounded(px(radius::ROW))
+                .bg(t.warn.opacity(0.12))
+                .child(div().pt(px(2.)).child(icon("triangle-alert", 14., t.warn)))
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .flex_1()
+                        .min_w_0()
+                        .gap(px(2.))
+                        .child(
+                            div()
+                                .ramp(ty::BODY)
+                                .font_weight(FontWeight::SEMIBOLD)
+                                .text_color(t.ink)
+                                .child(ex.title),
+                        )
+                        .child(div().ramp(ty::SMALL).text_color(t.ink).child(ex.why))
+                        .child(div().flex().flex_col().pt(px(2.)).children(steps)),
+                )
+                .child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .flex_none()
+                        .items_end()
+                        .gap(px(sp::S))
+                        .child(icon_button(
+                            "disk-fda-close",
+                            "Close this note",
+                            "x",
+                            false,
+                            t,
+                            cx.listener(|v, _, _, cx| {
+                                v.fda_dismissed = true;
+                                cx.notify();
+                            }),
+                        ))
+                        .when(mac, |d| {
+                            d.child(button(
+                                "disk-fda-open",
+                                "Open Full Disk Access settings",
+                                ButtonKind::Secondary,
+                                None,
+                                t,
+                                cx.listener(|_, _, _, cx| cx.open_url(fda_settings_url())),
+                            ))
+                        }),
+                )
                 .into_any_element(),
         )
     }
@@ -615,15 +836,14 @@ impl DiskView {
                     }),
                 ))
             })
-            // The review flow (move to trash) is the next unit's job: the button holds its place.
             .child(button_ex(
                 "disk-review",
                 "Review and move to trash",
                 ButtonKind::Primary,
                 None,
-                false,
+                self.picks.count() > 0 && self.busy.is_none(),
                 t,
-                |_, _, _| {},
+                cx.listener(|v, _, _, cx| v.open_review(cx)),
             ))
             .into_any_element()
     }
@@ -798,12 +1018,14 @@ impl DiskView {
         );
         let r = tile.rect;
         let selected = self.selected == Some(i);
+        let picked = more.is_none() && self.is_picked(tile.node);
         let size_text = format_bytes(bytes);
         let nested_header = folder && tile.depth == 0;
         let drillable = folder && tree.child_count(tile.node) > 0;
         let label = format!(
-            "{name}, {size_text}{}",
-            if drillable { ", folder" } else { "" }
+            "{name}, {size_text}{}{}",
+            if drillable { ", folder" } else { "" },
+            if picked { ", picked for the Trash" } else { "" }
         );
         let el = div()
             .id(("disk-tile", i))
@@ -816,7 +1038,7 @@ impl DiskView {
             .h(px(r.h))
             .rounded(px(if tile.depth == 0 { 4.0 } else { 3.0 }))
             .border_2()
-            .border_color(if selected {
+            .border_color(if selected || picked {
                 t.accent_text
             } else {
                 gpui::transparent_black()
@@ -827,7 +1049,25 @@ impl DiskView {
                 let bounds = interactive.unwrap_or_default();
                 d.hover(move |s| s.border_color(t.accent_text))
                     .tooltip(tip(&label, &[]))
-                    .on_click(cx.listener(move |v, _, _, cx| v.tile_clicked(i, bounds, cx)))
+                    .on_click(cx.listener(move |v, ev: &ClickEvent, _, cx| {
+                        let m = ev.modifiers();
+                        v.tile_clicked(i, bounds, m.shift || m.platform, cx)
+                    }))
+            })
+            .when(picked, |d| {
+                d.child(
+                    div()
+                        .absolute()
+                        .top(px(4.))
+                        .right(px(4.))
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .size(px(16.))
+                        .rounded_full()
+                        .bg(t.accent)
+                        .child(icon("check", 10., t.on_accent)),
+                )
             })
             .when(tile.label_fits, |d| {
                 d.child(
@@ -962,14 +1202,18 @@ impl DiskView {
     }
 
     /// One row of a list: a colour dot, the name, the size.
+    /// One row of a list: a checkbox, a colour dot, the name, the size. The checkbox picks the entry
+    /// for the Trash; the rest of the row opens it.
+    #[allow(clippy::too_many_arguments)]
     fn list_row(
         &self,
-        id: impl Into<ElementId>,
+        ids: (&'static str, &'static str, usize),
         node: NodeId,
         t: Theme,
         scan: &Scan,
         on_click: impl Fn(&ClickEvent, &mut Window, &mut App) + 'static,
-    ) -> Stateful<Div> {
+        cx: &mut Context<Self>,
+    ) -> Div {
         let tree = &scan.tree;
         let name = tree.name(node);
         let size = format_bytes(tree.size(node));
@@ -984,47 +1228,92 @@ impl DiskView {
         };
         let dot = tile_rgb(cat, kind == Kind::Dir, 0, t.dark, pal.window, pal.ink);
         let path = tree.path(node).to_string_lossy().into_owned();
-        focus_border(div().id(id), t)
-            .role(Role::Button)
-            .aria_label(format!("{name}, {size}"))
+        let pickable = self.review_item(node).is_some();
+        let picked = self.is_picked(node);
+        let check = focus_border(div().id((ids.1, ids.2)), t)
+            .role(Role::CheckBox)
+            .aria_label(format!("Pick {name} for the Trash"))
+            .aria_toggled(if picked {
+                Toggled::True
+            } else {
+                Toggled::False
+            })
+            .flex()
+            .flex_none()
+            .items_center()
+            .justify_center()
+            .size(px(28.))
+            .rounded(px(radius::CONTROL))
+            .hover(move |s| s.bg(t.fill8))
+            .on_click(cx.listener(move |v, _, _, cx| v.pick_node(node, cx)))
+            .child(
+                div()
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .size(px(16.))
+                    .rounded(px(4.))
+                    .border_1()
+                    .border_color(if picked { t.accent } else { t.ink3 })
+                    .bg(if picked {
+                        t.accent
+                    } else {
+                        gpui::transparent_black()
+                    })
+                    .when(picked, |d| d.child(icon("check", 11., t.on_accent))),
+            );
+        div()
             .flex()
             .flex_row()
             .flex_none()
             .items_center()
-            .gap(px(sp::S))
             .h(px(32.))
-            .px(px(sp::S))
-            .rounded(px(radius::CONTROL))
-            .hover(move |s| s.bg(t.fill8))
-            .active(move |s| s.bg(t.fill12))
-            .tooltip(tip(&path, &[]))
-            .on_click(on_click)
+            .when(pickable, |d| d.child(check))
+            .when(!pickable, |d| d.child(div().flex_none().size(px(28.))))
             .child(
-                div()
-                    .flex_none()
-                    .size(px(10.))
-                    .rounded(px(3.))
-                    .border_1()
-                    .border_color(t.hair)
-                    .bg(dot.hsla(1.0)),
-            )
-            .child(
-                div()
+                focus_border(div().id((ids.0, ids.2)), t)
+                    .role(Role::Button)
+                    .aria_label(format!("{name}, {size}"))
+                    .flex()
+                    .flex_row()
                     .flex_1()
                     .min_w_0()
-                    .overflow_hidden()
-                    .whitespace_nowrap()
-                    .text_ellipsis()
-                    .ramp(ty::BODY)
-                    .text_color(t.ink)
-                    .child(name),
-            )
-            .child(
-                div()
-                    .flex_none()
-                    .ramp(ty::SMALL)
-                    .text_color(t.ink2)
-                    .child(size),
+                    .items_center()
+                    .gap(px(sp::S))
+                    .h_full()
+                    .px(px(sp::S))
+                    .rounded(px(radius::CONTROL))
+                    .hover(move |s| s.bg(t.fill8))
+                    .active(move |s| s.bg(t.fill12))
+                    .tooltip(tip(&path, &[]))
+                    .on_click(on_click)
+                    .child(
+                        div()
+                            .flex_none()
+                            .size(px(10.))
+                            .rounded(px(3.))
+                            .border_1()
+                            .border_color(t.hair)
+                            .bg(dot.hsla(1.0)),
+                    )
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .overflow_hidden()
+                            .whitespace_nowrap()
+                            .text_ellipsis()
+                            .ramp(ty::BODY)
+                            .text_color(t.ink)
+                            .child(name),
+                    )
+                    .child(
+                        div()
+                            .flex_none()
+                            .ramp(ty::SMALL)
+                            .text_color(t.ink2)
+                            .child(size),
+                    ),
             )
     }
 
@@ -1070,17 +1359,12 @@ impl DiskView {
         for (i, n) in here.iter().enumerate() {
             let n = *n;
             let is_dir = tree.kind(n) == Kind::Dir && tree.child_count(n) > 0;
-            col = col.child(self.list_row(
-                ("disk-row", i),
-                n,
-                t,
-                &scan,
-                cx.listener(move |v, _, _, cx| {
-                    if is_dir {
-                        v.open_node(n, bounds, cx);
-                    }
-                }),
-            ));
+            let go = cx.listener(move |v, _, _, cx| {
+                if is_dir {
+                    v.open_node(n, bounds, cx);
+                }
+            });
+            col = col.child(self.list_row(("disk-row", "disk-pick", i), n, t, &scan, go, cx));
         }
         if !big.is_empty() {
             col = col.child(
@@ -1092,18 +1376,14 @@ impl DiskView {
             );
             for (i, n) in big.iter().enumerate() {
                 let n = *n;
-                col = col.child(self.list_row(
-                    ("disk-big", i),
-                    n,
-                    t,
-                    &scan,
-                    // Show the folder the file lives in.
-                    cx.listener(move |v, _, _, cx| {
-                        if let Some(p) = v.scan.as_ref().and_then(|s| s.tree.parent(n)) {
-                            v.jump(p, cx);
-                        }
-                    }),
-                ));
+                // Show the folder the file lives in.
+                let go = cx.listener(move |v, _, _, cx| {
+                    if let Some(p) = v.scan.as_ref().and_then(|s| s.tree.parent(n)) {
+                        v.jump(p, cx);
+                    }
+                });
+                col =
+                    col.child(self.list_row(("disk-big", "disk-bigpick", i), n, t, &scan, go, cx));
             }
         }
         div()
@@ -1120,6 +1400,311 @@ impl DiskView {
             .border_color(t.hair)
             .child(col)
             .into_any_element()
+    }
+
+    /// The review panel: what is picked with name, path and size, the total, a remove button per
+    /// item, Move to Trash, and after a move the result line and Undo.
+    fn review_panel(&mut self, w: f32, h: f32, t: Theme, cx: &mut Context<Self>) -> AnyElement {
+        let busy = self.busy.as_ref().map(|b| {
+            (
+                b.done.load(Ordering::Relaxed).min(b.total),
+                b.total,
+                b.undoing,
+            )
+        });
+        let list = &self.picks.list;
+        let effective: Vec<PathBuf> = list
+            .effective_items()
+            .iter()
+            .map(|i| i.path.clone())
+            .collect();
+        let mut rows = div()
+            .id("disk-review-list")
+            .role(Role::List)
+            .aria_label("Items to move to the Trash")
+            .flex()
+            .flex_col()
+            .flex_1()
+            .min_h_0()
+            .overflow_y_scroll();
+        for (i, item) in list.items().iter().enumerate() {
+            let name = item
+                .path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| item.path.to_string_lossy().into_owned());
+            let note = if let Some(why) = list.protected_reason(&item.path) {
+                Some(format!("Will not be moved: {why}."))
+            } else if !effective.contains(&item.path) {
+                Some("Goes with its folder.".to_string())
+            } else {
+                None
+            };
+            let path = item.path.clone();
+            let shown = shorten_path(&item.path.to_string_lossy());
+            rows = rows.child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .flex_none()
+                    .items_center()
+                    .gap(px(sp::S))
+                    .min_h(px(48.))
+                    .px(px(sp::S))
+                    .py(px(4.))
+                    .border_b_1()
+                    .border_color(t.hair)
+                    .child(
+                        div()
+                            .flex()
+                            .flex_col()
+                            .flex_1()
+                            .min_w_0()
+                            .child(
+                                div()
+                                    .overflow_hidden()
+                                    .whitespace_nowrap()
+                                    .text_ellipsis()
+                                    .ramp(ty::BODY)
+                                    .font_weight(FontWeight::MEDIUM)
+                                    .text_color(t.ink)
+                                    .child(name.clone()),
+                            )
+                            .child(
+                                div()
+                                    .overflow_hidden()
+                                    .whitespace_nowrap()
+                                    .text_ellipsis()
+                                    .ramp(ty::SMALL)
+                                    .text_color(t.ink2)
+                                    .child(shown),
+                            )
+                            .when_some(note, |d, n| {
+                                d.child(div().ramp(ty::SMALL).text_color(t.ink).child(n))
+                            }),
+                    )
+                    .child(
+                        div()
+                            .flex_none()
+                            .ramp(ty::SMALL)
+                            .text_color(t.ink2)
+                            .child(format_bytes(item.size_bytes)),
+                    )
+                    .child(icon_button(
+                        ("disk-review-remove", i),
+                        &format!("Remove {name} from the list"),
+                        "x",
+                        false,
+                        t,
+                        cx.listener(move |v, _, _, cx| {
+                            v.picks.remove(&path);
+                            cx.notify();
+                        }),
+                    )),
+            );
+        }
+        let can_move = self.picks.can_move() && busy.is_none();
+        let can_undo = self.picks.list.can_undo() && busy.is_none();
+        let summary = list.summary();
+        let result = self.picks.result.clone();
+        let failures: Vec<String> = self
+            .picks
+            .failures
+            .iter()
+            .take(4)
+            .map(|f| {
+                let n = f
+                    .path
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_default();
+                format!("{n}: {}", f.reason)
+            })
+            .collect();
+        let stale = self.picks.stale && busy.is_none();
+        let empty = list.is_empty();
+        div()
+            .id("disk-review")
+            .role(Role::Group)
+            .aria_label("Review before moving to the Trash")
+            .flex()
+            .flex_col()
+            .flex_none()
+            .w(px(w))
+            .h(px(h))
+            .p(px(sp::M))
+            .gap(px(sp::S))
+            .rounded(px(radius::CARD))
+            .bg(t.card)
+            .border_1()
+            .border_color(t.hair)
+            .child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .items_center()
+                    .flex_none()
+                    .gap(px(sp::S))
+                    .child(button_ex(
+                        "disk-review-back",
+                        "Back to the map",
+                        ButtonKind::Ghost,
+                        Some("arrow-left"),
+                        busy.is_none(),
+                        t,
+                        cx.listener(|v, _, _, cx| v.close_review(cx)),
+                    ))
+                    .child(
+                        div()
+                            .id("disk-review-title")
+                            .role(Role::Heading)
+                            .aria_label("Review")
+                            .flex_1()
+                            .ramp(ty::HEADLINE)
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .text_color(t.ink)
+                            .child("Review"),
+                    )
+                    .child(
+                        div()
+                            .ramp(ty::SMALL)
+                            .text_color(t.ink2)
+                            .child(self.picks.selected_line()),
+                    ),
+            )
+            .child(rule(t))
+            .when(empty && busy.is_none(), |d| {
+                d.child(
+                    div()
+                        .flex_1()
+                        .ramp(ty::BODY)
+                        .text_color(t.ink2)
+                        .child("Nothing is picked. Everything that was picked has been moved."),
+                )
+            })
+            .when(!(empty && busy.is_none()), |d| d.child(rows))
+            .child(rule(t))
+            .when_some(busy, |d, (done, total, undoing)| {
+                let label = if undoing {
+                    format!("Putting back {done} of {total}")
+                } else {
+                    format!("Moving {done} of {total}")
+                };
+                d.child(
+                    div()
+                        .flex()
+                        .flex_col()
+                        .flex_none()
+                        .gap(px(sp::XS))
+                        .child(
+                            div()
+                                .ramp(ty::SMALL)
+                                .text_color(t.ink2)
+                                .child(label.clone()),
+                        )
+                        .child(progress_bar(
+                            Some(done as f32 / total.max(1) as f32),
+                            &label,
+                            t,
+                        )),
+                )
+            })
+            .when_some(result, |d, line| {
+                d.child(
+                    div()
+                        .id("disk-review-result")
+                        .role(Role::Status)
+                        .aria_label(line.clone())
+                        .flex_none()
+                        .ramp(ty::BODY)
+                        .text_color(t.ink)
+                        .child(line),
+                )
+            })
+            .children(failures.into_iter().map(|f| {
+                div()
+                    .flex_none()
+                    .ramp(ty::SMALL)
+                    .text_color(t.ink2)
+                    .overflow_hidden()
+                    .whitespace_nowrap()
+                    .text_ellipsis()
+                    .child(f)
+            }))
+            .child(
+                div()
+                    .flex()
+                    .flex_row()
+                    .flex_none()
+                    .items_center()
+                    .gap(px(sp::S))
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .overflow_hidden()
+                            .whitespace_nowrap()
+                            .text_ellipsis()
+                            .ramp(ty::BODY)
+                            .font_weight(FontWeight::MEDIUM)
+                            .text_color(t.ink)
+                            .child(summary),
+                    )
+                    .when(stale, |d| {
+                        d.child(button(
+                            "disk-review-rescan",
+                            "Scan again",
+                            ButtonKind::Secondary,
+                            Some("refresh-cw"),
+                            t,
+                            cx.listener(|v, _, _, cx| {
+                                let root = v.root_path.clone();
+                                v.picks.open = false;
+                                v.start_scan(root, cx);
+                            }),
+                        ))
+                    })
+                    .when(can_undo, |d| {
+                        d.child(button(
+                            "disk-review-undo",
+                            "Undo",
+                            ButtonKind::Secondary,
+                            Some("undo-2"),
+                            t,
+                            cx.listener(|v, _, _, cx| v.start_undo(cx)),
+                        ))
+                    })
+                    .child(button_ex(
+                        "disk-review-move",
+                        "Move to Trash",
+                        ButtonKind::Primary,
+                        None,
+                        can_move,
+                        t,
+                        cx.listener(|v, _, _, cx| v.start_move(cx)),
+                    )),
+            )
+            .into_any_element()
+    }
+
+    /// Review renders: pick entries of the current folder by name, as a click on their checkbox would.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn pick_named(&mut self, names: &[&str], cx: &mut Context<Self>) {
+        let Some(scan) = self.scan.clone() else {
+            return;
+        };
+        for n in scan.tree.children(self.current).collect::<Vec<_>>() {
+            if names.contains(&scan.tree.name(n).as_str()) {
+                self.pick_node(n, cx);
+            }
+        }
+    }
+
+    /// Review renders: open the review panel.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn show_review(&mut self, on: bool, cx: &mut Context<Self>) {
+        self.picks.open = on;
+        cx.notify();
     }
 
     fn start_state(&self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
@@ -1268,6 +1853,19 @@ fn start_buttons(t: Theme, cx: &mut Context<DiskView>) -> impl IntoElement {
         ))
 }
 
+/// A long path with its middle cut out, so the start (which drive) and the end (which folder) both
+/// stay readable: `/Users/me/.../Downloads/Old`.
+fn shorten_path(p: &str) -> String {
+    const MAX: usize = 64;
+    let chars: Vec<char> = p.chars().collect();
+    if chars.len() <= MAX {
+        return p.to_string();
+    }
+    let head: String = chars[..20].iter().collect();
+    let tail: String = chars[chars.len() - 40..].iter().collect();
+    format!("{head}...{tail}")
+}
+
 /// 1234567 as "1,234,567".
 fn group_digits(n: u64) -> String {
     let s = n.to_string();
@@ -1286,11 +1884,33 @@ impl Render for DiskView {
         let t = Theme::new(is_dark(window));
         let trailing = self.toolbar_buttons(t, cx);
         let body: AnyElement = if matches!(self.phase, Phase::Done) && self.scan.is_some() {
-            let map = self.map(window, t, cx);
+            let (mw, mh) = self.map_size(window);
+            self.map_w = mw + 4.0;
+            let reviewing = self.picks.open || self.busy.is_some();
+            let map = if reviewing {
+                let h = mh + 4.0 + BAR_H * 2.0 + sp::S * 2.0;
+                self.review_panel(mw + 4.0, h, t, cx)
+            } else {
+                self.map(window, t, cx)
+            };
             let side = self.side_list(window, t, cx);
             let crumbs = self.crumb_bar(t, cx);
             let legend = self.legend(t);
-            let summary = self.summary(t);
+            let summary = if self.picks.count() > 0 {
+                Some(
+                    div()
+                        .id("disk-selected")
+                        .role(Role::Status)
+                        .aria_label(self.picks.selected_line())
+                        .ramp(ty::SMALL)
+                        .font_weight(FontWeight::MEDIUM)
+                        .text_color(t.ink)
+                        .child(self.picks.selected_line())
+                        .into_any_element(),
+                )
+            } else {
+                self.summary(t)
+            };
             div()
                 .flex()
                 .flex_col()
@@ -1298,7 +1918,7 @@ impl Render for DiskView {
                 .min_h_0()
                 .p(px(sp::L))
                 .gap(px(sp::S))
-                .children(self.fda_banner(t))
+                .children(self.fda_banner(t, cx))
                 .child(
                     div()
                         .flex()
@@ -1313,17 +1933,9 @@ impl Render for DiskView {
                                 .flex_none()
                                 .w(px(self.map_w))
                                 .gap(px(sp::S))
-                                .child(crumbs)
+                                .children((!reviewing).then_some(crumbs))
                                 .child(map)
-                                .child(
-                                    div()
-                                        .flex()
-                                        .flex_row()
-                                        .items_center()
-                                        .justify_between()
-                                        .gap(px(sp::M))
-                                        .child(legend),
-                                ),
+                                .children((!reviewing).then_some(legend)),
                         )
                         .child(
                             div()
@@ -1355,7 +1967,7 @@ impl Render for DiskView {
 #[cfg(test)]
 mod tests {
     // Not `use super::*`: that pulls in gpui's own `test` macro over the standard one.
-    use super::{Category, LEGEND, Rgb, category_of, group_digits, tile_rgb};
+    use super::{Category, LEGEND, Rgb, category_of, group_digits, shorten_path, tile_rgb};
     use crate::ui::theme::Palette;
 
     #[test]
@@ -1371,6 +1983,16 @@ mod tests {
         assert_eq!(category_of("cache.sqlite"), Some(Category::Calculators));
         assert_eq!(category_of("README"), None);
         assert_eq!(category_of("weird.zzz"), None);
+    }
+
+    #[test]
+    fn long_paths_keep_both_ends() {
+        assert_eq!(shorten_path("/Users/me/a.txt"), "/Users/me/a.txt");
+        let long = format!("/Users/me/{}/Downloads/Old", "x".repeat(80));
+        let s = shorten_path(&long);
+        assert!(s.starts_with("/Users/me/"));
+        assert!(s.ends_with("/Downloads/Old"));
+        assert!(s.chars().count() <= 64 + 3);
     }
 
     #[test]
