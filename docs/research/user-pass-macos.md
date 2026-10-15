@@ -23,7 +23,7 @@ Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polis
 |---|---:|---:|---:|
 | P0 | 0 | 0 | 0 |
 | P1 | 12 | 6 | 6 |
-| P2 | 30 | 9 | 21 |
+| P2 | 31 | 9 | 22 |
 
 No P0: nothing crashed, hung, lost an original or wrote a half-finished file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
 
@@ -174,6 +174,7 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 | UP-40 | Remove background | A small piece of the old background survives in the gap between the arm and the torso (white and orange, lower left of the cutout). Edges, hair and the flag patch are otherwise clean. | Open |
 | UP-41 | Upscale | 4x is far better than bicubic but the skin is smooth and painterly and the flag's stars melt into a pattern. Fine for a profile picture, not for a print. The card does not say it is a model's guess. | Open |
 | UP-42 | Modules | Network tools show a "Network" pill and the words "Uses the network" in the same row; the pill adds nothing and the page is crowded on a narrow window. | Open |
+| UP-43 | Compress, Convert, Resize and the other picture tools | An animated GIF or WebP stops with "Choose \"first frame\" (animation=first) to keep one picture ... Panoply does not write animated files yet." That is the command-line spelling in an app window, the option is under More options, and KNOWN-LIMITATIONS says animated inputs "use the first frame and say so". One of the two should change. | Open |
 
 ---
 
