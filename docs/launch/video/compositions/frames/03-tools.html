@@ -11,25 +11,15 @@
     /* ground: its own child, identical to frame 2's blue (flat brand blue, same very faint centred lift) so the cut at beat 24 is invisible */
     #f3-ground { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 55% at 50% 48%, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 100%), #2d6cdf; }
 
-    /* frame 2's headline and Ctrl Alt Space keycaps, still up at its last frame; they leave over 0.25 s from beat 24 */
-    #f3-intro { position: absolute; inset: 0; }
-    #f3-intro-head { position: absolute; left: 0; right: 0; top: 84px; text-align: center; font-size: 116px; font-weight: 700; letter-spacing: -0.04em; line-height: 0.98; color: #fff; }
-    .f3-caps { position: absolute; left: 0; right: 0; top: 232px; height: 104px; display: flex; justify-content: center; gap: 24px; }
-    .f3-cap { position: absolute; left: 0; right: 0; top: -46px; line-height: 40px; text-align: center; font-size: 36px; font-weight: 500; letter-spacing: -0.01em; color: rgba(255,255,255,.9); }
-    .f3-key { height: 104px; border-radius: 26px; display: flex; align-items: center; justify-content: center; font-size: 52px; font-weight: 600; letter-spacing: -0.02em; color: #fff;
-      background: rgba(255,255,255,.16); border: 2px solid rgba(255,255,255,.45);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 18px 40px rgba(8,24,70,.28); }
-
     /* the command bar plate, the exact geometry frame 2 ends on: 920 wide, top 396, scale 1.04 about its centre */
     #f3-slide { position: absolute; inset: 0; }
     #f3-push { position: absolute; left: 500px; top: 396px; width: 920px; height: 588px; transform-origin: 50% 50%; }
     #f3-plate { position: absolute; inset: 0; border-radius: 24.1px; overflow: hidden; background: #f1f2f5;
       box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 100px rgba(8,24,70,.5); }
     #f3-plate img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
-    #f3-res-img { opacity: 0; }
 
     /* the payoff number above the plate */
-    #f3-result { position: absolute; left: 0; right: 0; top: 190px; height: 150px; display: flex; justify-content: center; align-items: baseline;
+    #f3-result { position: absolute; left: 0; right: 0; top: 168px; height: 150px; display: flex; justify-content: center; align-items: baseline;
       font-weight: 700; font-size: 150px; line-height: 150px; letter-spacing: -0.04em; white-space: nowrap; opacity: 0; }
     #f3-pct { display: inline-block; width: 2ch; text-align: right; font-variant-numeric: tabular-nums; }
     #f3-pct-sfx { display: inline-block; margin-left: .02em; }
@@ -49,8 +39,7 @@
     #f3-head { position: absolute; left: 0; right: 0; top: 0; height: 300px; }
     #f3-count { position: absolute; left: 0; right: 0; top: 70px; height: 160px; display: flex; justify-content: center; align-items: center;
       font-weight: 700; font-size: 168px; line-height: 160px; letter-spacing: -0.04em; white-space: nowrap; opacity: 0; }
-    #f3-nb { position: relative; width: 184px; height: 160px; flex: none; }
-    .f3-n { position: absolute; right: 0; top: 0; height: 160px; line-height: 160px; opacity: 0; }
+    #f3-nb { position: relative; width: 184px; height: 160px; flex: none; text-align: right; font-variant-numeric: tabular-nums; }
     #f3-tools { display: block; margin-left: 24px; opacity: 0; }
     #f3-labels { position: absolute; left: 0; right: 0; top: 236px; height: 52px; }
     .f3-label { position: absolute; left: 0; right: 0; top: 0; text-align: center; opacity: 0;
@@ -65,33 +54,28 @@
 
   <div id="root" data-composition-id="f3-tools" data-width="1920" data-height="1080">
     <div id="f3-ground"></div>
-    <div id="f3-intro" data-layout-allow-overflow data-layout-allow-overlap>
-      <div id="f3-intro-head">One hotkey. Any file.</div>
-      <div class="f3-caps"><div class="f3-cap">Windows and Linux</div><div class="f3-key" style="width:150px">Ctrl</div><div class="f3-key" style="width:130px">Alt</div><div class="f3-key" style="width:250px">Space</div></div>
-    </div>
     <div id="f3-slide" data-layout-allow-overflow><div id="f3-push" data-layout-allow-overflow><div id="f3-plate">
-      <img id="f3-opt-img" src="assets/captures/demo-light-12.png" alt="">
       <img id="f3-res-img" src="assets/captures/bar-result-light.png" alt="">
     </div></div></div>
     <div id="f3-result" data-layout-allow-overlap aria-label="35% smaller"><span id="f3-pct">0</span><span id="f3-pct-sfx">% smaller</span></div>
     <div id="f3-grid" data-layout-allow-overflow></div>
     <div id="f3-head" data-layout-allow-overflow>
-      <div id="f3-count"><div id="f3-nb"></div><div id="f3-tools">tools.</div></div>
+      <div id="f3-count"><div id="f3-nb">1</div><div id="f3-tools">tools.</div></div>
       <div id="f3-labels"></div>
     </div>
     <div id="f3-home"><img src="assets/captures/app-home-light.png" alt=""></div>
   </div>
 
   <script>
-    const BEAT = 60 / 130, START = 24;
+    const BEAT = 60 / 130, START = 24, F = 1 / 60;
     const at = b => (b - START) * BEAT;              /* local seconds of an absolute beat */
 
     /* ---- constants the real captures / the real build can change ---- */
-    /* The running frames (run-light-01..06) are dropped on purpose: at beat 24 the options sheet goes straight to the result card. */
+    /* Hard cut at beat 24: the real result card is on screen on the very first frame (no running frames, no cross-fade). */
     /* These MUST equal the text in the real bar-result-light.png capture ("67 KB to 43 KB, 35% smaller"). */
     const RESULT = { from: "67 KB", to: "43 KB", pct: 35 };
     const TOOL_COUNT = 31;                            /* = assets/data/tools.json "count" */
-    const PLATE_SCALE_START = 1.04;                   /* frame 2 ends on this (plate 920 wide, top 396) */
+    const PLATE_SCALE_START = 1.25;                   /* frame 2 ends pulled back to about 1.25x, bar centred; the cut at beat 24 must not jump */
 
     /* Tools of assets/data/tools.json with a baked, seeded layout (assets/f3-tools/layout.py, LCG seed 94, annealed row packing).
        [id, name, category, x, y, width, row] in a 1730 x 646 grid, row-major arrival order, rows of 4,4,4,5,5,5,4.
@@ -163,15 +147,11 @@
       icEls.push(pos.querySelector(".f3-ic"));
     });
 
-    const EARLY = [26, 27, 28, 29, 30, 31, 31.5, 32];      /* beats of the first eight cards (rows 0 and 1) */
-    const nb = $("f3-nb");
-    const numEls = {};
-    const NUMS = EARLY.map((_, i) => i + 1).concat([TOOL_COUNT]);
-    NUMS.forEach(n => {
-      const s = document.createElement("div");
-      s.className = "f3-n"; s.textContent = String(n);
-      nb.appendChild(s); numEls[n] = s;
-    });
+    /* the cards, impact entrances: each one STARTS 0.18 s before its beat and ENDS on it (power2.in, an impact).
+       Beats chosen on the level jumps of the edit (27.0, 28.51, 30.01, 30.76, 31.5) so every landing is a picture event. */
+    const EARLY = [26, 27, 28, 28.5, 29, 30, 30.75, 31.5, 32];
+    const $c = id => document.getElementById(id);
+    const cEl = $c("f3-nb");
     const labels = $("f3-labels");
     const labelEls = CAT_ORDER.map(k => {
       const d = document.createElement("div");
@@ -183,72 +163,71 @@
     const tl = gsap.timeline({ paused: true });
     const OUT = "expo.out", FADE = "power1.out";
     const NF = { immediateRender: false };
+    /* entrance on the hit frame: transform expo.out, opacity fromTo 0.5 to 1 in 0.08 s */
+    const enter = (sel, t, o = {}) => {
+      tl.fromTo(sel, { y: o.y === undefined ? 24 : o.y }, { y: 0, duration: o.dur || 0.4, ease: OUT, ...NF }, t);
+      tl.fromTo(sel, { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: FADE, ...NF }, t);
+    };
 
     gsap.set("#f3-push", { scale: PLATE_SCALE_START, transformOrigin: "50% 50%" });
     gsap.set("#f3-grid", { rotation: -1.5, transformOrigin: "50% 50%" });
     gsap.set("#f3-head", { scale: 1, transformOrigin: "50% 0%" });
     gsap.set(posEls, { opacity: 0, y: 80 });                 /* every card is hidden until its own beat */
 
-    /* beat 24.0: options sheet cross-fades to the real result card in the same plate geometry (0.12 s) */
-    tl.fromTo("#f3-res-img", { opacity: 0 }, { opacity: 1, duration: 0.12, ease: FADE, ...NF }, at(24));
-    tl.set("#f3-opt-img", { opacity: 0 }, at(24) + 0.12);
-    /* frame 2's headline and keycaps leave over 0.25 s (opacity and y -20) */
-    tl.fromTo("#f3-intro", { y: 0 }, { y: -20, duration: 0.25, ease: OUT, ...NF }, at(24));
-    tl.fromTo("#f3-intro", { opacity: 1 }, { opacity: 0, duration: 0.25, ease: FADE, ...NF }, at(24));
-    /* the number counts 0 to 35 in 0.35 s from beat 24, then rests with the card until beat 26 */
+    /* ---- beats 24 to 26: the result card, on screen from frame 0, nothing else moves ---- */
+    /* the big number counts 0 to 35 with an impact (power2.in) that ENDS exactly on beat 25, then rests with the card */
     const cnt = { v: 0 };
-    tl.to(cnt, { v: RESULT.pct, duration: 0.35, ease: OUT,
-      onUpdate: () => { $("f3-pct").textContent = String(Math.round(cnt.v)); } }, at(24));
-    /* the number fades in a tenth of a second after the count starts, so it does not sit on top of the keycaps that are leaving */
-    tl.fromTo("#f3-result", { opacity: 0 }, { opacity: 1, duration: 0.15, ease: FADE, ...NF }, at(24) + 0.1);
-    /* the only motion in the hold: the plate's slow push-in continues (frame 2 ended at 1.04) */
-    tl.fromTo("#f3-push", { scale: PLATE_SCALE_START }, { scale: 1.058, duration: at(26.4) - at(24), ease: "none", ...NF }, at(24));
+    tl.to(cnt, { v: RESULT.pct, duration: at(25) - at(24.25), ease: "power2.in", ...NF,
+      onUpdate: () => { $("f3-pct").textContent = String(Math.round(cnt.v)); } }, at(24.25));
+    tl.fromTo("#f3-result", { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: FADE, ...NF }, at(24.25));
+    /* the number leaves ending one frame before beat 26, the plate and the first card take over on beat 26 */
+    tl.to("#f3-result", { opacity: 0, duration: 0.15, ease: "power1.in" }, at(26) - 0.15 - F);
+    /* the bar slides down and shrinks to a small anchor, then is gone under the cards */
+    tl.fromTo("#f3-push", { scale: PLATE_SCALE_START }, { scale: 0.42, duration: 0.5, ease: OUT, ...NF }, at(26) - F);
+    tl.fromTo("#f3-slide", { y: 0 }, { y: 330, duration: 0.5, ease: OUT, ...NF }, at(26) - F);
+    tl.fromTo("#f3-slide", { opacity: 1 }, { opacity: 0, duration: 0.3, ease: "power1.in", ...NF }, at(26) - F);
 
-    /* beat 26.0: the card and the counter leave completely, the plate slides down 120 px and fades over 0.4 s */
-    tl.fromTo("#f3-slide", { y: 0 }, { y: 120, duration: 0.4, ease: OUT, ...NF }, at(26));
-    tl.fromTo("#f3-slide", { opacity: 1 }, { opacity: 0, duration: 0.4, ease: FADE, ...NF }, at(26));
-    tl.fromTo("#f3-result", { opacity: 1 }, { opacity: 0, duration: 0.2, ease: FADE, ...NF }, at(26));
+    /* the big counter lands with the first card */
+    enter("#f3-count", at(26) - F, { y: 24 });
+    tl.set("#f3-count", { opacity: 0 }, 0);
+    tl.fromTo("#f3-count", { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: FADE, ...NF }, at(26) - F);
 
-    /* the big counter appears with the first card */
-    tl.fromTo("#f3-count", { y: 24 }, { y: 0, duration: 0.4, ease: OUT, ...NF }, at(26) + 0.1);
-    tl.fromTo("#f3-count", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: FADE, ...NF }, at(26) + 0.1);
-    tl.set(numEls[1], { opacity: 1 }, 0);
-
-    /* cards: every move STARTS on its beat. Transform glide expo.out 0.4 s, opacity its own power1.out tween. */
-    const CARD_DUR = 0.4, OP_DUR = 0.25;
-    const glide = (el, beat, dur, opDur) => {
-      tl.fromTo(el, { y: 80 }, { y: 0, duration: dur, ease: OUT, ...NF }, at(beat));
-      tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: opDur, ease: FADE, ...NF }, at(beat));
-    };
-    /* the 8th-note cards are shortened so that nothing is still moving when the stop begins at 32.61 */
-    const durOf = b => Math.min(CARD_DUR, at(32.6) - at(b));
+    /* ---- cards: early ones as impacts that end on their beat ---- */
+    const IMPACT = 0.18;
     EARLY.forEach((b, i) => {
-      const d = durOf(b);
-      glide(posEls[i], b, d, Math.min(OP_DUR, d));
-      if (i > 0) {                                                     /* the counter ticks as the card starts to land */
-        tl.set(numEls[i], { opacity: 0 }, at(b));
-        tl.set(numEls[i + 1], { opacity: 1 }, at(b));
-      }
+      tl.fromTo(posEls[i], { y: 80 }, { y: 0, duration: IMPACT, ease: "power2.in", ...NF }, at(b) - IMPACT);
+      tl.fromTo(posEls[i], { opacity: 0 }, { opacity: 1, duration: IMPACT * 0.7, ease: FADE, ...NF }, at(b) - IMPACT);
     });
 
-    /* STOP, beats 32.61 to 32.93: nothing moves, the drift tweens below end at 32.61 and restart at 32.93.
-       HIT at beat 33.0: ordered ripple, row by row, 40 ms steps, every move starts at 33.0 + row * 40 ms. */
+    /* STOP, beats 32.61 to 32.93: nothing moves (the last early card has landed at 32, the drift tweens end at 32.61).
+       HIT at beat 33.0: ordered ripple, row by row, 40 ms steps, every move starts on the hit frame + row * 40 ms. */
     const STOP_A = 32.61, STOP_B = 32.93, HIT = 33;
-    const RIPPLE_STEP = 0.04, RIPPLE_DUR = 0.19, RIPPLE_OP = 0.15;
+    const RIPPLE_STEP = 0.04, RIPPLE_DUR = 0.3, RIPPLE_OP = 0.08, LAND_AT = 0.1;
     const rippleStart = EARLY.length;
+    const landTimes = EARLY.map(b => at(b));                 /* the moment each card is in place */
     for (let i = rippleStart; i < TOOLS.length; i++) {
       const r = ROW_OF[i] - ROW_OF[rippleStart];
-      tl.fromTo(posEls[i], { y: 80 }, { y: 0, duration: RIPPLE_DUR, ease: OUT, ...NF }, at(HIT) + r * RIPPLE_STEP);
-      tl.fromTo(posEls[i], { opacity: 0 }, { opacity: 1, duration: RIPPLE_OP, ease: FADE, ...NF }, at(HIT) + r * RIPPLE_STEP);
+      const t0 = at(HIT) - F + r * RIPPLE_STEP;
+      tl.fromTo(posEls[i], { y: 80 }, { y: 0, duration: RIPPLE_DUR, ease: OUT, ...NF }, t0);
+      tl.fromTo(posEls[i], { opacity: 0.5 }, { opacity: 1, duration: RIPPLE_OP, ease: FADE, ...NF }, t0);
+      landTimes.push(t0 + LAND_AT);
     }
-    /* the counter LOCKS on the real count exactly at 33.0 and reads "31 tools." */
-    tl.set(numEls[EARLY.length], { opacity: 0 }, at(HIT));
-    tl.set(numEls[TOOL_COUNT], { opacity: 1 }, at(HIT));
-    tl.fromTo("#f3-tools", { y: 24 }, { y: 0, duration: 0.4, ease: OUT, ...NF }, at(HIT));
-    tl.fromTo("#f3-tools", { opacity: 0 }, { opacity: 1, duration: 0.25, ease: FADE, ...NF }, at(HIT));
+    /* the word "tools." lands on the hit frame */
+    tl.set("#f3-tools", { opacity: 0 }, 0);
+    enter("#f3-tools", at(HIT) - F, { y: 24 });
+
+    /* ONE monotone counter: it shows how many cards are on screen. It steps with each early card, runs up with the ripple rows,
+       and locks on the real count (31) when the last card is in. It never runs ahead of the cards. */
+    const COUNT_A = at(26) - 0.2, COUNT_B = Math.max.apply(null, landTimes) + 0.05;
+    const cp = { p: 0 };
+    tl.to(cp, { p: 1, duration: COUNT_B - COUNT_A, ease: "none",
+      onUpdate: () => {
+        const t = COUNT_A + cp.p * (COUNT_B - COUNT_A) + 1e-6;
+        cEl.textContent = String(Math.max(1, landTimes.filter(x => x <= t).length));
+      } }, COUNT_A);
 
     /* slow 3 degree orbit of the grid and slow drift of the counter, in two segments around the stop */
-    const SEGS = [[26, STOP_A], [STOP_B, 38.5]];
+    const SEGS = [[26, STOP_A], [STOP_B, 39]];
     const TOT = SEGS.reduce((s, g) => s + g[1] - g[0], 0);
     let acc = 0;
     SEGS.forEach(([a, b]) => {
@@ -257,11 +236,12 @@
       tl.fromTo("#f3-head", { scale: 1 + 0.03 * f0 }, { scale: 1 + 0.03 * f1, duration: at(b) - at(a), ease: "none", ...NF }, at(a));
     });
 
-    /* beats 34 to 38: one category per beat lights, everything else dims to 55 percent. All changes start on the beat. */
-    const LIGHT_DUR = 0.3, DIM = 0.55;
+    /* beats 34 to 38: one category per beat lights, on a hit (34, 35, 36, 37, 38 all carry a level jump or onset).
+       0.08 s tweens starting on the hit frame, so the lit grid holds from 38 to the resolve. Everything else dims to 55 percent. */
+    const LIGHT_DUR = 0.08, DIM = 0.55;
     let prev = null;
     CAT_ORDER.forEach((cat, k) => {
-      const st = at(34 + k);
+      const st = at(34 + k) - F;
       TOOLS.forEach((t, i) => {
         const lit = t[2] === cat, wasLit = t[2] === prev;
         const fromOp = prev === null ? 1 : (wasLit ? 1 : DIM);
@@ -277,19 +257,18 @@
           }
         }
       });
-      /* label: the previous one is gone by the beat, the new one starts on it */
-      if (k > 0) tl.fromTo(labelEls[k - 1], { opacity: 1 }, { opacity: 0, duration: 0.12, ease: FADE, ...NF }, st - 0.12);
-      tl.fromTo(labelEls[k], { y: 12 }, { y: 0, duration: 0.4, ease: OUT, ...NF }, st);
-      tl.fromTo(labelEls[k], { opacity: 0 }, { opacity: 1, duration: OP_DUR, ease: FADE, ...NF }, st);
+      /* label: the previous one is out one frame before the beat, the new one lands on it */
+      if (k > 0) tl.to(labelEls[k - 1], { opacity: 0, duration: 0.1, ease: "power1.in" }, at(34 + k) - 0.1 - F);
+      enter(labelEls[k], st, { y: 12 });
       prev = cat;
     });
 
-    /* beat 37.5 to 38.5: the grid resolves into the real Home screen. The plate is fully opaque (38.2) before the grid goes
-       under 50 percent (it only starts to fade then), and everything is still from 38.5 to 40. */
-    tl.fromTo("#f3-home", { opacity: 0 }, { opacity: 1, duration: at(38.2) - at(37.5), ease: FADE, ...NF }, at(37.5));
-    tl.fromTo("#f3-home", { scale: 0.97, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.45, ease: OUT, ...NF }, at(37.5));
-    tl.fromTo("#f3-head", { opacity: 1 }, { opacity: 0, duration: at(38.2) - at(37.5), ease: FADE, ...NF }, at(37.5));
-    tl.fromTo("#f3-grid", { opacity: 1 }, { opacity: 0, duration: at(38.5) - at(38.2), ease: FADE, ...NF }, at(38.2));
+    /* beat 39: the lit grid resolves into the real Home screen on the hit frame (cut, no cross-dissolve of two text layers), then
+       everything is still until the hard cut into frame 4 on beat 40 (no fade through blank). */
+    const HOME_T = at(39) - F;
+    tl.fromTo("#f3-home", { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: FADE, ...NF }, HOME_T);
+    tl.fromTo("#f3-home", { scale: 0.97, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.4, ease: OUT, ...NF }, HOME_T);
+    tl.set(["#f3-head", "#f3-grid"], { opacity: 0 }, HOME_T);   /* the lit grid is cut on the hit frame, Home is already arriving */
 
     window.__timelines["f3-tools"] = tl;
   </script>

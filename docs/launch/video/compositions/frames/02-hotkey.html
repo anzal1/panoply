@@ -8,7 +8,7 @@
     #root { position: absolute; inset: 0; overflow: hidden; font-family: "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: #fff; }
     #f2-ground { position: absolute; inset: 0; background: #0c0c0f; }
     /* brand blue, one flat colour plus a very faint centred lift (no linear gradient), revealed by a straight wipe from the bottom */
-    #f2-blue { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 55% at 50% 48%, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 100%), #2d6cdf; clip-path: inset(100% 0% 0% 0%); }
+    #f2-blue { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 55% at 50% 48%, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 100%), #2d6cdf; clip-path: inset(0% 0% 0% 0%); }
 
     #f2-top { position: absolute; inset: 0; }
     #f2-head { position: absolute; left: 0; right: 0; top: 84px; text-align: center; font-size: 116px; font-weight: 700; letter-spacing: -0.04em; line-height: 0.98; color: #fff; opacity: 0; }
@@ -47,9 +47,9 @@
       <div class="f2-caps" id="f2-caps-mac"><div class="f2-key" style="width:104px">&#x2325;</div><div class="f2-key" style="width:250px">Space</div><div class="f2-cap-label">macOS</div></div>
       <div class="f2-caps" id="f2-caps-win"><div class="f2-key" style="width:150px">Ctrl</div><div class="f2-key" style="width:130px">Alt</div><div class="f2-key" style="width:250px">Space</div><div class="f2-cap-label">Windows and Linux</div></div>
     </div>
-    <div id="f2-push">
+    <div id="f2-push" data-layout-allow-overflow>
       <div id="f2-open">
-        <div id="f2-plate">
+        <div id="f2-plate" data-layout-allow-overflow>
           <img id="f2-rest" src="assets/captures/bar-rest-light.png" alt="">
           <div id="f2-demos"></div>
           <div id="f2-chipwrap"><div id="f2-chip"><span class="tile"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><circle cx="10" cy="14" r="1.4"/><path d="m18 17-3-3-6 5"/></svg></span><span class="name">signature.png</span><span class="size">67 KB</span><span class="x">&#x2715;</span></div></div>
@@ -60,7 +60,7 @@
 
   <script>
     (() => {
-      const BEAT = 60 / 130, START = 16;
+      const BEAT = 60 / 130, START = 16, F = 1 / 60;
       const at = (b) => (b - START) * BEAT;
 
       /* constants the real captures may change */
@@ -69,14 +69,14 @@
       const TYPE_START = 20;           /* beat of typed frame TYPED_FIRST */
       const TYPE_STEP = 0.25;          /* beats per typed frame (a 16th note); shrinks if more frames are captured */
       const RETURN_BEAT = 23.5;        /* Return: cross-fade to the last frame */
-      const PUSH_START = 18, PUSH_END = 24, PUSH_SCALE = 1.04;
+      /* camera: top-centre origin on the plate, so the search field stays put while the plate grows downward */
+      const PUSH_SCALE = 1.8, PULL_SCALE = 1.25, END_SCALE = 1.04;   /* frame 3 starts at 1.04 about the plate centre */
       /* final plate geometry, shared with frame 3 (bar renders are 1440 x 920) */
       const PLATE_W = 920, PLATE_TOP = 396, PLATE_LEFT = (1920 - PLATE_W) / 2, PLATE_H = Math.round(PLATE_W * 920 / 1440);
-      const OPEN_BEAT = 16.5;
-      const CHIP_BEAT = 18, CHIP_XFADE = 18.25, CHIP_DONE = 18.45;
+      const CHIP_BEAT = 18, CHIP_XFADE = 18.25;
 
       const push = document.getElementById('f2-push');
-      push.style.cssText = `left:${PLATE_LEFT}px;top:${PLATE_TOP}px;width:${PLATE_W}px;height:${PLATE_H}px`;
+      push.style.cssText = `left:${PLATE_LEFT}px;top:${PLATE_TOP}px;width:${PLATE_W}px;height:${PLATE_H}px;transform-origin:50% 0%`;
       document.getElementById('f2-plate').style.borderRadius = (PLATE_W * 0.0262).toFixed(1) + 'px';
       document.getElementById('f2-chipwrap').style.transform = `scale(${PLATE_W / 1120})`;
 
@@ -93,35 +93,53 @@
       const step = Math.min(TYPE_STEP, (RETURN_BEAT - TYPE_START) / typed);
 
       const tl = gsap.timeline({ paused: true });
+      const XO = 'expo.out';
+      /* a hit-frame entrance: transform expo-out, opacity 0.5 to 1 in 0.08 s, starting on the frame (never below t = 0) */
+      const land = (sel, t, o = {}) => {
+        t = Math.max(0, t);
+        const ir = t === 0;   /* later entrances must not pre-render their start pose at t = 0 */
+        tl.fromTo(sel, { x: o.x || 0, y: o.y === undefined ? 24 : o.y, scale: o.s || 1 }, { x: 0, y: 0, scale: 1, duration: o.dur || 0.4, ease: XO, immediateRender: ir }, t);
+        tl.fromTo(sel, { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: ir }, t);
+      };
 
-      /* the DROP (beat 16.0): straight wipe from the bottom edge, expo.out, done by 16.9 */
-      tl.fromTo('#f2-blue', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: at(16.9), ease: 'expo.out' }, 0);
+      /* THE DROP (beat 16.0 = frame 0 of this file): a hard cut from the Midnight stop to solid brand blue.
+         The blue, the headline, the keycaps and the bar all arrive on this very frame. No wipe, no blank frame. */
+      
+      land('#f2-head', 0, { y: 30 });
+      land('#f2-caps-mac', 0, { y: 30 });
+      tl.fromTo('#f2-open', { scale: 0.96 }, { scale: 1, duration: 0.45, ease: XO }, 0);
+      tl.fromTo('#f2-open', { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out' }, 0);
 
-      /* keycaps are already down on the drop (fully formed at frame 0, no motion). Headline glides in, done at 16.5 */
-      tl.fromTo('#f2-head', { y: 28 }, { y: 0, duration: 0.4, ease: 'expo.out' }, 0);
-      tl.fromTo('#f2-head', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out' }, 0);
+      /* 17.0 (a measured small hit): the Mac row is cut and the Windows and Linux row lands on the same frame, never two rows at once */
+      tl.set('#f2-caps-mac', { opacity: 0 }, at(17) - F);
+      gsap.set('#f2-caps-win', { opacity: 0 });
+      land('#f2-caps-win', at(17) - F, { y: 16, dur: 0.3 });
 
-      /* 16.5: the real bar plate opens in place; the move starts on the beat */
-      tl.fromTo('#f2-open', { scale: 0.97 }, { scale: 1, duration: 0.45, ease: 'expo.out' }, at(OPEN_BEAT));
-      tl.fromTo('#f2-open', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out' }, at(OPEN_BEAT));
+      /* 18.0: the file chip lands ON the beat, power3.in over 0.18 s ending exactly on beat 18 (an impact) */
+      tl.fromTo('#f2-chip', { x: -170, y: 110 }, { x: 0, y: 0, duration: 0.18, ease: 'power3.in', immediateRender: false }, at(CHIP_BEAT) - 0.18);
+      tl.fromTo('#f2-chip', { opacity: 0 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, at(CHIP_BEAT) - 0.18);
 
-      /* 17.0: keycaps cross-fade to the Windows / Linux hotkey */
-      /* A clean swap, never two rows at once: the Mac row is cut on beat 17 (a measured small hit) and the Windows and Linux row glides up into the same place. */
-      tl.set('#f2-caps-mac', { opacity: 0 }, at(17));
-      tl.fromTo('#f2-caps-win', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.2, ease: 'expo.out' }, at(17));
+      /* 18.25: the captured frame that already shows the chip takes over (same pixels, 0.1 s), then the tool list sorts in on 16ths,
+         best match first: the captured frame is revealed top to bottom in hard steps (header and first row, then the rest) */
+      tl.fromTo(D(0), { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'none', immediateRender: false }, at(CHIP_XFADE));
+      tl.to('#f2-chip', { opacity: 0, duration: 0.1, ease: 'none' }, at(CHIP_XFADE));
+      tl.set('#f2-rest', { opacity: 0 }, at(CHIP_XFADE) + 0.1);
+      const REVEAL = [[CHIP_XFADE, 27], [18.5, 45], [18.75, 63], [19.0, 81], [19.25, 100]];   /* beat, percent of the plate height shown */
+      gsap.set(D(0), { clipPath: 'inset(0% 0% 73% 0%)' });
+      REVEAL.forEach(([b, pc]) => tl.set(D(0), { clipPath: `inset(0% 0% ${100 - pc}% 0%)` }, at(b)));
 
-      /* 18.0: file chip glides in from lower left onto the bar, then cross-fades into the captured frame that already shows it */
-      tl.fromTo('#f2-chip', { x: -170, y: 110 }, { x: 0, y: 0, duration: 0.4, ease: 'expo.out' }, at(CHIP_BEAT));
-      tl.fromTo('#f2-chip', { opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'power1.out' }, at(CHIP_BEAT));
-      tl.fromTo(D(0), { opacity: 0 }, { opacity: 1, duration: at(CHIP_DONE) - at(CHIP_XFADE), ease: 'power1.inOut' }, at(CHIP_XFADE));
-      tl.to('#f2-chip', { opacity: 0, duration: at(CHIP_DONE) - at(CHIP_XFADE), ease: 'power1.inOut' }, at(CHIP_XFADE));
-      tl.set('#f2-rest', { opacity: 0 }, at(CHIP_DONE));
-
-      /* slow push-in across the plate group, around the bar's centre, ending at PUSH_SCALE for frame 3 */
-      tl.fromTo('#f2-push', { scale: 1 }, { scale: PUSH_SCALE, duration: at(PUSH_END) - at(PUSH_START), ease: 'none' }, at(PUSH_START));
+      /* camera: a slow drift while the bar settles, then a push to about 1.8x on the search field so "under 50 kb" reads on a phone
+         while it types, a near-still hold, then a pull-back on Return so the whole bar reads and frame 3 can take over at 1.04 */
+      tl.fromTo('#f2-push', { scale: 1 }, { scale: 1.05, duration: at(19.4), ease: 'none' }, 0);
+      tl.to('#f2-push', { scale: PUSH_SCALE, duration: at(20.4) - at(19.4), ease: 'power2.inOut' }, at(19.4));
+      tl.to('#f2-push', { scale: PUSH_SCALE + 0.02, duration: at(RETURN_BEAT) - at(20.4), ease: 'none' }, at(20.4));
+      tl.to('#f2-push', { scale: PULL_SCALE, duration: at(RETURN_BEAT + 0.25) - at(RETURN_BEAT), ease: 'power2.out' }, at(RETURN_BEAT));
+      /* settle onto frame 3's start pose: scale 1.04 about the plate centre equals scale 1.04 about the top centre shifted up by H/2 * 0.04 */
+      tl.to('#f2-push', { scale: END_SCALE, y: (PLATE_H / 2) * (1 - END_SCALE), duration: at(24) - at(RETURN_BEAT + 0.25), ease: 'power1.inOut' }, at(RETURN_BEAT + 0.25));
 
       /* the real captures are translucent (alpha about 90 percent), so every swap hides the previous frame; frames never stack */
       /* the typing: real captured frames, hard swap on each 16th note */
+      tl.set(D(0), { clipPath: 'inset(0% 0% 0% 0%)' }, at(TYPE_START) - 0.001);
       for (let k = TYPED_FIRST; k < DEMO_LAST; k++) {
         const t = at(TYPE_START + (k - TYPED_FIRST) * step);
         tl.set(D(k), { opacity: 1 }, t);
@@ -129,8 +147,8 @@
       }
 
       /* 23.5 Return: cross-fade to the last frame, then hold it to the end of the frame, no fade out */
-      tl.fromTo(D(DEMO_LAST), { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'none' }, at(RETURN_BEAT));
-      tl.set(D(DEMO_LAST - 1), { opacity: 0 }, at(RETURN_BEAT) + 0.12);
+      tl.fromTo(D(DEMO_LAST), { opacity: 0 }, { opacity: 1, duration: 0.08, ease: 'none', immediateRender: false }, at(RETURN_BEAT));
+      tl.set(D(DEMO_LAST - 1), { opacity: 0 }, at(RETURN_BEAT) + 0.08);
 
       window.__timelines["f2-hotkey"] = tl;
     })();

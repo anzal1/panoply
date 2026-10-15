@@ -73,8 +73,10 @@
       <div id="f7-device" class="f7-h" data-layout-allow-overlap>On your device.</div>
       <svg id="f7-diagram" viewBox="0 0 1700 420" fill="none">
         <defs><clipPath id="f7-nclip"><rect id="f7-nrect" x="560" y="40" width="0" height="260"/></clipPath></defs>
-        <rect id="f7-screen" pathLength="1" x="10" y="10" width="480" height="300" rx="22" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
-        <rect id="f7-base" pathLength="1" x="-30" y="326" width="560" height="22" rx="11" stroke="#fff" stroke-width="5"/>
+        <g id="f7-lap">
+        <rect id="f7-screen" x="10" y="10" width="480" height="300" rx="22" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+        <rect id="f7-base" x="-30" y="326" width="560" height="22" rx="11" stroke="#fff" stroke-width="5"/>
+        </g>
         <g id="f7-file">
           <path d="M195 85 H265 L305 125 V235 H195 Z" fill="rgba(255,255,255,.14)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
           <path d="M265 85 V125 H305" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
@@ -96,48 +98,51 @@
   </div>
 
   <script>
-    const BEAT = 60/130, START = 68;
+    const BEAT = 60/130, START = 68, F = 1/60;
     const at = b => (b - START) * BEAT;
     const tl = gsap.timeline({ paused: true });
-    const OPA = { duration: 0.25, ease: 'power1.out' };
-    const glide = (id, b, delay) => {
-      tl.fromTo(id, { y: 40 }, { y: 0, duration: 0.45, ease: 'expo.out' }, at(b) + (delay || 0));
-      tl.fromTo(id, { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(b) + (delay || 0));
+    /* an entrance starts one frame BEFORE its beat: expo.out on transform, opacity 0.5 to 1 in 0.08 s, so the hit frame already shows it */
+    const land = (sel, b, o = {}) => {
+      const t = Math.max(0, at(b) - F) + (o.delay || 0), d = o.dur || 0.4;
+      tl.fromTo(sel, { x: o.x || 0, y: o.y === undefined ? 40 : o.y }, { x: 0, y: 0, duration: d, ease: 'expo.out', immediateRender: false }, t);
+      tl.fromTo(sel, { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, t);
     };
-    /* the old phrase leaves just before the hit (0.25 s) so the new one lands on a clean ground. The exit into 74.0 may only start at 73.93, the end of the stop. */
-    const leave = (id, b, lead) => {
-      tl.to(id, { y: -30, duration: 0.25, ease: 'power3.in' }, at(b) - lead);
-      tl.to(id, { opacity: 0, duration: 0.25, ease: 'power2.out' }, at(b) - lead);
-    };
+    /* fade out ENDING one frame before beat b (ground stays blue) */
+    const out = (sel, b) => tl.to(sel, { opacity: 0, duration: 0.15, ease: 'power1.in' }, at(b) - 0.15 - F);
+    /* hard cut one frame before beat b, used where a stop holds the picture still until just before the hit */
+    const cut = (sel, b) => tl.set(sel, { opacity: 0 }, at(b) - F);
+    gsap.set(['#f7-free', '#f7-p1', '#f7-p2', '#f7-p3', '#f7-open', '#f7-lic', '#f7-graph', '.f7-dot', '#f7-device', '#f7-lap', '#f7-file', '#f7-nlabel'], { opacity: 0 });
+    gsap.set('#f7-c2', { opacity: 0 }); gsap.set('#f7-c3', { opacity: 0 });
+    tl.set('#f7-c2', { opacity: 1 }, at(72) - F);
+    tl.set('#f7-c3', { opacity: 1 }, at(74) - F);
 
-    /* ---- 68.0 Free. : the move starts on the hit. "Free." stays until 72. ---- */
+    /* ---- 68.0 HIT: Free. and the platform row land on the first frame, hold to 72 (1.8 s) ---- */
     tl.fromTo('#f7-c1', { scale: 1 }, { scale: 1.02, duration: at(72), ease: 'none' }, 0);
-    glide('#f7-free', 68, 0);
-    ['#f7-p1', '#f7-p2', '#f7-p3'].forEach((id, i) => glide(id, 68, 0.05 + i * 0.05));
-    leave('#f7-c1', 72, 0.2);
+    land('#f7-free', 68, { y: 50 });
+    ['#f7-p1', '#f7-p2', '#f7-p3'].forEach((id, i) => land(id, 68, { delay: i * 0.04, y: 30 }));
+    out('#f7-c1', 72);
 
-    /* ---- 72.0 Open source. : starts on the hit, stays until 74 ---- */
-    glide('#f7-open', 72, 0);
-    glide('#f7-lic', 72, 0.1);
+    /* ---- 72.0 HIT: Open source., the licence line and the commit graph start drawing on the hit frame, hold to 74 (0.92 s) ---- */
+    land('#f7-open', 72, { y: 50 });
+    land('#f7-lic', 72, { delay: 0.06, y: 30 });
+    gsap.set('#f7-graph', { opacity: 1 });
+    tl.fromTo('#f7-grect', { attr: { width: 0 } }, { attr: { width: 720 }, duration: 0.4, ease: 'expo.out', immediateRender: false }, at(72) - F);
+    tl.fromTo('.f7-dot', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power1.out', stagger: 0.03, immediateRender: false }, at(72) - F);
     tl.fromTo('#f7-c2', { scale: 1 }, { scale: 1.02, duration: at(73.54) - at(72), ease: 'power1.out' }, at(72));
-    tl.fromTo('#f7-grect', { attr: { width: 0 } }, { attr: { width: 720 }, duration: 0.4, ease: 'expo.out' }, at(72) + 0.1);
-    tl.fromTo('.f7-dot', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out', stagger: 0.03 }, at(72) + 0.1);
-    leave('#f7-c2', 74, 0.0167);
+    /* 73.54 to 73.93 STOP: nothing moves (every tween above has ended, the drift ends exactly at 73.54).
+       The phrase is cut one frame before the hit, which falls after the stop ends. */
+    cut('#f7-c2', 74);
 
-    /* ---- 73.54 to 73.93 STOP: nothing moves (every tween above has ended, the drift ends exactly at 73.54) ---- */
-
-    /* ---- 74.0 On your device. : starts on the hit, stays to the end ---- */
-    glide('#f7-device', 74, 0);
+    /* ---- 74.0 HIT (the strongest): the phrase, the laptop outline and the file inside it land on the hit frame, then the flat network line draws ---- */
+    land('#f7-device', 74, { y: 60, dur: 0.45 });
+    land('#f7-lap', 74, { y: 40, dur: 0.45 });
+    land('#f7-file', 74, { y: -70, dur: 0.35 });
+    tl.fromTo('#f7-nrect', { attr: { width: 0 } }, { attr: { width: 1000 }, duration: 0.4, ease: 'expo.out', immediateRender: false }, at(74) + 0.12);
+    tl.fromTo('#f7-nlabel', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out', immediateRender: false }, at(74) + 0.4);
     tl.fromTo('#f7-c3', { scale: 1 }, { scale: 1.02, duration: at(75.54) - at(74), ease: 'power1.out' }, at(74));
-    gsap.set(['#f7-screen', '#f7-base'], { strokeDasharray: 1, strokeDashoffset: 1 });
-    tl.to('#f7-screen', { strokeDashoffset: 0, duration: 0.4, ease: 'expo.out' }, at(74) + 0.25);
-    tl.to('#f7-base', { strokeDashoffset: 0, duration: 0.35, ease: 'expo.out' }, at(74) + 0.3);
-    tl.fromTo('#f7-file', { y: 18 }, { y: 0, duration: 0.4, ease: 'expo.out' }, at(74) + 0.3);
-    tl.fromTo('#f7-file', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(74) + 0.3);
-    tl.fromTo('#f7-nrect', { attr: { width: 0 } }, { attr: { width: 1000 }, duration: 0.4, ease: 'expo.out' }, at(74) + 0.3);
-    tl.fromTo('#f7-nlabel', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(74) + 0.45);
 
-    /* ---- 75.54 to 75.92 STOP, the frame ends on the blue picture at 76.0 ---- */
+    /* ---- 75.54 to 75.92 STOP: everything is still. One frame before 76.0 the picture is cut and frame 8 lands on the same blue ---- */
+    cut('#f7-c3', 76);
 
     window.__timelines["f7-promise"] = tl;
   </script>

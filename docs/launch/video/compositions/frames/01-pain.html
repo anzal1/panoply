@@ -10,7 +10,8 @@
     #f1-content { position: absolute; inset: 0; }
     #f1-wall { position: absolute; inset: 0; transform-origin: 50% 50%; }
     #f1-scrim, #f1-scrim2 { position: absolute; inset: 0; opacity: 0; }
-    #f1-scrim { background: radial-gradient(ellipse 62% 58% at 50% 50%, rgba(12,12,15,.97) 0%, rgba(12,12,15,.93) 55%, rgba(12,12,15,.30) 100%); }
+    /* the first scrim is at full strength from frame 0: solid (1.0) under the words, nothing of a window shows through */
+    #f1-scrim { background: radial-gradient(ellipse 62% 58% at 50% 50%, rgba(12,12,15,1) 0%, rgba(12,12,15,1) 60%, rgba(12,12,15,.30) 100%); }
     #f1-scrim2 { background: rgba(12,12,15,.55); }
 
     /* the generic upload-site windows (unbranded on purpose) */
@@ -70,18 +71,17 @@
 
   <script>
     (() => {
-      const BEAT = 60 / 130, START = 0;
+      const BEAT = 60 / 130, START = 0, F = 1 / 60;
       const at = (b) => (b - START) * BEAT;
 
       /* every cue in beats, in one place */
-      const WORD_BEATS = [4, 6, 8, 10];            /* Upload. Wait. Sign up. Pay. (the hit at 8 is measured) */
+      const WORD_BEATS = [0, 6, 8, 10];            /* Upload. is already fully down on frame 0 (the poster); Wait. Sign up. Pay. land one frame early, ON their beats (the hit at 8 is measured) */
       const WORD_DIM = [0.38, 0.55, 0.75];         /* settled opacity of words 1..3 once the next lands */
       const SUB_BEAT = 11;
-      const WORD_RISE = 0.4;                       /* seconds, the move STARTS on the beat (expo.out) */
-      const FADE_IN = 0.25;                        /* opacity gets its own power1.out tween */
-      const STOP_BEAT = 13.32, LINE_BEAT = 14.0, FADE_START = 15.75, FADE_END = 15.93;
-      /* entrance beat per window, in entrance order (slot 0 of ORDER is already in at frame 0) */
-      const WIN_BEATS = [0, 1, 2, 3, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 9, 10, 11];
+      const WORD_RISE = 0.4;                       /* seconds, the move STARTS one frame before the beat (expo.out) */
+      const STOP_BEAT = 13.32, LINE_BEAT = 14.0, STOP_END = 15.93;
+      /* entrance beat per window, in entrance order (slot 0 of ORDER is already in at frame 0); two land on the hit at beat 8 */
+      const WIN_BEATS = [0, 1, 2, 3, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8, 10, 11];
       const ORDER = [7, 11, 3, 9, 5, 1, 13, 8, 0, 14, 6, 2, 10, 4, 12];  /* grid slots, spread so each early window lands somewhere new */
 
       /* ---------- build the wall (copied from the style frame, ids and classes prefixed) ---------- */
@@ -121,43 +121,54 @@
 
       /* ---------- timeline ---------- */
       const tl = gsap.timeline({ paused: true });
+      const XO = 'expo.out';
 
-      /* windows glide in: expo.out, 0.45 s, start on the beat */
+      /* a hit-frame entrance: the move is expo.out on transform, opacity goes 0.5 to 1 in 0.08 s, both start one frame BEFORE the beat */
+      const land = (sel, b, o = {}) => {
+        const t = Math.max(0, at(b) - F);
+        tl.fromTo(sel, { x: 0, y: o.y === undefined ? 28 : o.y, scale: o.s || 1 }, { x: 0, y: 0, scale: 1, duration: o.dur || WORD_RISE, ease: XO, immediateRender: false }, t);
+        tl.fromTo(sel, { opacity: o.from === undefined ? 0.5 : o.from }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, t);
+      };
+      /* a lit state that changes on a hit tweens in 0.08 s */
+      const dim = (sel, o, b) => tl.to(sel, { opacity: o, duration: 0.08, ease: 'none' }, Math.max(0, at(b) - F));
+
+      /* everything that enters later is invisible until its beat; the wall windows are scenery under the full scrim */
+      const later = ORDER.filter((_, n) => n > 0).map((i) => wins[i]);
+      gsap.set(later, { opacity: 0 });
+      gsap.set(['#f1-w2', '#f1-w3', '#f1-w4', '#f1-sub', '#f1-stopline'], { opacity: 0 });
+      gsap.set('#f1-w1', { opacity: 1 });                        /* frame 0 poster: the first word is fully visible */
+      gsap.set('#f1-scrim', { opacity: 1 });                     /* and the scrim is solid under it from the first frame */
+      gsap.set(wins[ORDER[0]], { opacity: 1 });                    /* the drop-zone window is already in on frame 0 */
+
+      /* windows land one frame early on each beat: expo.out 0.45 s, opacity 0.5 to 1 in 0.08 s */
       ORDER.forEach((slotIdx, n) => {
-        const el = wins[slotIdx];
-        if (n === 0) { gsap.set(el, { opacity: 1 }); return; }   /* already in at frame 0 */
-        tl.fromTo(el, { scale: 1.04, y: 20 }, { scale: 1, y: 0, duration: 0.45, ease: 'expo.out' }, at(WIN_BEATS[n]));
-        tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: FADE_IN, ease: 'power1.out' }, at(WIN_BEATS[n]));
+        if (n === 0) return;
+        const t = at(WIN_BEATS[n]) - F;
+        tl.fromTo(wins[slotIdx], { scale: 1.04, y: 20 }, { scale: 1, y: 0, duration: 0.45, ease: XO, immediateRender: false }, t);
+        tl.fromTo(wins[slotIdx], { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, t);
       });
-      /* windows not yet in must be invisible; the fromTo above sets them at render time, this covers t=0 */
-      ORDER.forEach((slotIdx, n) => { if (n > 0) gsap.set(wins[slotIdx], { opacity: 0 }); });
 
-      /* the wall drifts, then eases to rest on the stop */
+      /* the wall drifts to rest on the stop */
       tl.fromTo('#f1-wall', { scale: 1, x: 0 }, { scale: 1.015, x: -16, duration: at(STOP_BEAT), ease: 'none' }, 0);
 
-      /* scrim strengthens as the windows fill */
-      tl.fromTo('#f1-scrim', { opacity: 0 }, { opacity: 0.55, duration: at(4) - at(3), ease: 'power2.out' }, at(3));
-      tl.to('#f1-scrim', { opacity: 1, duration: at(10) - at(4), ease: 'power1.inOut' }, at(4));
-
-      /* the four words: glide up 28 px and fade in, finishing ON the beat; earlier words settle dimmer */
+      /* the words: Upload. is down on frame 0; the others land on beats 6, 8, 10; earlier words settle dimmer on the same frame */
       WORD_BEATS.forEach((b, n) => {
-        const id = '#f1-w' + (n + 1);
-        tl.fromTo(id, { y: 28 }, { y: 0, duration: WORD_RISE, ease: 'expo.out' }, at(b));
-        tl.fromTo(id, { opacity: 0 }, { opacity: 1, duration: FADE_IN, ease: 'power1.out' }, at(b));
-        if (n > 0) tl.to('#f1-w' + n, { opacity: WORD_DIM[n - 1], duration: FADE_IN, ease: 'power1.out' }, at(b));
+        if (n > 0) land('#f1-w' + (n + 1), b, { y: 30 });
+        if (n > 0) dim('#f1-w' + n, WORD_DIM[n - 1], b);
       });
-      tl.fromTo('#f1-sub', { y: 14 }, { y: 0, duration: WORD_RISE, ease: 'expo.out' }, at(SUB_BEAT));
-      tl.fromTo('#f1-sub', { opacity: 0 }, { opacity: 1, duration: FADE_IN, ease: 'power1.out' }, at(SUB_BEAT));
+      land('#f1-sub', SUB_BEAT, { y: 14 });
 
-      /* STOP: drift ends (above), scrim deepens, the words and sub line leave completely (up 20 px, to 0) so no ghost sits behind the key line */
-      tl.fromTo('#f1-scrim2', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power2.out' }, at(STOP_BEAT));
-      tl.to('#f1-words', { y: -20, duration: 0.3, ease: 'power2.out' }, at(STOP_BEAT));
-      tl.to('#f1-words', { opacity: 0, duration: 0.3, ease: 'power1.out' }, at(STOP_BEAT));
-      tl.fromTo('#f1-stopline', { y: 28 }, { y: 0, duration: WORD_RISE, ease: 'expo.out' }, at(LINE_BEAT));
-      tl.fromTo('#f1-stopline', { opacity: 0 }, { opacity: 1, duration: FADE_IN, ease: 'power1.out' }, at(LINE_BEAT));
+      /* the hit at beat 8 (0.63): "Sign up." lands and two windows land on the same frame (above), and the accent word waits for beat 10 */
 
-      /* the line holds completely still until 15.75, then everything fades to the empty Midnight ground by 15.93 */
-      tl.fromTo('#f1-content', { opacity: 1 }, { opacity: 0, duration: at(FADE_END) - at(FADE_START), ease: 'power3.in' }, at(FADE_START));
+      /* STOP at 13.32 (a measured stop): the scrim deepens, the words and sub line leave completely and are gone before the line lands */
+      tl.fromTo('#f1-scrim2', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'power2.out', immediateRender: false }, at(STOP_BEAT));
+      tl.to('#f1-words', { y: -20, duration: 0.28, ease: 'power2.out' }, at(STOP_BEAT));
+      tl.to('#f1-words', { opacity: 0, duration: 0.28, ease: 'power1.out' }, at(STOP_BEAT));
+      /* the line lands in the silence, one frame early like every entrance (words are fully out by 6.42 s, the line starts at 6.446 s) */
+      land('#f1-stopline', LINE_BEAT, { y: 28 });
+
+      /* the line holds completely still, then everything fades to the empty Midnight ground, ending one frame before the stop ends (the deliberate silence) */
+      tl.fromTo('#f1-content', { opacity: 1 }, { opacity: 0, duration: 0.15, ease: 'power1.in', immediateRender: false }, at(STOP_END) - 0.15 - F);
 
       window.__timelines["f1-pain"] = tl;
     })();

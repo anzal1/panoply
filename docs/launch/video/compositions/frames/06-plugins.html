@@ -24,53 +24,55 @@
     #f6-fan-in { position: absolute; inset: 0; }
     #f6-fan-in svg { width: 100%; height: 100%; display: block; overflow: visible; }
 
-    /* folder with three file chips */
-    #f6-folder { position: absolute; left: 870px; top: 420px; width: 560px; height: 440px; }
-    #f6-folder svg { position: absolute; left: 0; top: 0; width: 560px; height: 440px; overflow: visible; }
-    .f6-chip { position: absolute; left: 80px; width: 400px; height: 64px; border-radius: 18px; background: #fff; color: #1d1d1f; display: flex; align-items: center; gap: 18px; padding: 0 22px;
-      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 34px; letter-spacing: -0.01em; box-shadow: 0 10px 26px rgba(8,24,70,.28); white-space: nowrap; }
-    .f6-chip i { display: block; width: 22px; height: 28px; border-radius: 6px; flex: none; }
+    /* folder with three real files (fold: back + tab, chips staged above, white front on top) */
+    #f6-pz { position: absolute; inset: 0; }
+    #f6-folder { position: absolute; left: 880px; top: 640px; width: 700px; height: 340px; opacity: 0; }
+    #f6-folder .back { position: absolute; inset: 0; border-radius: 34px; background: #c3d8f8; }
+    #f6-folder .tab { position: absolute; left: 0; top: -40px; width: 220px; height: 70px; border-radius: 26px 26px 0 0; background: #c3d8f8; }
+    #f6-folder .front { position: absolute; left: 0; top: 90px; width: 700px; height: 250px; border-radius: 34px; background: #fff; box-shadow: 0 -10px 30px rgba(8,24,70,.16); color: #1d1d1f;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+    #f6-folder .front b { font-family: "Geist Mono", ui-monospace, monospace; font-weight: 600; font-size: 44px; letter-spacing: -0.02em; }
+    #f6-folder .fc { position: relative; display: block; height: 46px; width: 300px; text-align: center; font-size: 36px; font-weight: 500; color: #54545b; line-height: 46px; }
+    #f6-folder .fc span { position: absolute; left: 0; right: 0; top: 0; }
+    .f6-chip { position: absolute; left: 70px; width: 560px; height: 84px; border-radius: 24px; background: #fff; color: #1d1d1f; display: flex; align-items: center; gap: 18px; padding: 0 26px;
+      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 40px; letter-spacing: -0.02em; box-shadow: 0 16px 36px rgba(8,24,70,.30); white-space: nowrap; }
+    .f6-chip svg { width: 38px; height: 38px; stroke: #2d6cdf; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    #f6-chip1 { top: -130px; } #f6-chip2 { top: -232px; } #f6-chip3 { top: -334px; }
 
-    /* module card: its tile, name and sub line are a 1.75x copy of the Modules row, so it lands as that row */
-    #f6-card { position: absolute; left: 850px; top: 500px; width: 600px; height: 320px; }
-    #f6-cardbg { position: absolute; inset: 0; border-radius: 32px; background: #fff; box-shadow: 0 30px 70px rgba(8,24,70,.34); }
-    #f6-card .tile { position: absolute; left: 40px; top: 40px; width: 112px; height: 112px; border-radius: 28px; background: #d2e6fc; display: grid; place-items: center; }
-    #f6-card .tile svg { width: 56px; height: 56px; }
-    #f6-card .name { position: absolute; left: 194px; top: 37px; font-weight: 500; font-size: 45.5px; line-height: 56px; color: #1d1d1f; letter-spacing: -0.01em; white-space: nowrap; }
-    #f6-card .sub { position: absolute; left: 194px; top: 105px; font-weight: 400; font-size: 40px; line-height: 49px; color: #54545b; white-space: nowrap; }
-    #f6-card .sum { position: absolute; left: 40px; top: 196px; width: 520px; font-weight: 500; font-size: 32px; line-height: 40px; letter-spacing: -0.01em; color: #54545b; }
+    /* the real Modules page (apps/desktop/src/ui/app.rs modules_page), 1240 x 720, centred */
+    #f6-win { position: absolute; left: 340px; top: 210px; width: 1240px; height: 720px; border-radius: 32px; overflow: hidden; background: #fafafb; color: #1d1d1f; opacity: 0;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,.28), 0 40px 110px rgba(8,24,70,.5); }
+    #f6-wtitle { position: absolute; left: 44px; top: 30px; font-size: 44px; line-height: 52px; font-weight: 700; letter-spacing: -0.03em; }
+    #f6-whead { position: absolute; left: 44px; top: 100px; height: 60px; font-size: 38px; line-height: 60px; color: #54545b; white-space: nowrap; letter-spacing: -0.015em; }
+    #f6-whead .hl { display: inline-block; height: 60px; padding: 0 12px; margin: 0 -12px; border-radius: 14px; background: rgba(10,132,255,0); }
+    #f6-whead .sw { display: inline-grid; font-variant-numeric: tabular-nums; }
+    #f6-whead .sw i { grid-area: 1/1; font-style: normal; }
+    #f6-whead .sw i + i { opacity: 0; }
+    #f6-wrule { position: absolute; left: 0; right: 0; top: 185px; height: 1px; background: rgba(0,0,0,.09); }
+    #f6-wlist { position: absolute; left: 0; top: 186px; width: 1240px; height: 520px; overflow: hidden;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20px, #000 calc(100% - 20px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 20px, #000 calc(100% - 20px), transparent 100%); }
+    #f6-mscroll { position: absolute; left: 0; top: 0; width: 1240px; }
+    .f6-mrow { position: absolute; left: 0; width: 1240px; height: 130px; }
+    .f6-mrow .rowbg { position: absolute; left: 14px; right: 14px; top: 8px; bottom: 8px; border-radius: 22px; background: rgba(10,132,255,0); }
+    .f6-mrow .tile { position: absolute; left: 44px; top: 27px; width: 76px; height: 76px; border-radius: 20px; display: grid; place-items: center; }
+    .f6-mrow .tile svg { width: 40px; height: 40px; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+    .f6-mrow .nm { position: absolute; left: 148px; top: 22px; font-size: 38px; line-height: 46px; font-weight: 500; letter-spacing: -0.015em; white-space: nowrap; }
+    .f6-mrow .sb { position: absolute; left: 148px; top: 74px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 26px; line-height: 32px; color: #54545b; white-space: nowrap; }
+    .f6-mrow .bd { position: absolute; right: 44px; top: 39px; height: 52px; padding: 0 22px; border-radius: 26px; font-size: 28px; line-height: 52px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; background: #eceef2; color: #54545b; }
+    .f6-mrow .bd.c { background: #d2e6fc; color: #0a60d0; }
+    .f6-mrow::after { content: ""; position: absolute; left: 44px; right: 44px; bottom: 0; height: 1px; background: rgba(0,0,0,.07); }
 
-    /* the real Modules plate, native 2320 x 1440, scaled by the timeline */
-    #f6-plate { position: absolute; left: -200px; top: -180px; width: 2320px; height: 1440px; border-radius: 24.36px; overflow: hidden; background: #fafafb;
-      box-shadow: 0 0 0 2px rgba(255,255,255,.35), 0 60px 160px rgba(8,24,70,.5); }
-    #f6-plate img { position: absolute; left: 0; top: 0; width: 2320px; height: 1440px; display: block; }
-    #f6-ringpatch { position: absolute; left: 16px; top: 228px; width: 430px; height: 72px; border: 12px solid #f0f1f4; border-radius: 26px; }
-    #f6-listpatch { position: absolute; left: 464px; top: 225px; width: 1816px; height: 1215px; background: #fafafb; }
-    #f6-listimg { position: absolute; left: 0; top: 0; width: 2320px; height: 1440px; clip-path: inset(225px 0 0 0); background: url("assets/captures/app-modules-light.png") 0 0 / 2320px 1440px no-repeat; }
-    #f6-listclip { position: absolute; left: 0; top: 0; width: 2320px; height: 1440px; clip-path: inset(225px 40px 0 464px); }
-    #f6-hl { position: absolute; left: 500px; top: 247px; width: 1760px; height: 84px; border-radius: 20px; background: rgba(10,132,255,.08); }
-    #f6-row { position: absolute; left: 0; top: 0; width: 2320px; height: 400px; }
-    #f6-row .tile { position: absolute; left: 536px; top: 257px; width: 64px; height: 64px; border-radius: 16px; background: #d2e6fc; display: grid; place-items: center; }
-    #f6-row .tile svg { width: 32px; height: 32px; }
-    #f6-row .name { position: absolute; left: 624px; top: 255px; font-weight: 500; font-size: 26px; line-height: 32px; color: #1d1d1f; letter-spacing: -0.01em; white-space: nowrap; }
-    #f6-row .sub { position: absolute; left: 624px; top: 294px; font-weight: 400; font-size: 23px; line-height: 28px; color: #54545b; white-space: nowrap; }
-    #f6-count { position: absolute; left: 500px; top: 146px; width: 1075px; height: 52px; background: #fafafb; padding-left: 14px; white-space: nowrap;
-      font-weight: 400; font-size: 27px; line-height: 52px; letter-spacing: -0.45px; color: #54545b; font-variant-numeric: tabular-nums; }
-    .f6-odo { display: inline-block; overflow: hidden; height: 52px; vertical-align: top; }
-    .f6-odo-in { display: block; }
-    .f6-odo-in i { display: block; height: 52px; font-style: normal; }
-
-    /* the wall: a few big cards */
+    /* the wall: the three real community plugins as large cards */
     #f6-wall { position: absolute; inset: 0; }
-    .f6-slot { position: absolute; width: 420px; height: 230px; border-radius: 32px; }
-    .f6-slot.empty { border: 3px dashed rgba(255,255,255,.6); display: grid; place-items: center; font-weight: 500; font-size: 40px; letter-spacing: -0.015em; color: rgba(255,255,255,.6); }
-    .f6-slot.full { background: #fff; color: #1d1d1f; box-shadow: 0 18px 44px rgba(8,24,70,.30); }
-    .f6-slot.full .tile { position: absolute; left: 28px; top: 28px; width: 72px; height: 72px; border-radius: 20px; background: #d2e6fc; display: grid; place-items: center; }
-    .f6-slot.full .tile svg { width: 38px; height: 38px; }
-    .f6-slot.full .nm { position: absolute; left: 116px; top: 30px; font-weight: 600; font-size: 38px; line-height: 44px; letter-spacing: -0.02em; white-space: nowrap; }
-    .f6-slot.full .id { position: absolute; left: 28px; top: 118px; font-family: "Geist Mono", monospace; font-weight: 500; font-size: 30px; line-height: 36px; color: #54545b; white-space: nowrap; }
-    .f6-slot.full .tag { position: absolute; left: 28px; top: 166px; height: 44px; padding: 0 20px; border-radius: 22px; background: #d2e6fc; color: #0a60d0; font-weight: 600; font-size: 30px; line-height: 44px; letter-spacing: -0.01em; }
+    .f6-card { position: absolute; top: 430px; width: 540px; height: 520px; border-radius: 36px; background: #fff; color: #1d1d1f; box-shadow: 0 24px 60px rgba(8,24,70,.32); opacity: 0; }
+    .f6-card .tile { position: absolute; left: 36px; top: 36px; width: 96px; height: 96px; border-radius: 26px; background: #eef0f4; display: grid; place-items: center; }
+    .f6-card .tile svg { width: 50px; height: 50px; fill: none; stroke: #8a8a93; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+    .f6-card .cat { position: absolute; left: 154px; top: 66px; font-size: 32px; line-height: 38px; font-weight: 500; color: #54545b; letter-spacing: -0.01em; }
+    .f6-card .nm { position: absolute; left: 36px; top: 156px; width: 468px; height: 108px; font-size: 46px; line-height: 54px; font-weight: 650; letter-spacing: -0.03em; }
+    .f6-card .sm { position: absolute; left: 36px; top: 272px; width: 468px; font-size: 32px; line-height: 41px; font-weight: 400; color: #54545b; letter-spacing: -0.01em; }
+    .f6-card .bd { position: absolute; left: 36px; bottom: 36px; height: 52px; padding: 0 22px; border-radius: 26px; background: #eceef2; color: #54545b; font-size: 28px; line-height: 52px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
   </style>
+
 
   <div id="root" data-composition-id="f6-plugins" data-width="1920" data-height="1080">
     <div id="f6-ground"></div>
@@ -101,40 +103,22 @@
       <div id="f6-morph"></div>
 
       <div id="f6-t1" class="f6-big">Anyone can add a tool.</div>
-      <div id="f6-t2" class="f6-big">Add yours in an afternoon.</div>
+      <div id="f6-t2" class="f6-big">Add yours.</div>
 
-      <div id="f6-folder">
-        <svg viewBox="0 0 560 440" fill="none">
-          <path id="f6-folderfill" d="M30 70 Q30 30 70 30 H214 Q232 30 244 44 L262 70 H490 Q530 70 530 110 V370 Q530 410 490 410 H70 Q30 410 30 370 Z" fill="rgba(255,255,255,.16)"/>
-          <path id="f6-folderline" pathLength="1" d="M30 70 Q30 30 70 30 H214 Q232 30 244 44 L262 70 H490 Q530 70 530 110 V370 Q530 410 490 410 H70 Q30 410 30 370 Z" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"/>
-        </svg>
-        <div id="f6-chip1" class="f6-chip" style="top:132px"><i style="background:#ff9f0a"></i>module.toml</div>
-        <div id="f6-chip2" class="f6-chip" style="top:218px"><i style="background:#bf5af2"></i>tool.wasm</div>
-        <div id="f6-chip3" class="f6-chip" style="top:304px"><i style="background:#1a84f3"></i>icon.svg</div>
-      </div>
-
-      <div id="f6-plate">
-        <img src="assets/captures/app-modules-light.png" alt="">
-        <!-- REAL_CAPTURE = false : the patches below stand in for a capture with a user module installed and a settled sidebar.
-             When a real capture exists, delete #f6-ringpatch, #f6-count, #f6-row, #f6-hl, #f6-listpatch and #f6-listclip and show the PNG as is. -->
-        <div id="f6-ringpatch"></div>
-        <div id="f6-listpatch"></div>
-        <div id="f6-listclip"><div id="f6-listimg"></div></div>
-        <div id="f6-hl"></div>
-        <div id="f6-row">
-          <div class="tile"><svg viewBox="0 0 32 32" fill="none" stroke="#0079fd" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11l6 6v18H8z"/><path d="M19 4v6h6"/><path d="M12 16h9M12 21h9"/></svg></div>
-          <div class="name">Word count</div>
-          <div class="sub">text.word_count<span id="f6-suffix">&nbsp;&nbsp;&middot;&nbsp;&nbsp;Chosen files only</span></div>
+      <div id="f6-pz">
+        <div id="f6-win" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div id="f6-wtitle">Modules</div>
+          <div id="f6-whead"><span class="hl" id="f6-hl"><span class="sw" id="f6-r1"><i>31</i><i>33</i><i>34</i></span> installed, <span class="sw" id="f6-r2"><i>0</i><i>2</i><i>3</i></span> from the community.</span></div>
+          <div id="f6-wrule"></div>
+          <div id="f6-wlist"><div id="f6-mscroll"></div></div>
         </div>
-        <div id="f6-count"><span class="f6-odo"><span class="f6-odo-in" id="f6-n1"><i>31</i><i>32</i></span></span> installed. Every module runs with only the files you choose.</div>
-      </div>
-
-      <div id="f6-card">
-        <div id="f6-cardbg"></div>
-        <div class="tile"><svg viewBox="0 0 32 32" fill="none" stroke="#0079fd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11l6 6v18H8z"/><path d="M19 4v6h6"/><path d="M12 16h9M12 21h9"/></svg></div>
-        <div class="name">Word count</div>
-        <div class="sub">text.word_count</div>
-        <div class="sum" id="f6-cardsum">Count the lines, words and characters in a text file.</div>
+        <div id="f6-folder" data-layout-allow-overlap data-layout-allow-occlusion>
+          <div class="back"></div><div class="tab"></div>
+          <div class="f6-chip" id="f6-chip1" data-layout-allow-overlap data-layout-allow-occlusion><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>module.toml</div>
+          <div class="f6-chip" id="f6-chip2" data-layout-allow-overlap data-layout-allow-occlusion><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>src/lib.rs</div>
+          <div class="f6-chip" id="f6-chip3" data-layout-allow-overlap data-layout-allow-occlusion><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>wit/module.wit</div>
+          <div class="front"><b>my-tool</b><span class="fc"><span id="f6-fc0">0 files</span><span id="f6-fc1" style="opacity:0">1 file</span><span id="f6-fc2" style="opacity:0">2 files</span><span id="f6-fc3" style="opacity:0">3 files</span></span></div>
+        </div>
       </div>
 
       <div id="f6-wall"></div>
@@ -142,114 +126,176 @@
   </div>
 
   <script>
-    // REAL_CAPTURE = false: when a real capture with a user module installed exists, remove the count patch, the row and the ring patch (see the comment in the plate).
-    const REAL_CAPTURE = false;
-    const BEAT = 60/130, START = 56;
+    const BEAT = 60/130, START = 56, F = 1/60;
     const at = b => (b - START) * BEAT;
-    const tl = gsap.timeline({ paused: true });
     const OPA = { duration: 0.25, ease: 'power1.out' };
+    const XO = 'expo.out';
 
-    /* ---- the wall: 6 big cards, seeded (2 real examples from modules/examples-wasm, 4 open slots) ---- */
-    let seed = 20261014; const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
-    const COLS = 3, ROWS = 2, CW = 420, CH = 230, GAP = 28;
-    const X0 = (1920 - (COLS * CW + (COLS - 1) * GAP)) / 2, Y0 = 410;
-    const EXAMPLES = [{ name: 'Word count', id: 'text.word_count' }, { name: 'Slugify lines', id: 'text.slugify_lines' }];
-    const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-    const cells = shuffle(Array.from({ length: COLS * ROWS }, (_, i) => i));
-    const fullAt = [cells[0], cells[1]];
-    const wall = document.getElementById('f6-wall');
-    const ICON = '<svg viewBox="0 0 32 32" fill="none" stroke="#0079fd" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11l6 6v18H8z"/><path d="M19 4v6h6"/><path d="M12 16h9M12 21h9"/></svg>';
-    for (let i = 0; i < COLS * ROWS; i++) {
-      const el = document.createElement('div');
-      const r = Math.floor(i / COLS), c = i % COLS, k = fullAt.indexOf(i);
-      el.id = 'f6-slot' + i;
-      el.className = 'f6-slot ' + (k >= 0 ? 'full' : 'empty');
-      el.style.left = (X0 + c * (CW + GAP)) + 'px';
-      el.style.top = (Y0 + r * (CH + GAP)) + 'px';
-      el.innerHTML = k >= 0 ? '<div class="tile">' + ICON + '</div><div class="nm">' + EXAMPLES[k].name + '</div><div class="id">' + EXAMPLES[k].id + '</div><div class="tag">Example</div>' : '+ your tool';
-      wall.appendChild(el);
+    /* fallback copy of assets/data/modules.json rows (the real Modules list, 34 rows, 3 community), used only if the file cannot be read */
+    const ROWS_FALLBACK = [{"id":"data.format","name":"Format JSON, YAML and TOML","category":"dev","tint":"#787882","community":true},{"id":"doc.markdown_to_html","name":"Markdown to HTML","category":"doc","tint":"#007aff","community":true},{"id":"files.hash","name":"Hash files","category":"files","tint":"#007aff","community":false},{"id":"id.passport_photo","name":"Passport photo","category":"id","tint":"#ff9500","community":false},{"id":"id.print_sheet","name":"Print sheet","category":"id","tint":"#ff9500","community":false},{"id":"id.signature_cleaner","name":"Signature cleaner","category":"id","tint":"#ff9500","community":false},{"id":"image.compress","name":"Compress image","category":"image","tint":"#af52de","community":false},{"id":"image.convert","name":"Convert image","category":"image","tint":"#af52de","community":false},{"id":"image.erase","name":"Erase object","category":"image","tint":"#af52de","community":false},{"id":"image.qr_code","name":"QR code maker","category":"image","tint":"#af52de","community":true},{"id":"image.remove_background","name":"Remove background","category":"image","tint":"#af52de","community":false},{"id":"image.remove_watermark","name":"Remove watermark","category":"image","tint":"#af52de","community":false},{"id":"image.resize","name":"Resize image","category":"image","tint":"#af52de","community":false},{"id":"image.resize_to_kb","name":"Resize to exact KB","category":"image","tint":"#af52de","community":false},{"id":"image.strip_metadata","name":"Strip metadata","category":"image","tint":"#af52de","community":false},{"id":"image.to_text","name":"Image to text","category":"image","tint":"#af52de","community":false},{"id":"image.upscale","name":"Upscale","category":"image","tint":"#af52de","community":false},{"id":"media.compress","name":"Compress video","category":"media","tint":"#ff6414","community":false},{"id":"media.convert","name":"Convert video or audio","category":"media","tint":"#ff6414","community":false},{"id":"media.extract_audio","name":"Extract audio","category":"media","tint":"#ff6414","community":false},{"id":"media.hdr_to_sdr","name":"HDR to SDR","category":"media","tint":"#ff6414","community":false},{"id":"media.info","name":"Video and audio info","category":"media","tint":"#ff6414","community":false},{"id":"media.normalize","name":"Normalize loudness","category":"media","tint":"#ff6414","community":false},{"id":"media.repair","name":"Repair video","category":"media","tint":"#ff6414","community":false},{"id":"media.streams","name":"Streams","category":"media","tint":"#ff6414","community":false},{"id":"media.to_mono","name":"Stereo to mono","category":"media","tint":"#ff6414","community":false},{"id":"media.trim","name":"Trim video or audio","category":"media","tint":"#ff6414","community":false},{"id":"pdf.compress","name":"Compress PDF","category":"pdf","tint":"#ff3b30","community":false},{"id":"pdf.images_to_pdf","name":"Images to PDF","category":"pdf","tint":"#ff3b30","community":false},{"id":"pdf.merge","name":"Merge PDF","category":"pdf","tint":"#ff3b30","community":false},{"id":"pdf.ocr","name":"OCR","category":"pdf","tint":"#ff3b30","community":false},{"id":"pdf.organize","name":"Organize PDF pages","category":"pdf","tint":"#ff3b30","community":false},{"id":"pdf.split","name":"Split PDF","category":"pdf","tint":"#ff3b30","community":false},{"id":"pdf.to_images","name":"PDF to images","category":"pdf","tint":"#ff3b30","community":false}];
+    function loadRows() {
+      let rows = ROWS_FALLBACK;
+      try {
+        const x = new XMLHttpRequest();
+        x.open('GET', 'assets/data/modules.json', false);
+        x.send(null);
+        if (x.status === 200 || x.status === 0) { const j = JSON.parse(x.responseText); if (j && Array.isArray(j.rows) && j.rows.length) rows = j.rows; }
+      } catch (e) {}
+      return rows.slice().sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     }
-    const arrival = shuffle(Array.from({ length: COLS * ROWS }, (_, i) => i));
 
-    /* ---- camera: slow pull back over the whole frame, ends settled on beat 68 ---- */
-    tl.fromTo('#f6-cam', { scale: 1.03 }, { scale: 1, duration: at(68), ease: 'power1.out' }, 0);
+    function build(ROWS) {
+      const $ = id => document.getElementById(id);
+      const tl = gsap.timeline({ paused: true });
+      /* an entrance starts one frame before its beat, so it is already arriving on the beat frame */
+      const enter = (sel, t, o = {}) => {
+        tl.fromTo(sel, { x: o.x || 0, y: o.y === undefined ? 26 : o.y, scale: o.s || 1 }, { x: 0, y: 0, scale: 1, duration: o.dur || 0.4, ease: XO }, t);
+        tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: o.od || 0.25, ease: 'power1.out' }, t);
+      };
+      const land = (sel, b, o) => enter(sel, at(b) - F, o);
 
-    /* ---- 56.0 continuity: frame 5's white card shrinks into the fan's centre card, the side cards rotate out from behind it ---- */
-    tl.to('#f6-t0', { y: -30, duration: 0.25, ease: 'power3.in' }, 0);
-    tl.to('#f6-t0', { opacity: 0, duration: 0.25, ease: 'power3.in' }, 0);
-    tl.to('#f6-morphshadow', { opacity: 0, duration: 0.25, ease: 'power1.out' }, 0);
-    tl.to('#f6-morph', { clipPath: 'inset(240.6px 618.3px 227.2px 619.4px round 35px)', duration: 0.5, ease: 'expo.out' }, 0);
-    tl.to('#f6-morph', { opacity: 0, duration: 0.12, ease: 'power1.out' }, 0.45);
-    gsap.set(['#f6-sideL', '#f6-sideR'], { svgOrigin: '272.788 612.197', rotation: 0 });
-    tl.to('#f6-sideL', { rotation: -20, duration: 0.5, ease: 'expo.out' }, 0);
-    tl.to('#f6-sideR', { rotation: 20, duration: 0.5, ease: 'expo.out' }, 0);
-    tl.fromTo('#f6-midimg', { opacity: 0 }, { opacity: 0.7, duration: 0.25, ease: 'power1.out' }, 0.3);
-    tl.fromTo('#f6-fan-in', { scale: 1, rotation: 0 }, { scale: 1.04, rotation: 2, duration: at(60.2), ease: 'none' }, 0);
+      const GLYPH = {
+        doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
+        dev: '<path d="m8 8-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/>',
+        image: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 9"/>',
+        media: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 4v16M16 4v16M3 9h5M3 15h5M16 9h5M16 15h5"/>',
+        id: '<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.7 1.8-2.4 3-2.4s2.4.7 3 2.4M14.5 10h4M14.5 14h3"/>',
+        files: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+        pdf: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>'
+      };
 
-    /* ---- 57.0 line lands, the fan settles smaller, the folder draws ---- */
-    tl.fromTo('#f6-t1', { y: 40 }, { y: 0, duration: 0.4, ease: 'expo.out' }, at(57));
-    tl.fromTo('#f6-t1', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(57));
-    tl.to('#f6-fan', { x: -340, y: 100, scale: 0.62, duration: 0.45, ease: 'expo.out' }, at(57));
-    gsap.set('#f6-folderline', { strokeDasharray: 1, strokeDashoffset: 1 });
-    tl.to('#f6-folderline', { strokeDashoffset: 0, duration: 0.45, ease: 'expo.out' }, at(57));
-    tl.fromTo('#f6-folderfill', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(57) + 0.1);
+      /* ---- the Modules list, rows sorted by id exactly as the app sorts them ---- */
+      const PITCH = 130;
+      const mscroll = $('f6-mscroll');
+      mscroll.style.height = (ROWS.length * PITCH) + 'px';
+      ROWS.forEach((r, i) => {
+        const g = GLYPH[r.category] || GLYPH.doc;
+        mscroll.insertAdjacentHTML('beforeend',
+          '<div class="f6-mrow" id="f6-mrow' + i + '" style="top:' + (i * PITCH) + 'px"><span class="rowbg"></span>' +
+          '<div class="tile" style="background:' + r.tint + '29"><svg viewBox="0 0 24 24" stroke="' + r.tint + '">' + g + '</svg></div>' +
+          '<div class="nm">' + r.name + '</div><div class="sb">' + r.id + ' &middot; Chosen files only</div>' +
+          '<span class="bd' + (r.community ? ' c' : '') + '">' + (r.community ? 'Community, sandboxed' : 'Built in') + '</span></div>');
+      });
+      const comm = ROWS.map((r, i) => r.community ? i : -1).filter(i => i >= 0);   /* sorted places: 0, 1 and 9 */
+      const top2 = comm.filter(i => i < 2), mid = comm.filter(i => i >= 2);        /* two at the very top, one in the middle */
+      const QR = mid[0];
+      /* before the community rows exist, every row below a missing one sits that many rows higher */
+      ROWS.forEach((r, i) => {
+        const above = comm.filter(c => c < i).length;
+        if (r.community) gsap.set('#f6-mrow' + i, { opacity: 0 });
+        else if (above) gsap.set('#f6-mrow' + i, { y: -above * PITCH });
+      });
+      const n0 = ROWS.length - comm.length;   /* 31 built in */
 
-    /* ---- 58, 59, 60 the chips start on the beat ---- */
-    [{ id: '#f6-chip1', b: 58, x: 0, y: -150 }, { id: '#f6-chip2', b: 59, x: 260, y: 0 }, { id: '#f6-chip3', b: 60, x: 0, y: 150 }].forEach(c => {
-      tl.fromTo(c.id, { x: c.x, y: c.y }, { x: 0, y: 0, duration: 0.4, ease: 'expo.out' }, at(c.b));
-      tl.fromTo(c.id, { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(c.b));
-    });
+      /* ---- camera: slow drift over the build, then the push-in lives on #f6-pz ---- */
+      tl.fromTo('#f6-cam', { scale: 1.03 }, { scale: 1, duration: at(60.5), ease: 'power1.out' }, 0);
 
-    /* ---- 60: the line leaves, the fan leaves ---- */
-    tl.to('#f6-t1', { y: -30, duration: 0.25, ease: 'power3.in' }, at(60));
-    tl.to('#f6-t1', { opacity: 0, duration: 0.25, ease: 'power3.in' }, at(60));
-    tl.to('#f6-fan', { opacity: 0, duration: 0.25, ease: 'power1.in' }, at(60.2));
+      /* ---- 56.0 continuity: frame 5's white card shrinks into the fan's centre card, the side cards rotate out from behind it ---- */
+      tl.to('#f6-t0', { y: -30, duration: 0.25, ease: 'power3.in' }, 0);
+      tl.to('#f6-t0', { opacity: 0, duration: 0.25, ease: 'power3.in' }, 0);
+      tl.to('#f6-morphshadow', { opacity: 0, duration: 0.25, ease: 'power1.out' }, 0);
+      tl.to('#f6-morph', { clipPath: 'inset(240.6px 618.3px 227.2px 619.4px round 35px)', duration: 0.5, ease: XO }, 0);
+      tl.to('#f6-morph', { opacity: 0, duration: 0.12, ease: 'power1.out' }, 0.45);
+      gsap.set(['#f6-sideL', '#f6-sideR'], { svgOrigin: '272.788 612.197', rotation: 0 });
+      tl.to('#f6-sideL', { rotation: -20, duration: 0.5, ease: XO }, 0);
+      tl.to('#f6-sideR', { rotation: 20, duration: 0.5, ease: XO }, 0);
+      tl.fromTo('#f6-midimg', { opacity: 0 }, { opacity: 0.7, duration: 0.25, ease: 'power1.out' }, 0.3);
+      tl.fromTo('#f6-fan-in', { scale: 1, rotation: 0 }, { scale: 1.04, rotation: 2, duration: at(60.2), ease: 'none' }, 0);
 
-    /* ---- the folder becomes the module card (one object), then travels into its row ---- */
-    const T3 = at(60);
-    tl.to(['#f6-chip1', '#f6-chip2', '#f6-chip3'], { opacity: 0, duration: 0.17, ease: 'power1.in' }, T3 + 0.1);
-    tl.to(['#f6-folderline', '#f6-folderfill'], { opacity: 0, duration: 0.17, ease: 'power1.in' }, T3 + 0.1);
-    tl.fromTo('#f6-card', { opacity: 0 }, { opacity: 1, duration: 0.17, ease: 'power1.out' }, T3 + 0.1);
-    tl.fromTo('#f6-card', { scale: 0.93 }, { scale: 1, duration: 0.17, ease: 'expo.out' }, T3 + 0.1);
+      /* ---- 57.0 the line lands, the fan settles to the left, the folder arrives with all three real files readable ---- */
+      land('#f6-t1', 57, { y: 40 });
+      tl.to('#f6-fan', { x: -440, y: 100, scale: 0.62, duration: 0.45, ease: XO }, at(57));
+      tl.fromTo('#f6-folder', { y: 40 }, { y: 0, duration: 0.4, ease: XO }, at(57) - F);
+      tl.fromTo('#f6-folder', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power1.out' }, at(57) - F);
 
-    gsap.set('#f6-plate', { scale: 0.58, opacity: 0 });
-    tl.to('#f6-plate', { scale: 0.6034, duration: 0.45, ease: 'expo.out' }, at(60.5));
-    tl.to('#f6-plate', Object.assign({}, OPA, { opacity: 1 }), at(60.5));
-    gsap.set('#f6-row', { opacity: 0 });
-    gsap.set('#f6-hl', { opacity: 0 });
-    gsap.set('#f6-suffix', { opacity: 0 });
+      /* ---- 58, 59, 60: each file drops behind the folder's front and LANDS on its beat (power2.in, 0.18 s, ending on the beat) ---- */
+      [['#f6-chip1', 58, 1, -130], ['#f6-chip2', 59, 2, -232], ['#f6-chip3', 60, 3, -334]].forEach(c => {
+        tl.fromTo(c[0], { y: 0 }, { y: 120 - c[3], duration: 0.18, ease: 'power2.in' }, at(c[1]) - 0.18);
+        tl.set('#f6-fc' + c[2], { opacity: 1 }, at(c[1]));
+        tl.set('#f6-fc' + (c[2] - 1), { opacity: 0 }, at(c[1]));
+      });
 
-    /* card tile -> row tile: scale 38.6 / 112, aligned on the tile centre (602.8, 279.9) in the wide view */
-    const CS = 38.64 / 112, CX = 1150, CY = 660;
-    const TRAVEL = at(60.6), LAND = TRAVEL + 0.45;
-    tl.to('#f6-card', { x: 602.8 - CX + 204 * CS, y: 279.9 - CY + 64 * CS, scale: CS, duration: 0.45, ease: 'expo.out' }, TRAVEL);
-    tl.to(['#f6-cardbg', '#f6-cardsum'], { opacity: 0, duration: 0.2, ease: 'power1.in' }, TRAVEL + 0.1);
-    tl.to('#f6-listimg', { y: 104, duration: 0.4, ease: 'expo.out' }, TRAVEL + 0.1);
-    tl.set('#f6-card', { opacity: 0 }, LAND);
-    tl.set('#f6-row', { opacity: 1 }, LAND);
-    tl.to('#f6-suffix', Object.assign({}, OPA, { opacity: 1 }), LAND);
-    tl.to('#f6-hl', Object.assign({}, OPA, { opacity: 1 }), LAND);
-    tl.to('#f6-hl', { opacity: 0, duration: 0.25, ease: 'power1.in' }, at(62.7));
+      /* ---- 60.2 the line and the fan leave ---- */
+      tl.to('#f6-t1', { y: -30, opacity: 0, duration: 0.25, ease: 'power3.in' }, at(60.2));
+      tl.to('#f6-fan', { opacity: 0, duration: 0.25, ease: 'power1.in' }, at(60.2));
 
-    /* ---- 61.6 push in about 1.8x onto the count line, the digits roll at 62.0, hold ---- */
-    const S1 = 0.6034 * 1.8;
-    tl.to('#f6-plate', { scale: S1, x: (1160 - 880) * S1, y: 385, duration: 0.45, ease: 'expo.out' }, at(61.6));
-    tl.to('#f6-n1', { y: -52, duration: 0.6, ease: 'expo.out' }, at(62));
+      /* ---- 60.35 the Modules page arrives, the folder flies to the top of its list ---- */
+      land('#f6-win', 60.35, { y: 40, od: 0.2 });
+      const FX = 1230, FY = 810;           /* folder centre */
+      const TX = 340 + 44 + 38, TY = 186 + 210 + 20 + 30;   /* the tile slot of the first row */
+      tl.to('#f6-folder .front b, #f6-folder .front .fc', { opacity: 0, duration: 0.15, ease: 'none' }, at(60.35));
+      tl.to('#f6-folder', { x: TX - FX, y: TY - FY, scale: 0.11, duration: 0.45, ease: XO }, at(60.35));
+      tl.to('#f6-folder', { opacity: 0, duration: 0.12, ease: 'power1.in' }, at(61) - F - 0.12);
 
-    /* ---- 63 the plate eases back and zooms out, the wall fills one card per half beat from 64 ---- */
-    tl.to('#f6-plate', { scale: 0.6034 * 0.55, x: 0, y: 0, duration: 0.7, ease: 'expo.out' }, at(63));
-    tl.to('#f6-plate', { opacity: 0, duration: 0.3, ease: 'power1.in' }, at(63) + 0.15);
-    tl.fromTo('#f6-wall', { scale: 1.06 }, { scale: 1, duration: at(68) - at(63), ease: 'power2.out' }, at(63));
-    arrival.forEach((idx, n) => {
-      const b = 64 + 0.5 * n;
-      tl.fromTo('#f6-slot' + idx, { y: 30, scale: 0.94 }, { y: 0, scale: 1, duration: 0.4, ease: 'expo.out' }, at(b));
-      tl.fromTo('#f6-slot' + idx, { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(b));
-    });
-    /* 65.0 line lands */
-    tl.fromTo('#f6-t2', { y: 40 }, { y: 0, duration: 0.4, ease: 'expo.out' }, at(65));
-    tl.fromTo('#f6-t2', { opacity: 0 }, Object.assign({}, OPA, { opacity: 1 }), at(65));
+      /* ---- push in about 1.35x so the header and rows read on a phone ---- */
+      gsap.set('#f6-pz', { transformOrigin: '960px 570px' });
+      tl.to('#f6-pz', { scale: 1.35, duration: 0.5, ease: XO }, at(60.6));
 
-    window.__timelines["f6-plugins"] = tl;
+      /* ---- 61 two community rows land at the very top (Format JSON, Markdown to HTML); the list shifts down, header swaps once they are in ---- */
+      const shiftRows = (idxs, dy, t) => idxs.forEach(i => tl.to('#f6-mrow' + i, { y: dy(i), duration: 0.4, ease: XO }, t));
+      ROWS.forEach((r, i) => {
+        if (r.community) return;
+        const above = comm.filter(c => c < i).length;
+        if (i > top2[top2.length - 1]) tl.to('#f6-mrow' + i, { y: -(above - top2.length) * PITCH, duration: 0.4, ease: XO }, at(61));
+      });
+      top2.forEach((i, n) => {
+        tl.fromTo('#f6-mrow' + i, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'power1.out' }, at(61) + 0.02);
+        tl.to('#f6-mrow' + i + ' .rowbg', { backgroundColor: 'rgba(10,132,255,0.10)', duration: 0.15, ease: 'power1.out' }, at(61) + 0.02);
+      });
+      const swap = (id, from, to, t) => { tl.set(id + ' i:nth-child(' + from + ')', { opacity: 0 }, t); tl.set(id + ' i:nth-child(' + to + ')', { opacity: 1 }, t); };
+      const HL = 'rgba(10,132,255,0.14)';
+      swap('#f6-r1', 1, 2, at(61) + 0.17); swap('#f6-r2', 1, 2, at(61) + 0.17);
+      tl.to('#f6-hl', { backgroundColor: HL, duration: 0.12, ease: 'power1.out' }, at(61) + 0.17);
+
+      /* ---- 61.55 the list scrolls to where the third plugin sorts (QR code maker) ---- */
+      const SCROLL = (QR - 2) * PITCH;     /* QR code maker in the third slot, two built-in rows above it */
+      tl.fromTo('#f6-mscroll', { y: 0 }, { y: -SCROLL, duration: 0.3, ease: XO }, at(61.55));
+
+      /* ---- 62 the third row lands in its sorted place, rows below it move down, header swaps to 34 and 3 ---- */
+      ROWS.forEach((r, i) => { if (i > QR && !r.community) tl.to('#f6-mrow' + i, { y: 0, duration: 0.4, ease: XO }, at(62)); });
+      tl.fromTo('#f6-mrow' + QR, { opacity: 0 }, { opacity: 1, duration: 0.15, ease: 'power1.out' }, at(62) + 0.02);
+      tl.to('#f6-mrow' + QR + ' .rowbg', { backgroundColor: 'rgba(10,132,255,0.10)', duration: 0.15, ease: 'power1.out' }, at(62) + 0.02);
+      swap('#f6-r1', 2, 3, at(62) + 0.17); swap('#f6-r2', 2, 3, at(62) + 0.17);
+      tl.to('#f6-hl', { backgroundColor: 'rgba(10,132,255,0.22)', duration: 0.12, ease: 'power1.out' }, at(62) + 0.17);
+
+      /* ---- 62.75 the page pulls back and gives way to the wall ---- */
+      tl.to('#f6-pz', { scale: 0.85, duration: 0.3, ease: 'power2.in' }, at(63) - F - 0.14);
+      tl.to('#f6-win', { opacity: 0, duration: 0.14, ease: 'power1.in' }, at(63) - F - 0.14);
+
+      /* ---- the wall: the three real community plugins as large cards ---- */
+      const CARDS = [
+        { id: 'data.format', cat: 'Developer', k: 'dev', tint: '#787882' },
+        { id: 'doc.markdown_to_html', cat: 'Documents', k: 'doc', tint: '#007aff' },
+        { id: 'image.qr_code', cat: 'Images', k: 'image', tint: '#af52de' }
+      ];
+      /* one-line summaries copied from each module.toml on feat/community-plugins */
+      const SUMMARY = {
+        'data.format': 'Tidy, convert or check JSON, YAML and TOML files.',
+        'doc.markdown_to_html': 'Turn a Markdown file into one clean HTML page that prints straight to PDF.',
+        'image.qr_code': 'Turn the links or text in a file into QR codes, one per line, as PNG or SVG.'
+      };
+      const CW = 540, GAP = 40, X0 = (1920 - (3 * CW + 2 * GAP)) / 2;
+      const wall = $('f6-wall');
+      CARDS.forEach((c, i) => {
+        const name = (ROWS.find(r => r.id === c.id) || { name: c.id }).name;
+        wall.insertAdjacentHTML('beforeend',
+          '<div class="f6-card" id="f6-card' + i + '" style="left:' + (X0 + i * (CW + GAP)) + 'px"><div class="tile" id="f6-ct' + i + '"><svg viewBox="0 0 24 24">' + GLYPH[c.k] + '</svg></div>' +
+          '<div class="cat">' + c.cat + '</div><div class="nm">' + name + '</div><div class="sm">' + SUMMARY[c.id] + '</div><span class="bd" id="f6-cb' + i + '">Community, sandboxed</span></div>');
+      });
+      /* arrivals speed up into the fill: 63, 64, 65 */
+      [63, 64, 65].forEach((b, i) => land('#f6-card' + i, b, { y: 36, s: 0.96 }));
+      land('#f6-t2', 65, { y: 40 });
+      tl.fromTo('#f6-wall', { scale: 1.04 }, { scale: 1, duration: at(67.9) - at(63), ease: 'power1.out' }, at(63));
+      /* the drum fill: each card lights in its category tint on 66.5, 67 and 67.5 (0.08 s), then the wall holds still into the hit on 68 */
+      [66.5, 67, 67.5].forEach((b, i) => {
+        tl.to('#f6-ct' + i, { backgroundColor: CARDS[i].tint + '29', duration: 0.08, ease: 'power1.out' }, at(b));
+        tl.to('#f6-ct' + i + ' svg', { stroke: CARDS[i].tint, duration: 0.08, ease: 'power1.out' }, at(b));
+        tl.to('#f6-cb' + i, { backgroundColor: '#d2e6fc', color: '#0a60d0', duration: 0.08, ease: 'power1.out' }, at(b));
+      });
+
+      window.__timelines['f6-plugins'] = tl;
+    }
+    build(loadRows());
   </script>
 </template>
 </body></html>

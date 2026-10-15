@@ -1,0 +1,246 @@
+{
+ "note": "The real Modules list (apps/desktop/src/ui/app.rs modules_page; catalog.rs sorts tools by id). Community rows are the three plugins on feat/community-plugins. The perms line is 'Chosen files only' on every row.",
+ "builtin": 31,
+ "community": 3,
+ "installed": 34,
+ "rows": [
+  {
+   "id": "data.format",
+   "name": "Format JSON, YAML and TOML",
+   "category": "dev",
+   "tint": "#787882",
+   "community": true
+  },
+  {
+   "id": "doc.markdown_to_html",
+   "name": "Markdown to HTML",
+   "category": "doc",
+   "tint": "#007aff",
+   "community": true
+  },
+  {
+   "id": "files.hash",
+   "name": "Hash files",
+   "category": "files",
+   "tint": "#007aff",
+   "community": false
+  },
+  {
+   "id": "id.passport_photo",
+   "name": "Passport photo",
+   "category": "id",
+   "tint": "#ff9500",
+   "community": false
+  },
+  {
+   "id": "id.print_sheet",
+   "name": "Print sheet",
+   "category": "id",
+   "tint": "#ff9500",
+   "community": false
+  },
+  {
+   "id": "id.signature_cleaner",
+   "name": "Signature cleaner",
+   "category": "id",
+   "tint": "#ff9500",
+   "community": false
+  },
+  {
+   "id": "image.compress",
+   "name": "Compress image",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "image.convert",
+   "name": "Convert image",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "image.erase",
+   "name": "Erase object",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "image.qr_code",
+   "name": "QR code maker",
+   "category": "image",
+   "tint": "#af52de",
+   "community": true
+  },
+  {
+   "id": "image.remove_background",
+   "name": "Remove background",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "image.remove_watermark",
+   "name": "Remove watermark",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "image.resize",
+   "name": "Resize image",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "image.resize_to_kb",
+   "name": "Resize to exact KB",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "image.strip_metadata",
+   "name": "Strip metadata",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "image.to_text",
+   "name": "Image to text",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "image.upscale",
+   "name": "Upscale",
+   "category": "image",
+   "tint": "#af52de",
+   "community": false
+  },
+  {
+   "id": "media.compress",
+   "name": "Compress video",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "media.convert",
+   "name": "Convert video or audio",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "media.extract_audio",
+   "name": "Extract audio",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "media.hdr_to_sdr",
+   "name": "HDR to SDR",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "media.info",
+   "name": "Video and audio info",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "media.normalize",
+   "name": "Normalize loudness",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "media.repair",
+   "name": "Repair video",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "media.streams",
+   "name": "Streams",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "media.to_mono",
+   "name": "Stereo to mono",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "media.trim",
+   "name": "Trim video or audio",
+   "category": "media",
+   "tint": "#ff6414",
+   "community": false
+  },
+  {
+   "id": "pdf.compress",
+   "name": "Compress PDF",
+   "category": "pdf",
+   "tint": "#ff3b30",
+   "community": false
+  },
+  {
+   "id": "pdf.images_to_pdf",
+   "name": "Images to PDF",
+   "category": "pdf",
+   "tint": "#ff3b30",
+   "community": false
+  },
+  {
+   "id": "pdf.merge",
+   "name": "Merge PDF",
+   "category": "pdf",
+   "tint": "#ff3b30",
+   "community": false
+  },
+  {
+   "id": "pdf.ocr",
+   "name": "OCR",
+   "category": "pdf",
+   "tint": "#ff3b30",
+   "community": false
+  },
+  {
+   "id": "pdf.organize",
+   "name": "Organize PDF pages",
+   "category": "pdf",
+   "tint": "#ff3b30",
+   "community": false
+  },
+  {
+   "id": "pdf.split",
+   "name": "Split PDF",
+   "category": "pdf",
+   "tint": "#ff3b30",
+   "community": false
+  },
+  {
+   "id": "pdf.to_images",
+   "name": "PDF to images",
+   "category": "pdf",
+   "tint": "#ff3b30",
+   "community": false
+  }
+ ]
+}

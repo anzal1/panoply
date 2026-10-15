@@ -50,7 +50,7 @@
     #f5-sheet .pri { right: 40px; width: 262px; background: #0a84ff; color: #fff; }
 
     #f5-slot { position: absolute; left: 56px; top: 44px; padding: 8px 18px; border-radius: 12px; background: rgba(11,27,68,.78); color: rgba(255,255,255,.88);
-      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 26px; line-height: 1.2; white-space: nowrap; }
+      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 28px; line-height: 1.2; white-space: nowrap; }
   </style>
   <div id="root" data-composition-id="f5-diskmap" data-width="1920" data-height="1080">
     <div id="f5-ground"></div>
@@ -80,7 +80,7 @@
     <img id="f5-grain" src="assets/f5-diskmap/grain.png" alt="">
   </div>
   <script>
-    const BEAT = 60 / 130, START = 48;
+    const BEAT = 60 / 130, START = 48, F = 1 / 60;
     const at = b => (b - START) * BEAT;
 
     const SHOW_SLOT_TAG = true;
@@ -204,11 +204,15 @@
        (centred horizontally, bottom 900), corner radius 28, scale 1, at rest from beat 55 to the end of the frame.
        It never moves: the camera drift ends at scale 1 on beat 55. The headline sits BELOW it, top 930. */
     const tl = gsap.timeline({ paused: true });
-    // an entrance: the move starts ON the beat (expo.out, transform only); opacity has its own short tween
-    const enter = (sel, beat, from, dur = 0.45, fade = 0.25) => {
-      tl.fromTo(sel, from, { x: 0, y: 0, duration: dur, ease: 'expo.out' }, at(beat));
-      tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: fade, ease: 'power1.out' }, at(beat));
+    // an entrance starts one frame BEFORE the beat (expo.out on transform, opacity 0.5 to 1 in 0.08 s, so the first frame already shows it)
+    const enter = (sel, beat, from, dur = 0.4) => {
+      const t = Math.max(0, at(beat) - F);
+      tl.fromTo(sel, from, { x: 0, y: 0, duration: dur, ease: 'expo.out', immediateRender: false }, t);
+      tl.fromTo(sel, { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, t);
     };
+    gsap.set('#f5-title', { opacity: 0 });
+    // HIT beat 48: the card lands on the first frame (the frame 4 content was cut one frame earlier, the blue ground stays)
+    enter('#f5-cardwrap', 48, { y: 60 }, 0.45);
     enter('#f5-title', 54, { y: 40 });
 
     // 48.0 to 49.9: 22 rectangles grow from their corners on 8ths (four slots, expo.out 0.4 s each)
@@ -218,8 +222,10 @@
       const ox = (r.x + r.w / 2) < cx ? '100%' : '0%', oy = (r.y + r.h / 2) < cy ? '100%' : '0%';  // corner nearest the map centre
       const slot = Math.min(3, Math.floor(i / 5.5)), within = i - Math.ceil(slot * 5.5);
       const t0 = at(slots[slot]) + Math.max(0, within) * 0.035;
-      tl.fromTo(el, { scale: 0, transformOrigin: `${ox} ${oy}` }, { scale: 1, duration: 0.4, ease: 'expo.out', transformOrigin: `${ox} ${oy}` }, t0);
-      tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out' }, t0);
+      // the first slot (the biggest blocks) lands ON the hit: already half size and half lit on its first frame
+      const first = slot === 0, sc0 = first ? 0.6 : 0, op0 = first ? 0.5 : 0, opd = first ? 0.08 : 0.25;
+      tl.fromTo(el, { scale: sc0, transformOrigin: `${ox} ${oy}` }, { scale: 1, duration: 0.4, ease: 'expo.out', transformOrigin: `${ox} ${oy}` }, t0);
+      tl.fromTo(el, { opacity: op0 }, { opacity: 1, duration: opd, ease: 'power1.out' }, t0);
     });
 
     // 50.0 camera drills into the biggest rectangle, which splits into its folders

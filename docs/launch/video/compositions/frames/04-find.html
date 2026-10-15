@@ -39,7 +39,7 @@
       font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 36px; letter-spacing: -0.01em; box-shadow: 0 10px 30px rgba(8,24,70,.35); }
     #f4-lat i { display: block; width: 14px; height: 14px; border-radius: 50%; background: #30d158; }
     #f4-slot { position: absolute; left: 56px; bottom: 28px; padding: 8px 18px; border-radius: 12px; background: rgba(11,27,68,.78); color: rgba(255,255,255,.88);
-      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 26px; letter-spacing: 0; line-height: 1.2; white-space: nowrap; }
+      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 28px; letter-spacing: 0; line-height: 1.2; white-space: nowrap; }
   </style>
   <div id="root" data-composition-id="f4-find" data-width="1920" data-height="1080">
     <div id="f4-ground"></div>
@@ -61,7 +61,7 @@
     <img id="f4-grain" src="assets/f4-find/grain.png" alt="">
   </div>
   <script>
-    const BEAT = 60 / 130, START = 40;
+    const BEAT = 60 / 130, START = 40, F = 1 / 60;
     const at = b => (b - START) * BEAT;
 
     const LATENCY_TEXT = "-- ms";      // placeholder: shows the measured keystroke time when instant search ships
@@ -113,11 +113,13 @@
     const slotOf = (k, id) => STAGES[k].indexOf(id);
 
     const tl = gsap.timeline({ paused: true });
-    // an entrance: the move starts ON the beat (expo.out, transform only); opacity has its own short tween
-    const enter = (sel, beat, from, dur = 0.45) => {
-      tl.fromTo(sel, from, { x: 0, y: 0, duration: dur, ease: 'expo.out' }, at(beat));
-      tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out' }, at(beat));
+    // an entrance starts one frame BEFORE the beat (expo.out on transform, opacity 0.5 to 1 in 0.08 s, so the first frame already shows it)
+    const enter = (sel, beat, from, dur = 0.4) => {
+      const t = Math.max(0, at(beat) - F);
+      tl.fromTo(sel, from, { x: 0, y: 0, duration: dur, ease: 'expo.out', immediateRender: false }, t);
+      tl.fromTo(sel, { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, t);
     };
+    gsap.set(['#f4-card', '#f4-l1', '#f4-l2', '#f4-lat', '#f4-hl'], { opacity: 0 });
 
     // initial row state: stage 0 rows visible, every other row parked (hidden) at the slot where it first appears
     rows.forEach((r, id) => {
@@ -125,11 +127,10 @@
       gsap.set(r, { y: slotOf(first, id) * ROW_H, opacity: first === 0 ? 1 : 0 });
     });
 
-    // plate: already on screen exactly as frame 3 ends (left 210, top 74, 1500 wide, scale 1), glide away from beat 40.0 (0.5 s)
-    tl.fromTo('#f4-plate', { x: 0, y: 0, scale: 1 }, { x: -320, y: 101, scale: 0.70, duration: 0.5, ease: 'expo.out', transformOrigin: '50% 50%' }, at(40));
-    // search card glides in from the right, also from beat 40.0
-    tl.fromTo('#f4-card', { x: 300 }, { x: 0, duration: 0.45, ease: 'expo.out' }, at(40));
-    tl.fromTo('#f4-card', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out' }, at(40));
+    // plate: already on screen exactly as frame 3 ends (left 210, top 74, 1500 wide, scale 1), glides away from the first frame
+    tl.fromTo('#f4-plate', { x: 0, y: 0, scale: 1 }, { x: -320, y: 101, scale: 0.70, duration: 0.5, ease: 'expo.out', transformOrigin: '50% 50%', immediateRender: false }, 0);
+    // search card is already arriving on the first frame (beat 40)
+    enter('#f4-card', 40, { x: 300 }, 0.45);
 
     // three letters on three 16ths: 41, 41.25, 41.5
     const TYPE = [41, 41.25, 41.5];
@@ -155,10 +156,17 @@
     // copy: legible from the beat it lands on
     enter('#f4-l1', 44, { y: 40 });
     enter('#f4-l2', 46.5, { y: 40 });
-    enter('#f4-lat', 46.5, { y: 18 }, 0.4);
+
+    // HIT beat 46.5: the latency pill drops in as an impact that ENDS on the beat, and the top result locks (lit in 0.08 s)
+    tl.fromTo('#f4-lat', { y: -26 }, { y: 0, duration: 0.18, ease: 'power2.in', immediateRender: false }, at(46.5) - 0.18);
+    tl.fromTo('#f4-lat', { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, at(46.5) - 0.18);
+    tl.fromTo('#f4-hl', { opacity: 0 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, at(46.5) - F);
 
     // slow camera drift across the scene
     tl.fromTo('#f4-cam', { scale: 1 }, { scale: 1.025, duration: 8 * BEAT, ease: 'none' }, 0);
+
+    // hard exit one frame before beat 48: the ground stays blue, frame 5 lands on beat 48
+    tl.to(['#f4-cam', '#f4-slot'], { opacity: 0, duration: 0.15, ease: 'power1.in' }, at(48) - 0.15 - F);
 
     window.__timelines["f4-find"] = tl;
   </script>
