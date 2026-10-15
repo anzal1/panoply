@@ -91,6 +91,8 @@ pub(crate) struct ToolPanel {
     /// True when the person answered Not now to a download, so the job that stops because of it
     /// goes back to the options quietly instead of showing a failure.
     declined: bool,
+    /// True after the person cancelled a run, so the options say that nothing was written.
+    cancelled_note: bool,
     _subs: Vec<Subscription>,
 }
 
@@ -518,6 +520,7 @@ impl ToolPanel {
         self.job = Some(job);
         self.declined = false;
         self.phase = Phase::Running {
+        self.cancelled_note = false;
             started: Instant::now(),
             fraction: 0.0,
             label: "Starting".into(),
@@ -1429,6 +1432,19 @@ impl ToolPanel {
             })
             .when_some(
                 blocker.filter(|_| !self.files.is_empty() || !self.tool.takes_files()),
+            .when(self.cancelled_note, |d| {
+                d.child(
+                    notice(
+                        "circle-check",
+                        t.ink2,
+                        "Cancelled. Nothing was written.".to_string(),
+                        t,
+                    )
+                    .id("cancelled")
+                    .role(Role::Status)
+                    .aria_label("Cancelled. Nothing was written."),
+                )
+            })
                 |d, b| d.child(notice("triangle-alert", t.warn, b, t)),
             );
         div()
@@ -1848,6 +1864,33 @@ impl ToolPanel {
         let last = outputs.len().saturating_sub(1);
         let card_body = div()
             .id("result-card")
+        // A tool that answers with text (Image to text) has the text itself as its headline. It
+        // belongs in a text block under a short title, not in the title.
+        let text_answer = done.after_bytes.is_none()
+            && (headline.contains('\n') || headline.chars().count() > 90);
+        let title_line = if text_answer {
+            done.notes
+                .iter()
+                .rev()
+                .find(|n| !n.contains(&headline))
+                .cloned()
+                .unwrap_or_else(|| "Done".to_string())
+        } else {
+            headline.clone()
+        };
+        let (shown_notes, hidden_notes) = if text_answer {
+            result_notes(
+                &done
+                    .notes
+                    .iter()
+                    .filter(|n| **n != title_line)
+                    .cloned()
+                    .collect::<Vec<_>>(),
+                &headline,
+            )
+        } else {
+            result_notes(&done.notes, &headline)
+        };
             .role(Role::Group)
             .aria_label(format!("Result: {headline}"))
             .flex()
@@ -1875,7 +1918,7 @@ impl ToolPanel {
                             .text_color(t.ink)
                             .child(match undone {
                                 Some(u) => u.title().to_string(),
-                                None => headline.clone(),
+                                None => title_line.clone(),
                             }),
                     ),
             )
