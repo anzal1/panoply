@@ -307,7 +307,7 @@ impl LiveIndex {
         let root_dev = dir_device(dir);
         while let Some((path, id)) = stack.pop() {
             let mut found: Vec<(String, bool, u32, u64)> = Vec::new();
-            read_entries(false, &path, true, true, &mut |raw: Raw<'_>| {
+            read_entries(false, true, &path, true, true, &mut |raw: Raw<'_>| {
                 found.push((
                     raw.name.to_string_lossy().into_owned(),
                     raw.is_dir,

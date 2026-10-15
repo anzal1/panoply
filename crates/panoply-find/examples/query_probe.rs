@@ -1,4 +1,4 @@
-//! Times queries against a saved index: `probe <index file> <query>...`.
+//! Times queries against a saved index: `query_probe <index file> <query>...`.
 
 use std::time::Instant;
 

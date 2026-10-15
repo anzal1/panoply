@@ -24,6 +24,7 @@ fn live(root: &Path) -> LiveIndex {
         with_mtime: true,
         exclude: Exclusions::defaults(),
         portable_reader: false,
+        bulk_reader: true,
     };
     let (idx, _) = Index::build(&[root.to_path_buf()], &o).unwrap();
     LiveIndex::new(idx, Exclusions::defaults())

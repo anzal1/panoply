@@ -34,6 +34,10 @@ pub struct WalkOptions {
     /// folder, read names without allocating, stat relative to it). For comparing the two and as an
     /// escape hatch.
     pub portable_reader: bool,
+    /// macOS: read folders with `getattrlistbulk`, which returns the modified time with the names. Off
+    /// falls back to a read plus one `lstat` per entry (for comparing the two, and for volumes that do
+    /// not support bulk reads, which fall back by themselves). Ignored elsewhere.
+    pub bulk_reader: bool,
 }
 
 impl Default for WalkOptions {
@@ -43,6 +47,7 @@ impl Default for WalkOptions {
             with_mtime: true,
             exclude: Exclusions::defaults(),
             portable_reader: false,
+            bulk_reader: true,
         }
     }
 }
@@ -241,13 +246,14 @@ fn read_entries_std(
 
 pub(crate) fn read_entries(
     portable: bool,
+    bulk: bool,
     path: &Path,
     want_stat: bool,
     dirs_only_stat: bool,
     f: &mut dyn FnMut(Raw<'_>),
 ) -> bool {
     #[cfg(target_os = "macos")]
-    if !portable && want_stat {
+    if !portable && bulk && want_stat {
         // One getattrlistbulk call returns name, type and modified time for a few hundred entries.
         // A file system that does not support it (some network and FAT volumes) falls back below,
         // unless entries were already delivered.
@@ -271,7 +277,7 @@ pub(crate) fn read_entries(
     if !portable {
         return read_entries_native(path, want_stat, dirs_only_stat, f);
     }
-    let _ = portable;
+    let _ = (portable, bulk);
     read_entries_std(path, want_stat, dirs_only_stat, f)
 }
 
@@ -401,6 +407,7 @@ fn visit<'s>(ctx: &'s Ctx<'s>, scope: &rayon::Scope<'s>, path: PathBuf, batch_id
     let mut never_index = false;
     let opened = read_entries(
         ctx.opts.portable_reader,
+        ctx.opts.bulk_reader,
         &path,
         ctx.opts.with_mtime,
         ex.one_file_system,

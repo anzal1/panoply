@@ -40,6 +40,7 @@ fn build(root: &Path) -> Index {
         with_mtime: true,
         exclude: Exclusions::defaults(),
         portable_reader: false,
+        bulk_reader: true,
     };
     Index::build(&[root.to_path_buf()], &o).unwrap().0
 }

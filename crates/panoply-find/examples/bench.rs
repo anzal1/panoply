@@ -2,7 +2,8 @@
 //!
 //!   --threads N        walker threads (default 8)
 //!   --runs N           index builds to time (default 3)
-//!   --no-mtime         skip the per-entry lstat
+//!   --no-mtime         skip the modified time
+//!   --lstat            macOS: read the modified time with one lstat per entry instead of getattrlistbulk
 //!   --ignore           also build with the `ignore` crate's walker (needs --features ignore-walker)
 //!   --exclude-dir P    never enter P (repeatable)
 //!   --compare          time `rg --files` (the walker fd uses) and `mdfind -name` on the same root
@@ -125,6 +126,7 @@ fn main() {
     let mut ignore = false;
     let mut compare = false;
     let mut portable = false;
+    let mut bulk = true;
     let mut nq = 2000usize;
     let mut save: Option<PathBuf> = None;
     let mut load: Option<PathBuf> = None;
@@ -158,6 +160,7 @@ fn main() {
             }
             "--no-mtime" => with_mtime = false,
             "--portable" => portable = true,
+            "--lstat" => bulk = false,
             "--ignore" => ignore = true,
             "--compare" => compare = true,
             other => panic!("unknown option {other}"),
@@ -174,6 +177,7 @@ fn main() {
         with_mtime,
         exclude,
         portable_reader: portable,
+        bulk_reader: bulk,
     };
     println!(
         "root {}  threads {threads}  mtime {with_mtime}  rss at start {:.1} MB",
