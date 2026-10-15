@@ -80,10 +80,8 @@ pub(crate) struct AppView {
 impl AppView {
     pub(crate) fn new(window: &mut Window, cx: &mut Context<Self>, hub: Hub) -> Self {
         let search = cx.new(|cx| {
-            InputState::new(window, cx).placeholder(format!(
-                "Search {} tools",
-                hub.catalog.tools().len()
-            ))
+            InputState::new(window, cx)
+                .placeholder(format!("Search {} tools", hub.catalog.tools().len()))
         });
         let search_sub = cx.subscribe_in(
             &search,

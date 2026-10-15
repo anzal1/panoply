@@ -88,7 +88,7 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 
 ### UP-07 The privacy line says "Uses the network" on tools that, on this computer, never do (open)
 
-- **Tools.** 22 of 31: every media tool (including Video and audio info, which only reads a file), every OCR and PDF tool, the AI picture tools, Passport photo.
+- **Tools.** 19 of the 31: every media tool (including Video and audio info, which only reads a file), OCR, Compress PDF and PDF to images, the AI picture tools, Passport photo.
 - **Steps.** Open Video and audio info on a Mac that has `ffmpeg`, or Passport photo on a Mac.
 - **Expected.** FLOWS.md capability 11: every screen states where the work ran. "Processed on this computer" when nothing leaves it.
 - **Happened.** The header chip says "Uses the network" and a banner above the files says "Downloads the video engine (about 140 MB) once" or "Only on Windows and Linux, ... A Mac uses Apple Vision and downloads nothing." The CLI prints the same line to stderr before every run, including the tenth run of a model that is already on disk. The result card then says "Processed on this computer", which contradicts the header. A person reading the chip would think a photo of their passport goes online.
