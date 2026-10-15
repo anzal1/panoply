@@ -121,9 +121,7 @@ for scenario in default compositor; do
   [ "${bar_after_hotkey:-0}" != 0 ] || failed+=("command bar did not show on the hotkey")
   [ "${bar_after_escape:-0}" = 0 ] || failed+=("command bar still on screen after Escape")
   [ "${bar_second_show:-0}" != 0 ] || failed+=("command bar did not show on the second hotkey")
-  # With a compositor the hotkey that should hide the bar can race the bar's own focus-loss hide and show it
-  # again (CHANGELOG v0.1.2 Known). A warning until the fix in the next release.
-  [ "${bar_after_toggle:-0}" = 0 ] || echo "::warning::command bar still on screen after the hotkey toggled it off"
+  [ "${bar_after_toggle:-0}" = 0 ] || failed+=("command bar still on screen after the hotkey toggled it off")
   runs+=("$(python3 -I - "$scenario" "$alive" "$wid" "$title" "$geom" "$frame" "$motif" "$mem_mb" "$alive_after_hotkey" "$exited" "$code" "$t_window" "$bar_at_start" "$bar_after_hotkey" "$bar_after_escape" "$bar_second_show" "$bar_after_toggle" "$bar_first_show_ms" "$bar_second_show_ms" <<'PY'
 import json, sys
 k = ["scenario","alive","window_id","title","geometry","frame_extents","motif_hints","memory_mb","alive_after_hotkey","exited_after_close","exit_code","seconds_to_window","bar_at_start","bar_after_hotkey","bar_after_escape","bar_second_show","bar_after_toggle","bar_first_show_ms","bar_second_show_ms"]
