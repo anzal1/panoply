@@ -793,6 +793,9 @@ impl DiskView {
 
     fn toolbar_buttons(&self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
         let scanning = matches!(self.phase, Phase::Scanning { .. });
+        // Before a scan and after a failed start the page offers its own two buttons in the middle, and
+        // there is nothing to review yet, so the toolbar stays empty.
+        let has_map = matches!(self.phase, Phase::Done) && self.scan.is_some();
         div()
             .flex()
             .flex_row()
@@ -808,7 +811,7 @@ impl DiskView {
                     cx.listener(|v, _, _, cx| v.cancel_scan(cx)),
                 ))
             })
-            .when(!scanning, |d| {
+            .when(has_map, |d| {
                 d.child(button(
                     "disk-choose",
                     "Choose folder",
@@ -836,15 +839,17 @@ impl DiskView {
                     }),
                 ))
             })
-            .child(button_ex(
-                "disk-review",
-                "Review and move to trash",
-                ButtonKind::Primary,
-                None,
-                self.picks.count() > 0 && self.busy.is_none(),
-                t,
-                cx.listener(|v, _, _, cx| v.open_review(cx)),
-            ))
+            .when(has_map, |d| {
+                d.child(button_ex(
+                    "disk-review",
+                    "Review and move to trash",
+                    ButtonKind::Primary,
+                    None,
+                    self.picks.count() > 0 && self.busy.is_none(),
+                    t,
+                    cx.listener(|v, _, _, cx| v.open_review(cx)),
+                ))
+            })
             .into_any_element()
     }
 
@@ -1756,7 +1761,9 @@ impl DiskView {
                     if p.file_name().is_some_and(|n| n == "Library") {
                         Err(panoply_core::TrashError::NoTrash)
                     } else {
-                        Ok(Some(PathBuf::from("/Users/you/.Trash").join(p.file_name().unwrap())))
+                        Ok(Some(
+                            PathBuf::from("/Users/you/.Trash").join(p.file_name().unwrap()),
+                        ))
                     }
                 },
                 |_| {},
@@ -1801,14 +1808,6 @@ impl DiskView {
                             .child(super::widgets::progress_bar(fraction, "Scan progress", t)),
                     )
                     .child(div().ramp(ty::BODY).text_color(t.ink2).child(line))
-                    .child(button(
-                        "disk-cancel-center",
-                        "Cancel",
-                        ButtonKind::Secondary,
-                        Some("x"),
-                        t,
-                        cx.listener(|v, _, _, cx| v.cancel_scan(cx)),
-                    ))
             }
             Phase::Failed(msg) => div()
                 .flex()
