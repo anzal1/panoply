@@ -14,9 +14,13 @@ pub fn user_modules_dir() -> PathBuf {
 /// to the executable (Windows install folder and zip, Linux `bin/` in the tarball and AppImage, and
 /// next to the command line tool in its archive). Only folders that exist are returned.
 pub fn search_dirs() -> Vec<PathBuf> {
+    search_dirs_with(std::env::var_os("PANOPLY_MODULES").as_deref())
+}
+
+fn search_dirs_with(env_override: Option<&std::ffi::OsStr>) -> Vec<PathBuf> {
     let mut dirs = Vec::new();
-    if let Some(v) = std::env::var_os("PANOPLY_MODULES") {
-        dirs.extend(std::env::split_paths(&v));
+    if let Some(v) = env_override {
+        dirs.extend(std::env::split_paths(v));
     }
     dirs.push(user_modules_dir());
     if let Ok(exe) = std::env::current_exe()
@@ -78,13 +82,7 @@ mod tests {
     fn panoply_modules_comes_first() {
         let d = std::env::temp_dir();
         // search_dirs keeps only folders that exist, and PANOPLY_MODULES leads the list.
-        let dirs = {
-            // SAFETY: a test that sets one variable no other test in this crate reads.
-            unsafe { std::env::set_var("PANOPLY_MODULES", &d) };
-            let v = search_dirs();
-            unsafe { std::env::remove_var("PANOPLY_MODULES") };
-            v
-        };
+        let dirs = search_dirs_with(Some(d.as_os_str()));
         assert_eq!(dirs.first(), Some(&d));
     }
 }

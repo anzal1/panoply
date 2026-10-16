@@ -404,6 +404,7 @@ fn a_shipped_module_folder_is_found_by_the_cli_from_anywhere() {
         .arg("modules")
         .env("PANOPLY_MODULES", d.join("modules"))
         .env("PANOPLY_DATA_DIR", d.join("data"))
+        .env("PANOPLY_NO_SOURCE_TREE", "1")
         .current_dir(&d)
         .output()
         .unwrap();

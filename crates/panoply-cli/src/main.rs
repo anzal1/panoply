@@ -419,12 +419,16 @@ fn examples_dir(name: &str) -> Option<PathBuf> {
             .filter(|_| name == "examples"),
         Some(PathBuf::from("modules").join(name)),
         // The source tree this binary was built from: for `cargo run` while developing. A release
-        // build must not look there (on the CI runner that folder exists and holds the examples).
-        cfg!(debug_assertions).then(|| {
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../modules")
-                .join(name)
-        }),
+        // build must not look there (on the CI runner that folder exists and holds the examples), and
+        // PANOPLY_NO_SOURCE_TREE=1 turns it off in a debug build too (the tests that check what a
+        // shipped folder holds).
+        (cfg!(debug_assertions) && std::env::var_os("PANOPLY_NO_SOURCE_TREE").is_none()).then(
+            || {
+                PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../modules")
+                    .join(name)
+            },
+        ),
     ];
     candidates.into_iter().flatten().find(|p| p.is_dir())
 }
