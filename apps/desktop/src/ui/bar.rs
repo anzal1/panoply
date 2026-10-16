@@ -398,7 +398,8 @@ impl Bar {
 
     /// Open the chosen file with its default app, or show it in the file manager. On a worker.
     fn open_selected_file(&mut self, reveal: bool, cx: &mut Context<Self>) {
-        let Some(Action::OpenFile { path }) = self.results.get(self.selected).map(|r| r.action.clone())
+        let Some(Action::OpenFile { path }) =
+            self.results.get(self.selected).map(|r| r.action.clone())
         else {
             return;
         };
@@ -516,7 +517,11 @@ impl Bar {
     #[cfg(feature = "snapshot")]
     pub(crate) fn section_titles(&self) -> (Vec<String>, bool) {
         (
-            self.results.sections.iter().map(|s| s.title.clone()).collect(),
+            self.results
+                .sections
+                .iter()
+                .map(|s| s.title.clone())
+                .collect(),
             self.files_pending,
         )
     }
@@ -1275,8 +1280,8 @@ impl Render for Bar {
 
         let dragging = self.drag_active;
         let trimmed = self.query.trim().to_string();
-        let searched_files = self.wants_files()
-            && matches!(self.hub.finder.state(), finder::State::Ready { .. });
+        let searched_files =
+            self.wants_files() && matches!(self.hub.finder.state(), finder::State::Ready { .. });
         let list_body: AnyElement = if self.results.is_empty() && self.files_pending {
             // The tools had nothing and the index has not answered yet: a blank list for a few
             // milliseconds, not a "nothing found" that is about to change.
@@ -1393,10 +1398,7 @@ impl Render for Bar {
             let keys = if self.results.is_empty() {
                 Vec::new()
             } else if self.selected_is_file() {
-                vec![
-                    ("Open", vec!["\u{21B5}"]),
-                    (SHOW_FILE, vec![c, "\u{21B5}"]),
-                ]
+                vec![("Open", vec!["\u{21B5}"]), (SHOW_FILE, vec![c, "\u{21B5}"])]
             } else if has_chips {
                 vec![("Edit option", vec!["\u{21E5}"]), ("Run", vec!["\u{21B5}"])]
             } else if !self.files.is_empty() {

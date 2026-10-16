@@ -57,7 +57,10 @@ fn fixture_files() -> Vec<(String, u64)> {
     .collect();
     // A long list: more matches than the page will show.
     for i in 1..=240u64 {
-        v.push((format!("Documents/Invoices/invoice-{i:04}.pdf"), i * 3600 * 5));
+        v.push((
+            format!("Documents/Invoices/invoice-{i:04}.pdf"),
+            i * 3600 * 5,
+        ));
     }
     v
 }

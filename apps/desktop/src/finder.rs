@@ -21,7 +21,7 @@ use std::time::Duration;
 
 use panoply_find::watch::{self, Updater};
 use panoply_find::{
-    Exclusions, Index, LiveIndex, Segment, WalkOptions, walk_with_progress, SearchOptions,
+    Exclusions, Index, LiveIndex, SearchOptions, Segment, WalkOptions, walk_with_progress,
 };
 
 use crate::catalog::Category;
@@ -505,16 +505,12 @@ pub fn kind_of(name: &str, is_dir: bool) -> Kind {
         "pdf" => k("file-text", Category::Pdf, "PDF document"),
         "png" | "jpg" | "jpeg" | "gif" | "webp" | "heic" | "heif" | "tif" | "tiff" | "bmp"
         | "svg" | "avif" | "raw" | "dng" => k("file-image", Category::Images, "Image"),
-        "mp4" | "mov" | "mkv" | "avi" | "webm" | "m4v" => {
-            k("file-video", Category::Video, "Video")
-        }
+        "mp4" | "mov" | "mkv" | "avi" | "webm" | "m4v" => k("file-video", Category::Video, "Video"),
         "mp3" | "wav" | "flac" | "m4a" | "aac" | "ogg" | "opus" | "aiff" => {
             k("file-audio", Category::Audio, "Audio")
         }
         "doc" | "docx" | "odt" | "rtf" | "xls" | "xlsx" | "ods" | "ppt" | "pptx" | "odp"
-        | "pages" | "numbers" | "key" | "epub" => {
-            k("file-text", Category::Documents, "Document")
-        }
+        | "pages" | "numbers" | "key" | "epub" => k("file-text", Category::Documents, "Document"),
         "txt" | "md" | "csv" | "log" | "json" | "yaml" | "yml" | "toml" => {
             k("file-text", Category::Text, "Text file")
         }
@@ -535,7 +531,10 @@ pub fn highlight(name: &str, query: &str) -> Vec<usize> {
     let mut hit = vec![false; chars.len()];
     for word in query.split_whitespace() {
         // A path word ("src/lib") matches the name by its last part.
-        let word = word.rsplit(['/', '\\']).find(|s| !s.is_empty()).unwrap_or("");
+        let word = word
+            .rsplit(['/', '\\'])
+            .find(|s| !s.is_empty())
+            .unwrap_or("");
         let w: Vec<char> = word.chars().map(fold_char).collect();
         if w.is_empty() || w.len() > chars.len() {
             continue;
@@ -739,7 +738,10 @@ mod tests {
             format!("~{0}a{0}b", std::path::MAIN_SEPARATOR)
         );
         assert_eq!(home_relative(Path::new("/Volumes/x"), home), "/Volumes/x");
-        assert_eq!(home_relative(Path::new("/Users/mellon"), home), "/Users/mellon");
+        assert_eq!(
+            home_relative(Path::new("/Users/mellon"), home),
+            "/Users/mellon"
+        );
     }
 
     #[test]
@@ -819,7 +821,11 @@ mod tests {
             assert!(t0.elapsed() < Duration::from_secs(5));
             std::thread::sleep(Duration::from_millis(5));
         }
-        assert!(matches!(f.state(), State::Unavailable { .. }), "{:?}", f.state());
+        assert!(
+            matches!(f.state(), State::Unavailable { .. }),
+            "{:?}",
+            f.state()
+        );
         assert!(f.search("a", 5).is_empty());
     }
 
@@ -843,7 +849,10 @@ mod tests {
         fs::write(t.path().join("Documents/zebra-invoice.pdf"), b"x").unwrap();
         let t1 = Instant::now();
         while f.search("zebra-invoice", 3).is_empty() {
-            assert!(t1.elapsed() < Duration::from_secs(8), "the watcher missed it");
+            assert!(
+                t1.elapsed() < Duration::from_secs(8),
+                "the watcher missed it"
+            );
             std::thread::sleep(Duration::from_millis(50));
         }
         f.shutdown();
@@ -853,7 +862,10 @@ mod tests {
     fn open_and_reveal_commands_hold_the_path_as_one_argument() {
         let p = Path::new("/tmp/a b & c.pdf");
         let o = crate::platform::open_command(p);
-        assert!(o.get_args().any(|a| a == p.as_os_str() || a.to_string_lossy().ends_with("a b & c.pdf")));
+        assert!(
+            o.get_args()
+                .any(|a| a == p.as_os_str() || a.to_string_lossy().ends_with("a b & c.pdf"))
+        );
         let r = crate::platform::reveal_command(p);
         assert!(r.get_args().count() >= 1);
     }

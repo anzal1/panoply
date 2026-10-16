@@ -310,8 +310,12 @@ impl AppView {
             .update(cx, |s, _| s.set_editor_style(editor_style(t)));
 
         let count = match &status {
-            State::Ready { entries, .. } => Some(format!("{} files indexed", thousands(*entries as u64))),
-            State::Indexing { entries } => Some(format!("Indexing, {} so far", thousands(*entries))),
+            State::Ready { entries, .. } => {
+                Some(format!("{} files indexed", thousands(*entries as u64)))
+            }
+            State::Indexing { entries } => {
+                Some(format!("Indexing, {} so far", thousands(*entries)))
+            }
             State::Unavailable { .. } => None,
         };
         let trailing = count.map(|c| {
@@ -539,13 +543,14 @@ impl AppView {
                             .whitespace_nowrap()
                             .text_ellipsis()
                             .ramp(ty::SMALL)
-                            .text_color(if self.find.note.is_some() { t.warn } else { t.ink3 })
-                            .child(
-                                self.find
-                                    .note
-                                    .clone()
-                                    .unwrap_or_else(|| "Names only. Nothing leaves this computer.".into()),
-                            ),
+                            .text_color(if self.find.note.is_some() {
+                                t.warn
+                            } else {
+                                t.ink3
+                            })
+                            .child(self.find.note.clone().unwrap_or_else(|| {
+                                "Names only. Nothing leaves this computer.".into()
+                            })),
                     )
                     .when(showing_list, |d| {
                         d.child(key_hint("Move".into(), vec!["\u{2191}", "\u{2193}"]))
@@ -654,7 +659,9 @@ fn ready_state(entries: usize, t: Theme) -> AnyElement {
             "Start typing. {} files on this computer are ready to search, and the list follows every letter.",
             thousands(entries as u64)
         ),
-        Some("Two words narrow it down, like \u{201C}tax report\u{201D}. A few letters of the name are enough."),
+        Some(
+            "Two words narrow it down, like \u{201C}tax report\u{201D}. A few letters of the name are enough.",
+        ),
         t,
     )
 }
@@ -686,7 +693,13 @@ fn no_results_state(query: &str, t: Theme) -> AnyElement {
     )
 }
 
-fn state_block(icon_name: &str, title: &str, body: &str, hint: Option<&str>, t: Theme) -> AnyElement {
+fn state_block(
+    icon_name: &str,
+    title: &str,
+    body: &str,
+    hint: Option<&str>,
+    t: Theme,
+) -> AnyElement {
     let mut block = empty_state(icon_name, title, body, None, t);
     if let Some(h) = hint {
         block = block.child(
