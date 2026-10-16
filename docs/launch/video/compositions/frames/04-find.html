@@ -50,7 +50,10 @@
   </div>
   <script>
     const BEAT = 60 / 130, START = 40, F = 1 / 60;
-    const at = b => (b - START) * BEAT;
+    /* every event is placed on the 60 fps grid: the frame start snap (window.__snap, see assemble-index.py) is taken out, and half a frame is taken off,
+         so an event at exact time t first shows on frame round(t * 60), the frame the cue sheet names */
+      const SNAP = ((window.__snap && window.__snap['f4-find']) || 0) + 1 / 120;
+      const at = b => Math.max(0, (b - START) * BEAT - SNAP);
 
     /* the measured time from a keystroke to a drawn frame: p50 of 20 keystrokes in assets/data/find-report.json (release build, Mac runner) */
     const LATENCY_MS = 2;

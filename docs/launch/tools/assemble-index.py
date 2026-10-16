@@ -26,6 +26,7 @@ for k, (i, f, st, dur) in enumerate(hosts):
     sf = round(st * FPS)
     ef = round((st + dur) * FPS) if k + 1 == len(hosts) else round(hosts[k + 1][2] * FPS)
     snapped.append((i, f, fl(sf / FPS), fl((ef - sf) / FPS + 1e-9) if k + 1 == len(hosts) else fl((ef - sf) / FPS + 1e-9)))
+orig_hosts = hosts
 hosts = snapped
 json.dump(spec, open(os.path.join(root, 'frames.json'), 'w'), indent=2)
 rows = []
@@ -49,12 +50,14 @@ for i, f, st, dur in hosts:
 </template>
 </body></html>
 ''')
+snap_json = json.dumps({f['id']: round(st - orig, 6) for (i, f, st, dur), (_, _, orig, _) in zip(hosts, orig_hosts)})
 html = f'''<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width={w}, height={h}" />
     <script src="assets/vendor/gsap.min.js"></script>
+    <script>window.__snap = {snap_json};</script>
     <style>
       * {{ margin: 0; padding: 0; box-sizing: border-box; }}
       @font-face {{ font-family: "Geist"; src: url("assets/fonts/Geist-Variable-latin.woff2") format("woff2"); font-weight: 100 900; }}

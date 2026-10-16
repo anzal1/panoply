@@ -1,2 +1,2 @@
 video looks 60
-# run 14: frame grid snap, no blank cuts, real 412k captures, after-map shrink into the fan
+# run 15: events snapped to the frame grid (counter locks on 914), exact-frame checks

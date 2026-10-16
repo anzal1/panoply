@@ -71,7 +71,10 @@
 
   <script>
     const BEAT = 60 / 130, START = 24, F = 1 / 60;
-    const at = b => (b - START) * BEAT;              /* local seconds of an absolute beat */
+    /* every event is placed on the 60 fps grid: the frame start snap (window.__snap, see assemble-index.py) is taken out, and half a frame is taken off,
+         so an event at exact time t first shows on frame round(t * 60), the frame the cue sheet names */
+      const SNAP = ((window.__snap && window.__snap['f3-tools']) || 0) + 1 / 120;
+      const at = b => Math.max(0, (b - START) * BEAT - SNAP);              /* local seconds of an absolute beat */
 
     /* ---- constants the real captures / the real build can change ---- */
     /* Hard cut at beat 24: the real result card is on screen on the very first frame (no running frames, no cross-fade). */

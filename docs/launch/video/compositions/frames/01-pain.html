@@ -72,7 +72,10 @@
   <script>
     (() => {
       const BEAT = 60 / 130, START = 0, F = 1 / 60;
-      const at = (b) => (b - START) * BEAT;
+      /* every event is placed on the 60 fps grid: the frame start snap (window.__snap, see assemble-index.py) is taken out, and half a frame is taken off,
+         so an event at exact time t first shows on frame round(t * 60), the frame the cue sheet names */
+      const SNAP = ((window.__snap && window.__snap['f1-pain']) || 0) + 1 / 120;
+      const at = b => Math.max(0, (b - START) * BEAT - SNAP);
 
       /* every cue in beats, in one place */
       const WORD_BEATS = [4, 6, 8, 10];            /* Upload. beat 4 (frame 111), Wait. beat 6, Sign up. beat 8 (the measured hit), Pay. beat 10; each lands one frame early so its beat frame already shows it */

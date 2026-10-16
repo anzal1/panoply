@@ -30,7 +30,10 @@
   </div>
 <script>
     const BEAT = 60 / 130, START = 76, F = 1 / 60;
-    const at = b => (b - START) * BEAT;
+    /* every event is placed on the 60 fps grid: the frame start snap (window.__snap, see assemble-index.py) is taken out, and half a frame is taken off,
+         so an event at exact time t first shows on frame round(t * 60), the frame the cue sheet names */
+      const SNAP = ((window.__snap && window.__snap['f8-end']) || 0) + 1 / 120;
+      const at = b => Math.max(0, (b - START) * BEAT - SNAP);
 
     // the fan mark, same path as docs/assets/panoply-mark.svg; three cards about one pivot
     const CARD = 'M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z';
