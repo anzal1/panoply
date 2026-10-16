@@ -1008,6 +1008,35 @@ pub(crate) fn run_review(out: PathBuf) {
                         &mut log,
                         &mut times,
                     );
+                    // The move's result with Undo (a fake mover: nothing leaves the temp folder or
+                    // reaches the real Trash), one item refused so the failure line shows, then
+                    // the Undo result.
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.preview_move(false, cx));
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-moved",
+                        &file("disk-map-moved"),
+                        &mut log,
+                        &mut times,
+                    );
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.preview_move(true, cx));
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-undone",
+                        &file("disk-map-undone"),
+                        &mut log,
+                        &mut times,
+                    );
                     d.change(app_win, |a, _, cx| {
                         let dv = a.disk_view();
                         dv.update(cx, |v, cx| v.show_review(false, cx));
@@ -1028,9 +1057,25 @@ pub(crate) fn run_review(out: PathBuf) {
                         &mut log,
                         &mut times,
                     );
+                    // The pages around the map: before a scan, mid-scan, a failed start.
+                    for (kind, name) in [
+                        ("idle", "disk-start"),
+                        ("scanning", "disk-scanning"),
+                        ("failed", "disk-failed"),
+                    ] {
+                        d.change(app_win, move |a, _, cx| {
+                            let dv = a.disk_view();
+                            dv.update(cx, |v, cx| {
+                                v.preview_fda_banner(false, cx);
+                                v.preview_phase(kind, cx);
+                            });
+                        });
+                        d.settle(app_win).await;
+                        shot(&mut d, app_win, name, &file(name), &mut log, &mut times);
+                    }
                     d.change(app_win, |a, _, cx| {
                         let dv = a.disk_view();
-                        dv.update(cx, |v, cx| v.preview_fda_banner(false, cx));
+                        dv.update(cx, |v, cx| v.preview_done(cx));
                         a.go(Route::Home, cx);
                     });
                     if std::env::args().any(|a| a == "--only-disk") {

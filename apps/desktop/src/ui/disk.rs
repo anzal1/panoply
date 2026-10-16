@@ -1707,6 +1707,65 @@ impl DiskView {
         cx.notify();
     }
 
+    /// Review renders: show the page before a scan, mid-scan or after a failed start, without
+    /// touching the loaded tree. `kind` is "idle", "scanning" or "failed".
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn preview_phase(&mut self, kind: &str, cx: &mut Context<Self>) {
+        match kind {
+            "scanning" => {
+                let p = Arc::new(Progress::default());
+                p.files.store(2_481_903, Ordering::Relaxed);
+                p.bytes.store(142 * 1024 * 1024 * 1024, Ordering::Relaxed);
+                self.progress = Some(p);
+                self.volume_used = Some(440 * 1024 * 1024 * 1024);
+                self.phase = Phase::Scanning {
+                    root: PathBuf::from("/Users/you"),
+                    started: Instant::now() - Duration::from_secs(11),
+                };
+            }
+            "failed" => {
+                self.phase = Phase::Failed(
+                    "Panoply cannot read /Volumes/Backup. Check that the drive is connected, then try again."
+                        .into(),
+                );
+            }
+            _ => self.phase = Phase::Idle,
+        }
+        cx.notify();
+    }
+
+    /// Review renders: put the tree back on screen after `preview_phase`.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn preview_done(&mut self, cx: &mut Context<Self>) {
+        self.phase = Phase::Done;
+        self.progress = None;
+        cx.notify();
+    }
+
+    /// Review renders: run the move with a fake mover (nothing touches the disk or the real
+    /// Trash), one item refused so the failure line shows, or undo the earlier fake move.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn preview_move(&mut self, undo: bool, cx: &mut Context<Self>) {
+        let mut picks = std::mem::replace(&mut self.picks, Picks::new());
+        picks.open = true;
+        if undo {
+            picks.run_undo(|_, _| Ok(()));
+        } else {
+            picks.run_move(
+                |p| {
+                    if p.file_name().is_some_and(|n| n == "Library") {
+                        Err(panoply_core::TrashError::NoTrash)
+                    } else {
+                        Ok(Some(PathBuf::from("/Users/you/.Trash").join(p.file_name().unwrap())))
+                    }
+                },
+                |_| {},
+            );
+        }
+        self.picks = picks;
+        cx.notify();
+    }
+
     fn start_state(&self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
         let body = match &self.phase {
             Phase::Scanning { root, started } => {
