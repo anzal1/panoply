@@ -2011,10 +2011,13 @@ pub(crate) fn run_userpass(out: PathBuf, manifest: PathBuf) {
             entries: Vec::new(),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(work.join("history.jsonl")),
             recents: recents.clone(),
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let app_hub = hub.clone();
