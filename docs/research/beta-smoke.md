@@ -114,7 +114,7 @@ These are written down in DECISIONS.md ("Exceptions to the budgets", and "Except
 | `image.upscale` | no 100 ms first preview | id-and-image.md 3.11 Budgets: time and model size, preview tile in seconds |
 | `image.convert` | 400 MB peak | id-and-image.md 3.1 Budgets: RAW development is about 8 bytes per pixel, 45 MP is about 360 MB |
 | `image.erase` | 1250 MB peak, no 100 ms first preview | DECISIONS.md, smoke matrix exceptions: the fill model is about 575 MB resident and the picture adds about 7 bytes a pixel up to the 24 MP working size, 1025 MB at 31 MP, 1156 MB for a batch |
-| `image.remove_watermark` | 950 MB peak, no 100 ms first preview | DECISIONS.md, smoke matrix exceptions: the same fill model as Erase, 786 MB on a camera RAW and 892 MB with a 31 MP picture in the batch |
+| `image.remove_watermark` | 1100 MB peak, no 100 ms first preview | DECISIONS.md, smoke matrix exceptions: the same fill model as Erase plus the face finder (UP-38), 786 MB on a camera RAW and 1018 MB with a 31 MP picture in the batch |
 | `id.passport_photo` | 450 MB peak | id-and-image.md 2.1 Budgets (the cutout carries the 3.8 exception) and DECISIONS.md, smoke matrix exceptions: Apple Vision's foreground mask, 348 MB measured |
 | `pdf.ocr` | 650 MB peak | DECISIONS.md, smoke matrix exceptions: Apple Vision is 156 MB before the page is read, and a page with next to no text also starts the Hindi and Bengali fallback (ONNX Runtime and the PP-OCR models), 535 MB measured |
 | `image.upscale` | 400 MB peak, no 100 ms first preview | DECISIONS.md, smoke matrix exceptions: the upscale model plus the allocator keeping its high-water mark between the pictures of a batch, 313 MB measured |
