@@ -37,4 +37,4 @@ pub use query::{Hit, Kind, SearchOptions};
 pub use segment::{Segment, SegmentBuilder};
 #[cfg(feature = "ignore-walker")]
 pub use walk::walk_ignore;
-pub use walk::{WalkOptions, WalkStats, walk};
+pub use walk::{WalkOptions, WalkStats, walk, walk_with_progress};

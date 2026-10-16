@@ -301,3 +301,40 @@ pub(crate) fn accent_rgb() -> (f32, f32, f32) {
         (r as f32, g as f32, b as f32)
     }
 }
+
+/// The command that opens a file or folder with its default app.
+pub(crate) fn open_command(path: &std::path::Path) -> std::process::Command {
+    let mut c = std::process::Command::new("/usr/bin/open");
+    c.arg("--").arg(path);
+    c
+}
+
+/// The command that shows a file selected in Finder.
+pub(crate) fn reveal_command(path: &std::path::Path) -> std::process::Command {
+    let mut c = std::process::Command::new("/usr/bin/open");
+    c.arg("-R").arg("--").arg(path);
+    c
+}
+
+/// Open a file or folder with its default app. Returns when the system has taken the request.
+pub(crate) fn open_path(path: &std::path::Path) -> std::io::Result<()> {
+    run_launcher(open_command(path))
+}
+
+/// Show a file selected in Finder (a folder opens in a new window).
+pub(crate) fn reveal_path(path: &std::path::Path) -> std::io::Result<()> {
+    run_launcher(reveal_command(path))
+}
+
+fn run_launcher(mut c: std::process::Command) -> std::io::Result<()> {
+    let st = c
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()?;
+    if st.success() {
+        Ok(())
+    } else {
+        Err(std::io::Error::other("the system could not open it"))
+    }
+}

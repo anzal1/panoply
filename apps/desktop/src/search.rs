@@ -31,6 +31,12 @@ pub enum Action {
         /// Index into the history entries given to [`search`].
         entry: usize,
     },
+    /// Open a file from the index with its default app (Command+Return shows it in the file
+    /// manager instead).
+    OpenFile {
+        /// The file.
+        path: std::path::PathBuf,
+    },
     /// The row cannot run. The text says why.
     Unavailable(String),
 }
