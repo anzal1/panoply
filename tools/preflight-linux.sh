@@ -82,12 +82,17 @@ prev_ctx="$(docker context show 2>/dev/null || echo default)"
 cleanup() {
   status=$?
   trap - EXIT
-  if [ "$keep" = 0 ]; then
+  vm_mine=0
+  if [ -n "${vm_lock:-}" ] && [ "$(cat "$vm_lock/pid" 2>/dev/null || true)" = "$$" ]; then vm_mine=1; fi
+  if [ "$vm_mine" = 0 ]; then
+    :  # never got the VM, so never stop it
+  elif [ "$keep" = 0 ]; then
     colima stop "$profile" >/dev/null 2>&1 && echo "[linux] VM stopped (colima stop $profile)" || true
   else
     echo "[linux] VM left running (--keep); stop it with: colima stop $profile"
   fi
   docker context use "$prev_ctx" >/dev/null 2>&1 || true
+  if [ "$vm_mine" = 1 ]; then rm -rf "$vm_lock"; fi
   heavy_lock_release
   exit "$status"
 }
@@ -96,6 +101,20 @@ trap 'exit 130' INT TERM
 
 # Only one heavy check at a time on this Mac (tools/lib/heavy-lock.sh); waits when another holds it.
 heavy_lock_acquire
+# The VM is shared by every worktree. Only one Linux check uses it at a time, and only the holder stops
+# it, so one agent's cleanup never kills another agent's run.
+vm_lock="${PANOPLY_LINUX_VM_LOCK:-/Users/anzalhussainabidi/personal/.panoply-linux-vm.lock}"
+vm_announced=0
+until mkdir "$vm_lock" 2>/dev/null; do
+  vm_holder="$(cat "$vm_lock/pid" 2>/dev/null || true)"
+  if [ -n "$vm_holder" ] && ! kill -0 "$vm_holder" 2>/dev/null; then
+    rm -rf "$vm_lock"
+    continue
+  fi
+  if [ "$vm_announced" = 0 ]; then echo "[linux] waiting for another Linux check to finish with the VM" >&2; vm_announced=1; fi
+  sleep 5
+done
+printf '%s\n' "$$" >"$vm_lock/pid"
 
 if ! colima status "$profile" >/dev/null 2>&1; then
   step "starting the VM (4 CPUs, 4 GB, no windows)"
