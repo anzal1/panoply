@@ -102,7 +102,9 @@ More about the gaps:
 
 - **Watermark removal sometimes needs a box.** Panoply finds text-like watermarks (white or black letters
   over a picture) by itself. It does not find logos, patterned marks or anything that looks like part of
-  the picture. When it finds nothing or the wrong thing, name the area yourself with `panoply unmark
+  the picture, and it never fills in a face (a mark across a face is left on the face). A large pale mark
+  across a busy picture can be missed; it then says nothing was found. When it finds nothing or the wrong
+  thing, name the area yourself with `panoply unmark
   --rect x,y,w,h`, or use Erase object on it. The desktop panel has no box-drawing tool yet. It only runs on your own pictures: it asks you to confirm that you own them. It
   fills the area with a model's guess, which looks right but is not the original.
 - **First use downloads something.** The PDF engine, ONNX Runtime, each model and the video helper are
