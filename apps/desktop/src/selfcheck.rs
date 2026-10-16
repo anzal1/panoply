@@ -1247,6 +1247,16 @@ pub(crate) fn run_review(out: PathBuf) {
                     &mut log,
                     &mut times,
                 );
+                d.change(app_win, |a, _, cx| a.scroll_modules_to_model_tools(cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-modules-models",
+                    &file("app-modules-models"),
+                    &mut log,
+                    &mut times,
+                );
                 d.change(app_win, |a, _, cx| a.go(Route::History, cx));
                 d.settle(app_win).await;
                 shot(

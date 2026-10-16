@@ -194,6 +194,24 @@ impl AppView {
         self.selected = 0;
     }
 
+    /// Dev only: scroll the Modules page so the rows of the tools that download a model once are on
+    /// screen (`first` of them, counted in rows), for the review pictures.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn scroll_modules_to_model_tools(&mut self, cx: &mut Context<Self>) {
+        let first = self
+            .hub
+            .catalog
+            .tools()
+            .iter()
+            .position(|t| {
+                t.manifest.capabilities.network_use() == panoply_manifest::NetworkUse::ModelDownload
+            })
+            .unwrap_or(0);
+        let y = (first as f32 * 52.0).max(0.0);
+        self.page_scroll.set_offset(point(px(0.), px(-y)));
+        cx.notify();
+    }
+
     pub(crate) fn go(&mut self, route: Route, cx: &mut Context<Self>) {
         self.panel = None;
         self._panel_sub = None;
