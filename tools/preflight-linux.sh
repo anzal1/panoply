@@ -82,13 +82,17 @@ prev_ctx="$(docker context show 2>/dev/null || echo default)"
 cleanup() {
   status=$?
   trap - EXIT
-  if [ "$keep" = 0 ]; then
+  vm_mine=0
+  if [ -n "${vm_lock:-}" ] && [ "$(cat "$vm_lock/pid" 2>/dev/null || true)" = "$$" ]; then vm_mine=1; fi
+  if [ "$vm_mine" = 0 ]; then
+    :  # never got the VM, so never stop it
+  elif [ "$keep" = 0 ]; then
     colima stop "$profile" >/dev/null 2>&1 && echo "[linux] VM stopped (colima stop $profile)" || true
   else
     echo "[linux] VM left running (--keep); stop it with: colima stop $profile"
   fi
   docker context use "$prev_ctx" >/dev/null 2>&1 || true
-  if [ -n "${vm_lock:-}" ] && [ "$(cat "$vm_lock/pid" 2>/dev/null || true)" = "$$" ]; then rm -rf "$vm_lock"; fi
+  if [ "$vm_mine" = 1 ]; then rm -rf "$vm_lock"; fi
   heavy_lock_release
   exit "$status"
 }
