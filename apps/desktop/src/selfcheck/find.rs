@@ -30,9 +30,9 @@ use panoply_find::{Exclusions, Index, LiveIndex, WalkOptions};
 fn fixture_files() -> Vec<(String, u64)> {
     const DAY: u64 = 86_400;
     let mut v: Vec<(String, u64)> = [
-        ("Downloads/Quarterly report final.pdf", 300),
-        ("Documents/Taxes/Quarterly report 2025.pdf", 3 * 3600),
-        ("Documents/Taxes/Quarterly report 2024.pdf", 400 * DAY),
+        ("Downloads/Quarterly report final.pdf", 2 * DAY),
+        ("Documents/Taxes/Quarterly report 2025.pdf", 5 * DAY),
+        ("Documents/Taxes/Quarterly report 2024.pdf", 120 * DAY),
         ("Documents/Work/Q3 report draft.docx", 2 * DAY),
         ("Documents/Work/Report template.docx", 40 * DAY),
         ("Downloads/annual_report_summary.pdf", 90 * DAY),
@@ -45,10 +45,10 @@ fn fixture_files() -> Vec<(String, u64)> {
         ("Pictures/Goa 2025/IMG_0413.heic", 330 * DAY),
         ("Music/Albums/Kind of Blue/01 So What.flac", 700 * DAY),
         ("Movies/Wedding/ceremony-cut-v3.mov", 60 * DAY),
-        ("Documents/Finance/Quarterly budget.xlsx", 3 * DAY),
-        ("Documents/Finance/Quarterly review slides.key", 8 * DAY),
+        ("Documents/Finance/Quarterly budget.xlsx", 9 * DAY),
+        ("Documents/Finance/Quarterly review slides.key", 21 * DAY),
         ("Downloads/Quarterly newsletter Q3.pdf", 14 * DAY),
-        ("Documents/Finance/quarter-end checklist.txt", 21 * DAY),
+        ("Documents/Finance/quarter-end checklist.txt", 45 * DAY),
         ("projects/panoply/README.md", 6 * 3600),
         ("projects/panoply/src/main.rs", 3 * DAY),
         (
@@ -88,6 +88,16 @@ pub(super) fn demo_finder(work: &Path) -> Finder {
         {
             let _ = f.set_modified(now - Duration::from_secs(age));
         }
+    }
+    // Launch film: a believable index. About 412,000 files in all, as plain empty files with names that hold no "q",
+    // so a query for "quarter" still matches only the real fixture names above. The disk map in the film has the same count.
+    let filler = 412_000usize.saturating_sub(fixture_files().len());
+    for i in 0..filler {
+        if i % 1000 == 0 {
+            let _ = fs::create_dir_all(home.join(format!("Archive/set{:03}", i / 1000)));
+        }
+        let _ =
+            fs::File::create(home.join(format!("Archive/set{:03}/f{:05}.txt", i / 1000, i % 1000)));
     }
     let opts = WalkOptions {
         threads: 2,

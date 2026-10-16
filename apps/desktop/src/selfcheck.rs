@@ -902,7 +902,7 @@ fn film_home_listing() -> Vec<(String, u64)> {
     }
     for i in 0..300 {
         add(
-            &format!("Developer/web/node_modules/pkg{}/index{:03}.js", i % 12, i),
+            &format!("Developer/web/vendor/pkg{}/index{:03}.js", i % 12, i),
             11 * MB,
         );
     }
@@ -935,7 +935,31 @@ fn film_home_listing() -> Vec<(String, u64)> {
             100 * MB,
         );
     }
+    // Small files everywhere else, so the map counts about 412,000 files like the Find index in the film does.
+    let base = v.len();
+    for i in 0..412_000usize.saturating_sub(base) {
+        v.push((
+            format!(
+                "Library/Application Support/Sync/chunk{:03}/{:05}.dat",
+                i / 1000,
+                i % 1000
+            ),
+            8_000,
+        ));
+    }
     v
+}
+
+/// The same home after the three picks went to the Trash.
+fn film_after_listing(all: &[(String, u64)]) -> Vec<(String, u64)> {
+    all.iter()
+        .filter(|(p, _)| {
+            p != "Movies/trip-2025.mp4"
+                && p != "Downloads/installer.dmg"
+                && !p.starts_with("Library/Caches/com.google.Chrome/")
+        })
+        .cloned()
+        .collect()
 }
 
 fn synthetic_disk_tree(root: &Path) -> std::io::Result<()> {
@@ -1165,6 +1189,28 @@ pub(crate) fn run_review(out: PathBuf) {
                             app_win,
                             "film-moved",
                             &file("film-moved"),
+                            &mut log,
+                            &mut times,
+                        );
+                        // The map again, after the move: the same home without the three picks.
+                        let after = film_after_listing(&listing);
+                        let arefs: Vec<(&str, u64)> =
+                            after.iter().map(|(p, n)| (p.as_str(), *n)).collect();
+                        let scan2 = panoply_disk::Scan::synthetic("/Users/maya", &arefs);
+                        let root3 = PathBuf::from("/Users/maya");
+                        d.change(app_win, move |a, _, cx| {
+                            let dv = a.disk_view();
+                            dv.update(cx, |v, cx| {
+                                v.load(scan2, root3.clone(), cx);
+                                v.preview_home(root3.clone(), cx);
+                            });
+                        });
+                        d.settle(app_win).await;
+                        shot(
+                            &mut d,
+                            app_win,
+                            "film-after-map",
+                            &file("film-after-map"),
                             &mut log,
                             &mut times,
                         );
