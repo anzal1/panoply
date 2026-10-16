@@ -5,7 +5,8 @@
 //! - Nothing is ever deleted for good. The caller passes in the mover (normally
 //!   [`panoply_core::trash_item`]) and the putter ([`panoply_core::put_back`]).
 //! - One item failing never stops the batch. Each failure keeps a plain reason.
-//! - A filesystem root and the home folder (or any folder that holds it) are refused.
+//! - A filesystem root, the home folder (or any folder that holds it) and the folders the system and apps
+//!   need are refused (see `panoply_core::protect`).
 //! - When a folder and something inside it are both listed, only the folder is moved and its size
 //!   is counted once.
 //! - Undo puts back what this list moved and says what it could not, and why.
@@ -222,17 +223,17 @@ impl ReviewList {
         self.effective_items().iter().map(|i| i.size_bytes).sum()
     }
 
-    /// Why a path may not be moved, or `None` when it may. Roots and the home folder are refused.
+    /// Why a path may not be moved, or `None` when it may. The list is `panoply_core::protect`'s: drive
+    /// roots, the home folder and what holds it, and the folders the system and apps need
+    /// ("macOS needs this folder"). The same check sits under `trash_item`, so it holds even if a
+    /// picker forgets to ask.
     pub fn protected_reason(&self, path: &Path) -> Option<&'static str> {
-        if path.parent().is_none() || path.file_name().is_none() {
-            return Some("it is the top of a drive, which Panoply never moves");
-        }
-        if let Some(home) = &self.home
-            && (path == home.as_path() || home.starts_with(path))
-        {
-            return Some("it is your home folder or holds it, which Panoply never moves");
-        }
-        None
+        panoply_core::protect::refusal_for_home(path, self.home.as_deref())
+    }
+
+    /// A note for an entry that is allowed only because it is a known cache inside a protected folder.
+    pub fn cache_note(&self, path: &Path) -> Option<&'static str> {
+        panoply_core::protect::cache_note_for_home(path, self.home.as_deref())
     }
 
     /// "Move 12 items, 4.2 GB, to the Trash". Counts and sizes are of the effective items.
@@ -602,6 +603,65 @@ mod tests {
     }
 
     #[test]
+    fn a_system_folder_that_slips_into_the_list_never_reaches_the_mover() {
+        let sys = if cfg!(windows) {
+            r"C:\Windows"
+        } else if cfg!(target_os = "macos") {
+            "/System"
+        } else {
+            "/usr/lib"
+        };
+        let mut l = list();
+        l.add(item(sys, 1_000, true));
+        l.add(item("/Users/me/ok.bin", 5, false));
+        let calls = RefCell::new(Vec::new());
+        let report = l.trash_all(
+            |p| {
+                calls.borrow_mut().push(p.to_path_buf());
+                Ok(None)
+            },
+            |_| {},
+        );
+        assert_eq!(*calls.borrow(), vec![PathBuf::from("/Users/me/ok.bin")]);
+        assert_eq!(
+            l.total_bytes(),
+            0,
+            "the refused item adds nothing to the total"
+        );
+        let f = report
+            .failed
+            .iter()
+            .find(|f| f.path == Path::new(sys))
+            .unwrap();
+        assert!(f.reason.ends_with("needs this folder"), "{}", f.reason);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn library_is_locked_but_a_cache_folder_inside_it_can_go_with_a_note() {
+        let l = list();
+        let lib = Path::new("/Users/me/Library");
+        assert_eq!(l.protected_reason(lib), Some("macOS needs this folder"));
+        assert_eq!(
+            l.protected_reason(Path::new("/Users/me/Library/Application Support")),
+            Some("macOS needs this folder")
+        );
+        let cache = Path::new("/Users/me/Library/Caches/com.example.app");
+        assert_eq!(l.protected_reason(cache), None);
+        assert!(l.cache_note(cache).is_some());
+        assert_eq!(l.cache_note(Path::new("/Users/me/Movies")), None);
+        for p in [
+            "/Applications",
+            "/Library",
+            "/System",
+            "/Users/me",
+            "/Volumes/Backup",
+        ] {
+            assert!(l.protected_reason(Path::new(p)).is_some(), "{p}");
+        }
+    }
+
+    #[test]
     fn a_refused_folder_does_not_swallow_the_items_inside_it() {
         let mut l = list();
         l.add(item("/Users/me", 100, true));
@@ -616,7 +676,7 @@ mod tests {
         // with what every platform shares.
         let l = ReviewList::with_home(None);
         assert!(l.protected_reason(Path::new("/")).is_some());
-        assert!(l.protected_reason(Path::new("/Users")).is_none());
+        assert!(l.protected_reason(Path::new("/Users/me/ok.bin")).is_none());
     }
 
     #[test]

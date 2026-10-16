@@ -873,8 +873,8 @@ fn synthetic_disk_tree(root: &Path) -> std::io::Result<()> {
     put("Downloads/archive.zip", 2_000_000)?;
     put("Downloads/export.sqlite", 1_000_000)?;
     put("Downloads/payload.bin", 2_000_000)?;
-    put("Library/Caches/cache.db", 1_500_000)?;
-    put("Library/Caches/thumbs.dat", 700_000)?;
+    put("Library/Caches/com.example.browser/cache.db", 1_500_000)?;
+    put("Library/Caches/com.example.browser/thumbs.dat", 700_000)?;
     Ok(())
 }
 
@@ -975,9 +975,13 @@ pub(crate) fn run_review(out: PathBuf) {
                     let scan = panoply_disk::scan(&home, &panoply_disk::ScanOptions::default())
                         .expect("scan the synthetic tree");
                     let root = home.clone();
+                    let home_for_picks = home.clone();
                     d.change(app_win, move |a, _, cx| {
                         let dv = a.disk_view();
-                        dv.update(cx, |v, cx| v.load(scan, root, cx));
+                        dv.update(cx, |v, cx| {
+                            v.load(scan, root, cx);
+                            v.preview_home(home_for_picks.clone(), cx);
+                        });
                         a.go(Route::Disk, cx);
                     });
                     d.settle(app_win).await;
@@ -994,7 +998,10 @@ pub(crate) fn run_review(out: PathBuf) {
                     d.change(app_win, |a, _, cx| {
                         let dv = a.disk_view();
                         dv.update(cx, |v, cx| {
-                            v.pick_named(&["Movies", "Downloads", "Library"], cx);
+                            v.pick_named(&["Movies", "Downloads"], cx);
+                            // Library itself is protected, so its box is locked; a cache folder inside
+                            // it can be picked, with a note.
+                            v.pick_path(&["Library", "Caches", "com.example.browser"], cx);
                             v.preview_fda_banner(true, cx);
                             v.show_review(true, cx);
                         });

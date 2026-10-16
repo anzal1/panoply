@@ -34,6 +34,12 @@ pub enum TrashError {
     /// The file is not there (already moved or deleted).
     #[error("it is already gone")]
     NotFound,
+    /// A folder the system or an app needs (see [`crate::protect`]). Never moved, whoever asks.
+    #[error("{reason}, so it was left where it is")]
+    Protected {
+        /// Why, in plain words ("macOS needs this folder").
+        reason: &'static str,
+    },
     /// The drive the file is on has no trash to move it to (a network share or a USB stick, for
     /// example). Panoply will not delete the file for good in its place.
     #[error("this drive has no {TRASH_NAME}, so the file was left where it is")]
@@ -101,7 +107,16 @@ pub fn trash_item(path: &Path) -> Result<Option<PathBuf>, TrashError> {
     if path.symlink_metadata().is_err() {
         return Err(TrashError::NotFound);
     }
+    guard(path)?;
     os_trash(path)
+}
+
+/// The last line of defence: whatever picked this path, a folder the system needs stays where it is.
+fn guard(path: &Path) -> Result<(), TrashError> {
+    match crate::protect::refusal(path) {
+        Some(reason) => Err(TrashError::Protected { reason }),
+        None => Ok(()),
+    }
 }
 
 /// Move an item back out of the trash to `original`, where [`trash_item`] took it from.
@@ -231,6 +246,56 @@ fn temp_dir(name: &str) -> std::path::PathBuf {
 mod tests {
     use super::*;
     use std::path::PathBuf;
+
+    /// Folders every machine of this kind has. Only the guard is asked: nothing here is ever moved.
+    fn system_folders() -> Vec<PathBuf> {
+        let list: &[&str] = if cfg!(target_os = "macos") {
+            &[
+                "/",
+                "/System",
+                "/Library",
+                "/Applications",
+                "/Users",
+                "/usr",
+            ]
+        } else if cfg!(windows) {
+            &[r"C:\", r"C:\Windows", r"C:\Program Files", r"C:\Users"]
+        } else {
+            &["/", "/usr", "/etc", "/bin", "/home", "/var"]
+        };
+        let mut v: Vec<PathBuf> = list.iter().map(PathBuf::from).collect();
+        v.extend(crate::protect::home_dir());
+        v
+    }
+
+    #[test]
+    fn the_guard_refuses_system_folders_and_the_home_folder() {
+        for p in system_folders() {
+            assert!(
+                matches!(guard(&p), Err(TrashError::Protected { .. })),
+                "{} must be refused",
+                p.display()
+            );
+        }
+    }
+
+    #[test]
+    fn a_refusal_is_plain_words() {
+        let e = TrashError::Protected {
+            reason: "macOS needs this folder",
+        };
+        assert_eq!(
+            e.to_string(),
+            "macOS needs this folder, so it was left where it is"
+        );
+    }
+
+    #[test]
+    fn the_guard_lets_an_ordinary_folder_through() {
+        let d = temp_dir("panoply-trash-guard");
+        assert!(guard(&d.join("report.txt")).is_ok());
+        std::fs::remove_dir_all(d).unwrap();
+    }
 
     #[test]
     fn a_missing_file_is_reported_and_nothing_else_happens() {

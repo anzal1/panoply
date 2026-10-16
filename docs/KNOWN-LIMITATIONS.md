@@ -121,6 +121,10 @@ More about the gaps:
   twice for the blocks it still shares, under 1 MiB per file. Other volumes and network drives are skipped
   unless you ask. Without Full Disk Access on macOS some folders in your Library cannot be read: the map
   says which, and why. A scan of a whole home folder holds about 290 MB while it runs.
+- **The disk map will not move folders the system needs.** Drive roots, the home folder and what holds it,
+  `/System`, `/Library`, `/Applications`, `~/Library` (except cache folders inside it), `C:\Windows`,
+  `Program Files`, `AppData` and `/usr`, `/etc`, `~/.config` on Linux have a locked box that says why. The same
+  list sits under the Trash call itself. A few cache folders inside a protected one can be moved, with a note.
 - **Undo after Move to Trash puts the files back where they were.** It works on macOS and Linux, where the
   system tells Panoply where the Trash put each item. On Windows the Recycle Bin gives no location, so Undo
   says so and you restore from the Recycle Bin yourself. If something new already sits at the old path, that

@@ -14,6 +14,7 @@ pub mod cancel;
 pub mod job;
 pub mod modules;
 pub mod naming;
+pub mod protect;
 pub mod sniff;
 pub mod trash;
 

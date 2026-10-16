@@ -19,8 +19,9 @@
 # "panoply" so your own default VM is never touched) runs one container of tools/linux/Dockerfile (Ubuntu
 # 24.04, the toolchain from rust-toolchain.toml, the apt packages of .github/actions/linux-libs). The repo
 # is bind-mounted read-only; inside, it is synced to a work volume (rsync keeps the modification times, so
-# cargo rebuilds only what you changed). Named docker volumes keep the cargo registry, the Linux target
-# folder and the downloaded engines warm between runs. Everything runs at nice 15, and only one heavy check runs on the Mac at a time (tools/lib/heavy-lock.sh). When the check ends the
+# cargo rebuilds only what you changed). Named docker volumes keep the cargo registry, the downloaded
+# engines and, per checkout (keyed on a hash of its path, so branches never share build output), the
+# Linux target folder and the work folder warm between runs. Everything runs at nice 15, and only one heavy check runs on the Mac at a time (tools/lib/heavy-lock.sh). When the check ends the
 # VM is stopped (`colima stop`), so it costs nothing while idle, and your docker context is put back.
 #
 # Environment: PANOPLY_COLIMA_PROFILE (default panoply), PANOPLY_LINUX_JOBS (cargo jobs, default 4),
@@ -53,6 +54,10 @@ ctx="colima-$profile"
 [ "$profile" = default ] && ctx=colima
 # 4 jobs: the VM has 4 CPUs and 3.7 GB, and 8 rustc processes (cranelift-codegen above all) were OOM-killed.
 jobs="${PANOPLY_LINUX_JOBS:-4}"
+# The Linux target and work folders are per checkout: cargo hashes workspace crates the same in every
+# worktree, so one shared target let a build from another branch stand in for this one (and a test ran
+# another branch's code). The registry, git and engine volumes hold content that is the same for all.
+wt="$(printf '%s' "$PWD" | shasum | cut -c1-10)"
 smoke_out="${PANOPLY_SMOKE_OUT:-$HOME/.cache/panoply/linux-smoke}"
 start=$SECONDS
 step() { printf '\n==> [linux] %s\n' "$*"; step_start=$SECONDS; }
@@ -168,9 +173,9 @@ d run --rm --cpus 4 --memory 3700m --memory-swap 3700m \
   "${corpus_args[@]}" \
   -v panoply-linux-registry:/usr/local/cargo/registry \
   -v panoply-linux-git:/usr/local/cargo/git \
-  -v panoply-linux-target:/cache/target \
+  -v "panoply-linux-target-$wt":/cache/target \
   -v panoply-linux-engines:/cache/engines \
-  -v panoply-linux-work:/work \
+  -v "panoply-linux-work-$wt":/work \
   -v "$smoke_out":/out \
   -e SCOPE="$scope" -e NEXTEST_PROFILE="$profile_nx" -e SMOKE="$smoke" -e JOBS="$jobs" -e PLAN="$plan" \
   "$tag" bash /src/tools/linux/inner.sh

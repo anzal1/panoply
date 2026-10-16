@@ -8,6 +8,8 @@
 //! Hooks for the next unit: the `Review` button is disabled for now, and `fda_banner` is the slot that
 //! the Full Disk Access explainer fills when a scan was refused folders.
 
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -48,6 +50,8 @@ const BIG_ROWS: usize = 6;
 /// Tile fill strength over the window colour, light and dark. Chosen so the label colour passes 4.5:1
 /// on every tint (see the test).
 const FILL_ALPHA: (f32, f32) = (0.34, 0.46);
+/// How much of that strength a folder tile keeps.
+const FOLDER_MUTE: f32 = 0.55;
 
 /// The colour group of a file, by its extension. `None` is "other", drawn neutral.
 ///
@@ -79,20 +83,33 @@ pub(crate) fn category_of(name: &str) -> Option<Category> {
     Some(c)
 }
 
-/// The colour group a folder is mostly made of: follow the largest entry down to a file.
-fn dominant(tree: &Tree, mut node: NodeId) -> Option<Category> {
-    for _ in 0..8 {
-        let first = tree
-            .children_by_size(node)
-            .into_iter()
-            .find(|n| tree.size(*n) > 0)?;
-        match tree.kind(first) {
-            Kind::Dir => node = first,
-            Kind::File | Kind::Symlink => return category_of(&tree.name(first)),
-            _ => return None,
+/// The colour group a folder is mostly made of, by size: the group that holds the most bytes of the files
+/// anywhere inside it, when it holds at least half of the folder. Mixed or unknown content gives `None`,
+/// drawn grey. Folded small files count as unknown.
+fn dominant(tree: &Tree, node: NodeId) -> Option<Category> {
+    let mut bytes = [0u64; LEGEND.len()];
+    let mut total = 0u64;
+    let mut stack = vec![node];
+    while let Some(n) = stack.pop() {
+        for c in tree.children(n) {
+            match tree.kind(c) {
+                Kind::Dir => stack.push(c),
+                Kind::File | Kind::Symlink => {
+                    let size = tree.size(c);
+                    total += size;
+                    let name = String::from_utf8_lossy(tree.name_bytes(c));
+                    if let Some(cat) = category_of(&name)
+                        && let Some(i) = LEGEND.iter().position(|(_, l)| *l == cat)
+                    {
+                        bytes[i] += size;
+                    }
+                }
+                _ => total += tree.size(c),
+            }
         }
     }
-    None
+    let (i, best) = bytes.iter().copied().enumerate().max_by_key(|(_, b)| *b)?;
+    (total > 0 && best * 2 >= total).then(|| LEGEND[i].1)
 }
 
 /// What the legend names, in order.
@@ -122,6 +139,8 @@ fn tile_rgb(
         Some(c) => {
             let (r, g, b) = tint(c, dark);
             let a = if dark { FILL_ALPHA.1 } else { FILL_ALPHA.0 };
+            // A folder wears its colour more quietly than the files inside it.
+            let a = if folder { a * FOLDER_MUTE } else { a };
             Rgb::u8(r, g, b).over(a, window)
         }
         None if folder => window.mix(ink, if depth == 0 { 0.06 } else { 0.10 }),
@@ -178,6 +197,10 @@ pub(crate) struct DiskView {
     busy: Option<Busy>,
     /// The person closed the Full Disk Access banner.
     fda_dismissed: bool,
+    /// Folder colour groups already worked out for the loaded scan (a folder walk each).
+    dominant_cache: RefCell<HashMap<NodeId, Option<Category>>>,
+    /// Which entries the system protects, already asked for the loaded scan (a few system calls each).
+    protect_cache: RefCell<HashMap<NodeId, Option<&'static str>>>,
 }
 
 /// A move or undo in flight.
@@ -208,6 +231,8 @@ impl DiskView {
             picks: Picks::new(),
             busy: None,
             fda_dismissed: false,
+            dominant_cache: RefCell::default(),
+            protect_cache: RefCell::default(),
         }
     }
 
@@ -297,8 +322,31 @@ impl DiskView {
         self.layout = None;
         self.anim = None;
         self.picks = Picks::new();
+        self.dominant_cache.borrow_mut().clear();
+        self.protect_cache.borrow_mut().clear();
         self.phase = Phase::Done;
         cx.notify();
+    }
+
+    /// The colour group of a folder, kept after the first walk.
+    fn dominant_of(&self, tree: &Tree, node: NodeId) -> Option<Category> {
+        *self
+            .dominant_cache
+            .borrow_mut()
+            .entry(node)
+            .or_insert_with(|| dominant(tree, node))
+    }
+
+    /// Why the system keeps this entry out of the Trash ("macOS needs this folder"), or `None`.
+    fn protected(&self, node: NodeId) -> Option<&'static str> {
+        if let Some(r) = self.protect_cache.borrow().get(&node) {
+            return *r;
+        }
+        let r = self
+            .review_item(node)
+            .and_then(|i| self.picks.list.protected_reason(&i.path));
+        self.protect_cache.borrow_mut().insert(node, r);
+        r
     }
 
     fn cancel_scan_quiet(&mut self) {
@@ -460,6 +508,10 @@ impl DiskView {
     /// Put an entry on the review list, or take it off.
     fn pick_node(&mut self, node: NodeId, cx: &mut Context<Self>) {
         if self.busy.is_some() {
+            return;
+        }
+        // A folder the system needs cannot be picked, whatever asked.
+        if self.protected(node).is_some() {
             return;
         }
         if let Some(item) = self.review_item(node) {
@@ -839,7 +891,8 @@ impl DiskView {
                     }),
                 ))
             })
-            .when(has_map, |d| {
+            // One accent per view: while the review panel is open its own Move to Trash is the button.
+            .when(has_map && !self.picks.open, |d| {
                 d.child(button_ex(
                     "disk-review",
                     "Review and move to trash",
@@ -1008,8 +1061,12 @@ impl DiskView {
             None => (tree.name(tile.node), tree.size(tile.node)),
         };
         let folder = more.is_none() && kind == Kind::Dir;
-        let cat = if more.is_none() && matches!(kind, Kind::File | Kind::Symlink) {
+        let cat = if more.is_some() {
+            None
+        } else if matches!(kind, Kind::File | Kind::Symlink) {
             category_of(&name)
+        } else if kind == Kind::Dir {
+            self.dominant_of(tree, tile.node)
         } else {
             None
         };
@@ -1227,7 +1284,7 @@ impl DiskView {
         let cat = if matches!(kind, Kind::File | Kind::Symlink) {
             category_of(&name)
         } else if kind == Kind::Dir {
-            dominant(tree, node)
+            self.dominant_of(tree, node)
         } else {
             None
         };
@@ -1235,38 +1292,66 @@ impl DiskView {
         let path = tree.path(node).to_string_lossy().into_owned();
         let pickable = self.review_item(node).is_some();
         let picked = self.is_picked(node);
-        let check = focus_border(div().id((ids.1, ids.2)), t)
-            .role(Role::CheckBox)
-            .aria_label(format!("Pick {name} for the Trash"))
-            .aria_toggled(if picked {
-                Toggled::True
-            } else {
-                Toggled::False
-            })
-            .flex()
-            .flex_none()
-            .items_center()
-            .justify_center()
-            .size(px(28.))
-            .rounded(px(radius::CONTROL))
-            .hover(move |s| s.bg(t.fill8))
-            .on_click(cx.listener(move |v, _, _, cx| v.pick_node(node, cx)))
-            .child(
-                div()
-                    .flex()
-                    .items_center()
-                    .justify_center()
-                    .size(px(16.))
-                    .rounded(px(4.))
-                    .border_1()
-                    .border_color(if picked { t.accent } else { t.ink3 })
-                    .bg(if picked {
-                        t.accent
-                    } else {
-                        gpui::transparent_black()
-                    })
-                    .when(picked, |d| d.child(icon("check", 11., t.on_accent))),
-            );
+        let why = self.protected(node);
+        let check = if let Some(why) = why {
+            // A folder the system needs: the box is there but off, and says why on hover.
+            focus_border(div().id((ids.1, ids.2)), t)
+                .role(Role::CheckBox)
+                .aria_label(format!("{name} cannot be picked: {why}"))
+                .aria_toggled(Toggled::False)
+                .flex()
+                .flex_none()
+                .items_center()
+                .justify_center()
+                .size(px(28.))
+                .rounded(px(radius::CONTROL))
+                .tooltip(tip(why, &[]))
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .size(px(16.))
+                        .rounded(px(4.))
+                        .border_1()
+                        .border_color(t.hair)
+                        .bg(t.fill8)
+                        .child(icon("lock", 10., t.ink3)),
+                )
+        } else {
+            focus_border(div().id((ids.1, ids.2)), t)
+                .role(Role::CheckBox)
+                .aria_label(format!("Pick {name} for the Trash"))
+                .aria_toggled(if picked {
+                    Toggled::True
+                } else {
+                    Toggled::False
+                })
+                .flex()
+                .flex_none()
+                .items_center()
+                .justify_center()
+                .size(px(28.))
+                .rounded(px(radius::CONTROL))
+                .hover(move |s| s.bg(t.fill8))
+                .on_click(cx.listener(move |v, _, _, cx| v.pick_node(node, cx)))
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .size(px(16.))
+                        .rounded(px(4.))
+                        .border_1()
+                        .border_color(if picked { t.accent } else { t.ink3 })
+                        .bg(if picked {
+                            t.accent
+                        } else {
+                            gpui::transparent_black()
+                        })
+                        .when(picked, |d| d.child(icon("check", 11., t.on_accent))),
+                )
+        };
         div()
             .flex()
             .flex_row()
@@ -1443,7 +1528,7 @@ impl DiskView {
             } else if !effective.contains(&item.path) {
                 Some("Goes with its folder.".to_string())
             } else {
-                None
+                list.cache_note(&item.path).map(|n| format!("{n}."))
             };
             let path = item.path.clone();
             let shown = shorten_path(&item.path.to_string_lossy());
@@ -1712,6 +1797,35 @@ impl DiskView {
         cx.notify();
     }
 
+    /// Review renders: treat `home` as the home folder (the render scans a stand-in), so the
+    /// protected list applies to it the way it would to the real one.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn preview_home(&mut self, home: PathBuf, cx: &mut Context<Self>) {
+        self.picks = Picks::with_list(crate::disk_review::ReviewList::with_home(Some(home)));
+        self.protect_cache.borrow_mut().clear();
+        cx.notify();
+    }
+
+    /// Review renders: pick the entry at a path of names below the folder on screen.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn pick_path(&mut self, names: &[&str], cx: &mut Context<Self>) {
+        let Some(scan) = self.scan.clone() else {
+            return;
+        };
+        let mut node = self.current;
+        for name in names {
+            match scan
+                .tree
+                .children(node)
+                .find(|n| scan.tree.name(*n) == *name)
+            {
+                Some(n) => node = n,
+                None => return,
+            }
+        }
+        self.pick_node(node, cx);
+    }
+
     /// Review renders: show the page before a scan, mid-scan or after a failed start, without
     /// touching the loaded tree. `kind` is "idle", "scanning" or "failed".
     #[cfg(feature = "snapshot")]
@@ -1758,7 +1872,7 @@ impl DiskView {
         } else {
             picks.run_move(
                 |p| {
-                    if p.file_name().is_some_and(|n| n == "Library") {
+                    if p.file_name().is_some_and(|n| n == "Downloads") {
                         Err(panoply_core::TrashError::NoTrash)
                     } else {
                         Ok(Some(
@@ -1868,10 +1982,10 @@ impl DiskView {
         let scan = self.scan.as_ref()?;
         let r = &scan.report;
         let line = format!(
-            "{} in {} files, scanned in {:.1} s",
+            "{} in {} files, scanned in {}",
             format_bytes(r.total_bytes),
             group_digits(r.files),
-            r.elapsed.as_secs_f32()
+            scan_time_text(r.elapsed.as_secs_f32())
         );
         Some(
             div()
@@ -1880,6 +1994,15 @@ impl DiskView {
                 .child(line)
                 .into_any_element(),
         )
+    }
+}
+
+/// How long a scan took, without a "0.0 s" for a small folder.
+fn scan_time_text(secs: f32) -> String {
+    if secs < 0.1 {
+        "under 0.1 s".to_string()
+    } else {
+        format!("{secs:.1} s")
     }
 }
 
@@ -1954,7 +2077,7 @@ impl Render for DiskView {
             let side = self.side_list(window, t, cx);
             let crumbs = self.crumb_bar(t, cx);
             let legend = self.legend(t);
-            let summary = if self.picks.count() > 0 {
+            let summary = if self.picks.count() > 0 && !reviewing {
                 Some(
                     div()
                         .id("disk-selected")
@@ -2054,6 +2177,85 @@ mod tests {
     }
 
     #[test]
+    fn a_quick_scan_says_under_a_tenth_of_a_second() {
+        assert_eq!(super::scan_time_text(0.0), "under 0.1 s");
+        assert_eq!(super::scan_time_text(0.04), "under 0.1 s");
+        assert_eq!(super::scan_time_text(0.1), "0.1 s");
+        assert_eq!(super::scan_time_text(38.24), "38.2 s");
+    }
+
+    /// A folder tree on disk for the colour tests. Files are 200 KB so none is folded into "small files".
+    fn colour_tree(name: &str) -> (std::path::PathBuf, panoply_disk::Scan) {
+        let root =
+            std::env::temp_dir().join(format!("panoply-colour-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let put = |rel: &str, n: usize| {
+            let p = root.join(rel);
+            std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+            std::fs::write(p, vec![1u8; n]).unwrap();
+        };
+        put("Pictures/RAW/a.dng", 400_000);
+        put("Pictures/RAW/b.dng", 400_000);
+        put("Pictures/Photos/x.jpg", 300_000);
+        put("Pictures/Photos/notes.txt", 20_000);
+        put("Music/Album/one.mp3", 300_000);
+        put("Music/Album/two.mp3", 300_000);
+        put("Mixed/a.mp4", 300_000);
+        put("Mixed/b.pdf", 300_000);
+        put("Mixed/c.mp3", 300_000);
+        put("Unknown/a.xyz", 300_000);
+        let scan = panoply_disk::scan(&root, &panoply_disk::ScanOptions::default()).unwrap();
+        (root, scan)
+    }
+
+    #[test]
+    fn a_folder_wears_the_colour_of_what_is_mostly_inside_it() {
+        let (root, scan) = colour_tree("dominant");
+        let tree = &scan.tree;
+        let find = |from: panoply_disk::NodeId, name: &str| {
+            tree.children(from).find(|n| tree.name(*n) == name).unwrap()
+        };
+        let top = tree.root();
+        let pictures = find(top, "Pictures");
+        // Folders of files all the way down: the colour of the files, at every level.
+        assert_eq!(super::dominant(tree, pictures), Some(Category::Images));
+        assert_eq!(
+            super::dominant(tree, find(pictures, "RAW")),
+            Some(Category::Images)
+        );
+        assert_eq!(
+            super::dominant(tree, find(pictures, "Photos")),
+            Some(Category::Images),
+            "a small text file does not change a folder of photos"
+        );
+        let music = find(top, "Music");
+        assert_eq!(super::dominant(tree, music), Some(Category::Audio));
+        assert_eq!(
+            super::dominant(tree, find(music, "Album")),
+            Some(Category::Audio)
+        );
+        // Mixed content and unknown types stay grey.
+        assert_eq!(super::dominant(tree, find(top, "Mixed")), None);
+        assert_eq!(super::dominant(tree, find(top, "Unknown")), None);
+        let _ = std::fs::remove_dir_all(root);
+    }
+
+    #[test]
+    fn a_folder_is_a_quieter_version_of_its_type_colour() {
+        for dark in [false, true] {
+            let p = Palette::new(dark, false, Rgb::u8(0, 122, 255));
+            let file = tile_rgb(Some(Category::Images), false, 0, dark, p.window, p.ink);
+            let folder = tile_rgb(Some(Category::Images), true, 0, dark, p.window, p.ink);
+            let grey = tile_rgb(None, true, 0, dark, p.window, p.ink);
+            assert_ne!(folder, grey, "a folder of photos is not grey");
+            assert_ne!(folder, file, "and it is quieter than the photos");
+            // Quieter: closer to the window colour than the file tile is.
+            let d = |a: Rgb, b: Rgb| (a.0 - b.0).abs() + (a.1 - b.1).abs() + (a.2 - b.2).abs();
+            assert!(d(folder, p.window) < d(file, p.window));
+        }
+    }
+
+    #[test]
     fn digits_group_by_three() {
         assert_eq!(group_digits(0), "0");
         assert_eq!(group_digits(999), "999");
@@ -2088,6 +2290,12 @@ mod tests {
                         )
                     })
                     .collect();
+                for c in &cats {
+                    fills.push((
+                        format!("folder of {c:?}"),
+                        tile_rgb(Some(*c), true, 0, dark, p.window, p.ink),
+                    ));
+                }
                 for depth in [0u8, 1] {
                     fills.push((
                         format!("folder{depth}"),
