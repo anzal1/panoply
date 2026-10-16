@@ -158,7 +158,7 @@ fn blit(dst: &mut Image, src: &Image, x: u32, y: u32) {
 ///
 /// SSIM on luma is blind to smooth regions when the rest of the picture is busy or dark: a 32 megapixel
 /// night sky passed at 0.979 with quality 21 and showed 8 by 8 blocks and a banded halo at 100%
-/// (docs/research/user-pass.md, UP-11). Without a floor the search settles at 10 to 21 on such pictures.
+/// (docs/research/user-pass-macos.md, UP-11). Without a floor the search settles at 10 to 21 on such pictures.
 /// Quality 40 is where MozJPEG's blocks on a smooth gradient stop being visible at 100%.
 pub const QUALITY_FLOOR: u32 = 40;
 
