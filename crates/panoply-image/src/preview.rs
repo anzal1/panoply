@@ -64,11 +64,8 @@ pub fn preview(
     let mut head = [0u8; 64];
     let n = file.read(&mut head)?;
     file.seek(SeekFrom::Start(0))?;
-    let fmt = format::detect(&head[..n], ext_hint).ok_or_else(|| {
-        ImageError::Unsupported(
-            "This file is not an image Panoply can read. Check that it is a JPEG, PNG, WebP, GIF, TIFF, BMP, HEIC or AVIF file.".into(),
-        )
-    })?;
+    let fmt = format::detect(&head[..n], ext_hint)
+        .ok_or_else(|| ImageError::Unsupported(crate::format::not_an_image_message(&head[..n])))?;
     match fmt {
         Format::Jpeg => jpeg(file, max_side, fast),
         Format::Heic | Format::Avif | Format::Jxl | Format::Jp2 | Format::Raw | Format::Exr => {

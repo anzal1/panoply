@@ -1424,6 +1424,16 @@ pub(crate) fn run_review(out: PathBuf) {
                     &mut log,
                     &mut times,
                 );
+                d.change(app_win, |a, _, cx| a.scroll_modules_to_model_tools(cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-modules-models",
+                    &file("app-modules-models"),
+                    &mut log,
+                    &mut times,
+                );
                 d.change(app_win, |a, _, cx| a.go(Route::History, cx));
                 d.settle(app_win).await;
                 shot(
@@ -1934,6 +1944,217 @@ pub(crate) fn run_frames(out: PathBuf) {
                 let _ = std::fs::remove_dir_all(out2.join("consent-data"));
             }
             println!("{{\"tools\": {tools}}}");
+            let _ = std::fs::remove_dir_all(&work2);
+            d.cx.update(|cx| cx.quit());
+        })
+        .detach();
+    });
+}
+
+/// `--selfcheck-userpass --manifest FILE --out DIR`: the user pass. For every entry of the manifest
+/// (`[{"label", "tool", "files": [...], "options": {...}, "cancel_ms": null}]`) it opens the tool in
+/// the offscreen app window, runs it through the same job path a person's Return key takes, and
+/// saves the options, running, done, failed or cancelled screen in light and dark at the display's
+/// 2x. `userpass.jsonl` records the outcome, the time and the slowest frame while the job ran.
+/// Nothing is shown on screen. Files are written next to the inputs, so point it at copies.
+pub(crate) fn run_userpass(out: PathBuf, manifest: PathBuf) {
+    let _ = std::fs::create_dir_all(&out);
+    let work = std::env::temp_dir().join(format!("panoply-userpass-{}", std::process::id()));
+    let _ = std::fs::create_dir_all(&work);
+    let entries: Vec<Value> = std::fs::read_to_string(&manifest)
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+        .unwrap_or_default();
+    let app = gpui_platform::application().with_assets(Icons);
+    app.run(move |cx: &mut App| {
+        gpui_base::init(cx);
+        crate::ui::live::bind_input_keys(cx);
+        cx.set_activation_policy(ActivationPolicy::Accessory);
+        crate::ui::theme::force_appearance(Some(false));
+        platform::set_trash_dir(work.join("trash"));
+        let mut dirs = crate::paths::module_search_dirs();
+        dirs.push(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../modules/examples-wasm"),
+        );
+        let catalog = Arc::new(Catalog::with_dirs(&dirs));
+        let recents = cx.new(|_| Recents {
+            entries: Vec::new(),
+            loaded: true,
+        });
+        let hub = Hub {
+            catalog,
+            history: History::at(work.join("history.jsonl")),
+            recents: recents.clone(),
+        };
+        cx.set_global(hub.clone());
+        let app_hub = hub.clone();
+        let app_win = cx
+            .open_window(app_window_options_at(true, None), move |window, cx| {
+                cx.new(|cx| AppView::new(window, cx, app_hub))
+            })
+            .expect("open the offscreen app window");
+        let out2 = out.clone();
+        let work2 = work.clone();
+        cx.spawn(async move |cx| {
+            let mut d = Drv {
+                cx,
+                dark: false,
+                update_ms: vec![],
+                draw_ms: vec![],
+                tag: String::new(),
+                slow: vec![],
+            };
+            d.settle(app_win).await;
+            let only_dark = std::env::args().skip_while(|a| a != "--appearance").nth(1);
+            let only_tool = std::env::args().skip_while(|a| a != "--only").nth(1);
+            let mut jsonl = String::new();
+            for entry in &entries {
+                let label = entry["label"].as_str().unwrap_or("x").to_string();
+                let tool_id = entry["tool"].as_str().unwrap_or("").to_string();
+                if only_tool.as_deref().is_some_and(|o| !label.starts_with(o)) {
+                    continue;
+                }
+                let Some(ti) = hub.catalog.index_of(&tool_id) else {
+                    jsonl.push_str(&format!(
+                        "{}\n",
+                        json!({"label": label, "tool": tool_id, "state": "unknown tool"})
+                    ));
+                    continue;
+                };
+                let files: Vec<PathBuf> = entry["files"]
+                    .as_array()
+                    .map(|a| {
+                        a.iter()
+                            .filter_map(|v| v.as_str().map(PathBuf::from))
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let preset: Vec<(String, Value)> = entry["options"]
+                    .as_object()
+                    .map(|o| o.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+                    .unwrap_or_default();
+                let cancel_ms = entry["cancel_ms"].as_u64();
+                for dark in [false, true] {
+                    if only_dark.as_deref().is_some_and(|o| (o == "dark") != dark) {
+                        continue;
+                    }
+                    let tag = if dark { "dark" } else { "light" };
+                    crate::ui::theme::force_appearance(Some(dark));
+                    d.dark = dark;
+                    let file = |name: &str| out2.join(format!("{label}-{name}-{tag}.png"));
+                    let profiles: Vec<FileProfile> =
+                        files.iter().map(|p| FileProfile::read(p)).collect();
+                    let t_open = Instant::now();
+                    let p2 = preset.clone();
+                    d.change(app_win, move |a, window, cx| {
+                        a.open_tool(ti, profiles, p2, false, window, cx)
+                    });
+                    d.draw(app_win);
+                    let first_frame_ms = t_open.elapsed().as_secs_f64() * 1000.0;
+                    d.settle(app_win).await;
+                    let mut log = Vec::new();
+                    let mut times = Vec::new();
+                    shot(&mut d, app_win, "options", &file("options"), &mut log, &mut times);
+                    // The pass is for the job; run it once, in light.
+                    if dark {
+                        continue;
+                    }
+                    d.draw_ms.clear();
+                    let panel = d.change(app_win, |a, _, _| a.panel.clone()).flatten();
+                    let Some(p) = panel else { continue };
+                    let blocker = d
+                        .win(app_win, |_, cx| p.read(cx).blocker())
+                        .flatten();
+                    if let Some(b) = blocker {
+                        jsonl.push_str(&format!(
+                            "{}\n",
+                            json!({"label": label, "tool": tool_id, "state": "blocked", "message": b, "first_frame_ms": first_frame_ms})
+                        ));
+                        continue;
+                    }
+                    let p_run = p.clone();
+                    d.win(app_win, move |window, cx| {
+                        p_run.update(cx, |p, cx| p.run(window, cx))
+                    });
+                    let ran_at = Instant::now();
+                    let mut saw_running = false;
+                    let mut cancelled_sent = false;
+                    let mut state = "timeout";
+                    let mut headline = String::new();
+                    let mut notes: Vec<String> = Vec::new();
+                    let mut outputs: Vec<String> = Vec::new();
+                    for _ in 0..4800 {
+                        d.cx.background_executor()
+                            .timer(Duration::from_millis(25))
+                            .await;
+                        d.draw(app_win);
+                        let snapshot = d
+                            .win(app_win, |_, cx| {
+                                let r = p.read(cx);
+                                if r.is_done() {
+                                    let h = r.result_headline().unwrap_or_default();
+                                    Some(("done", h, r.outputs()))
+                                } else if let Some(f) = r.failure() {
+                                    Some((
+                                        "error",
+                                        format!("{} || {}", f.message, f.next_step),
+                                        Vec::new(),
+                                    ))
+                                } else if r.is_options() && cancelled_sent {
+                                    Some(("cancelled", String::new(), Vec::new()))
+                                } else {
+                                    None
+                                }
+                            })
+                            .flatten();
+                        if let Some((s, h, o)) = snapshot {
+                            state = s;
+                            headline = h;
+                            outputs = o.iter().map(|p| p.display().to_string()).collect();
+                            break;
+                        }
+                        let el = ran_at.elapsed();
+                        if !saw_running && el > Duration::from_millis(400) {
+                            saw_running = true;
+                            shot(&mut d, app_win, "running", &file("running"), &mut log, &mut times);
+                        }
+                        if let Some(c) = cancel_ms
+                            && !cancelled_sent
+                            && el > Duration::from_millis(c)
+                        {
+                            cancelled_sent = true;
+                            d.win(app_win, |_, cx| p.update(cx, |p, _| p.cancel()));
+                        }
+                    }
+                    let elapsed_ms = ran_at.elapsed().as_secs_f64() * 1000.0;
+                    let max_draw = d.draw_ms.iter().cloned().fold(0.0, f64::max);
+                    d.settle(app_win).await;
+                    let name = match state {
+                        "done" => "done",
+                        "error" => "error",
+                        "cancelled" => "cancelled",
+                        _ => "timeout",
+                    };
+                    shot(&mut d, app_win, name, &file(name), &mut log, &mut times);
+                    // Notes live on the card; read them from the report via the clipboard path is
+                    // not possible offscreen, so the CLI log has the full list.
+                    let _ = &mut notes;
+                    jsonl.push_str(&format!(
+                        "{}\n",
+                        json!({
+                            "label": label, "tool": tool_id, "state": state,
+                            "elapsed_ms": elapsed_ms.round(), "max_draw_ms": (max_draw * 100.0).round() / 100.0,
+                            "first_frame_ms": (first_frame_ms * 100.0).round() / 100.0,
+                            "headline": headline, "outputs": outputs,
+                        })
+                    ));
+                    let _ = std::fs::write(out2.join("userpass.jsonl"), &jsonl);
+                    // Back to the home screen so the next tool opens clean.
+                    d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+                }
+            }
+            let _ = std::fs::write(out2.join("userpass.jsonl"), &jsonl);
             let _ = std::fs::remove_dir_all(&work2);
             d.cx.update(|cx| cx.quit());
         })

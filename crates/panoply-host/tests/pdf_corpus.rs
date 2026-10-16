@@ -154,3 +154,23 @@ fn encrypted_and_broken_files_get_plain_errors() {
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }
+
+#[test]
+fn keeping_pages_past_the_end_says_so_instead_of_blaming_the_keep_list() {
+    if !have_corpus() {
+        return;
+    }
+    let (dir, f) = scratch_copy("past-end", "gov/irs-f1040-2022.pdf");
+    let spec = JobSpec {
+        module_id: "pdf.organize".into(),
+        inputs: vec![f.clone()],
+        options: json!({"keep": "5-9"}),
+    };
+    let err = Registry::with_builtins()
+        .run_job(&spec, None, CancelToken::new(), |_| {})
+        .unwrap_err()
+        .plain_message();
+    assert!(err.contains("has 2 pages"), "{err}");
+    assert!(err.contains("Choose pages from 1 to 2"), "{err}");
+    std::fs::remove_dir_all(&dir).unwrap();
+}

@@ -118,6 +118,35 @@ pub struct Context<'a> {
     pub now: u64,
 }
 
+/// A search that remembers what it showed a moment ago, for a person typing. Typing "under 50 kb"
+/// passes through "u", "under" and "under 5", which match nothing by themselves; the bar must not
+/// flash "No tools match" in between, so while the query is plainly unfinished the last answer
+/// stays on screen. A query that is not a way to finish (a typo, "under 50 kbx") gets the empty
+/// state at once.
+#[derive(Default)]
+pub struct Typing {
+    files: Vec<std::path::PathBuf>,
+    last: Results,
+}
+
+impl Typing {
+    /// Rows for the query as typed so far.
+    pub fn search(&mut self, cx: &Context, query: &str) -> Results {
+        let files: Vec<std::path::PathBuf> = cx.files.iter().map(|f| f.path.clone()).collect();
+        if files != self.files {
+            self.files = files;
+            self.last = Results::default();
+        }
+        let r = search(cx, query);
+        let q = query.trim();
+        if r.is_empty() && !q.is_empty() && !self.last.is_empty() && intent::is_unfinished(q) {
+            return self.last.clone();
+        }
+        self.last = r.clone();
+        r
+    }
+}
+
 fn tool_row(cx: &Context, tool: usize, subtitle: String) -> Row {
     let t = cx.catalog.tool(tool);
     Row {
@@ -267,15 +296,32 @@ fn article(noun: &str) -> &'static str {
 /// Words of a tool that a query word can match: name, summary, category.
 fn word_hit(cx: &Context, tool: usize, word: &str) -> bool {
     let t = cx.catalog.tool(tool);
+    // The services a preset names (WhatsApp, Discord, Gmail), so "whatsapp" finds Compress video.
+    let presets = t
+        .manifest
+        .options
+        .get("preset")
+        .map(|o| o.values.join(" ").replace('_', " "))
+        .unwrap_or_default();
     let hay = format!(
-        "{} {} {} {}",
+        "{} {} {} {} {}",
         t.name.to_lowercase(),
         t.summary.to_lowercase(),
         t.category.label().to_lowercase(),
-        t.id.replace(['.', '_'], " ")
+        t.id.replace(['.', '_'], " "),
+        presets
     );
-    hay.split(|c: char| !c.is_alphanumeric())
-        .any(|w| w == word || (word.len() >= 3 && w.starts_with(word)))
+    // "photo" and "picture" are searched as "image" (see `intent`), so a tool that says photo
+    // must still answer to it.
+    let alts: &[&str] = if word == "image" {
+        &["image", "photo", "photos", "picture", "pictures"]
+    } else {
+        std::slice::from_ref(&word)
+    };
+    hay.split(|c: char| !c.is_alphanumeric()).any(|w| {
+        alts.iter()
+            .any(|a| w == *a || (a.len() >= 3 && w.starts_with(a)))
+    })
 }
 
 fn from_query(cx: &Context, q: &str) -> Results {
@@ -358,10 +404,34 @@ fn from_query(cx: &Context, q: &str) -> Results {
             scored.push((score * 10 + rank.min(9), tool, matched));
         }
     }
-    scored.sort_by(|a, b| {
-        b.0.cmp(&a.0)
-            .then_with(|| cx.catalog.tool(a.1).name.cmp(&cx.catalog.tool(b.1).name))
-    });
+    // Nothing matched every word. People type "passport photo india", "resize to 800px" or
+    // "loudness -16": a country, a size or a level next to the name of what they want. Match on the
+    // words that name something (not numbers, not "to"), when more than half of them are found.
+    if scored.is_empty() && best_rows.is_empty() {
+        let content: Vec<&String> = intent
+            .words
+            .iter()
+            .filter(|w| w.chars().count() >= 3 && !w.chars().any(|c| c.is_ascii_digit()))
+            .collect();
+        if !content.is_empty() {
+            for &(tool, rank) in &pool {
+                let hits = content.iter().filter(|w| word_hit(cx, tool, w)).count();
+                if hits > 0 && hits * 2 > content.len() {
+                    scored.push(((10 + hits as i32 * 6) * 10 + rank.min(9), tool, Vec::new()));
+                }
+            }
+        }
+    }
+    if q_chars.len() < 3 && intent.size.is_none() {
+        // One or two letters match many names, and the best of them changes with every keystroke.
+        // Keep the catalog's own order, so each letter only removes rows and never reorders them.
+        scored.sort_by_key(|s| s.1);
+    } else {
+        scored.sort_by(|a, b| {
+            b.0.cmp(&a.0)
+                .then_with(|| cx.catalog.tool(a.1).name.cmp(&cx.catalog.tool(b.1).name))
+        });
+    }
 
     let mut tool_rows: Vec<Row> = Vec::new();
     for (n, (_, tool, matched)) in scored.iter().enumerate() {
@@ -738,6 +808,69 @@ mod tests {
         assert!(titles(&r).contains(&"Compress image".to_string()));
         let footer = r.footer.unwrap();
         assert!(footer.contains("tools fit a PNG image"), "{footer}");
+    }
+
+    #[test]
+    fn typing_under_50_kb_never_flashes_no_tools_and_never_reorders() {
+        let c = cat();
+        for files in [Vec::new(), vec![png("signature.png", 312_000)]] {
+            for phrase in ["under 50 kb", "make this under 50 kb"] {
+                let mut typing = Typing::default();
+                let mut prev: Option<Vec<String>> = None;
+                let mut seen_rows = false;
+                for end in 1..=phrase.len() {
+                    let q = &phrase[..end];
+                    let r = typing.search(&cx(&c, &files, &[]), q);
+                    let now = titles(&r);
+                    if seen_rows && intent::is_unfinished(q) {
+                        assert!(!now.is_empty(), "{q:?} flashed the empty state");
+                    }
+                    // Up to two letters, rows only drop out; the ones that stay keep their order.
+                    if q.trim().len() <= 2
+                        && let Some(p) = &prev
+                    {
+                        let kept: Vec<&String> = p.iter().filter(|t| now.contains(t)).collect();
+                        let order: Vec<&String> = now.iter().filter(|t| p.contains(t)).collect();
+                        assert_eq!(kept, order, "{q:?} reordered {p:?} into {now:?}");
+                    }
+                    seen_rows |= !now.is_empty();
+                    prev = Some(now);
+                }
+                let end = typing.search(&cx(&c, &files, &[]), phrase);
+                assert_eq!(titles(&end), titles(&search(&cx(&c, &files, &[]), phrase)));
+                // A query that is not a way to finish gets the empty state straight away.
+                let q = "make this under 50 kbx";
+                let typo = typing.search(&cx(&c, &files, &[]), q);
+                assert_eq!(titles(&typo), titles(&search(&cx(&c, &files, &[]), q)));
+                let junk = typing.search(&cx(&c, &files, &[]), "zzzqx");
+                assert!(junk.is_empty());
+            }
+        }
+    }
+
+    #[test]
+    fn a_name_with_a_country_a_size_or_a_level_next_to_it_still_finds_the_tool() {
+        let c = cat();
+        let photo = [png("me.jpg", 400_000)];
+        let r = search(&cx(&c, &photo, &[]), "passport photo india");
+        assert_eq!(titles(&r)[0], "Passport photo", "{:?}", titles(&r));
+        let r = search(&cx(&c, &photo, &[]), "resize to 800px");
+        assert!(
+            titles(&r).iter().any(|t| t.starts_with("Resize")),
+            "{:?}",
+            titles(&r)
+        );
+        let r = search(&cx(&c, &[], &[]), "whatsapp");
+        assert!(
+            titles(&r).contains(&"Compress video".to_string()),
+            "{:?}",
+            titles(&r)
+        );
+        // A request for something Panoply does not do stays empty rather than guessing.
+        let r = search(&cx(&c, &[], &[]), "pdf to word");
+        assert!(r.is_empty(), "{:?}", titles(&r));
+        let r = search(&cx(&c, &[], &[]), "zzzqx");
+        assert!(r.is_empty());
     }
 
     #[test]

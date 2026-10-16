@@ -21,7 +21,8 @@ use super::panel::{PanelEvent, ToolPanel};
 use super::theme::{Theme, is_dark, radius, sp, tile_colors, ty};
 use super::widgets::{
     ButtonKind, Ramp, badge, button, card, category_tile, chip, cmd, editor_style, file_icon,
-    focus_border, heading, icon, icon_button, keycap, link, notice, rule, scroll_thumb, tip,
+    focus_border, heading, icon, icon_button, keycap, link, network_words, notice, rule,
+    scroll_thumb, tip,
 };
 use crate::catalog::{Category, Source};
 use crate::history::Entry;
@@ -64,6 +65,7 @@ pub(crate) struct AppView {
     query: String,
     files: Vec<FileProfile>,
     results: Results,
+    typing: search::Typing,
     selected: usize,
     pub(crate) panel: Option<Entity<ToolPanel>>,
     /// The disk map page. It lives as long as the window, so a scan survives a visit to another page.
@@ -85,10 +87,8 @@ pub(crate) struct AppView {
 impl AppView {
     pub(crate) fn new(window: &mut Window, cx: &mut Context<Self>, hub: Hub) -> Self {
         let search = cx.new(|cx| {
-            InputState::new(window, cx).placeholder(format!(
-                "Search {} tools and files",
-                hub.catalog.tools().len()
-            ))
+            InputState::new(window, cx)
+                .placeholder(format!("Search {} tools", hub.catalog.tools().len()))
         });
         let search_sub = cx.subscribe_in(
             &search,
@@ -122,6 +122,7 @@ impl AppView {
             query: String::new(),
             files: Vec::new(),
             results: Results::default(),
+            typing: search::Typing::default(),
             selected: 0,
             panel: None,
             disk,
@@ -188,7 +189,7 @@ impl AppView {
 
     fn rebuild(&mut self, cx: &App) {
         let history = self.recents(cx);
-        self.results = search::search(
+        self.results = self.typing.search(
             &search::Context {
                 catalog: &self.hub.catalog,
                 files: &self.files,
@@ -204,6 +205,24 @@ impl AppView {
     #[cfg(feature = "snapshot")]
     pub(crate) fn disk_view(&self) -> Entity<DiskView> {
         self.disk.clone()
+    }
+
+    /// Dev only: scroll the Modules page so the rows of the tools that download a model once are on
+    /// screen (`first` of them, counted in rows), for the review pictures.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn scroll_modules_to_model_tools(&mut self, cx: &mut Context<Self>) {
+        let first = self
+            .hub
+            .catalog
+            .tools()
+            .iter()
+            .position(|t| {
+                t.manifest.capabilities.network_use() == panoply_manifest::NetworkUse::ModelDownload
+            })
+            .unwrap_or(0);
+        let y = (first as f32 * 52.0).max(0.0);
+        self.page_scroll.set_offset(point(px(0.), px(-y)));
+        cx.notify();
     }
 
     pub(crate) fn go(&mut self, route: Route, cx: &mut Context<Self>) {
@@ -882,7 +901,7 @@ impl AppView {
                 div()
                     .id("app-search")
                     .role(Role::SearchInput)
-                    .aria_label("Search tools and files")
+                    .aria_label("Search tools")
                     .aria_keyshortcuts("Meta+F")
                     .aria_value(self.query.clone())
                     .track_focus(&focus)
@@ -1399,10 +1418,10 @@ impl AppView {
             .skip(first)
             .take(end - first)
             .map(|(i, tool)| {
-                let network = tool.manifest.capabilities.network;
+                let network = network_words(&tool.manifest.capabilities);
                 let community = matches!(tool.source, Source::Community(_));
-                let perms = if network {
-                    "Uses the network"
+                let perms = if let Some(n) = &network {
+                    n.meta
                 } else if tool.takes_files() {
                     "Chosen files only"
                 } else {
@@ -1424,7 +1443,9 @@ impl AppView {
                         .flex_row()
                         .items_center()
                         .gap(px(sp::S))
-                        .when(network, |d| d.child(badge("Network", Some(t.warn), t)))
+                        .when_some(network, |d, n| {
+                            d.child(badge(n.badge, n.warn.then_some(t.warn), t))
+                        })
                         .child(badge(
                             if community {
                                 "Community, sandboxed"
@@ -1812,7 +1833,7 @@ impl Render for AppView {
                 (
                     "search",
                     "Find arrives with the file index",
-                    "Searching inside your files, screenshots and photos comes in a later phase. Until then, the search box on Home finds tools and takes files.",
+                    "Searching inside your files, screenshots and photos is not in the app yet. For now the search box on Home finds tools and takes files.",
                 ),
                 t,
                 cx,
@@ -1823,7 +1844,7 @@ impl Render for AppView {
                 (
                     "radio",
                     "Nearby arrives with sharing",
-                    "Sending to your phone and other computers comes in a later phase, over your own network.",
+                    "Sending to your phone and other computers is not in the app yet. From the command line, panoply share already does it over your own network.",
                 ),
                 t,
                 cx,

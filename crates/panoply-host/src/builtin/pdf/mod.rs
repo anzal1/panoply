@@ -132,6 +132,10 @@ pub(crate) fn map_err(e: PdfError) -> ModuleError {
         PdfError::Io { path, source } if !path.as_os_str().is_empty() => {
             ModuleError::Io { path, source }
         }
+        PdfError::Io { source, .. } => ModuleError::Failed(format!(
+            "The result could not be written: {}. Free some space or choose another folder, then try again.",
+            panoply_core::naming::plain_io(&source)
+        )),
         other => ModuleError::Failed(other.to_string()),
     }
 }

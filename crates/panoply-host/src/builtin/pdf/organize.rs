@@ -33,8 +33,10 @@ pub(super) fn run(
                     .into(),
             ));
         }
+        let past_end = std::cell::RefCell::new(Vec::<String>::new());
         let note_parsed = |p: &ranges::Parsed| {
             if !p.skipped.is_empty() {
+                past_end.borrow_mut().extend(p.skipped.iter().cloned());
                 ctx.note(format!(
                     "Left out, past the last page: {}.",
                     p.skipped.join(", ")
@@ -61,9 +63,17 @@ pub(super) fn run(
             kept.retain(|i| !gone.contains(i));
         }
         if kept.is_empty() {
-            return Err(ModuleError::Failed(
-                "Every page would be removed. Keep at least one page.".into(),
-            ));
+            let past = past_end.borrow();
+            return Err(ModuleError::Failed(if past.is_empty() {
+                "Every page would be removed. Keep at least one page.".into()
+            } else {
+                format!(
+                    "This PDF has {total} {}, and {} {} past the last one. Choose pages from 1 to {total}.",
+                    if total == 1 { "page" } else { "pages" },
+                    past.join(", "),
+                    if past.len() == 1 { "is" } else { "are" },
+                )
+            }));
         }
         if reverse {
             kept.reverse();

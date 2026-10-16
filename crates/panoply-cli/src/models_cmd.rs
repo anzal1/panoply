@@ -85,12 +85,17 @@ pub fn install(yes: bool) {
 pub fn show_network_notice(registry: &panoply_host::Registry, module_id: &str) {
     if let Some(m) = registry.get(module_id) {
         let caps = &m.manifest().capabilities;
-        if caps.network {
-            eprintln!(
-                "Uses the network: {}",
-                caps.network_reason.as_deref().unwrap_or("no reason given")
-            );
-        }
+        // The same two names the app uses (Modules page, panel header): a tool that lists its models
+        // fetches them once after a yes, which is not the warning a plain network user gets.
+        let lead = match caps.network_use() {
+            panoply_manifest::NetworkUse::None => return,
+            panoply_manifest::NetworkUse::ModelDownload => "Model download",
+            panoply_manifest::NetworkUse::Network => "Uses the network",
+        };
+        eprintln!(
+            "{lead}: {}",
+            caps.network_reason.as_deref().unwrap_or("no reason given")
+        );
     }
 }
 

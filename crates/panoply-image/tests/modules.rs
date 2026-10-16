@@ -464,6 +464,40 @@ fn quality_target_and_format_shootout() {
     assert_eq!(w.extension().unwrap(), "webp");
 }
 
+/// The quality the card names: "..., quality 21".
+fn quality_in(notes: &str) -> u32 {
+    let after = notes
+        .split("quality ")
+        .nth(1)
+        .expect("the card names a quality");
+    after
+        .chars()
+        .take_while(char::is_ascii_digit)
+        .collect::<String>()
+        .parse()
+        .unwrap()
+}
+
+/// UP-11: luma SSIM passes smooth, blocky results on pictures that are mostly busy or dark, and without
+/// a floor these two settle at 18 and 10. The default stops at 40; a similarity asked for by name is a
+/// request for a smaller file and is not held to it.
+#[test]
+fn the_default_target_never_goes_under_the_quality_floor() {
+    for rel in ["libvips/ultra-hdr.jpg", "generated/display-p3.jpg"] {
+        let Some(src) = corpus(rel) else { continue };
+        let s = Scratch::new("floor");
+        let (_, r) = run_ok("image.compress", &src, json!({}), s.path());
+        let q = quality_in(&r.notes_text());
+        assert!(q >= 40, "{rel}: the default settled at quality {q}");
+        let (_, r) = run_ok("image.compress", &src, json!({"ssim": 0.9}), s.path());
+        let q = quality_in(&r.notes_text());
+        assert!(
+            q < 40,
+            "{rel}: an asked-for 0.9 should be free of the floor, got {q}"
+        );
+    }
+}
+
 #[test]
 fn flat_art_png_gets_fewer_colors_and_photos_do_not() {
     let s = Scratch::new("lossy-png");

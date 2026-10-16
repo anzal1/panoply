@@ -51,7 +51,7 @@ quality bar does not move to make the date. Owner is who drives it; "crew" means
 
 ## In progress
 
-- **User pass** (crew). Findings in `docs/research/user-pass.md`, fixes on branch `qa/user-pass`.
+- **User pass** (crew). Findings in `docs/research/user-pass-macos.md` (the tools, run on a Mac) and `docs/research/user-pass.md` (the scripted journeys on Windows and Linux), fixes on branch `qa/user-pass`.
 - **Instant search** (crew). Branch `feat/instant-search`, results in `docs/research/instant-search-index.md`.
 - **Disk map** (crew, branch `feat/disk-map`). Scanner built and measured: a 440 GiB home folder (8.1 million
   files) in about 38 s, 9x faster than `du`, clones and hard links counted once, peak memory 289 MB. The
