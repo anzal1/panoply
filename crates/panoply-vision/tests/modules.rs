@@ -616,6 +616,166 @@ fn the_model_fill_cleans_a_stamp_too() {
     );
 }
 
+/// True when the face finder can be used now: it is on disk, or the network may fetch it (the same
+/// rule as `have` for a model).
+fn have_faces() -> bool {
+    if panoply_vision::faces::ready() {
+        return true;
+    }
+    if std::env::var_os("PANOPLY_OFFLINE").is_some() {
+        eprintln!("skipping: the face model is not downloaded and PANOPLY_OFFLINE is set");
+        return false;
+    }
+    panoply_vision::faces::ensure().is_ok()
+}
+
+/// The seven corpus portraits carry no watermark. Before UP-38 the detector called a hand, a flag
+/// stripe, hair or the chin a mark and filled it in.
+const PORTRAITS: [&str; 7] = [
+    "faces/antonelli.jpg",
+    "faces/borman.jpg",
+    "faces/fisher.jpg",
+    "faces/hoshide.jpg",
+    "faces/jemison.jpg",
+    "faces/sunita.jpg",
+    "faces/thomas.jpg",
+];
+
+#[test]
+fn portraits_with_no_watermark_are_left_alone() {
+    let Some(first) = corpus(PORTRAITS[0]) else {
+        return;
+    };
+    let pic = decode(&first);
+    // The face guard is what keeps thomas.jpg (hair and forehead read as text) clean.
+    if !have_faces() || panoply_vision::faces::find(&pic.rgb, pic.w, pic.h).is_empty() {
+        return;
+    }
+    for rel in PORTRAITS {
+        let Some(src) = corpus(rel) else {
+            continue;
+        };
+        let d = Scratch::new("wm-portrait");
+        let input = d.copy_in(&src);
+        let e = run_many(
+            "image.remove_watermark",
+            std::slice::from_ref(&input),
+            json!({"own_content": true, "fill": "blur"}),
+        )
+        .err()
+        .unwrap_or_else(|| panic!("{rel}: something was cleaned on a picture with no mark"));
+        assert!(e.contains("No watermark"), "{rel}: {e}");
+        assert_eq!(d.files().len(), 1, "{rel}: nothing was written");
+    }
+}
+
+/// `stamp` with every pixel `s` times larger, for a picture of a few megapixels.
+fn stamp_scaled(rgb: &mut [u8], w: usize, x0: usize, y0: usize, n: usize, alpha: f32, s: usize) {
+    for k in 0..n {
+        for y in 0..14 * s {
+            for x in 0..8 * s {
+                let (lx, ly) = (x / s, y / s);
+                if lx > 2 && lx < 5 && ly > 3 && ly < 10 {
+                    continue;
+                }
+                let i = ((y0 + y) * w + x0 + k * 13 * s + x) * 3;
+                for c in 0..3 {
+                    rgb[i + c] = (f32::from(rgb[i + c]) * (1.0 - alpha) + 255.0 * alpha) as u8;
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn a_real_stamp_on_a_portrait_is_removed_and_the_face_is_not_touched() {
+    let Some(src) = corpus("faces/borman.jpg") else {
+        return;
+    };
+    let mut pic = decode(&src);
+    if !have_faces() {
+        return;
+    }
+    let faces = panoply_vision::faces::find(&pic.rgb, pic.w, pic.h);
+    if faces.is_empty() {
+        return;
+    }
+    let (w, h) = (pic.w, pic.h);
+    let d = Scratch::new("wm-portrait-stamp");
+    let input = d.path().join("borman-stamped.png");
+    // A credit in the top right corner, and a row of the same letters across the face.
+    stamp_scaled(&mut pic.rgb, w, w - 1000, 120, 12, 0.6, 5);
+    let f = faces[0];
+    stamp_scaled(
+        &mut pic.rgb,
+        w,
+        f.x + f.w / 10,
+        f.y + f.h * 3 / 4,
+        6,
+        0.6,
+        5,
+    );
+    write_png(&input, w, h, &pic.rgb, None);
+    let (out, ran) = run_ok(
+        "image.remove_watermark",
+        &input,
+        json!({"own_content": true, "fill": "blur", "format": "png"}),
+    );
+    let after = decode(&out);
+    // The credit is gone.
+    let mut err = 0u32;
+    let mut n = 0u32;
+    let clean = decode(&src);
+    for y in 120..120 + 70 {
+        for x in w - 1000..w - 1000 + 12 * 65 {
+            for c in 0..3 {
+                err += u32::from(after.px(x, y)[c].abs_diff(clean.px(x, y)[c]));
+                n += 1;
+            }
+        }
+    }
+    assert!(
+        f64::from(err) / f64::from(n) < 40.0,
+        "the credit is still there: {}\n{}",
+        f64::from(err) / f64::from(n),
+        ran.notes_text()
+    );
+    // Not one pixel of the head changed.
+    let head = panoply_vision::watermark::head_box(&f, w, h);
+    for y in head.y..head.y + head.h {
+        for x in head.x..head.x + head.w {
+            assert_eq!(after.px(x, y), pic.px(x, y), "({x},{y}) is on the head");
+        }
+    }
+}
+
+#[test]
+fn a_box_typed_over_a_face_is_refused() {
+    let Some(src) = corpus("faces/borman.jpg") else {
+        return;
+    };
+    let pic = decode(&src);
+    if !have_faces() {
+        return;
+    }
+    let faces = panoply_vision::faces::find(&pic.rgb, pic.w, pic.h);
+    let Some(f) = faces.first() else {
+        return;
+    };
+    let d = Scratch::new("wm-face-rect");
+    let input = d.copy_in(&src);
+    let rect = format!("{},{},{},{}", f.x, f.y, f.w, f.h);
+    let e = run_many(
+        "image.remove_watermark",
+        std::slice::from_ref(&input),
+        json!({"own_content": true, "rect": rect, "fill": "blur"}),
+    )
+    .err()
+    .unwrap();
+    assert!(e.contains("is a face"), "{e}");
+    assert_eq!(d.files().len(), 1);
+}
+
 // ---------------------------------------------------------------- jobs
 
 #[test]

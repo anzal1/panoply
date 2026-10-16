@@ -121,6 +121,18 @@ pub struct ModelSpec {
     pub license: String,
 }
 
+/// A program or library a module downloads on first use (the video engine, pdfium).
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct EngineSpec {
+    /// Engine id.
+    pub id: String,
+    /// Download size in megabytes, shown before the first download.
+    pub size_mb: u32,
+    /// SPDX license expression of the program.
+    pub license: String,
+}
+
 /// The `[capabilities]` table.
 #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -137,28 +149,36 @@ pub struct Capabilities {
     /// Models the module loads.
     #[serde(default)]
     pub models: Vec<ModelSpec>,
+    /// Programs the module downloads once (an engine is not a model).
+    #[serde(default)]
+    pub engines: Vec<EngineSpec>,
 }
 
 /// What a module's network access is for, as a person should be told. Decided from the manifest alone:
-/// a module that lists the models it loads uses the network to fetch them once, with the person's yes,
-/// and no file leaves the computer. Any other module that asks for the network is a plain network user.
+/// a module that lists the models or engines it loads uses the network to fetch them once, with the
+/// person's yes, and no file leaves the computer. Any other module that asks for the network is a plain
+/// network user: the person is told so clearly.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NetworkUse {
     /// No network access: everything is processed on this computer.
     None,
     /// A one-time model download after consent.
     ModelDownload,
-    /// Network access that is not a model download (an engine download, exchange rates).
+    /// A one-time download of a program (the video engine, pdfium) after consent.
+    EngineDownload,
+    /// Network access that is not a one-time download of something the module needs (exchange rates).
     Network,
 }
 
 impl Capabilities {
-    /// How this module uses the network, from `network` and the `models` it lists.
+    /// How this module uses the network, from `network` and the `models` and `engines` it lists.
     pub fn network_use(&self) -> NetworkUse {
         if !self.network {
             NetworkUse::None
         } else if !self.models.is_empty() {
             NetworkUse::ModelDownload
+        } else if !self.engines.is_empty() {
+            NetworkUse::EngineDownload
         } else {
             NetworkUse::Network
         }
@@ -299,7 +319,15 @@ summary = "Does a demo."
             license: "MIT".into(),
         });
         assert_eq!(m.capabilities.network_use(), NetworkUse::ModelDownload);
-        // Listing a model without asking for the network does not make it a network user.
+        // An engine alone is an engine download; a model beside it still reads as a model.
+        m.capabilities.models.clear();
+        m.capabilities.engines.push(EngineSpec {
+            id: "ffmpeg".into(),
+            size_mb: 140,
+            license: "LGPL-2.1-or-later".into(),
+        });
+        assert_eq!(m.capabilities.network_use(), NetworkUse::EngineDownload);
+        // Listing a model or an engine without asking for the network does not make it a network user.
         m.capabilities.network = false;
         assert_eq!(m.capabilities.network_use(), NetworkUse::None);
     }
@@ -325,7 +353,29 @@ summary = "Does a demo."
         ] {
             assert_eq!(seen[id], NetworkUse::ModelDownload, "{id}");
         }
-        assert_eq!(seen["media.compress"], NetworkUse::Network);
-        assert_eq!(seen["pdf.compress"], NetworkUse::Network);
+        // The video and PDF engines are one-time downloads of a program, not a use of the network
+        // for the person's files (UP-07).
+        for id in [
+            "media.compress",
+            "media.convert",
+            "media.extract_audio",
+            "media.hdr_to_sdr",
+            "media.info",
+            "media.normalize",
+            "media.repair",
+            "media.streams",
+            "media.to_mono",
+            "media.trim",
+            "pdf.compress",
+            "pdf.to_images",
+        ] {
+            assert_eq!(seen[id], NetworkUse::EngineDownload, "{id}");
+        }
+        // Nothing shipped sends a person's data anywhere, so no built-in module is a plain network
+        // user. A module that is one keeps the clear "Uses the network" label (see the test above).
+        assert!(
+            !seen.values().any(|u| *u == NetworkUse::Network),
+            "a built-in module that is not a download needs its own label: {seen:?}"
+        );
     }
 }

@@ -252,6 +252,25 @@ pub fn ensure_onnxruntime() -> Result<PathBuf> {
     Ok(lib)
 }
 
+/// True when the YuNet model and the ONNX Runtime are both already on this computer, so a face
+/// can be looked for without fetching or asking for anything. Other tools that only want to
+/// avoid a face (Remove watermark) use the engine when it is here and go without when it is not.
+pub fn face_engine_ready() -> bool {
+    let model = std::env::var_os("PANOPLY_YUNET_MODEL")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| model_dir().join(MODEL_FILE))
+        .is_file();
+    let lib = match std::env::var_os("PANOPLY_ORT_LIB") {
+        Some(p) => PathBuf::from(p).is_file(),
+        None => ort_pin().is_some_and(|pin| {
+            ort_dir()
+                .join(Path::new(pin.member).file_name().unwrap_or_default())
+                .is_file()
+        }),
+    };
+    model && lib
+}
+
 /// Make sure the YuNet model is on disk and return its path, downloading it once.
 pub fn ensure_model() -> Result<PathBuf> {
     if let Some(p) = std::env::var_os("PANOPLY_YUNET_MODEL") {

@@ -25,6 +25,7 @@
 pub mod cache;
 pub mod catalog;
 pub mod cutout;
+pub mod faces;
 pub mod fetch;
 pub mod inpaint;
 pub mod matte;

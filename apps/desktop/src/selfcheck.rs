@@ -2158,6 +2158,17 @@ pub(crate) fn run_userpass(out: PathBuf, manifest: PathBuf) {
                         _ => "timeout",
                     };
                     shot(&mut d, app_win, name, &file(name), &mut log, &mut times);
+                    // The result card again in dark, with its thumbnail already decoded.
+                    if state == "done" {
+                        crate::ui::theme::force_appearance(Some(true));
+                        d.dark = true;
+                        d.settle(app_win).await;
+                        let dark_file = out2.join(format!("{label}-{name}-dark.png"));
+                        shot(&mut d, app_win, name, &dark_file, &mut log, &mut times);
+                        crate::ui::theme::force_appearance(Some(false));
+                        d.dark = false;
+                        d.settle(app_win).await;
+                    }
                     // Notes live on the card; read them from the report via the clipboard path is
                     // not possible offscreen, so the CLI log has the full list.
                     let _ = &mut notes;

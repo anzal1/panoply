@@ -90,6 +90,7 @@ pub fn show_network_notice(registry: &panoply_host::Registry, module_id: &str) {
         let lead = match caps.network_use() {
             panoply_manifest::NetworkUse::None => return,
             panoply_manifest::NetworkUse::ModelDownload => "Model download",
+            panoply_manifest::NetworkUse::EngineDownload => "Engine download",
             panoply_manifest::NetworkUse::Network => "Uses the network",
         };
         eprintln!(

@@ -52,6 +52,11 @@ files = "chosen"
 network = true
 network_reason = "Downloads the PDF engine (pdfium, about 4 MB) once, the first time pages have to be drawn. Your files never leave the computer."
 
+[[capabilities.engines]]
+id = "pdfium"
+size_mb = 4
+license = "BSD-3-Clause AND Apache-2.0"
+
 [surfaces]
 bar = true
 panel = true

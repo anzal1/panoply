@@ -89,6 +89,18 @@ impl Manifest {
                     .into(),
             );
         }
+        for engine in &c.engines {
+            if engine.id.trim().is_empty() {
+                errs.push("An engine has no id.".into());
+            }
+            if engine.size_mb == 0 || engine.license.trim().is_empty() {
+                errs.push(format!(
+                    "Engine \"{}\" needs its download size in megabytes and its license, shown \
+                     before the first download.",
+                    engine.id
+                ));
+            }
+        }
         for model in &c.models {
             if model.id.trim().is_empty() {
                 errs.push("A model has no id.".into());
@@ -284,6 +296,24 @@ summary = "Does a demo."
         let e = errors(&m);
         assert!(e.contains("clean licenses"), "{e}");
         m.capabilities.models[0].license = "MIT".into();
+        assert!(m.validate().is_ok());
+    }
+
+    #[test]
+    fn an_engine_needs_its_size_and_license() {
+        let mut m = base();
+        m.capabilities.engines.push(crate::EngineSpec {
+            id: "ffmpeg".into(),
+            size_mb: 0,
+            license: "".into(),
+        });
+        assert!(
+            errors(&m).contains("needs its download size"),
+            "{}",
+            errors(&m)
+        );
+        m.capabilities.engines[0].size_mb = 140;
+        m.capabilities.engines[0].license = "LGPL-3.0-or-later".into();
         assert!(m.validate().is_ok());
     }
 

@@ -53,6 +53,11 @@ files = "chosen"
 network = true
 network_reason = "Downloads the video engine (an LGPL ffmpeg build, about 140 MB) once, the first time a video or audio job runs. Nothing else leaves your device."
 
+[[capabilities.engines]]
+id = "ffmpeg"
+size_mb = 140
+license = "LGPL-3.0-or-later"
+
 [surfaces]
 bar = true
 panel = true

@@ -294,7 +294,8 @@ pub(crate) fn badge(text: &str, tone: Option<Hsla>, t: Theme) -> impl IntoElemen
 /// The words the app uses for a tool's network access, one place for the Modules page, the panel header
 /// and the panel note, so they cannot drift apart. Derived from the manifest: a tool that lists the models
 /// it loads fetches them once after a yes and no file leaves the computer, which is not the same warning
-/// as a tool that uses the network (see `Capabilities::network_use`).
+/// as a tool that uses the network (see `Capabilities::network_use`). The same goes for an engine
+/// (the video program, pdfium): fetched once after a yes, so neutral, with the person's files staying here.
 pub(crate) struct NetworkWords {
     /// The privacy chip in the panel header.
     pub status: &'static str,
@@ -304,9 +305,10 @@ pub(crate) struct NetworkWords {
     pub meta: &'static str,
     /// The pill on the Modules page.
     pub badge: &'static str,
-    /// Warning colour for the pill and the note. A model download is neutral.
+    /// Warning colour for the pill and the note. A model or engine download is neutral.
     pub warn: bool,
-    model: bool,
+    /// What is fetched once, when the tool downloads something it needs: "a model" or "an engine".
+    fetched: Option<&'static str>,
 }
 
 /// `None` when the tool never uses the network.
@@ -320,7 +322,15 @@ pub(crate) fn network_words(caps: &panoply_manifest::Capabilities) -> Option<Net
             meta: "Downloads a model once",
             badge: "Model download",
             warn: false,
-            model: true,
+            fetched: Some("a model"),
+        }),
+        NetworkUse::EngineDownload => Some(NetworkWords {
+            status: "Downloads an engine once",
+            icon: "package-open",
+            meta: "Downloads an engine once",
+            badge: "Engine download",
+            warn: false,
+            fetched: Some("an engine"),
         }),
         NetworkUse::Network => Some(NetworkWords {
             status: "Uses the network",
@@ -328,7 +338,7 @@ pub(crate) fn network_words(caps: &panoply_manifest::Capabilities) -> Option<Net
             meta: "Uses the network",
             badge: "Network",
             warn: true,
-            model: false,
+            fetched: None,
         }),
     }
 }
@@ -338,13 +348,21 @@ impl NetworkWords {
     /// the person's files, from the manifest's own reason when it has one.
     pub fn sentence(&self, reason: &str) -> String {
         let reason = reason.trim();
-        if self.model {
+        if let Some(what) = self.fetched {
             let lead = if reason.is_empty() {
-                "Downloads a model once, after you say yes."
+                format!("Downloads {what} once, after you say yes.")
             } else {
-                reason
+                reason.to_string()
             };
-            format!("{lead} Your files never leave this computer.")
+            // Some reasons already carry the promise ("Your files never leave the computer.").
+            let said = ["never leave", "leaves your device", "leave your device"]
+                .iter()
+                .any(|p| lead.contains(p));
+            if said {
+                lead
+            } else {
+                format!("{lead} Your files never leave this computer.")
+            }
         } else if reason.is_empty() {
             "Uses the network.".to_string()
         } else {

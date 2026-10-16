@@ -14,6 +14,8 @@ categories = ["multimedia::images", "science"]
 
 [dependencies]
 panoply-core.workspace = true
+# The YuNet face finder (panoply-id) keeps Remove watermark off faces.
+panoply-id.workspace = true
 panoply-manifest.workspace = true
 panoply-image.workspace = true
 serde_json.workspace = true

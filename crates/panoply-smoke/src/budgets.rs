@@ -81,7 +81,7 @@ pub const EXCEPTIONS: &[Exception] = &[
         no_first_preview: true,
         only_for: &[],
         only_ids: &[],
-        source: "DECISIONS.md, smoke matrix exceptions: the same fill model as Erase, 786 MB on a camera RAW and 892 MB with a 31 MP picture in the batch",
+        source: "DECISIONS.md, smoke matrix exceptions: the same fill model as Erase, 786 MB on a camera RAW and 912 MB with a 31 MP picture in the batch",
     },
     Exception {
         module: "id.passport_photo",
