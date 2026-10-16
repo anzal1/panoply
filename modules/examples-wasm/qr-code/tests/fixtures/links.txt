@@ -1,0 +1,4 @@
+https://anzalabidi.dev
+https://github.com/anzal1/panoply
+
+WIFI:T:WPA;S:Home Network;P:correct horse battery;;

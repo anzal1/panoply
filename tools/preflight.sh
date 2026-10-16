@@ -20,6 +20,7 @@
 #   cargo clippy -p <crates> --all-targets -- -D warnings
 #   cargo nextest run -p <crates>, with the `ci-core` profile (everything except the heavy tests), then
 #   the timing tests alone (profile `ci-idle`)
+#   tools/check-modules.sh, when a file under modules/examples-wasm changed
 #   python3 tools/ci/check_docs.py
 #
 # The whole workspace is used instead of the changed crates when Cargo.lock, a Cargo.toml in the root,
@@ -192,6 +193,13 @@ step "timing tests, alone (profile ci-idle)"
 # shellcheck disable=SC2086
 cargo nextest run $scope --profile ci-idle --lib --bins --tests --no-fail-fast --no-tests=pass
 done_step
+
+# The community modules are their own Cargo projects, so the workspace checks above never see them.
+if printf '%s\n' "$changed" | grep -q '^modules/examples-wasm/'; then
+  step "community modules (tools/check-modules.sh)"
+  tools/check-modules.sh
+  done_step
+fi
 
 printf '\nmacOS checks passed in %ss\n' "$((SECONDS - start))"
 

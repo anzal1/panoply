@@ -1,0 +1,61 @@
+# Text or links in a file to QR codes, as PNG or SVG. Pattern A, instant transform.
+accepts = ["text/*"]
+outputs = ["image/png", "image/svg+xml"]
+
+[module]
+id = "image.qr_code"
+name = "QR code maker"
+version = "0.1.0"
+pattern = "A"
+summary = "Turn the links or text in a file into QR codes, one per line, as PNG or SVG."
+
+[options.format]
+type = "choice"
+values = ["png", "svg"]
+default = "png"
+label = "Save as"
+help = "SVG stays sharp at any size, so use it for print."
+
+[options.lines]
+type = "choice"
+values = ["each_line", "whole_file"]
+default = "each_line"
+label = "Make"
+help = "One code per line, or one code for the whole file (a contact card, a Wi-Fi sign-in)."
+
+[options.error_correction]
+type = "choice"
+values = ["L", "M", "Q", "H"]
+default = "M"
+label = "Damage tolerance"
+help = "Higher survives scratches and logos laid on top, but makes a denser code."
+
+[options.scale]
+type = "number"
+default = 10
+min = 2
+max = 40
+label = "PNG pixels per square"
+
+[options.border]
+type = "number"
+default = 4
+min = 0
+max = 16
+label = "Quiet border, in squares"
+help = "Scanners need at least 4 to read reliably."
+
+[options.dark]
+type = "text"
+default = "#000000"
+label = "Square colour"
+help = "A hex colour like #111111. Keep it much darker than the background."
+
+[options.light]
+type = "text"
+default = "#ffffff"
+label = "Background colour"
+
+[capabilities]
+files = "chosen"
+network = false

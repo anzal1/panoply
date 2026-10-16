@@ -27,7 +27,10 @@
     <ui:WixUI Id="WixUI_FeatureTree" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="Panoply" />
+      <Directory Id="INSTALLFOLDER" Name="Panoply">
+        <!-- Next to panoply-desktop.exe: the folder the app's module catalog loads from. -->
+        <Directory Id="ModulesFolder" Name="modules" />
+      </Directory>
     </StandardDirectory>
 
     <!-- Files -->
@@ -87,9 +90,14 @@
       </Component>
     </ComponentGroup>
 
+    <!-- The shipped community modules: the ModuleFiles group is written next to this file by package.ps1
+         (one folder under ModulesFolder per module, module.toml and module.wasm in each) and linked in
+         as modules.wxs. -->
+
     <Feature Id="Main" Title="Panoply" Description="The app and the panoply command." Level="1"
              AllowAbsent="no" ConfigurableDirectory="INSTALLFOLDER">
       <ComponentGroupRef Id="AppFiles" />
+      <ComponentGroupRef Id="ModuleFiles" />
     </Feature>
     <Feature Id="PathFeature" Title="Add panoply to PATH"
              Description="Lets you run the panoply command from any terminal." Level="1">

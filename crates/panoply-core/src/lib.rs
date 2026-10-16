@@ -12,6 +12,7 @@ pub mod assets;
 pub mod budgets;
 pub mod cancel;
 pub mod job;
+pub mod modules;
 pub mod naming;
 pub mod sniff;
 pub mod trash;

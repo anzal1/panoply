@@ -7,6 +7,11 @@ PREFIX="${1:-$HOME/.local}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 install -d "$PREFIX/bin" "$PREFIX/share/applications" "$PREFIX/share/icons" "$PREFIX/share/doc/panoply"
 install -m 755 "$HERE/bin/panoply" "$HERE/bin/panoply-desktop" "$PREFIX/bin/"
+# The community modules ship next to the programs: that is where Panoply looks for them.
+if [ -d "$HERE/bin/modules" ]; then
+  rm -rf "$PREFIX/bin/modules"
+  cp -R "$HERE/bin/modules" "$PREFIX/bin/modules"
+fi
 install -m 644 "$HERE/share/applications/panoply.desktop" "$PREFIX/share/applications/"
 cp -R "$HERE/share/icons/." "$PREFIX/share/icons/"
 for f in LICENSE-MIT LICENSE-APACHE THIRD-PARTY-NOTICES.md; do

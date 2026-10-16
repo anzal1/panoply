@@ -678,6 +678,54 @@ mod tests {
     }
 
     #[test]
+    fn the_community_plugins_are_found_by_what_people_type() {
+        let examples =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../modules/examples-wasm");
+        let c = Catalog::with_dirs(&[examples]);
+        if c.index_of("image.qr_code").is_none() {
+            return; // wasm examples not built on this machine
+        }
+        for (typed, title) in [
+            ("qr code", "QR code maker"),
+            ("markdown", "Markdown to HTML"),
+            ("format json", "Format JSON, YAML and TOML"),
+            ("yaml", "Format JSON, YAML and TOML"),
+        ] {
+            let r = search(&cx(&c, &[], &[]), typed);
+            assert!(
+                titles(&r).iter().take(3).any(|t| t == title),
+                "{typed:?} should find {title}: {:?}",
+                titles(&r)
+            );
+        }
+        // Dropping a Markdown file offers the converter, a JSON file offers the formatter.
+        let md = FileProfile {
+            path: PathBuf::from("notes.md"),
+            name: "notes.md".into(),
+            bytes: 900,
+            sniffed: panoply_core::sniff_bytes(b"# Notes\n", Some("md")),
+        };
+        let r = search(&cx(&c, std::slice::from_ref(&md), &[]), "");
+        assert!(
+            titles(&r).contains(&"Markdown to HTML".to_string()),
+            "{:?}",
+            titles(&r)
+        );
+        let json = FileProfile {
+            path: PathBuf::from("data.json"),
+            name: "data.json".into(),
+            bytes: 90,
+            sniffed: panoply_core::sniff_bytes(b"{\"a\":1}", Some("json")),
+        };
+        let r = search(&cx(&c, std::slice::from_ref(&json), &[]), "");
+        assert!(
+            titles(&r).contains(&"Format JSON, YAML and TOML".to_string()),
+            "{:?}",
+            titles(&r)
+        );
+    }
+
+    #[test]
     fn plain_words_find_a_tool_by_what_it_does() {
         let c = cat();
         let r = search(&cx(&c, &[], &[]), "shrink");

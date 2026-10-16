@@ -1,0 +1,16 @@
+# A small stack
+services:
+  web:
+    image: nginx:1.27
+    ports:
+      - "8080:80"
+    environment:
+      DEBUG: false
+      WORKERS: 4
+    depends_on: [db]
+  db:
+    image: postgres:16
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata: {}
