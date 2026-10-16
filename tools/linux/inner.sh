@@ -3,6 +3,13 @@
 set -euo pipefail
 
 export CARGO_TARGET_DIR=/cache/target CARGO_BUILD_JOBS="${JOBS:-8}" PANOPLY_YES=1
+# lld, not GNU ld: parallel links of the big test binaries were OOM-killed in the 4 GB VM.
+# Set for the Linux target only: the wasm32-wasip2 modules that tests build link with wasm-component-ld,
+# which rejects -fuse-ld, so a plain RUSTFLAGS broke them.
+case "$(uname -m)" in
+  aarch64 | arm64) export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_RUSTFLAGS="-C link-arg=-fuse-ld=lld" ;;
+  *) export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS="-C link-arg=-fuse-ld=lld" ;;
+esac
 export PANOPLY_ENGINES_DIR=/cache/engines PANOPLY_DATA_DIR=/tmp/panoply-data
 start=$SECONDS
 tests_failed=0
@@ -33,12 +40,6 @@ step "syncing the repo into the work volume"
 mkdir -p /work
 rsync -a --delete --exclude .git --exclude '.DS_Store' --exclude 'target/' --exclude /tests/corpus/cache /src/ /work/
 cd /work
-# lld, not GNU ld: parallel links of the big test binaries were OOM-killed in the 4 GB VM. Set for the Linux
-# host triple only, through its own variable: a plain RUSTFLAGS also reaches the wasm32-wasip2 fixture builds,
-# whose linker (wasm-component-ld) rejects -fuse-ld=lld.
-host_triple="$(rustc -vV | sed -n 's/^host: //p')"
-triple_var="CARGO_TARGET_$(printf '%s' "$host_triple" | tr 'a-z-' 'A-Z_')_RUSTFLAGS"
-export "$triple_var=${!triple_var:-} -C link-arg=-fuse-ld=lld"
 # The corpus kinds CI has (pdf, image), mounted read-only from the Mac's cache.
 rm -rf tests/corpus/cache && mkdir -p tests/corpus/cache
 for kind in pdf image; do

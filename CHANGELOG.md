@@ -4,12 +4,19 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
-## Unreleased
+## v0.1.3-beta (2026-10-16)
+
+Fixes found by running the app on real Windows and Linux desktops.
 
 ### Fixed
 
-- **Linux: the hotkey always hides the command bar.** With a compositing window manager it could bring the
-  bar straight back.
+- **Windows and Linux: type straight after the hotkey.** The command bar opened without the cursor in the
+  search box, so typing did nothing until you clicked it.
+- **"Under 50 kb" on a photo saved as PNG.** It used to promise the size and then fail. When PNG cannot get
+  that small, Panoply now tries JPG, then WebP, and tells you which it used. If nothing fits, it says so and
+  shows the smallest size it reached.
+- **Windows at 150% scaling.** The first window now fits the screen, with the close button in view.
+- **Linux: the hotkey always hides the command bar,** also with a compositing window manager.
 
 ## v0.1.2-beta (2026-10-15)
 
