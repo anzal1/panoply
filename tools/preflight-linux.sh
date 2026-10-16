@@ -88,7 +88,7 @@ cleanup() {
     echo "[linux] VM left running (--keep); stop it with: colima stop $profile"
   fi
   docker context use "$prev_ctx" >/dev/null 2>&1 || true
-  rm -rf "$vm_lock" 2>/dev/null || true
+  if [ -n "${vm_lock:-}" ] && [ "$(cat "$vm_lock/pid" 2>/dev/null || true)" = "$$" ]; then rm -rf "$vm_lock"; fi
   heavy_lock_release
   exit "$status"
 }
