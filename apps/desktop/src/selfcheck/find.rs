@@ -30,8 +30,8 @@ use panoply_find::{Exclusions, Index, LiveIndex, WalkOptions};
 fn fixture_files() -> Vec<(String, u64)> {
     const DAY: u64 = 86_400;
     let mut v: Vec<(String, u64)> = [
-        ("Downloads/Quarterly report final.pdf", 2 * DAY),
-        ("Documents/Taxes/Quarterly report 2025.pdf", 5 * DAY),
+        ("Downloads/Quarterly report final.pdf", 10 * DAY),
+        ("Documents/Taxes/Quarterly report 2025.pdf", 16 * DAY),
         ("Documents/Taxes/Quarterly report 2024.pdf", 120 * DAY),
         ("Documents/Work/Q3 report draft.docx", 2 * DAY),
         ("Documents/Work/Report template.docx", 40 * DAY),

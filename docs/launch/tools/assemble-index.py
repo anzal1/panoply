@@ -24,7 +24,7 @@ def fl(x):
 snapped = []
 for k, (i, f, st, dur) in enumerate(hosts):
     sf = round(st * FPS)
-    ef = round((st + dur) * FPS) if k + 1 == len(hosts) else round(hosts[k + 1][2] * FPS)
+    ef = math.ceil((st + dur) * FPS) if k + 1 == len(hosts) else round(hosts[k + 1][2] * FPS)   # the last frame covers the final sample too
     snapped.append((i, f, fl(sf / FPS), fl((ef - sf) / FPS + 1e-9) if k + 1 == len(hosts) else fl((ef - sf) / FPS + 1e-9)))
 orig_hosts = hosts
 hosts = snapped

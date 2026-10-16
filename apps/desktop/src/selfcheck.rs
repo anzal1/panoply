@@ -937,7 +937,7 @@ fn film_home_listing() -> Vec<(String, u64)> {
     }
     // Small files everywhere else, so the map counts about 412,000 files like the Find index in the film does.
     let base = v.len();
-    for i in 0..412_000usize.saturating_sub(base) {
+    for i in 0..412_438usize.saturating_sub(base) {
         v.push((
             format!(
                 "Library/Application Support/Sync/chunk{:03}/{:05}.dat",
