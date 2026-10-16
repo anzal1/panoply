@@ -5308,7 +5308,7 @@ version = "0.1.3"
 
 [[package]]
 name = "panoply-find"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "ignore",
  "memchr",
@@ -5464,7 +5464,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-platform-windows"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "windows-sys 0.61.2",
 ]
