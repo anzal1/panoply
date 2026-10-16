@@ -322,7 +322,7 @@ fn overlay_spread(
                 continue;
             }
             seen += 1;
-            if seen % step != 0 {
+            if !seen.is_multiple_of(step) {
                 continue;
             }
             let x0 = xx.saturating_sub(reach);
