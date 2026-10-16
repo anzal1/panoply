@@ -616,6 +616,19 @@ fn the_model_fill_cleans_a_stamp_too() {
     );
 }
 
+/// True when the face finder can be used now: it is on disk, or the network may fetch it (the same
+/// rule as `have` for a model).
+fn have_faces() -> bool {
+    if panoply_vision::faces::ready() {
+        return true;
+    }
+    if std::env::var_os("PANOPLY_OFFLINE").is_some() {
+        eprintln!("skipping: the face model is not downloaded and PANOPLY_OFFLINE is set");
+        return false;
+    }
+    panoply_vision::faces::ensure().is_ok()
+}
+
 /// The seven corpus portraits carry no watermark. Before UP-38 the detector called a hand, a flag
 /// stripe, hair or the chin a mark and filled it in.
 const PORTRAITS: [&str; 7] = [
@@ -634,9 +647,8 @@ fn portraits_with_no_watermark_are_left_alone() {
         return;
     };
     let pic = decode(&first);
-    // Without a face engine on this machine the face guard is absent, and thomas.jpg (hair and
-    // forehead read as text) relies on it, so there is nothing fair to assert.
-    if panoply_vision::faces::find(&pic.rgb, pic.w, pic.h).is_empty() {
+    // The face guard is what keeps thomas.jpg (hair and forehead read as text) clean.
+    if !have_faces() || panoply_vision::faces::find(&pic.rgb, pic.w, pic.h).is_empty() {
         return;
     }
     for rel in PORTRAITS {
@@ -681,6 +693,9 @@ fn a_real_stamp_on_a_portrait_is_removed_and_the_face_is_not_touched() {
         return;
     };
     let mut pic = decode(&src);
+    if !have_faces() {
+        return;
+    }
     let faces = panoply_vision::faces::find(&pic.rgb, pic.w, pic.h);
     if faces.is_empty() {
         return;
@@ -740,6 +755,9 @@ fn a_box_typed_over_a_face_is_refused() {
         return;
     };
     let pic = decode(&src);
+    if !have_faces() {
+        return;
+    }
     let faces = panoply_vision::faces::find(&pic.rgb, pic.w, pic.h);
     let Some(f) = faces.first() else {
         return;

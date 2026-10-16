@@ -1,15 +1,37 @@
 //! Where the faces are, for the tools that must never change one (Remove watermark, UP-38).
 //!
-//! The engines are the ones the passport photo tool uses: Apple Vision on macOS, YuNet through ONNX
-//! Runtime elsewhere. Nothing here fetches or asks: off macOS the face engine is used only when its
-//! model and runtime are already on this computer (the passport photo tool put them there), and a
-//! picture with no engine is read as having no faces, so the watermark detector's own checks stay the
-//! only guard. The result is face boxes in picture pixels.
+//! The engine is YuNet through ONNX Runtime, the passport photo tool's fallback face engine, on every
+//! platform. It is used here instead of Apple Vision on purpose: the ONNX Runtime is already loaded
+//! for the fill model, so YuNet costs about 40 MB of the job's memory where any Apple Vision request
+//! costs about 145 MB that stay resident beside the fill model (measured on the smoke batch, UP-38).
+//! The model (0.2 MB) and the runtime are fetched once after a yes, like the fill model, by
+//! [`ensure`]; [`find`] itself never fetches. The result is face boxes in picture pixels.
 
 use crate::px::Rect;
 
-/// The faces in an 8 bit RGB picture, as boxes clamped to the picture. Never fails: an engine that
-/// is missing or errors gives no boxes.
+/// True when the face model and the runtime are already on this computer.
+pub fn ready() -> bool {
+    panoply_id::runtime::face_engine_ready()
+}
+
+/// Makes sure the face model and the runtime are on this computer, fetching what is missing after
+/// the person's yes (the same consent sheet as the fill model).
+pub fn ensure() -> panoply_image::error::Result<()> {
+    if !ready() {
+        panoply_id::runtime::ensure_onnxruntime()?;
+        panoply_id::runtime::ensure_model()?;
+    }
+    Ok(())
+}
+
+/// [`ensure`], then [`find`]: the call a job makes.
+pub fn find_ensuring(rgb: &[u8], w: usize, h: usize) -> panoply_image::error::Result<Vec<Rect>> {
+    ensure()?;
+    Ok(find(rgb, w, h))
+}
+
+/// The faces in an 8 bit RGB picture, as boxes clamped to the picture. Never fetches and never
+/// fails: an engine that is not on this computer or errors gives no boxes.
 pub fn find(rgb: &[u8], w: usize, h: usize) -> Vec<Rect> {
     // Faces are found on a reduced copy (a face is large next to 1,600 pixels), so a 30 megapixel
     // picture costs no more memory than a small one, and the boxes are scaled back.
@@ -66,22 +88,6 @@ pub fn clamp(x: f64, y: f64, bw: f64, bh: f64, w: usize, h: usize) -> Option<Rec
     })
 }
 
-#[cfg(target_os = "macos")]
-fn engine(rgb: &[u8], w: usize, h: usize) -> Vec<(f64, f64, f64, f64)> {
-    use panoply_platform_macos::faces;
-    if !faces::available() {
-        return Vec::new();
-    }
-    faces::detect_faces(rgb, w as u32, h as u32)
-        .map(|v| {
-            v.into_iter()
-                .map(|f| (f.x, f.y, f.width, f.height))
-                .collect()
-        })
-        .unwrap_or_default()
-}
-
-#[cfg(not(target_os = "macos"))]
 fn engine(rgb: &[u8], w: usize, h: usize) -> Vec<(f64, f64, f64, f64)> {
     if !panoply_id::runtime::face_engine_ready() {
         return Vec::new();

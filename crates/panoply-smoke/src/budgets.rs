@@ -77,11 +77,11 @@ pub const EXCEPTIONS: &[Exception] = &[
     },
     Exception {
         module: "image.remove_watermark",
-        peak_mb: Some(1100),
+        peak_mb: Some(950),
         no_first_preview: true,
         only_for: &[],
         only_ids: &[],
-        source: "DECISIONS.md, smoke matrix exceptions: the same fill model as Erase, 786 MB on a camera RAW, and 1018 MB with a 31 MP picture in the batch, which now includes Apple Vision's face model (about 125 MB, loaded only when the detector has a candidate to check, UP-38)",
+        source: "DECISIONS.md, smoke matrix exceptions: the same fill model as Erase, 786 MB on a camera RAW and 912 MB with a 31 MP picture in the batch",
     },
     Exception {
         module: "id.passport_photo",

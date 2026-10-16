@@ -78,7 +78,7 @@ label = "Animated files"
 [capabilities]
 files = "chosen"
 network = true
-network_reason = "Downloads a model once, after you say yes."
+network_reason = "Downloads a model once, and a small face finder (0.2 MB) that keeps faces untouched, after you say yes."
 
 [[capabilities.models]]
 id = "migan-512-places2"

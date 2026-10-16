@@ -962,7 +962,7 @@ fn one(io: &dyn VisionIo, path: &std::path::Path, opts: &Opts) -> Result<Option<
     let (regions, mask) = match opts.str("rect") {
         Some(t) => {
             let rects = parse_rects(t, w, h)?;
-            let faces = crate::faces::find(&src.rgb, w, h);
+            let faces = crate::faces::find_ensuring(&src.rgb, w, h)?;
             if rects.iter().any(|r| {
                 faces
                     .iter()
@@ -989,9 +989,25 @@ fn one(io: &dyn VisionIo, path: &std::path::Path, opts: &Opts) -> Result<Option<
             (regions, m)
         }
         None => {
-            let d = detect_with(&src.rgb, w, h, search, || {
-                crate::faces::find(&src.rgb, w, h)
-            });
+            // The face model is fetched (after a yes) only when the detector has a candidate to
+            // check; a failure to get it stops the job rather than going on without the guard.
+            let mut face_err = None;
+            let d = detect_with(
+                &src.rgb,
+                w,
+                h,
+                search,
+                || match crate::faces::find_ensuring(&src.rgb, w, h) {
+                    Ok(v) => v,
+                    Err(e) => {
+                        face_err = Some(e);
+                        Vec::new()
+                    }
+                },
+            );
+            if let Some(e) = face_err {
+                return Err(e);
+            }
             spared = d.spared;
             (d.regions, d.mask)
         }

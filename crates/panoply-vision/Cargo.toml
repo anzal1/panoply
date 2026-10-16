@@ -14,6 +14,8 @@ categories = ["multimedia::images", "science"]
 
 [dependencies]
 panoply-core.workspace = true
+# The YuNet face finder (panoply-id) keeps Remove watermark off faces.
+panoply-id.workspace = true
 panoply-manifest.workspace = true
 panoply-image.workspace = true
 serde_json.workspace = true
@@ -31,10 +33,6 @@ ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "
 [target.'cfg(target_os = "macos")'.dependencies]
 panoply-platform-macos = { path = "../panoply-platform-macos" }
 ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "coreml"] }
-
-# Off macOS the YuNet face engine (already in panoply-id) finds the faces Remove watermark must not touch.
-[target.'cfg(not(target_os = "macos"))'.dependencies]
-panoply-id.workspace = true
 
 # DirectML where the runtime build has it; the CPU provider otherwise.
 [target.'cfg(windows)'.dependencies]
