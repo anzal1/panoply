@@ -16,6 +16,17 @@ for i, f in enumerate(spec['frames']):
     total = t + f.get('tail_beats', 0) * B
 total = round(total, 5)
 spec['total_s'] = total
+# Snap every frame boundary to the 60 fps grid, so the first sample of a frame is the frame the cue sheet names (beat 16 = frame 443, not 444).
+import math
+FPS = 60
+def fl(x):
+    return math.floor(x * 1e6) / 1e6
+snapped = []
+for k, (i, f, st, dur) in enumerate(hosts):
+    sf = round(st * FPS)
+    ef = round((st + dur) * FPS) if k + 1 == len(hosts) else round(hosts[k + 1][2] * FPS)
+    snapped.append((i, f, fl(sf / FPS), fl((ef - sf) / FPS + 1e-9) if k + 1 == len(hosts) else fl((ef - sf) / FPS + 1e-9)))
+hosts = snapped
 json.dump(spec, open(os.path.join(root, 'frames.json'), 'w'), indent=2)
 rows = []
 for i, f, st, dur in hosts:

@@ -1,175 +1,99 @@
 {
   "build": "release",
-  "fixture_entries": 287,
+  "fixture_entries": 412438,
   "long_list_hits": 200,
   "keystroke_to_frame_ms": {
-    "p50": 2.880792,
-    "p95": 7.3303329999999995,
-    "max": 9.140374999999999,
+    "p50": 2.23175,
+    "p95": 4.770667,
+    "max": 6.141125,
     "samples": 20
   },
   "ui_state_change_ms": {
-    "p50": 0.048,
-    "p95": 0.38787499999999997,
-    "max": 0.5924170000000001
+    "p50": 0.042125,
+    "p95": 0.307875,
+    "max": 0.8800840000000001
   },
   "ui_frame_ms": {
-    "p50": 2.0527919999999997,
-    "p95": 6.139417,
-    "max": 38.917624999999994
+    "p50": 1.3765830000000001,
+    "p95": 5.4597500000000005,
+    "max": 17.951375
   },
   "frames_over_4ms": [
     {
-      "state": "find typing",
-      "ms": 6.139417
+      "state": "find empty",
+      "ms": 7.8171669999999995
     },
     {
       "state": "find typing",
-      "ms": 7.275166
+      "ms": 4.608125
     },
     {
       "state": "find typing",
-      "ms": 4.4905409999999994
-    },
-    {
-      "state": "find typing",
-      "ms": 38.917624999999994
-    },
-    {
-      "state": "find no results",
-      "ms": 4.363333
+      "ms": 6.058459
     },
     {
       "state": "find long list",
-      "ms": 7.624
+      "ms": 8.823917
     },
     {
       "state": "find long list",
-      "ms": 4.856625
+      "ms": 4.659459
     },
     {
       "state": "find long list",
-      "ms": 5.207458
+      "ms": 4.939375
     },
     {
       "state": "find long list",
-      "ms": 4.694875000000001
+      "ms": 4.9475
     },
     {
       "state": "find long list",
-      "ms": 4.409792
-    },
-    {
-      "state": "find long list",
-      "ms": 6.117832999999999
-    },
-    {
-      "state": "find long list",
-      "ms": 5.995625
-    },
-    {
-      "state": "find permission note",
-      "ms": 4.161042
-    },
-    {
-      "state": "find permission note",
-      "ms": 4.534833
+      "ms": 4.2275
     },
     {
       "state": "bar tools only",
-      "ms": 4.326875
-    },
-    {
-      "state": "bar tools and files",
-      "ms": 4.49525
+      "ms": 5.021791
     },
     {
       "state": "bar files only",
-      "ms": 4.715625
+      "ms": 4.47125
     },
     {
       "state": "bar files only",
-      "ms": 9.340542000000001
-    },
-    {
-      "state": "bar files only",
-      "ms": 10.623459
-    },
-    {
-      "state": "bar files only",
-      "ms": 4.508500000000001
+      "ms": 11.908875
     },
     {
       "state": "find empty",
-      "ms": 4.052709
+      "ms": 5.4597500000000005
     },
     {
       "state": "find typing",
-      "ms": 9.067792
+      "ms": 4.0502910000000005
     },
     {
       "state": "find typing",
-      "ms": 4.599417
-    },
-    {
-      "state": "find typing",
-      "ms": 5.3019169999999995
-    },
-    {
-      "state": "find typing",
-      "ms": 4.628
-    },
-    {
-      "state": "find typing",
-      "ms": 4.522167
-    },
-    {
-      "state": "find typing",
-      "ms": 4.872792
-    },
-    {
-      "state": "find typing",
-      "ms": 4.164666
-    },
-    {
-      "state": "find no results",
-      "ms": 5.559833
+      "ms": 4.6930000000000005
     },
     {
       "state": "find long list",
-      "ms": 5.463082999999999
+      "ms": 5.937375
     },
     {
       "state": "find long list",
-      "ms": 5.272749999999999
-    },
-    {
-      "state": "find long list",
-      "ms": 4.970625
-    },
-    {
-      "state": "find long list",
-      "ms": 4.899083999999999
-    },
-    {
-      "state": "find indexing",
-      "ms": 5.834583
-    },
-    {
-      "state": "find indexing",
-      "ms": 5.6132919999999995
-    },
-    {
-      "state": "find permission note",
-      "ms": 7.165375
+      "ms": 17.951375
     },
     {
       "state": "bar tools and files",
-      "ms": 7.521875
+      "ms": 6.712709
     },
     {
-      "state": "bar tools and files",
-      "ms": 9.107708
+      "state": "bar file selected",
+      "ms": 10.684875
+    },
+    {
+      "state": "bar files only",
+      "ms": 5.618709
     }
   ],
   "bar_tools_on_list_before_files": true,

@@ -11,7 +11,7 @@
     /* ground: its own child, identical to frame 2's blue (flat brand blue, same very faint centred lift) so the cut at beat 24 is invisible */
     #f3-ground { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 55% at 50% 48%, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 100%), #2d6cdf; }
 
-    /* the command bar plate, the exact geometry frame 2 ends on: 920 wide, top 396, scale 1.04 about its centre */
+    /* the command bar plate, the exact geometry frame 2 ends on: 920 wide, top 396, scale 1.06 about its centre */
     #f3-slide { position: absolute; inset: 0; }
     #f3-push { position: absolute; left: 500px; top: 396px; width: 920px; height: 588px; transform-origin: 50% 50%; }
     #f3-plate { position: absolute; inset: 0; border-radius: 24.1px; overflow: hidden; background: #f1f2f5;
@@ -60,7 +60,7 @@
     <div id="f3-slide" data-layout-allow-overflow><div id="f3-push" data-layout-allow-overflow><div id="f3-plate">
       <img id="f3-res-img" src="assets/captures/bar-result-light.png" alt="">
     </div></div></div>
-    <div id="f3-result" data-layout-allow-overlap aria-label="35% smaller"><span id="f3-pct">10</span><span id="f3-pct-sfx">% smaller</span></div>
+    <div id="f3-result" data-layout-allow-overlap aria-label="35% smaller"><span id="f3-pct">35</span><span id="f3-pct-sfx">% smaller</span></div>
     <div id="f3-grid" data-layout-allow-overflow></div>
     <div id="f3-head" data-layout-allow-overflow>
       <div id="f3-count"></div>
@@ -78,7 +78,7 @@
     /* These MUST equal the text in the real bar-result-light.png capture ("67 KB to 43 KB, 35% smaller"). */
     const RESULT = { from: "67 KB", to: "43 KB", pct: 35 };
     const TOOL_COUNT = 31;                            /* = assets/data/tools.json "count" */
-    const PLATE_SCALE_START = 1.25;                   /* frame 2 ends pulled back to about 1.25x, bar centred; the cut at beat 24 must not jump */
+    const PLATE_SCALE_START = 1.06;                   /* frame 2 ends pulled back to 1.06x (1.25 x 0.85), bar centred, equals PULL_SCALE in 02-hotkey.html; the cut at beat 24 must not jump */
 
     /* Tools of assets/data/tools.json with a baked, seeded layout (assets/f3-tools/layout.py, LCG seed 94, annealed row packing).
        [id, name, category, x, y, width, row] in a 1730 x 646 grid, row-major arrival order, rows of 4,4,4,5,5,5,4.
@@ -183,13 +183,11 @@
     gsap.set(posEls, { opacity: 0, y: 80 });                 /* every card is hidden until its own beat */
 
     /* ---- beats 24 to 26: the result card, on screen from frame 0, nothing else moves ---- */
-    /* the big number counts 0 to 35 with an impact (power2.in) that ENDS exactly on beat 25, then rests with the card */
-    /* it starts on a real value (never 0): the first frame the number is visible already reads "10% smaller" */
-    const cnt = { v: 10 };
+    /* the big number lands DIRECTLY on its final text "35% smaller" on its hit frame (beat 24.25): no count-up, the first visible frame already reads 35% */
     $("f3-pct").textContent = String(RESULT.pct);
-    tl.fromTo(cnt, { v: 10 }, { v: RESULT.pct, duration: at(25) - at(24.25), ease: "power2.in", ...NF,
-      onUpdate: () => { $("f3-pct").textContent = String(Math.max(10, Math.round(cnt.v))); } }, at(24.25));
-    tl.fromTo("#f3-result", { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: FADE, ...NF }, at(24.25));
+    const T_NUM = firstVisible(beatFrame(24.25));
+    tl.set("#f3-result", { opacity: 0 }, 0);
+    enter("#f3-result", T_NUM, { y: 24 });
     /* the number leaves ending one frame before beat 26, the plate and the first card take over on beat 26 */
     tl.to("#f3-result", { opacity: 0, duration: 0.15, ease: "power1.in" }, at(26) - 0.15 - F);
     /* the bar slides down and shrinks to a small anchor, then is gone under the cards */

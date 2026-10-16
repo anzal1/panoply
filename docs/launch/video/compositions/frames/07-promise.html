@@ -90,7 +90,6 @@
         <g id="f7-capL"><path d="M940 120 V200" stroke="#fff" stroke-width="8" stroke-linecap="round"/></g>
         <g id="f7-capR"><path d="M1080 120 V200" stroke="#fff" stroke-width="8" stroke-linecap="round"/></g>
         <g id="f7-far">
-          <path d="M1100 160 H1380" stroke="rgba(255,255,255,.35)" stroke-width="5" stroke-dasharray="22 18"/>
           <g stroke="rgba(255,255,255,.55)" stroke-width="6" stroke-linecap="round" fill="none">
             <path d="M1472 160 A40 40 0 0 1 1528 160"/>
             <path d="M1447 135 A75 75 0 0 1 1553 135"/>
@@ -116,8 +115,6 @@
     };
     /* fade out ENDING one frame before beat b (ground stays blue) */
     const out = (sel, b) => tl.to(sel, { opacity: 0, duration: 0.15, ease: 'power1.in' }, at(b) - 0.15 - F);
-    /* hard cut one frame before beat b, used where a stop holds the picture still until just before the hit */
-    const cut = (sel, b) => tl.set(sel, { opacity: 0 }, at(b) - F);
     gsap.set(['#f7-free', '#f7-p1', '#f7-p2', '#f7-p3', '#f7-open', '#f7-lic', '#f7-graph', '.f7-dot', '#f7-device', '#f7-lap', '#f7-file', '#f7-nlabel', '#f7-capL', '#f7-capR', '#f7-far', '#f7-strike'], { opacity: 0 });
     gsap.set('#f7-c2', { opacity: 0 }); gsap.set('#f7-c3', { opacity: 0 });
     tl.set('#f7-c2', { opacity: 1 }, at(72) - F);
@@ -158,8 +155,7 @@
     tl.fromTo('#f7-nlabel', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power1.out', immediateRender: false }, at(74) + 0.45);
     tl.fromTo('#f7-c3', { scale: 1 }, { scale: 1.02, duration: at(75.54) - at(74), ease: 'power1.out' }, at(74));
 
-    /* ---- 75.54 to 75.92 STOP: everything is still. One frame before 76.0 the picture is cut and frame 8 lands on the same blue ---- */
-    cut('#f7-c3', 76);
+    /* ---- 75.54 to the end STOP: everything is still and stays fully visible through the last frame (2104); frame 8 cuts in on frame 2105 ---- */
 
     window.__timelines["f7-promise"] = tl;
   </script>

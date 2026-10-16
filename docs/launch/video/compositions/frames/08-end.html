@@ -43,11 +43,11 @@
 
     const tl = gsap.timeline({ paused: true });
 
-    // frame 7 was cut one frame before this one on the same blue. The front card is already showing on the first frame,
-    // the two side cards sit behind it, and everything else is parked until it lands.
-    gsap.set('#f8-cardL', { rotation: 0, svgOrigin: PIVOT });
-    gsap.set('#f8-cardR', { rotation: 0, svgOrigin: PIVOT });
-    gsap.set(['#f8-name', '#f8-plat', '#f8-url'], { opacity: 0 });
+    // frame 7 holds its picture to its last frame (2104), and this card is on screen from its first sample (t = 0): the fan is already open
+    // (cards at -12 and 12 degrees) and "Panoply" is fully settled. Only the platform row and the url are parked until beat 77.
+    gsap.set('#f8-cardL', { rotation: -12, svgOrigin: PIVOT });
+    gsap.set('#f8-cardR', { rotation: 12, svgOrigin: PIVOT });
+    gsap.set(['#f8-plat', '#f8-url'], { opacity: 0 });
 
     // an entrance starts at the beat (host time 0 is the hit) or one frame before it: expo.out on transform, opacity 0.5 to 1 in 0.08 s
     const land = (sel, b, from, dur, delay = 0) => {
@@ -56,10 +56,9 @@
       tl.fromTo(sel, { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, t);
     };
 
-    // BEAT 76.0, the final hit: the fan opens from its front card on the first frame, "Panoply" settles on the same hit (the settle ends 0.22 s after it)
-    tl.fromTo('#f8-cardL', { rotation: 0 }, { rotation: -20, duration: 0.5, ease: 'expo.out', svgOrigin: PIVOT, immediateRender: false }, 0.004);
-    tl.fromTo('#f8-cardR', { rotation: 0 }, { rotation: 20, duration: 0.5, ease: 'expo.out', svgOrigin: PIVOT, immediateRender: false }, 0.004);
-    land('#f8-name', 76, { y: 36 }, 0.22, 0.004);
+    // BEAT 76.0, the final hit: the fan, already visible, opens a little further; "Panoply" is already in place and does not move
+    tl.fromTo('#f8-cardL', { rotation: -12 }, { rotation: -20, duration: 0.5, ease: 'expo.out', svgOrigin: PIVOT, immediateRender: false }, 0.004);
+    tl.fromTo('#f8-cardR', { rotation: 12 }, { rotation: 20, duration: 0.5, ease: 'expo.out', svgOrigin: PIVOT, immediateRender: false }, 0.004);
 
     // beat 77: the platform row and the url (the only place the url appears in the film)
     land('#f8-plat', 77, { y: 24 }, 0.4);

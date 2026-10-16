@@ -22,6 +22,8 @@
     #f5-row1 { clip-path: inset(118px 306px 527px 28px); }
     #f5-row2 { clip-path: inset(172.6px 306px 481px 28px); }
     #f5-row3 { clip-path: inset(218.8px 306px 424px 28px); }
+    /* hides the empty-state text of the moved page until the last row has left (same colour as the page) */
+    #f5-mask { position: absolute; background: #fafafb; opacity: 0; }
     #f5-cursor { position: absolute; left: 0; top: 0; width: 40px; height: 40px; opacity: 0; transform-origin: 6px 4px; }
     #f5-cursor svg { width: 40px; height: 40px; display: block; overflow: visible; filter: drop-shadow(0 3px 5px rgba(0,0,0,.35)); }
     #f5-freed { position: absolute; left: 1450px; top: 84px; height: 64px; padding: 0 30px; display: flex; align-items: center; justify-content: center; gap: 14px; border-radius: 999px; background: #0b1b44; color: #fff;
@@ -40,6 +42,8 @@
             <img class="pl" id="f5-picked" src="assets/f5-diskmap/picked.png" alt="">
             <img class="pl" id="f5-review" src="assets/f5-diskmap/review.png" alt="">
             <img class="pl" id="f5-moved" src="assets/f5-diskmap/moved.png" alt="">
+            <div id="f5-mask"></div>
+            <img class="pl" id="f5-after" src="assets/f5-diskmap/after.png" alt="">
             <div class="f5-row" id="f5-row1"></div>
             <div class="f5-row" id="f5-row2"></div>
             <div class="f5-row" id="f5-row3"></div>
@@ -57,6 +61,8 @@
 
     /* the freed number is the real result of the render: "Moved 3 items, 27.8 GB, to the Trash" (moved.png). The three picks are the trip video, an installer and a browser cache folder */
     const FREED_GB = 27.8;
+    /* source rectangle (cropped plate pixels) of the empty-state sentence of the moved page, from the capture: x, y, w, h */
+    const MASK = [50, 255, 820, 50];
 
     const tl = gsap.timeline({ paused: true });
     /* a hit-frame entrance: transform expo-out, opacity 0.5 to 1 in 0.08 s, starting one frame before the beat */
@@ -79,23 +85,23 @@
 
     /* HIT beat 48: the real Disk map is on screen at full opacity from the first frame (hard cut from the Find card), and the push starts on that frame */
     move([ZS, 0, 150], 48, 0.8);
+    /* 49.0 the headline lands over the treemap, the strongest frames of the shot */
+    enter('#f5-title', 49, { y: 40 });
 
     /* 50.0 DRILL into Movies on the beat: the captured drilled view takes the beat frame (several coloured children), same camera */
     tl.set('#f5-drilled', { opacity: 1 }, at(50));
     tl.set('#f5-map', { opacity: 0 }, at(50));
 
-    /* 51.0 the trip video is ticked (checkbox and "1 selected, 18.4 GB"), the camera slides right to the header button */
+    /* 51.0 the trip video is ticked (checkbox on its block), same camera */
     tl.set('#f5-picked', { opacity: 1 }, at(51));
     tl.set('#f5-drilled', { opacity: 0 }, at(51));
-    move([ZS, 576, 0], 51, 0.55);
 
-    /* 52.0 the review: three rows with real paths; the camera comes back left to read them */
+    /* 52.0 the review: three rows with real paths, read at 1.45x for 0.7 beat, then the camera widens to the whole page (no crop through a panel) while the cursor travels */
     tl.set('#f5-review', { opacity: 1 }, at(52));
     tl.set('#f5-picked', { opacity: 0 }, at(52));
     move([ZS, 0, 200], 52, 0.5);
-    /* the rows are read for 0.7 beats, then the camera widens so the rows and the Move to Trash button are both in view while the cursor travels to it */
-    move([1.25, 0, 262], 52.7, 0.3);
-    const BTN = [1107, 1358], FROM = [1020, 1030];   /* source pixels (cropped plate): the button centre, and where the cursor comes from */
+    move([1, 0, 0], 52.7, 0.3);
+    const BTN = [1107, 1358], FROM = [900, 900];   /* source pixels (cropped plate): the Move to Trash button centre, and where the cursor comes from */
     const place = (xy) => ({ x: px(xy[0]) - 6, y: px(xy[1]) - 4 });
     tl.fromTo('#f5-cursor', Object.assign({ opacity: 0, scale: 1 }, place(FROM)), Object.assign({ opacity: 1, duration: 0.12, ease: 'none', immediateRender: false }, place(FROM)), at(52.55));
     tl.to('#f5-cursor', Object.assign({ duration: at(53) - at(52.7), ease: 'power2.inOut', immediateRender: false }, place(BTN)), at(52.7));
@@ -103,9 +109,14 @@
     tl.to('#f5-cursor', { scale: 1, duration: 0.1, ease: 'power1.out', immediateRender: false }, at(53));
     tl.to('#f5-cursor', { opacity: 0, duration: 0.15, ease: 'power1.in', immediateRender: false }, at(53) + 0.25);
 
-    /* 53.0 CLICK: the result takes the beat frame ("Moved 3 items, 27.8 GB, to the Trash") and the three real rows leave, one after another, sliding right and fading */
+    /* 53.0 CLICK: the result takes the beat frame ("Moved 3 items, 27.8 GB, to the Trash") and the three real rows leave, one after another, sliding right and fading.
+       The empty-state text of the page stays covered until the last row has gone, then fades in. */
     tl.set('#f5-moved', { opacity: 1 }, at(53));
     tl.set('#f5-review', { opacity: 0 }, at(53));
+    const M = MASK, mk = document.getElementById('f5-mask');
+    mk.style.cssText = `left:${px(M[0])}px;top:${px(M[1])}px;width:${px(M[2])}px;height:${px(M[3])}px`;
+    tl.set('#f5-mask', { opacity: 1 }, at(53));
+    tl.to('#f5-mask', { opacity: 0, duration: 0.2, ease: 'power1.out', immediateRender: false }, at(53) + 0.5);
     [1, 2, 3].forEach((n, i) => {
       const sel = '#f5-row' + n, t = at(53) + i * 0.06;
       tl.set(sel, { opacity: 1 }, at(53));
@@ -119,11 +130,11 @@
       document.getElementById('f5-freed-txt').textContent = st.v.toFixed(1) + ' GB freed';
     } }, at(53));
     tl.set('#f5-row1, #f5-row2, #f5-row3', { opacity: 0 }, at(53) + 0.45);
-    /* pull back to the whole page; this is the pose frame 6 shrinks into the fan */
-    move([1, 0, 0], 53.6, 0.7);
 
-    /* 54.0 the line lands */
-    enter('#f5-title', 54, { y: 40 });
+    /* 54.5 back to the map: the same home after the move (a real render of the app, 97 GB down to 69 GB); this is the page frame 6 shrinks into the fan */
+    tl.set('#f5-after', { opacity: 1 }, at(54.5));
+    tl.set('#f5-moved', { opacity: 0 }, at(54.5));
+    tl.set('#f5-mask', { opacity: 0 }, at(54.5));
 
     /* the pill leaves with the page still, before the cut */
     tl.to('#f5-freed', { opacity: 0, y: -14, duration: 0.2, ease: 'power3.in', immediateRender: false }, at(55));
