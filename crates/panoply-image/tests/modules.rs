@@ -351,6 +351,84 @@ fn an_unreachable_size_reports_the_floor() {
     assert!(e.contains("max_size"), "{e}");
 }
 
+/// A 2 MB photographic PNG: a smooth scene with sensor noise, far more than 5000 colors. Lossless PNG can
+/// never reach 50 KB for it, so a size target has to move to a lossy format and say so.
+fn photo_png(path: &std::path::Path, w: u32, h: u32) -> u64 {
+    let mut seed = 0x2545_F491_4F6C_DD1Du64;
+    let mut noise = move || {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed >> 59) as i32 - 16 // -16..=15
+    };
+    let mut rgb = Vec::with_capacity((w * h * 3) as usize);
+    for y in 0..h {
+        for x in 0..w {
+            let (fx, fy) = (x as f32 / w as f32, y as f32 / h as f32);
+            let base = [
+                110.0 + 90.0 * (fx * 3.1).sin() * (fy * 2.3).cos(),
+                120.0 + 80.0 * (fy * 4.0 + fx).sin(),
+                140.0 + 70.0 * ((fx + fy) * 2.7).cos(),
+            ];
+            for c in base {
+                rgb.push((c as i32 + noise()).clamp(0, 255) as u8);
+            }
+        }
+    }
+    let file = std::fs::File::create(path).unwrap();
+    let mut enc = png::Encoder::new(std::io::BufWriter::new(file), w, h);
+    enc.set_color(png::ColorType::Rgb);
+    enc.set_depth(png::BitDepth::Eight);
+    enc.write_header().unwrap().write_image_data(&rgb).unwrap();
+    len(path)
+}
+
+#[test]
+fn a_photo_saved_as_png_goes_under_a_size_as_jpg_and_says_so() {
+    let s = Scratch::new("photo-png");
+    let src = s.path().join("photo.png");
+    let before = photo_png(&src, 1400, 1000);
+    assert!(before > 1_500_000, "the fixture is only {before} bytes");
+    let out = Scratch::new("photo-png-out");
+    let (c, r) = run_ok(
+        "image.compress",
+        &src,
+        json!({"target": "under_size", "max_size": "50kb"}),
+        out.path(),
+    );
+    let n = len(&c);
+    assert!(n <= 50 * 1000, "{n} bytes is over 50 KB: {:?}", r.notes);
+    assert_eq!(c.extension().and_then(|e| e.to_str()), Some("jpg"), "{c:?}");
+    let notes = r.notes_text();
+    assert!(
+        notes.contains("PNG cannot get under") && notes.contains("changed format from PNG to JPEG"),
+        "the change of format must be said: {:?}",
+        r.notes
+    );
+    assert!(src.exists(), "the original stays");
+}
+
+#[test]
+fn a_photo_png_with_the_format_asked_for_stays_a_png_and_reports_the_floor() {
+    let s = Scratch::new("photo-png-keep");
+    let src = s.path().join("photo.png");
+    photo_png(&src, 700, 500);
+    let out = Scratch::new("photo-png-keep-out");
+    let e = run(
+        "image.compress",
+        &src,
+        json!({"target": "under_size", "max_size": "10kb", "format": "png"}),
+        out.path(),
+    )
+    .err()
+    .unwrap();
+    assert!(
+        e.contains("cannot get under 10 KB") && e.contains("smallest it gets"),
+        "{e}"
+    );
+    assert!(out.files().is_empty());
+}
+
 #[test]
 fn quality_target_and_format_shootout() {
     let Some(src) = corpus("exif-orientation/landscape-1.jpg") else {
