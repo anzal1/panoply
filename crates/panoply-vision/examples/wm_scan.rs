@@ -27,7 +27,7 @@ fn main() {
             }
         };
         let faces = panoply_vision::faces::find(&src.rgb, src.w, src.h);
-        let d = detect_with(&src.rgb, src.w, src.h, Search::Anywhere, &faces);
+        let d = detect_with(&src.rgb, src.w, src.h, Search::Anywhere, || faces.clone());
         if d.regions.is_empty() {
             println!("{name}\tnone ({} spared, {} faces)", d.spared, faces.len());
         }

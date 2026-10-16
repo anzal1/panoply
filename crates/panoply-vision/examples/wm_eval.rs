@@ -54,7 +54,7 @@ fn main() {
             .collect();
         let t = Instant::now();
         let faces = panoply_vision::faces::find(&src.rgb, src.w, src.h);
-        let d = detect_with(&src.rgb, src.w, src.h, search, &faces);
+        let d = detect_with(&src.rgb, src.w, src.h, search, || faces.clone());
         let ms = t.elapsed().as_millis();
         let near = dilate(&gtm, src.w, src.h, (src.h / 100).max(3));
         let gt_px = gtm.iter().filter(|&&v| v != 0).count().max(1);
@@ -112,7 +112,7 @@ fn main() {
     for c in files(&dir.join("clean"), "jpg") {
         let src = load_source(&io, &c, Animation::First, 24_000_000).unwrap();
         let faces = panoply_vision::faces::find(&src.rgb, src.w, src.h);
-        let d = detect_with(&src.rgb, src.w, src.h, search, &faces);
+        let d = detect_with(&src.rgb, src.w, src.h, search, || faces.clone());
         let det_px = d.mask.iter().filter(|&&v| v != 0).count();
         println!(
             "{}\t{:.3}% detected, {} regions",

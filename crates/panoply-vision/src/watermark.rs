@@ -631,7 +631,7 @@ fn blobs_at_scale(
 
 /// Finds watermark-like marks in an 8 bit sRGB picture.
 pub fn detect(rgb: &[u8], w: usize, h: usize, search: Search) -> Detection {
-    detect_with(rgb, w, h, search, &[])
+    detect_with(rgb, w, h, search, Vec::new)
 }
 
 /// The head around a detected face box: the box grown for hair above, and a little on the sides
@@ -665,10 +665,17 @@ fn covered_by(r: &Rect, o: &Rect) -> f32 {
 }
 
 /// Like [`detect`], with the faces of the picture (full resolution boxes, as the face engines
-/// give them). A candidate mostly on a head is not a mark, and where a mark crosses a head the
+/// give them). `faces` is only called when there is a candidate to check, so a picture with
+/// nothing in it never pays for a face search. A candidate mostly on a head is not a mark, and where a mark crosses a head the
 /// head is cut out of the mask, so a face is never filled in. The caller reads
 /// [`Detection::spared`] to say so.
-pub fn detect_with(rgb: &[u8], w: usize, h: usize, search: Search, faces: &[Rect]) -> Detection {
+pub fn detect_with(
+    rgb: &[u8],
+    w: usize,
+    h: usize,
+    search: Search,
+    faces: impl FnOnce() -> Vec<Rect>,
+) -> Detection {
     // Work on a reduced copy.
     let f = w.max(h).div_ceil(ANALYSIS_LONG).max(1);
     let lum: Vec<f32> = rgb
@@ -777,6 +784,11 @@ pub fn detect_with(rgb: &[u8], w: usize, h: usize, search: Search, faces: &[Rect
 
     // A candidate that sits mostly on a head is skin, hair, teeth or a collar, not an overlay. It
     // is dropped before the best of each group is picked, so it cannot hide a real mark beside it.
+    let faces = if blobs.is_empty() {
+        Vec::new()
+    } else {
+        faces()
+    };
     let heads: Vec<Rect> = faces.iter().map(|f| head_box(f, w, h)).collect();
     let heads_lo: Vec<Rect> = heads
         .iter()
@@ -946,11 +958,11 @@ fn one(io: &dyn VisionIo, path: &std::path::Path, opts: &Opts) -> Result<Option<
     let name = src.name.clone();
     let (w, h) = (src.w, src.h);
     // Faces are found first and never filled in: not by the detector, not by a box typed by hand.
-    let faces = crate::faces::find(&src.rgb, w, h);
     let mut spared = 0usize;
     let (regions, mask) = match opts.str("rect") {
         Some(t) => {
             let rects = parse_rects(t, w, h)?;
+            let faces = crate::faces::find(&src.rgb, w, h);
             if rects.iter().any(|r| {
                 faces
                     .iter()
@@ -977,7 +989,9 @@ fn one(io: &dyn VisionIo, path: &std::path::Path, opts: &Opts) -> Result<Option<
             (regions, m)
         }
         None => {
-            let d = detect_with(&src.rgb, w, h, search, &faces);
+            let d = detect_with(&src.rgb, w, h, search, || {
+                crate::faces::find(&src.rgb, w, h)
+            });
             spared = d.spared;
             (d.regions, d.mask)
         }
@@ -1284,7 +1298,7 @@ mod tests {
             !bare.regions.is_empty(),
             "the test picture needs a candidate"
         );
-        let d = detect_with(&img, w, h, Search::Anywhere, &[face]);
+        let d = detect_with(&img, w, h, Search::Anywhere, || vec![face]);
         assert!(d.regions.is_empty(), "{:?}", d.regions);
         assert!(d.mask.iter().all(|&v| v == 0));
         assert!(d.spared >= 1);
@@ -1296,7 +1310,7 @@ mod tests {
         let (mut img, face) = portrait(w, h);
         // A stamp in the corner, far from the head, and a long row across the head and beyond.
         stamp_letters(&mut img, w, 470, 360, 10, 0.55);
-        let d = detect_with(&img, w, h, Search::Anywhere, &[face]);
+        let d = detect_with(&img, w, h, Search::Anywhere, || vec![face]);
         assert!(
             d.regions.iter().any(|r| r.rect.y > 330),
             "the corner mark is still found: {:?}",
