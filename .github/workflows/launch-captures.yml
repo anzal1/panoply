@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       modes:
-        description: "Self-check modes to run, space separated (frames, review)"
+        description: "Self-check modes to run, space separated (frames, review, find)"
         type: string
         default: "frames"
 
@@ -63,6 +63,9 @@ jobs:
                   mkdir -p "captures/frames-$a"
                   perl -e 'alarm 900; exec @ARGV' ./target/release/panoply-desktop --selfcheck-frames --out "captures/frames-$a" --appearance "$a"
                 done ;;
+              find)
+                mkdir -p captures/find
+                perl -e 'alarm 900; exec @ARGV' ./target/release/panoply-desktop --selfcheck-find --out captures/find ;;
               review)
                 perl -e 'alarm 900; exec @ARGV' ./target/release/panoply-desktop --selfcheck-review --out captures/review ;;
               *) echo "unknown mode $mode"; exit 1 ;;

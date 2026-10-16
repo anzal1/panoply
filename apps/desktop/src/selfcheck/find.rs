@@ -195,6 +195,8 @@ pub(crate) fn run_find(out: PathBuf) {
                     d.change(app_win, |a, window, cx| a.find_show(&q, window, cx));
                     d.draw(app_win);
                     keystroke_ms.push(t0.elapsed().as_secs_f64() * 1000.0);
+                    // One plate per keystroke, for the launch film (docs/launch): film-find-type-1 .. 6.
+                    let _ = d.png(app_win, &png(&format!("film-find-type-{}", typed.chars().count())));
                     d.cx.background_executor()
                         .timer(Duration::from_millis(15))
                         .await;
