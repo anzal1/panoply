@@ -22,7 +22,7 @@ Severity: **P0** broken or data loss, **P1** clearly below the bar, **P2** polis
 | | Found | Fixed on this branch | Open |
 |---|---:|---:|---:|
 | P0 | 0 | 0 | 0 |
-| P1 | 14 | 10 | 4 |
+| P1 | 15 | 12 | 3 |
 | P2 | 32 | 11 | 21 |
 
 No P0: nothing crashed, hung, lost an original or left a half-written file. A job that failed left no output behind, also on a full disk, and no original was touched in any run.
@@ -86,7 +86,7 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 - **Happened.** PDF: ": No space left on device (os error 28)" (a leading colon, no subject, an error number). Pictures: "Could not write /path/photo (compressed).jpg (Permission denied (os error 13))". No partial file was left behind in either case, which is right.
 - **Fix.** `panoply_core::naming::plain_io` turns the error kind into words ("the disk is full", "Panoply does not have permission to write there") and drops the "(os error N)" tail; the picture, ID and media writers and the PDF error mapping use it. Unit test `system_wording_and_codes_never_reach_a_person`.
 
-### UP-07 The privacy line says "Uses the network" on tools that, on this computer, never do (open)
+### UP-07 The privacy line says "Uses the network" on tools that, on this computer, never do (open, picture tools done under UP-47)
 
 - **Tools.** 19 of the 31: every media tool (including Video and audio info, which only reads a file), OCR, Compress PDF and PDF to images, the AI picture tools, Passport photo.
 - **Steps.** Open Video and audio info on a Mac that has `ffmpeg`, or Passport photo on a Mac.
@@ -121,13 +121,14 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 - **Cause.** Not the encoder. With `measure_quality=false` the same job peaks at 709 MB (4K) and 243 MB (1080p); the 3 GB and 0.6 GB on top are the quality check, which ran libvmaf with up to eight threads on frames at the source's own size.
 - **Fix.** `apps`-independent, in `crates/panoply-media/src/ops/quality.rs`: both pictures are compared at no more than 1080p (the size VMAF's model is made for) with four threads. Test `the_comparison_never_runs_above_1080p`. Re-measured with the fix: 4K clip 3,584 to 1,370 MB, 1080p H264 861 to 485 MB, 10-bit HDR 1,081 to 650 MB, 1080p WebM 886 to 432 MB (the encoder alone is 709 MB for the 4K clip, 243 MB for 1080p).
 
-### UP-11 The "Compress image" similarity floor lets smooth gradients block (open)
+### UP-11 The "Compress image" similarity floor lets smooth gradients block (fixed)
 
 - **Tool.** Compress image, default.
 - **Steps.** `day-earth-smiled.jpg` (9000 by 3500). Result: 5.0 MB to 268 KB at quality 21, similarity 0.979.
 - **Expected.** "Clean" at the size a person would zoom to.
 - **Happened.** At fit-to-screen it is indistinguishable. At 100% the smooth blue sky shows 8 by 8 blocking and a banded halo. The similarity score (SSIM on luminance) passes at 0.979 because the picture is mostly black.
-- **Direction.** A second gate on smooth regions (a block-edge or banding measure) before accepting a very low quality, or a floor of about 40.
+- **Cause.** Nothing stops the quality search at a floor: it went down to 10 as long as the score held. Without a floor `day-earth-smiled.jpg` settles at quality 21, `ultra-hdr.jpg` at 18, and the 28 KB synthetic pictures at 10 to 16.
+- **Fix.** `QUALITY_FLOOR` (40) and `quality_floor` in `crates/panoply-image/src/ops/search.rs`, used by both JPEG searches (`compress.rs` in memory, `big.rs` in strips). A source saved below 40 is never pushed above itself (the floor is capped by the search ceiling), and a similarity asked for by name under 0.97 is a request for a smaller file and has no floor. Tests `the_floor_holds_at_the_default_and_never_passes_the_ceiling` and `the_default_target_never_goes_under_the_quality_floor`.
 - **Screenshot.** `user-pass/compress-image-blocking-100pct.jpg` (original left, result right, bottom row at 100%).
 
 ### UP-38 Remove watermark (auto) leaves a clear watermark and edits the subject's mouth (open)
@@ -138,6 +139,14 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 - **Happened.** "found text at the top (17% x 5% of the picture) ... 1 mark cleaned (0.48% of the picture changed)". The changed area is the subject's chin and mouth (pixels 500 to 800, 200 to 400); the watermark is untouched. The card is the green success state. Naming the area by hand (`--rect`) removes it but leaves a garbled patch, see UP-39.
 - **Direction.** Treat a detection on a face (the face detector is already in the app) as not a watermark, report "no watermark found" when the best candidate is small and sits on skin, and run the detector on the large low-contrast mark class before the "text at the top" class. A test picture with a watermark belongs in the corpus; the beta smoke matrix has none, which is why this was not seen before.
 - **Screenshot.** `user-pass/remove-watermark-auto-before-after.jpg` (original left, result right), `user-pass/remove-watermark-rect-and-auto-crops.jpg` (top original, middle auto, bottom by hand).
+
+### UP-47 The Modules page warns "Uses the network" on tools that download a model once (fixed)
+
+- **Tools.** Passport photo, Erase object, Remove background, Remove watermark (and Upscale and the two OCR tools, which list models the same way).
+- **Steps.** Open Modules.
+- **Expected.** What these tools really do: fetch a model once after a yes, and no file ever leaves the computer.
+- **Happened.** The row said "Uses the network" and carried an orange "Network" badge, the colour of a warning, so a person would think the photo they cut out is uploaded.
+- **Fix.** `Capabilities::network_use` in `crates/panoply-manifest/src/schema.rs` reads the manifest: network access plus a listed model is `ModelDownload`. The Modules page, the panel header chip and the panel note read it through `network_words` in `apps/desktop/src/ui/widgets.rs`: "Downloads a model once" and a neutral "Model download" badge, "Your files never leave this computer." in the note, "{tool} downloads a model once and keeps it on this computer." on the consent sheet, and "Model download:" in front of the CLI's line. The video and PDF engine downloads are not models and keep "Uses the network" (see UP-07). Tests `the_network_is_told_by_the_models_a_module_lists`, `the_shipped_modules_that_fetch_a_model_are_model_downloads` and `the_consent_sheet_and_the_header_say_the_same_thing_about_a_model`.
 
 ### UP-44 The command bar answers "No tools match" to natural requests (fixed)
 
@@ -190,7 +199,7 @@ What held up, for the record: Remove background (hair, flag patch and collar edg
 | UP-39 | Erase object, Remove watermark | A 500 by 400 pixel fill (on a 2400 by 3000 picture) shows a hard rectangular seam and stretched texture; the fill model works at 512 and the area is scaled up. Small areas on plain backgrounds are fine. | Open |
 | UP-40 | Remove background | A small piece of the old background survives in the gap between the arm and the torso (white and orange, lower left of the cutout). Edges, hair and the flag patch are otherwise clean. | Open |
 | UP-41 | Upscale | 4x is far better than bicubic but the skin is smooth and painterly and the flag's stars melt into a pattern. Fine for a profile picture, not for a print. The card does not say it is a model's guess. | Open |
-| UP-42 | Modules | Network tools show a "Network" pill and the words "Uses the network" in the same row; the pill adds nothing and the page is crowded on a narrow window. | Open |
+| UP-42 | Modules | Network tools show a "Network" pill and the words "Uses the network" in the same row; the pill adds nothing and the page is crowded on a narrow window. | Open (the model tools now read "Model download", see UP-47) |
 | UP-43 | Compress, Convert, Resize and the other picture tools | An animated GIF or WebP stops with "Choose \"first frame\" (animation=first) to keep one picture ... Panoply does not write animated files yet." That is the command-line spelling in an app window, the option is under More options, and KNOWN-LIMITATIONS says animated inputs "use the first frame and say so". One of the two should change. | Open |
 | UP-45 | Command bar | With an MP3 on the bar the first suggestion is "Compress video", then "Convert video or audio". The tool names say video for sound files. | Open |
 

@@ -296,5 +296,6 @@ fn a_module_that_downloads_says_so_before_it_runs() {
     )
     .unwrap();
     let r = sb.run(&["cutout", pic.to_str().unwrap(), "--engine", "model"]);
-    assert!(r.err.contains("Uses the network:"), "{}", r.err);
+    assert!(r.err.contains("Model download:"), "{}", r.err);
+    assert!(!r.err.contains("Uses the network"), "{}", r.err);
 }

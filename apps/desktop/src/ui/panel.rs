@@ -20,8 +20,9 @@ use super::Hub;
 use super::theme::{Theme, is_dark, radius, sp, ty};
 use super::widgets::{
     ButtonKind, Ramp, button, button_ex, caption, card, category_tile, cmd, editor_style,
-    file_category, file_icon, fits_segmented, focus_ring, icon, icon_button, keycap, note, notice,
-    popup_button, popup_menu, progress_bar, rule, scroll_thumb, segmented, switch, tip,
+    file_category, file_icon, fits_segmented, focus_ring, icon, icon_button, keycap, network_words,
+    note, notice, popup_button, popup_menu, progress_bar, rule, scroll_thumb, segmented, switch,
+    tip,
 };
 use crate::catalog::Tool;
 use crate::form::{Control, Field, Form, display, number};
@@ -1239,24 +1240,21 @@ impl ToolPanel {
     }
 
     fn header(&self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
-        let network = self.tool.manifest.capabilities.network;
-        let (status, status_icon) = if network {
-            ("Uses the network", "radio")
-        } else {
-            ("Processed on this computer", "lock")
-        };
-        let full = if network {
-            format!(
-                "Uses the network: {}",
-                self.tool
-                    .manifest
-                    .capabilities
-                    .network_reason
-                    .clone()
-                    .unwrap_or_default()
-            )
-        } else {
-            "Processed on this computer. Nothing is uploaded.".to_string()
+        let reason = self
+            .tool
+            .manifest
+            .capabilities
+            .network_reason
+            .clone()
+            .unwrap_or_default();
+        let (status, status_icon, full) = match network_words(&self.tool.manifest.capabilities) {
+            Some(n) if n.warn => (n.status, n.icon, format!("Uses the network: {reason}")),
+            Some(n) => (n.status, n.icon, n.sentence(&reason)),
+            None => (
+                "Processed on this computer",
+                "lock",
+                "Processed on this computer. Nothing is uploaded.".to_string(),
+            ),
         };
         div()
             .flex()
@@ -1394,7 +1392,7 @@ impl ToolPanel {
             .children(more_views);
         let blocker = self.blocker();
         let estimate = self.estimate.clone();
-        let network = self.tool.manifest.capabilities.network;
+        let network = network_words(&self.tool.manifest.capabilities);
         let reason = self
             .tool
             .manifest
@@ -1420,15 +1418,11 @@ impl ToolPanel {
                         .aria_label(format!("Estimate: {e}")),
                 )
             })
-            .when(network, |d| {
+            .when_some(network, |d, n| {
                 d.child(note(
-                    "radio",
-                    t.warn,
-                    if reason.is_empty() {
-                        "Uses the network.".to_string()
-                    } else {
-                        format!("Uses the network. {reason}")
-                    },
+                    n.icon,
+                    if n.warn { t.warn } else { t.ink2 },
+                    n.sentence(&reason),
                     t,
                 ))
             })
@@ -1784,10 +1778,12 @@ impl ToolPanel {
                                     .child(format!("Download the {}?", info.name)),
                             ),
                     )
-                    .child(div().ramp(ty::BODY).text_color(t.ink2).child(format!(
-                        "{} needs it to work. It is fetched once and kept on this computer.",
-                        self.tool.name
-                    )))
+                    .child(
+                        div()
+                            .ramp(ty::BODY)
+                            .text_color(t.ink2)
+                            .child(consent_lead(&self.tool.name, info.kind)),
+                    )
                     .child(card(t).children(facts.into_iter().enumerate().map(
                         |(n, (label, value))| {
                             div()
@@ -2162,6 +2158,19 @@ pub(crate) fn result_notes(notes: &[String], headline: &str) -> (Vec<(String, bo
     (out, hidden)
 }
 
+/// The sentence under the consent sheet's title. A model reads like the panel header and the Modules
+/// page say it ("Downloads a model once"); an engine is a program the tool needs.
+fn consent_lead(tool: &str, kind: panoply_core::assets::AssetKind) -> String {
+    match kind {
+        panoply_core::assets::AssetKind::Model => {
+            format!("{tool} downloads a model once and keeps it on this computer.")
+        }
+        panoply_core::assets::AssetKind::Engine => {
+            format!("{tool} needs it to work. It is fetched once and kept on this computer.")
+        }
+    }
+}
+
 #[cfg(test)]
 mod result_notes_tests {
     use super::result_notes;
@@ -2183,5 +2192,43 @@ mod result_notes_tests {
         assert!(shown[2].0.contains("warn: Neutral") && shown[2].1);
         assert!(shown.len() >= 5, "room is left for the other lines");
         assert_eq!(shown.len() + hidden, 13);
+    }
+
+    #[test]
+    fn the_consent_sheet_and_the_header_say_the_same_thing_about_a_model() {
+        use panoply_core::assets::AssetKind;
+        let caps = panoply_manifest::Capabilities {
+            network: true,
+            network_reason: Some("Downloads a model once, after you say yes.".into()),
+            models: vec![panoply_manifest::ModelSpec {
+                id: "m".into(),
+                size_mb: 28,
+                license: "MIT".into(),
+            }],
+            ..Default::default()
+        };
+        let n = super::network_words(&caps).unwrap();
+        assert_eq!(n.status, "Downloads a model once");
+        assert_eq!(n.meta, "Downloads a model once");
+        assert_eq!(n.badge, "Model download");
+        assert!(!n.warn, "a model download is not a warning");
+        assert!(
+            super::consent_lead("Erase object", AssetKind::Model)
+                .contains(n.status.to_lowercase().as_str())
+        );
+        assert!(
+            n.sentence("Downloads a model once, after you say yes.")
+                .ends_with("Your files never leave this computer.")
+        );
+        // An engine download and a plain network user keep the network wording.
+        let mut c = caps.clone();
+        c.models.clear();
+        let n = super::network_words(&c).unwrap();
+        assert_eq!(
+            (n.badge, n.meta, n.warn),
+            ("Network", "Uses the network", true)
+        );
+        c.network = false;
+        assert!(super::network_words(&c).is_none());
     }
 }

@@ -20,7 +20,8 @@ use super::panel::{PanelEvent, ToolPanel};
 use super::theme::{Theme, is_dark, radius, sp, tile_colors, ty};
 use super::widgets::{
     ButtonKind, Ramp, badge, button, card, category_tile, chip, cmd, editor_style, file_icon,
-    focus_border, heading, icon, icon_button, keycap, link, notice, rule, scroll_thumb, tip,
+    focus_border, heading, icon, icon_button, keycap, link, network_words, notice, rule,
+    scroll_thumb, tip,
 };
 use crate::catalog::{Category, Source};
 use crate::history::Entry;
@@ -1372,10 +1373,10 @@ impl AppView {
             .skip(first)
             .take(end - first)
             .map(|(i, tool)| {
-                let network = tool.manifest.capabilities.network;
+                let network = network_words(&tool.manifest.capabilities);
                 let community = matches!(tool.source, Source::Community(_));
-                let perms = if network {
-                    "Uses the network"
+                let perms = if let Some(n) = &network {
+                    n.meta
                 } else if tool.takes_files() {
                     "Chosen files only"
                 } else {
@@ -1397,7 +1398,9 @@ impl AppView {
                         .flex_row()
                         .items_center()
                         .gap(px(sp::S))
-                        .when(network, |d| d.child(badge("Network", Some(t.warn), t)))
+                        .when_some(network, |d, n| {
+                            d.child(badge(n.badge, n.warn.then_some(t.warn), t))
+                        })
                         .child(badge(
                             if community {
                                 "Community, sandboxed"
