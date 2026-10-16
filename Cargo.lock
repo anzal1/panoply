@@ -5252,6 +5252,7 @@ dependencies = [
  "panoply-convert",
  "panoply-core",
  "panoply-host",
+ "panoply-image",
  "panoply-manifest",
  "panoply-wasm",
  "png 0.18.1",

@@ -6,7 +6,8 @@
 //! has any code in this file.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use futures::StreamExt;
@@ -31,6 +32,7 @@ use crate::jobs::{
     self, ConsentReply, Done, Failure, JobMsg, JobReport, JobRequest, RunningJob, UndoReport,
 };
 use crate::profile::{FileProfile, expand_paths};
+use crate::result_view::{self, THUMB_MAX};
 use crate::units::{format_bytes, now_secs, size_input_text};
 
 /// The first segment of a choice that has no default.
@@ -70,6 +72,43 @@ enum Phase {
     Failed(Failure),
 }
 
+/// A preview of one picture, decoded small and ready for GPUI to draw.
+#[derive(Clone)]
+struct Pic {
+    image: Arc<RenderImage>,
+    w: u32,
+    h: u32,
+    /// True when some pixel is see-through, so the picture sits on a checker.
+    alpha: bool,
+}
+
+/// The pictures on a result card: what was made, and the original it can be compared with.
+#[derive(Clone)]
+struct ResultPics {
+    after: Pic,
+    before: Option<Pic>,
+}
+
+/// Decode a small preview of a picture file, for the result card. Runs on a worker thread; a file
+/// that is not a picture, or that cannot be read, gives nothing and the card has no thumbnail.
+fn load_pic(path: &Path) -> Option<Pic> {
+    let file = std::fs::File::open(path).ok()?;
+    let ext = path.extension().and_then(|e| e.to_str()).map(str::to_owned);
+    let decoded = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        panoply_image::preview::preview(file, ext.as_deref(), result_view::PREVIEW_SIDE, false)
+    }))
+    .ok()?
+    .ok()?;
+    let (bgra, alpha) = result_view::to_bgra_premultiplied(&decoded.rgba);
+    let buffer = image::RgbaImage::from_raw(decoded.width, decoded.height, bgra)?;
+    Some(Pic {
+        image: Arc::new(RenderImage::new(vec![image::Frame::new(buffer)])),
+        w: decoded.width,
+        h: decoded.height,
+        alpha,
+    })
+}
+
 /// The panel for one tool.
 pub(crate) struct ToolPanel {
     hub: Hub,
@@ -94,6 +133,15 @@ pub(crate) struct ToolPanel {
     declined: bool,
     /// True after the person cancelled a run, so the options say that nothing was written.
     cancelled_note: bool,
+    /// The thumbnail on the result card, once it is decoded (see `start_pics`).
+    pics: Option<ResultPics>,
+    /// True while the preview is being decoded, so the card keeps its room and does not jump.
+    pics_pending: bool,
+    /// Which run the preview belongs to; an answer for an older run is dropped.
+    pics_token: u64,
+    /// The Before side of the compare toggle is showing.
+    show_before: bool,
+    compare_focus: FocusHandle,
     _subs: Vec<Subscription>,
 }
 
@@ -217,6 +265,11 @@ impl ToolPanel {
             phase: Phase::Options,
             declined: false,
             cancelled_note: false,
+            pics: None,
+            pics_pending: false,
+            pics_token: 0,
+            show_before: false,
+            compare_focus: cx.focus_handle().tab_stop(true),
             job: None,
             _subs: subs,
         };
@@ -258,7 +311,8 @@ impl ToolPanel {
 
     #[cfg(feature = "snapshot")]
     pub(crate) fn is_done(&self) -> bool {
-        matches!(self.phase, Phase::Done { .. })
+        // The card counts as done once its thumbnail is in, so a headless picture of it has one.
+        matches!(self.phase, Phase::Done { .. }) && !self.pics_pending
     }
 
     #[cfg(feature = "snapshot")]
@@ -605,7 +659,11 @@ impl ToolPanel {
                 self.job = None;
                 match report.result.clone() {
                     Ok(done) => {
-                        let headline = done.headline(report.request.inputs.len());
+                        let headline = result_view::card_title(
+                            &done,
+                            report.request.inputs.len(),
+                            self.size_matters(),
+                        );
                         self.hub.record(
                             Entry {
                                 at: now_secs(),
@@ -623,6 +681,7 @@ impl ToolPanel {
                             done,
                             undone: None,
                         };
+                        self.start_pics(cx);
                         cx.emit(PanelEvent::Ran);
                     }
                     Err(f) => {
@@ -673,8 +732,75 @@ impl ToolPanel {
         .detach();
     }
 
+    /// True when this tool's result card shows the Before and After size tiles (see
+    /// [`result_view::size_is_the_goal`]).
+    fn size_matters(&self) -> bool {
+        let has_size_option = self
+            .form
+            .fields()
+            .iter()
+            .any(|f| matches!(f.control, Control::Size));
+        result_view::size_is_the_goal(&self.tool.id, has_size_option)
+    }
+
+    /// Decode the thumbnail of the first output (and the original, for the picture tools to compare
+    /// with) off the UI thread. The card draws without it and fills in when it arrives.
+    fn start_pics(&mut self, cx: &mut Context<Self>) {
+        self.pics = None;
+        self.show_before = false;
+        self.pics_token += 1;
+        let Phase::Done { done, report, .. } = &self.phase else {
+            return;
+        };
+        let Some(after) = result_view::thumb_source(&done.outputs).map(Path::to_path_buf) else {
+            self.pics_pending = false;
+            return;
+        };
+        let before = result_view::compare_source(&self.tool.id, &report.request.inputs)
+            .map(Path::to_path_buf);
+        self.pics_pending = true;
+        let token = self.pics_token;
+        cx.spawn(async move |this, cx| {
+            let loaded = cx
+                .background_executor()
+                .spawn(async move {
+                    let after = load_pic(&after)?;
+                    Some(ResultPics {
+                        after,
+                        before: before.and_then(|b| load_pic(&b)),
+                    })
+                })
+                .await;
+            let _ = this.update(cx, |p, cx| {
+                if p.pics_token == token {
+                    p.pics = loaded;
+                    p.pics_pending = false;
+                    cx.notify();
+                }
+            });
+        })
+        .detach();
+    }
+
+    /// Show the original or the result on the compare toggle.
+    fn set_before(&mut self, before: bool, cx: &mut Context<Self>) {
+        if self.pics.as_ref().is_some_and(|p| p.before.is_some()) && self.show_before != before {
+            self.show_before = before;
+            cx.notify();
+        }
+    }
+
     /// Back to the options with everything as it was.
     fn again(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.pics_token += 1;
+        self.pics_pending = false;
+        if let Some(p) = self.pics.take() {
+            // Give the picture memory back to the atlas.
+            let _ = window.drop_image(p.after.image);
+            if let Some(b) = p.before {
+                let _ = window.drop_image(b.image);
+            }
+        }
         self.phase = Phase::Options;
         self.focus_default(window, cx);
         cx.notify();
@@ -762,6 +888,8 @@ impl ToolPanel {
                 "enter" if m.secondary() => self.chain(cx),
                 "enter" => self.open_first(cx),
                 "r" if m.secondary() => self.reveal(cx),
+                "left" => self.set_before(true, cx),
+                "right" => self.set_before(false, cx),
                 "escape" => cx.emit(PanelEvent::Close),
                 _ => {}
             },
@@ -1827,7 +1955,106 @@ impl ToolPanel {
             .into_any_element()
     }
 
-    fn done_body(&self, t: Theme) -> AnyElement {
+    /// The picture of the result: a thumbnail of the first output on a quiet ground, and for the
+    /// picture tools a Before and After toggle. A see-through picture sits on a checker so the
+    /// transparency can be seen. Nothing for outputs that are not pictures.
+    fn result_preview(&self, t: Theme, cx: &mut Context<Self>) -> Option<AnyElement> {
+        let Phase::Done { done, .. } = &self.phase else {
+            return None;
+        };
+        result_view::thumb_source(&done.outputs)?;
+        if self.pics.is_none() && !self.pics_pending {
+            return None;
+        }
+        let well_h = THUMB_MAX.1 + 2.0 * sp::L;
+        let name = done
+            .outputs
+            .first()
+            .and_then(|p| p.file_name())
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let showing_before =
+            self.show_before && self.pics.as_ref().is_some_and(|p| p.before.is_some());
+        let stage = self.pics.as_ref().map(|p| {
+            let pic = if showing_before {
+                p.before.as_ref().unwrap_or(&p.after)
+            } else {
+                &p.after
+            };
+            let (w, h) = result_view::fit_within(pic.w, pic.h, THUMB_MAX);
+            let label = if showing_before {
+                format!("Original of {name}")
+            } else {
+                format!("Preview of {name}")
+            };
+            div()
+                .id("result-preview")
+                .role(Role::Image)
+                .aria_label(label)
+                .relative()
+                .flex_none()
+                .w(px(w))
+                .h(px(h))
+                .rounded(px(radius::ROW))
+                .overflow_hidden()
+                .border_1()
+                .border_color(t.hair)
+                .when(pic.alpha, |d| d.child(checker(t.dark)))
+                .child(
+                    img(pic.image.clone())
+                        .size_full()
+                        .object_fit(ObjectFit::Contain),
+                )
+        });
+        let can_compare = self.pics.as_ref().is_some_and(|p| p.before.is_some());
+        let this = cx.entity().downgrade();
+        Some(
+            div()
+                .flex()
+                .flex_col()
+                .items_center()
+                .gap(px(sp::M))
+                .child(
+                    div()
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .w_full()
+                        .h(px(well_h))
+                        .rounded(px(radius::CARD))
+                        .bg(t.fill8)
+                        .children(stage),
+                )
+                .when(can_compare, |d| {
+                    d.child(
+                        div().w(px(200.)).child(
+                            segmented(
+                                "result-compare".to_string(),
+                                "Compare with the original",
+                                &["Before".to_string(), "After".to_string()],
+                                Some(if showing_before { "Before" } else { "After" }),
+                                &self.compare_focus,
+                                t,
+                                move |v, _, cx| {
+                                    this.update(cx, |p, cx| p.set_before(v == "Before", cx))
+                                        .ok();
+                                },
+                            )
+                            .on_key_down(cx.listener(
+                                |p, ev: &KeyDownEvent, _, cx| match ev.keystroke.key.as_str() {
+                                    "left" => p.set_before(true, cx),
+                                    "right" => p.set_before(false, cx),
+                                    _ => {}
+                                },
+                            )),
+                        ),
+                    )
+                })
+                .into_any_element(),
+        )
+    }
+
+    fn done_body(&self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
         let Phase::Done {
             report,
             done,
@@ -1838,6 +2065,7 @@ impl ToolPanel {
         };
         let inputs = report.request.inputs.len();
         let headline = done.headline(inputs);
+        let size_matters = self.size_matters();
         let fully_undone = undone.as_ref().is_some_and(|u| u.is_complete());
         let tile = |label: &str, value: String, accent: bool| {
             card(t)
@@ -1872,7 +2100,17 @@ impl ToolPanel {
                 .cloned()
                 .unwrap_or_else(|| "Done".to_string())
         } else {
+            result_view::card_title(done, inputs, size_matters)
+        };
+        let aria_title = if text_answer {
             headline.clone()
+        } else {
+            title_line.clone()
+        };
+        let preview = if fully_undone {
+            None
+        } else {
+            self.result_preview(t, cx)
         };
         let (shown_notes, hidden_notes) = if text_answer {
             result_notes(
@@ -1890,7 +2128,7 @@ impl ToolPanel {
         let card_body = div()
             .id("result-card")
             .role(Role::Group)
-            .aria_label(format!("Result: {headline}"))
+            .aria_label(format!("Result: {aria_title}"))
             .flex()
             .flex_col()
             .size_full()
@@ -1929,22 +2167,26 @@ impl ToolPanel {
                         .child(headline.clone()),
                 )
             })
-            .when_some(done.after_bytes.filter(|_| !fully_undone), |d, after| {
-                d.child(
-                    div()
-                        .flex()
-                        .flex_row()
-                        .items_center()
-                        .gap(px(sp::M))
-                        .child(tile("Before", format_bytes(done.before_bytes), false))
-                        .child(icon("arrow-right", 16., t.ink3))
-                        .child(tile(
-                            "After",
-                            format_bytes(after),
-                            after < done.before_bytes,
-                        )),
-                )
-            })
+            .children(preview)
+            .when_some(
+                done.after_bytes.filter(|_| !fully_undone && size_matters),
+                |d, after| {
+                    d.child(
+                        div()
+                            .flex()
+                            .flex_row()
+                            .items_center()
+                            .gap(px(sp::M))
+                            .child(tile("Before", format_bytes(done.before_bytes), false))
+                            .child(icon("arrow-right", 16., t.ink3))
+                            .child(tile(
+                                "After",
+                                format_bytes(after),
+                                after < done.before_bytes,
+                            )),
+                    )
+                },
+            )
             .when_some(undone.clone(), |d, u| {
                 d.child(
                     div().flex().flex_col().gap(px(sp::XS)).children(
@@ -2086,7 +2328,7 @@ impl Render for ToolPanel {
             Phase::Options => self.options_body(t, cx),
             Phase::Running { .. } => self.running_body(t),
             Phase::Consent { .. } => self.consent_body(t),
-            Phase::Done { .. } => self.done_body(t),
+            Phase::Done { .. } => self.done_body(t, cx),
             Phase::Failed(_) => self.failed_body(t),
         };
         let footer = self.footer(t, cx);
@@ -2156,6 +2398,39 @@ pub(crate) fn result_notes(notes: &[String], headline: &str) -> (Vec<(String, bo
     out.extend(rest.by_ref().take(room).map(|n| ((*n).clone(), false)));
     let hidden = rest.count();
     (out, hidden)
+}
+
+/// The ground under a see-through picture: two greys in squares, as every picture editor draws it,
+/// so a cutout reads as a cutout. Drawn behind the picture and clipped to its box.
+fn checker(dark: bool) -> impl IntoElement {
+    let (a, b) = if dark {
+        (0x2a2a2e_u32, 0x3a3a3f_u32)
+    } else {
+        (0xffffff_u32, 0xe3e3e8_u32)
+    };
+    canvas(
+        |_, _, _| (),
+        move |bounds, _, window, _| {
+            const SQUARE: f32 = 8.0;
+            window.paint_quad(fill(bounds, rgb(a)));
+            let (cols, rows) = (
+                (f32::from(bounds.size.width) / SQUARE).ceil() as i32,
+                (f32::from(bounds.size.height) / SQUARE).ceil() as i32,
+            );
+            for row in 0..rows {
+                for col in 0..cols {
+                    if (row + col) % 2 == 1 {
+                        let origin =
+                            bounds.origin + point(px(col as f32 * SQUARE), px(row as f32 * SQUARE));
+                        let cell = Bounds::new(origin, size(px(SQUARE), px(SQUARE)));
+                        window.paint_quad(fill(cell.intersect(&bounds), rgb(b)));
+                    }
+                }
+            }
+        },
+    )
+    .absolute()
+    .size_full()
 }
 
 /// The sentence under the consent sheet's title. A model reads like the panel header and the Modules

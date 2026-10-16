@@ -23,12 +23,13 @@ path = "src/main.rs"
 [features]
 # Dev only: offscreen render to PNG and the headless self check (`panoply-desktop --selfcheck`).
 # Never part of a shipping build.
-snapshot = ["gpui/test-support", "gpui_platform/test-support", "dep:image", "dep:png"]
+snapshot = ["gpui/test-support", "gpui_platform/test-support", "dep:png"]
 
 [dependencies]
 panoply-core.workspace = true
 panoply-manifest.workspace = true
 panoply-convert.workspace = true
+panoply-image.workspace = true
 panoply-host.workspace = true
 panoply-wasm.workspace = true
 serde.workspace = true
@@ -42,7 +43,8 @@ gpui-base = { path = "patches/gpui-base" }
 global-hotkey = "0.8"
 futures = "0.3"
 anyhow = "1"
-image = { version = "0.25", default-features = false, features = ["png"], optional = true }
+# The result card hands a decoded preview to GPUI as an `image::Frame`; the codecs come from panoply-image.
+image = { version = "0.25", default-features = false, features = ["png"] }
 png = { workspace = true, optional = true }
 
 [target.'cfg(unix)'.dependencies]

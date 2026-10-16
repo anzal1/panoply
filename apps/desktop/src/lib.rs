@@ -13,6 +13,7 @@ pub mod intent;
 pub mod jobs;
 pub mod paths;
 pub mod profile;
+pub mod result_view;
 pub mod search;
 pub mod units;
 pub mod window_state;
