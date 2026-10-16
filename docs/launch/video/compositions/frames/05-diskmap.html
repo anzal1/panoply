@@ -94,7 +94,7 @@
     tl.set('#f5-picked', { opacity: 0 }, at(52));
     move([ZS, 0, 200], 52, 0.5);
     /* the rows are read for 0.7 beats, then the camera widens so the rows and the Move to Trash button are both in view while the cursor travels to it */
-    move([1.25, 0, 240], 52.7, 0.3);
+    move([1.25, 0, 262], 52.7, 0.3);
     const BTN = [1107, 1358], FROM = [1020, 1030];   /* source pixels (cropped plate): the button centre, and where the cursor comes from */
     const place = (xy) => ({ x: px(xy[0]) - 6, y: px(xy[1]) - 4 });
     tl.fromTo('#f5-cursor', Object.assign({ opacity: 0, scale: 1 }, place(FROM)), Object.assign({ opacity: 1, duration: 0.12, ease: 'none', immediateRender: false }, place(FROM)), at(52.55));
