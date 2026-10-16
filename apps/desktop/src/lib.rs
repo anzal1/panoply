@@ -58,6 +58,19 @@ pub fn run_from_args(args: Vec<String>) {
             selfcheck::run_review(out);
             return;
         }
+        if args.iter().any(|a| a == "--selfcheck-userpass") {
+            let arg = |name: &str| {
+                args.iter()
+                    .position(|a| a == name)
+                    .and_then(|i| args.get(i + 1))
+                    .map(std::path::PathBuf::from)
+            };
+            selfcheck::run_userpass(
+                arg("--out").unwrap_or_else(|| std::path::PathBuf::from("userpass")),
+                arg("--manifest").unwrap_or_else(|| std::path::PathBuf::from("manifest.json")),
+            );
+            return;
+        }
         if args.iter().any(|a| a == "--selfcheck-frames") {
             let out = args
                 .iter()

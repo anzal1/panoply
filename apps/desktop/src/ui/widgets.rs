@@ -291,6 +291,68 @@ pub(crate) fn badge(text: &str, tone: Option<Hsla>, t: Theme) -> impl IntoElemen
         .child(text.to_string())
 }
 
+/// The words the app uses for a tool's network access, one place for the Modules page, the panel header
+/// and the panel note, so they cannot drift apart. Derived from the manifest: a tool that lists the models
+/// it loads fetches them once after a yes and no file leaves the computer, which is not the same warning
+/// as a tool that uses the network (see `Capabilities::network_use`).
+pub(crate) struct NetworkWords {
+    /// The privacy chip in the panel header.
+    pub status: &'static str,
+    /// The icon beside the chip.
+    pub icon: &'static str,
+    /// The line under a tool's name on the Modules page.
+    pub meta: &'static str,
+    /// The pill on the Modules page.
+    pub badge: &'static str,
+    /// Warning colour for the pill and the note. A model download is neutral.
+    pub warn: bool,
+    model: bool,
+}
+
+/// `None` when the tool never uses the network.
+pub(crate) fn network_words(caps: &panoply_manifest::Capabilities) -> Option<NetworkWords> {
+    use panoply_manifest::NetworkUse;
+    match caps.network_use() {
+        NetworkUse::None => None,
+        NetworkUse::ModelDownload => Some(NetworkWords {
+            status: "Downloads a model once",
+            icon: "package-open",
+            meta: "Downloads a model once",
+            badge: "Model download",
+            warn: false,
+            model: true,
+        }),
+        NetworkUse::Network => Some(NetworkWords {
+            status: "Uses the network",
+            icon: "radio",
+            meta: "Uses the network",
+            badge: "Network",
+            warn: true,
+            model: false,
+        }),
+    }
+}
+
+impl NetworkWords {
+    /// The sentence for the panel note and the chip's tooltip: what is fetched and the promise about
+    /// the person's files, from the manifest's own reason when it has one.
+    pub fn sentence(&self, reason: &str) -> String {
+        let reason = reason.trim();
+        if self.model {
+            let lead = if reason.is_empty() {
+                "Downloads a model once, after you say yes."
+            } else {
+                reason
+            };
+            format!("{lead} Your files never leave this computer.")
+        } else if reason.is_empty() {
+            "Uses the network.".to_string()
+        } else {
+            format!("Uses the network. {reason}")
+        }
+    }
+}
+
 /// A calm status row: a coloured icon, the message in the primary text colour, a faint tinted
 /// ground. Colour carries the kind; the words carry the meaning.
 pub(crate) fn notice(

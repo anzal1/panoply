@@ -139,6 +139,32 @@ pub struct Capabilities {
     pub models: Vec<ModelSpec>,
 }
 
+/// What a module's network access is for, as a person should be told. Decided from the manifest alone:
+/// a module that lists the models it loads uses the network to fetch them once, with the person's yes,
+/// and no file leaves the computer. Any other module that asks for the network is a plain network user.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NetworkUse {
+    /// No network access: everything is processed on this computer.
+    None,
+    /// A one-time model download after consent.
+    ModelDownload,
+    /// Network access that is not a model download (an engine download, exchange rates).
+    Network,
+}
+
+impl Capabilities {
+    /// How this module uses the network, from `network` and the `models` it lists.
+    pub fn network_use(&self) -> NetworkUse {
+        if !self.network {
+            NetworkUse::None
+        } else if !self.models.is_empty() {
+            NetworkUse::ModelDownload
+        } else {
+            NetworkUse::Network
+        }
+    }
+}
+
 fn yes() -> bool {
     true
 }
@@ -258,5 +284,48 @@ summary = "Does a demo."
         assert!(m.accepts_file("application/octet-stream", ".HEIC"));
         assert!(m.accepts_file("application/pdf", "pdf"));
         assert!(!m.accepts_file("image/png", "png"));
+    }
+
+    #[test]
+    fn the_network_is_told_by_the_models_a_module_lists() {
+        let mut m = Manifest::from_toml_str(MINIMAL).unwrap();
+        assert_eq!(m.capabilities.network_use(), NetworkUse::None);
+        m.capabilities.network = true;
+        m.capabilities.network_reason = Some("Downloads exchange rates".into());
+        assert_eq!(m.capabilities.network_use(), NetworkUse::Network);
+        m.capabilities.models.push(ModelSpec {
+            id: "demo".into(),
+            size_mb: 28,
+            license: "MIT".into(),
+        });
+        assert_eq!(m.capabilities.network_use(), NetworkUse::ModelDownload);
+        // Listing a model without asking for the network does not make it a network user.
+        m.capabilities.network = false;
+        assert_eq!(m.capabilities.network_use(), NetworkUse::None);
+    }
+
+    /// The Modules page, the panel header and the consent sheet all read this, so the shipped
+    /// modules decide what a person is told: the four picture tools that fetch a model once say so,
+    /// and the engine downloads (video, PDF) stay plain network users.
+    #[test]
+    fn the_shipped_modules_that_fetch_a_model_are_model_downloads() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../modules/builtin");
+        let mut seen = std::collections::BTreeMap::new();
+        for e in std::fs::read_dir(&dir).unwrap() {
+            let f = e.unwrap().path().join("module.toml");
+            let m = Manifest::from_file(&f).unwrap();
+            seen.insert(m.module.id.clone(), m.capabilities.network_use());
+        }
+        for id in [
+            "id.passport_photo",
+            "image.erase",
+            "image.remove_background",
+            "image.remove_watermark",
+            "image.upscale",
+        ] {
+            assert_eq!(seen[id], NetworkUse::ModelDownload, "{id}");
+        }
+        assert_eq!(seen["media.compress"], NetworkUse::Network);
+        assert_eq!(seen["pdf.compress"], NetworkUse::Network);
     }
 }

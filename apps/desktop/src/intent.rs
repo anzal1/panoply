@@ -95,6 +95,29 @@ fn tokenize(query: &str) -> Vec<String> {
     out
 }
 
+/// True while a query is plainly still being typed: only qualifier words, numbers and sizes so far
+/// ("under", "under 5", "under 50 k"), or a conversion that has no target yet ("heic to"). Such a
+/// query has nothing to match until the next keystroke, and is not an answer of "no tool".
+pub fn is_unfinished(query: &str) -> bool {
+    let t = tokenize(query);
+    let Some(last) = t.last() else {
+        return false;
+    };
+    if t.len() >= 2 && matches!(last.as_str(), "to" | "into") {
+        return true;
+    }
+    const BIG_UNITS: &[&str] = &["bytes", "kilobytes", "megabytes", "gigabytes"];
+    t.iter().all(|w| {
+        let numeric = w.chars().all(|c| c.is_ascii_digit() || c == '.')
+            && w.chars().any(|c| c.is_ascii_digit());
+        numeric
+            || STOP.iter().any(|s| s.starts_with(w.as_str()))
+            || QUALIFIERS.iter().any(|q| q.starts_with(w.as_str()))
+            || UNITS.contains(&w.as_str())
+            || BIG_UNITS.iter().any(|u| u.starts_with(w.as_str()))
+    })
+}
+
 /// Understand a query.
 pub fn parse(query: &str) -> Intent {
     let tokens = tokenize(query);

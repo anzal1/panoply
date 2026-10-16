@@ -154,6 +154,28 @@ fn blit(dst: &mut Image, src: &Image, x: u32, y: u32) {
     }
 }
 
+/// The lowest JPEG quality the default "smallest" target will pick.
+///
+/// SSIM on luma is blind to smooth regions when the rest of the picture is busy or dark: a 32 megapixel
+/// night sky passed at 0.979 with quality 21 and showed 8 by 8 blocks and a banded halo at 100%
+/// (docs/research/user-pass-macos.md, UP-11). Without a floor the search settles at 10 to 21 on such pictures.
+/// Quality 40 is where MozJPEG's blocks on a smooth gradient stop being visible at 100%.
+pub const QUALITY_FLOOR: u32 = 40;
+
+/// The lowest quality a search for `target` similarity may try, given the highest it will try (`hi`,
+/// which stops a little above the quality the source was saved at, so a source saved below the floor
+/// is never pushed above itself). A target under the default 0.97 was asked for by name: the person
+/// chose a smaller file over a cleaner one, so there is no floor.
+pub fn quality_floor(target: f64, hi: u32) -> u32 {
+    const DEFAULT_TARGET: f64 = 0.97;
+    const LOWEST: u32 = 10;
+    if target + 1e-9 < DEFAULT_TARGET {
+        LOWEST
+    } else {
+        QUALITY_FLOOR.min(hi).max(LOWEST)
+    }
+}
+
 /// The smallest `q` in `[lo, hi]` for which `passes(q)` is true, assuming a higher quality never
 /// passes less often. `hi` is taken to pass without being tried. Calls `passes` about
 /// log2(hi - lo) times.
@@ -238,6 +260,16 @@ mod tests {
             largest_fitting::<()>(1, 100, |_| Ok(true)).unwrap(),
             Some(100)
         );
+    }
+
+    #[test]
+    fn the_floor_holds_at_the_default_and_never_passes_the_ceiling() {
+        assert_eq!(quality_floor(0.97, 100), QUALITY_FLOOR);
+        assert_eq!(quality_floor(0.99, 100), QUALITY_FLOOR);
+        // A source saved at quality 20 searches up to 30 at most; the floor cannot sit above that.
+        assert_eq!(quality_floor(0.97, 30), 30);
+        // A named, lower similarity is a request for a smaller file.
+        assert_eq!(quality_floor(0.9, 100), 10);
     }
 
     #[test]

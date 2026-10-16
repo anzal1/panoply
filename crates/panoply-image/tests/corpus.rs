@@ -809,7 +809,7 @@ fn damaged_and_unsupported_files_fail_plainly_and_leave_nothing() {
         ("libvips/truncated.jpg", "incomplete"),
         ("libvips/truncated.gif", "damaged"),
         ("pngsuite/xcrn0g04.png", "not an image"),
-        ("libvips/logo.svg", "not an image"),
+        ("libvips/logo.svg", "svg drawing"),
         ("libvips/subsampled.tif", "cannot read"),
     ];
     for (rel, word) in cases {
