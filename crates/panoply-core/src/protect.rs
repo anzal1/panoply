@@ -199,7 +199,7 @@ fn linux(c: &[String], home: Option<&[String]>) -> Option<&'static str> {
     }
     for tree in [
         "usr", "bin", "sbin", "lib", "lib32", "lib64", "libx32", "boot", "etc", "dev", "proc",
-        "sys", "run", "root", "snap",
+        "sys", "run", "snap",
     ] {
         if under(c, &[tree]) {
             return Some(sys);
@@ -210,6 +210,7 @@ fn linux(c: &[String], home: Option<&[String]>) -> Option<&'static str> {
     }
     for top in [
         &["home"][..],
+        &["root"],
         &["media"],
         &["mnt"],
         &["opt"],
@@ -569,6 +570,17 @@ mod tests {
         assert_eq!(lin("/home/me/.config"), Some("Linux needs this folder"));
         assert_eq!(lin("/mnt/data"), Some(VOLUME_REASON));
         assert_eq!(lin("/run/media/me/USB"), Some(VOLUME_REASON));
+    }
+
+    #[test]
+    fn root_as_the_user_may_clean_up_inside_its_own_home() {
+        let r = |p: &str| refusal_on(Os::Linux, p, Some("/root"));
+        assert_eq!(r("/root"), Some(HOME_REASON));
+        assert_eq!(r("/root/.ssh"), Some(KEYS_REASON));
+        assert_eq!(r("/root/Downloads/big.iso"), None);
+        assert_eq!(r("/root/.local/share/some-app"), None);
+        // Without /root as the home folder it is still a system place.
+        assert!(lin("/root").is_some());
     }
 
     #[test]
