@@ -11,11 +11,43 @@ use crate::px::Rect;
 /// The faces in an 8 bit RGB picture, as boxes clamped to the picture. Never fails: an engine that
 /// is missing or errors gives no boxes.
 pub fn find(rgb: &[u8], w: usize, h: usize) -> Vec<Rect> {
-    engine(rgb, w, h)
+    // Faces are found on a reduced copy (a face is large next to 1,600 pixels), so a 30 megapixel
+    // picture costs no more memory than a small one, and the boxes are scaled back.
+    let f = w.max(h).div_ceil(SEARCH_LONG).max(1);
+    if f == 1 {
+        return engine(rgb, w, h)
+            .into_iter()
+            .filter_map(|(x, y, bw, bh)| clamp(x, y, bw, bh, w, h))
+            .collect();
+    }
+    let (sw, sh) = (w.div_ceil(f), h.div_ceil(f));
+    let mut small = vec![0u8; sw * sh * 3];
+    for dy in 0..sh {
+        for dx in 0..sw {
+            let (x1, y1) = (((dx + 1) * f).min(w), ((dy + 1) * f).min(h));
+            let mut sum = [0u32; 3];
+            for y in dy * f..y1 {
+                for x in dx * f..x1 {
+                    for (c, s) in sum.iter_mut().enumerate() {
+                        *s += u32::from(rgb[(y * w + x) * 3 + c]);
+                    }
+                }
+            }
+            let n = ((x1 - dx * f) * (y1 - dy * f)) as u32;
+            for (c, s) in sum.iter().enumerate() {
+                small[(dy * sw + dx) * 3 + c] = (s / n) as u8;
+            }
+        }
+    }
+    let k = f as f64;
+    engine(&small, sw, sh)
         .into_iter()
-        .filter_map(|(x, y, bw, bh)| clamp(x, y, bw, bh, w, h))
+        .filter_map(|(x, y, bw, bh)| clamp(x * k, y * k, bw * k, bh * k, w, h))
         .collect()
 }
+
+/// The longest side faces are looked for at.
+const SEARCH_LONG: usize = 1600;
 
 /// A float box as a rectangle inside a `w` by `h` picture; `None` when nothing is left.
 pub fn clamp(x: f64, y: f64, bw: f64, bh: f64, w: usize, h: usize) -> Option<Rect> {
