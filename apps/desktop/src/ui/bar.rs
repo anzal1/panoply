@@ -215,6 +215,11 @@ impl Bar {
         );
         input.update(cx, |s, cx| s.focus(window, cx));
         let hide_sub = cx.observe_window_activation(window, |bar, window, cx| {
+            if window.is_window_active() && bar.is_visible_phase() {
+                // Windows and X11 activate the window after `show` has run, and the activation can
+                // reset which element holds the keyboard, so put it on the search box again.
+                bar.focus_input(window, cx);
+            }
             if !window.is_window_active()
                 && matches!(bar.phase, Phase::Showing | Phase::Shown)
                 && !bar.suppress_autohide
@@ -596,7 +601,7 @@ impl Bar {
         .detach();
         #[cfg(target_os = "linux")]
         self.take_x11_focus(window, cx);
-        window.focus(&self.focus, cx);
+        self.focus_input_after_activation(window, cx);
         self.anim = Some(VisAnim {
             showing: true,
             from,
@@ -609,19 +614,65 @@ impl Bar {
         self.schedule_vis(window, cx);
     }
 
+    /// Put the keyboard in the search box. The root handle (`self.focus`) only receives keys that no
+    /// input wants, and it holds the focus when the box does not, which is how typing after the hotkey
+    /// went nowhere on Windows and Linux.
+    fn focus_input(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.panel.is_some() {
+            return; // the panel owns the keyboard while it is open
+        }
+        let focus = self.input.read(cx).focus_handle(cx);
+        if !focus.is_focused(window) {
+            window.focus(&focus, cx);
+        }
+    }
+
+    /// Focus the search box every time the bar is shown, on every OS: at once, on the next frame, and
+    /// once more after the platform's own activation has had time to run (Windows applies it after
+    /// `show` returns). Each step is a no-op when the box already has the keyboard.
+    fn focus_input_after_activation(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        self.focus_input(window, cx);
+        let this = cx.entity();
+        window.on_next_frame(move |window, cx| {
+            this.update(cx, |bar, cx| {
+                if bar.is_visible_phase() {
+                    bar.focus_input(window, cx);
+                }
+            });
+        });
+        cx.spawn_in(window, async move |this, cx| {
+            for ms in [50u64, 150, 400] {
+                cx.background_executor()
+                    .timer(std::time::Duration::from_millis(ms))
+                    .await;
+                let live = this.update_in(cx, |bar, window, cx| {
+                    if bar.is_visible_phase() {
+                        bar.focus_input(window, cx);
+                    }
+                    bar.is_visible_phase()
+                });
+                if !matches!(live, Ok(true)) {
+                    return;
+                }
+            }
+        })
+        .detach();
+    }
+
     /// X11 only: the bar's window is not viewable for the first few milliseconds after it is created,
     /// and the server will not focus it until it is, so keep trying for about a second.
     #[cfg(target_os = "linux")]
     fn take_x11_focus(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         cx.spawn_in(window, async move |this, cx| {
             for _ in 0..50 {
-                let done = this.update_in(cx, |bar, window, _| {
+                let done = this.update_in(cx, |bar, window, cx| {
                     if !bar.is_visible_phase() {
                         return true;
                     }
                     match platform::x11_take_focus(window) {
                         platform::Focus::Taken(prev) => {
                             bar.prev_focus = prev;
+                            bar.focus_input(window, cx);
                             true
                         }
                         platform::Focus::Unavailable => true,

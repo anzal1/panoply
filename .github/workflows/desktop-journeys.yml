@@ -15,7 +15,7 @@ name: Desktop journeys
 #
 # Run by hand: Actions > Desktop journeys > Run workflow, or
 #   gh workflow run desktop-journeys.yml -f tag=v0.1.2-beta
-# `run_id` takes a Release workflow run instead of a tag. `only` runs some journeys (1,2,3,5,4a,4b,6,7,8).
+# `run_id` takes a Release workflow run instead of a tag. `only` runs some journeys (1,2,3,3b,5,4a,4b,6,7,8).
 # `ref` of the dispatch picks the version of the scripts, so a branch can be tried before it is merged.
 on:
   workflow_dispatch:
@@ -29,7 +29,7 @@ on:
         type: string
         default: ""
       only:
-        description: "Journeys to run, comma separated (empty: all). Ids: 1 2 3 5 4a 4b 6 7 8"
+        description: "Journeys to run, comma separated (empty: all). Ids: 1 2 3 3b 5 4a 4b 6 7 8"
         type: string
         default: ""
 
