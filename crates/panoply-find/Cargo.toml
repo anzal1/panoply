@@ -1,0 +1,43 @@
+[package]
+name = "panoply-find"
+description = "Instant file-name search for Panoply: a compact name index, a parallel walker and a per-keystroke query engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["search", "filesystem", "index", "fuzzy"]
+categories = ["filesystem", "algorithms"]
+
+[dependencies]
+memchr = "2"
+rayon = "1"
+# Optional: the `ignore` crate's parallel walker, kept only as the baseline the benchmark compares our
+# own walker against. Off by default, not compiled into the app.
+ignore = { version = "0.4", optional = true }
+
+# Unix only: directory reads that hand back names without allocating, and stat relative to the open
+# folder (one path component to resolve instead of the whole path). Safe API; no unsafe in this crate.
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1", default-features = false, features = ["std", "fs"] }
+
+# Linux: inotify (rustix::fs::inotify, safe API) plus poll and eventfd to sleep until an event or a stop.
+[target.'cfg(target_os = "linux")'.dependencies]
+rustix = { version = "1", default-features = false, features = ["std", "fs", "event"] }
+
+# Windows: the USN journal and ReadDirectoryChangesW live in the one crate allowed to use unsafe.
+[target.'cfg(windows)'.dependencies]
+panoply-platform-windows = { path = "../panoply-platform-windows" }
+
+# macOS: bulk folder reads (getattrlistbulk) live in the one crate allowed to use unsafe.
+[target.'cfg(target_os = "macos")'.dependencies]
+panoply-platform-macos = { path = "../panoply-platform-macos" }
+
+[features]
+ignore-walker = ["dep:ignore"]
+
+[lints]
+workspace = true

@@ -54,6 +54,7 @@ panoply-share = { path = "crates/panoply-share" }
 panoply-mcp = { path = "crates/panoply-mcp" }
 panoply-wasm = { path = "crates/panoply-wasm" }
 panoply-disk = { path = "crates/panoply-disk" }
+panoply-find = { path = "crates/panoply-find" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

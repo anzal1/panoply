@@ -13,6 +13,8 @@ use gpui::prelude::*;
 use gpui::*;
 use gpui_base::input::{Input as KitInput, InputEvent, InputState};
 
+mod find_page;
+
 use super::Hub;
 use super::chrome;
 use super::disk::DiskView;
@@ -81,6 +83,8 @@ pub(crate) struct AppView {
     bounds_token: u64,
     /// The page's scroll position, reset when the page changes.
     page_scroll: ScrollHandle,
+    /// The Find page: its own search field, the latest answer and what is chosen.
+    find: find_page::FindState,
     _subs: Vec<Subscription>,
 }
 
@@ -103,6 +107,7 @@ impl AppView {
             },
         );
         let recents_sub = cx.observe(&hub.recents, |_, _, cx| cx.notify());
+        let (find, find_subs) = find_page::FindState::new(window, cx, &hub);
         let entity = cx.entity();
         let appearance = window.observe_window_appearance(move |_, cx| {
             entity.update(cx, |_, cx| cx.notify());
@@ -133,7 +138,12 @@ impl AppView {
             persist_bounds: false,
             bounds_token: 0,
             page_scroll: ScrollHandle::new(),
-            _subs: vec![search_sub, recents_sub, appearance, bounds_sub],
+            find,
+            _subs: {
+                let mut subs = vec![search_sub, recents_sub, appearance, bounds_sub];
+                subs.extend(find_subs);
+                subs
+            },
         }
     }
 
@@ -230,6 +240,9 @@ impl AppView {
         self._panel_sub = None;
         self.route = route;
         self.page_scroll.set_offset(point(px(0.), px(0.)));
+        if route == Route::Find {
+            self.find.arrive();
+        }
         if route == Route::Modules {
             // Reading the disk once on arrival keeps drawing free.
             self.downloads = crate::downloads::rows();
@@ -375,6 +388,7 @@ impl AppView {
                 };
                 self.rerun(&e, window, cx);
             }
+            Action::OpenFile { path } => self.find_open_path(path, false, cx),
             Action::Unavailable(_) => {}
         }
     }
@@ -417,6 +431,9 @@ impl AppView {
 
     fn on_key(&mut self, ev: &KeyDownEvent, window: &mut Window, cx: &mut Context<Self>) {
         if self.panel.is_some() {
+            return;
+        }
+        if self.route == Route::Find && self.find_key(ev, cx) {
             return;
         }
         match ev.keystroke.key.as_str() {
@@ -1827,17 +1844,7 @@ impl Render for AppView {
             (Route::Modules, _) => self.modules_page(t, cx),
             (Route::History, _) => self.history_page(t, cx),
             (Route::Settings, _) => self.settings_page(t, cx),
-            (Route::Find, _) => self.later_page(
-                "find",
-                "Find",
-                (
-                    "search",
-                    "Find arrives with the file index",
-                    "Searching inside your files, screenshots and photos is not in the app yet. For now the search box on Home finds tools and takes files.",
-                ),
-                t,
-                cx,
-            ),
+            (Route::Find, _) => self.find_page(t, window, cx),
             (Route::Nearby, _) => self.later_page(
                 "nearby",
                 "Nearby",

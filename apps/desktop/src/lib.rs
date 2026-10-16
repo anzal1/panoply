@@ -7,6 +7,7 @@ pub mod catalog;
 pub mod disk_review;
 pub mod downloads;
 pub mod estimate;
+pub mod finder;
 pub mod form;
 pub mod fuzzy;
 pub mod history;
@@ -28,6 +29,16 @@ mod ui;
 pub fn run_from_args(args: Vec<String>) {
     #[cfg(feature = "snapshot")]
     {
+        if args.iter().any(|a| a == "--selfcheck-find") {
+            let out = args
+                .iter()
+                .position(|a| a == "--out")
+                .and_then(|i| args.get(i + 1))
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| std::path::PathBuf::from("screens"));
+            selfcheck::run_find(out);
+            return;
+        }
         if args.iter().any(|a| a == "--selfcheck-idle") {
             let hold = args
                 .iter()

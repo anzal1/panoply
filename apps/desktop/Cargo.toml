@@ -32,6 +32,7 @@ panoply-convert.workspace = true
 panoply-disk.workspace = true
 panoply-host.workspace = true
 panoply-wasm.workspace = true
+panoply-find.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
