@@ -515,7 +515,7 @@ pub(crate) fn run(args: Vec<String>) {
             cx.spawn(async move |cx| {
                 while find_rx.next().await.is_some() {
                     // Several updates may be queued; one redraw covers them.
-                    while find_rx.try_next().is_ok_and(|m| m.is_some()) {}
+                    while find_rx.try_recv().is_ok() {}
                     let state = finder.state();
                     find_status.update(cx, |s, cx| {
                         if s.state != state {

@@ -131,7 +131,11 @@ impl AppView {
             bounds_token: 0,
             page_scroll: ScrollHandle::new(),
             find,
-            _subs: [vec![search_sub, recents_sub, appearance, bounds_sub], find_subs].concat(),
+            _subs: {
+                let mut subs = vec![search_sub, recents_sub, appearance, bounds_sub];
+                subs.extend(find_subs);
+                subs
+            },
         }
     }
 

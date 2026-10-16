@@ -454,7 +454,7 @@ impl AppView {
                 let reveal = cx.listener(move |app, _: &ClickEvent, _, cx| {
                     app.find_open_path(path2.clone(), true, cx)
                 });
-                file_row(i, n, &hit, i == selected, now, t, open, reveal)
+                file_row(i, n, &hit, i == selected, now, t, open, reveal).into_any_element()
             })
             .collect();
         let list = div()
@@ -711,7 +711,8 @@ fn state_block(icon_name: &str, title: &str, body: &str, hint: Option<&str>, t: 
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // Not `super::*`: it would bring in gpui's own `test` attribute and shadow the standard one.
+    use super::{ROW, step, thousands, visible_rows};
 
     #[test]
     fn the_selection_stays_inside_the_list() {
