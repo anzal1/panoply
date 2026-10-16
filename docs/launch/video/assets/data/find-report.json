@@ -1,0 +1,229 @@
+{
+  "build": "release",
+  "fixture_entries": 282,
+  "long_list_hits": 200,
+  "keystroke_to_frame_ms": {
+    "p50": 3.070583,
+    "p95": 6.83425,
+    "max": 6.83425,
+    "samples": 14
+  },
+  "ui_state_change_ms": {
+    "p50": 0.041124999999999995,
+    "p95": 0.229875,
+    "max": 0.30495799999999995
+  },
+  "ui_frame_ms": {
+    "p50": 2.062,
+    "p95": 6.8593329999999995,
+    "max": 19.019000000000002
+  },
+  "frames_over_4ms": [
+    {
+      "state": "find empty",
+      "ms": 8.357125
+    },
+    {
+      "state": "find typing",
+      "ms": 6.432875
+    },
+    {
+      "state": "find typing",
+      "ms": 6.212959
+    },
+    {
+      "state": "find long path",
+      "ms": 4.400875
+    },
+    {
+      "state": "find long list",
+      "ms": 4.297667
+    },
+    {
+      "state": "find long list",
+      "ms": 4.745959
+    },
+    {
+      "state": "find long list",
+      "ms": 4.759667
+    },
+    {
+      "state": "find long list",
+      "ms": 4.14525
+    },
+    {
+      "state": "find long list",
+      "ms": 5.891333
+    },
+    {
+      "state": "find long list",
+      "ms": 6.425417
+    },
+    {
+      "state": "find long list",
+      "ms": 4.75025
+    },
+    {
+      "state": "find long list",
+      "ms": 6.716749999999999
+    },
+    {
+      "state": "find long list",
+      "ms": 7.394709
+    },
+    {
+      "state": "find long list",
+      "ms": 5.192125
+    },
+    {
+      "state": "find long list",
+      "ms": 4.17375
+    },
+    {
+      "state": "find indexing",
+      "ms": 4.244833
+    },
+    {
+      "state": "find permission note",
+      "ms": 5.68525
+    },
+    {
+      "state": "find permission note",
+      "ms": 5.353
+    },
+    {
+      "state": "bar tools only",
+      "ms": 5.626875
+    },
+    {
+      "state": "bar files only",
+      "ms": 5.614415999999999
+    },
+    {
+      "state": "bar files only",
+      "ms": 7.429291999999999
+    },
+    {
+      "state": "bar files only",
+      "ms": 19.019000000000002
+    },
+    {
+      "state": "find empty",
+      "ms": 4.945208
+    },
+    {
+      "state": "find typing",
+      "ms": 6.7935419999999995
+    },
+    {
+      "state": "find typing",
+      "ms": 4.318458
+    },
+    {
+      "state": "find typing",
+      "ms": 4.099958
+    },
+    {
+      "state": "find long list",
+      "ms": 4.497542
+    },
+    {
+      "state": "find long list",
+      "ms": 4.701458000000001
+    },
+    {
+      "state": "find long list",
+      "ms": 4.201084
+    },
+    {
+      "state": "find long list",
+      "ms": 8.068792
+    },
+    {
+      "state": "find long list",
+      "ms": 5.764583
+    },
+    {
+      "state": "find long list",
+      "ms": 8.337208
+    },
+    {
+      "state": "find long list",
+      "ms": 8.213542
+    },
+    {
+      "state": "find long list",
+      "ms": 8.128666999999998
+    },
+    {
+      "state": "find long list",
+      "ms": 6.8593329999999995
+    },
+    {
+      "state": "find permission note",
+      "ms": 5.730916
+    },
+    {
+      "state": "find permission note",
+      "ms": 5.7620830000000005
+    },
+    {
+      "state": "find permission note",
+      "ms": 4.816875
+    },
+    {
+      "state": "find permission note",
+      "ms": 6.037417
+    },
+    {
+      "state": "find permission note",
+      "ms": 5.427208
+    },
+    {
+      "state": "find permission note",
+      "ms": 4.908833
+    },
+    {
+      "state": "bar tools only",
+      "ms": 4.7999160000000005
+    },
+    {
+      "state": "bar tools and files",
+      "ms": 6.028167
+    }
+  ],
+  "bar_tools_on_list_before_files": true,
+  "bar_files_arrived_after_settle": true,
+  "screens": [
+    "captures/find/18-find-empty.png (2320x1440)",
+    "captures/find/19-find-results.png (2320x1440)",
+    "captures/find/20-find-selected.png (2320x1440)",
+    "captures/find/21-find-no-results.png (2320x1440)",
+    "captures/find/24-find-long-path.png (2320x1440)",
+    "captures/find/25-find-long-list.png (2320x1440)",
+    "captures/find/26-find-long-list-end.png (2320x1440)",
+    "captures/find/22-find-indexing.png (2320x1440)",
+    "captures/find/31-find-note.png (2320x1440)",
+    "captures/find/23-find-unavailable.png (2320x1440)",
+    "captures/find/27-bar-tools-only.png (1440x920)",
+    "captures/find/32-bar-no-results.png (1440x920)",
+    "captures/find/28-bar-tools-and-files.png (1440x920)",
+    "captures/find/30-bar-file-selected.png (1440x920)",
+    "captures/find/29-bar-files-only.png (1440x920)",
+    "captures/find/18-find-empty-dark.png (2320x1440)",
+    "captures/find/19-find-results-dark.png (2320x1440)",
+    "captures/find/20-find-selected-dark.png (2320x1440)",
+    "captures/find/21-find-no-results-dark.png (2320x1440)",
+    "captures/find/24-find-long-path-dark.png (2320x1440)",
+    "captures/find/25-find-long-list-dark.png (2320x1440)",
+    "captures/find/26-find-long-list-end-dark.png (2320x1440)",
+    "captures/find/22-find-indexing-dark.png (2320x1440)",
+    "captures/find/31-find-note-dark.png (2320x1440)",
+    "captures/find/23-find-unavailable-dark.png (2320x1440)",
+    "captures/find/27-bar-tools-only-dark.png (1440x920)",
+    "captures/find/32-bar-no-results-dark.png (1440x920)",
+    "captures/find/28-bar-tools-and-files-dark.png (1440x920)",
+    "captures/find/30-bar-file-selected-dark.png (1440x920)",
+    "captures/find/29-bar-files-only-dark.png (1440x920)"
+  ]
+}

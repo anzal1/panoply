@@ -15,9 +15,9 @@
     /* frame 5's headline, kept for the continuity cut (same geometry as .f5-line in 05-diskmap.html) */
     #f6-t0 { position: absolute; left: 0; right: 0; top: 930px; text-align: center; font-weight: 700; font-size: 112px; line-height: .98; letter-spacing: -0.04em; color: #fff; white-space: nowrap; }
 
-    /* frame 5's end card, 1400 x 760 at left 260 top 140, radius 28, shrinks into the fan's centre card */
-    #f6-morphshadow { position: absolute; left: 260px; top: 140px; width: 1400px; height: 760px; border-radius: 28px; box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); }
-    #f6-morph { position: absolute; left: 260px; top: 140px; width: 1400px; height: 760px; background: #fff; clip-path: inset(0px 0px 0px 0px round 28px); }
+    /* frame 5's end card, 980 x 760 at left 470 top 140, radius 28, shrinks into the fan's centre card */
+    #f6-morphshadow { position: absolute; left: 470px; top: 140px; width: 980px; height: 760px; border-radius: 28px; box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); }
+    #f6-morph { position: absolute; left: 470px; top: 140px; width: 980px; height: 760px; background: #fff; clip-path: inset(0px 0px 0px 0px round 28px); }
 
     /* fan mark */
     #f6-fan { position: absolute; left: 750px; top: 330px; width: 420px; height: 420px; }
@@ -194,7 +194,7 @@
       tl.to('#f6-t0', { y: -30, duration: 0.25, ease: 'power3.in' }, 0);
       tl.to('#f6-t0', { opacity: 0, duration: 0.25, ease: 'power3.in' }, 0);
       tl.to('#f6-morphshadow', { opacity: 0, duration: 0.25, ease: 'power1.out' }, 0);
-      tl.to('#f6-morph', { clipPath: 'inset(240.6px 618.3px 227.2px 619.4px round 35px)', duration: 0.5, ease: XO }, 0);
+      tl.to('#f6-morph', { clipPath: 'inset(240.6px 408.3px 227.2px 409.4px round 35px)', duration: 0.5, ease: XO }, 0);
       tl.to('#f6-morph', { opacity: 0, duration: 0.12, ease: 'power1.out' }, 0.45);
       gsap.set(['#f6-sideL', '#f6-sideR'], { svgOrigin: '272.788 612.197', rotation: 0 });
       tl.to('#f6-sideL', { rotation: -20, duration: 0.5, ease: XO }, 0);

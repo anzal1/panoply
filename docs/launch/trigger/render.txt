@@ -1,2 +1,2 @@
 video looks 60
-# run 11: Shinji cut, frame 6 real Modules list (34 installed, 3 from the community), 2 to 3 cut lands on 1.25x
+# run 12: real find (frame 4) and disk map (frame 5) captures from main

@@ -9,54 +9,42 @@
     #f4-grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .08; mix-blend-mode: soft-light; pointer-events: none; }
     #f4-cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
 
-    /* the real Home plate, 1500 wide at beat 40, radius 0.0105 * width */
+    /* the real Home plate, exactly where frame 3 ends: 1500 wide at left 210, top 74 */
     #f4-plate { position: absolute; left: 210px; top: 74px; width: 1500px; height: 931px; border-radius: 15.75px; overflow: hidden;
       box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); }
     #f4-plate img { width: 100%; height: 100%; display: block; }
 
-    /* rebuilt search card */
-    #f4-card { position: absolute; left: 1120px; top: 372px; width: 720px; height: 652px; border-radius: 28px; background: #fff;
-      box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); overflow: hidden; }
-    #f4-field { position: absolute; left: 24px; top: 24px; width: 672px; height: 88px; border-radius: 22px; background: #eef0f3; display: flex; align-items: center; padding: 0 28px; gap: 20px; }
-    #f4-field svg { width: 38px; height: 38px; flex: none; stroke: #6b6b73; fill: none; stroke-width: 2; stroke-linecap: round; }
-    #f4-typed { position: relative; display: flex; align-items: center; font-size: 42px; font-weight: 500; letter-spacing: -0.015em; color: #1d1d1f; }
-    #f4-typed span { display: block; }
-    #f4-ph { position: absolute; left: 0; top: 0; white-space: nowrap; color: #8a8a92; font-size: 42px; font-weight: 500; letter-spacing: -0.015em; }
-    #f4-caret { display: block; width: 3px; height: 46px; border-radius: 2px; background: #0a84ff; margin-left: 3px; }
-    #f4-hl { position: absolute; left: 24px; top: 128px; width: 672px; height: 88px; border-radius: 18px; background: #dfe9fb; }
-    .f4-row { position: absolute; left: 24px; top: 128px; width: 672px; height: 88px; display: flex; align-items: center; gap: 22px; padding: 0 20px; }
-    .f4-ic { width: 56px; height: 56px; border-radius: 16px; flex: none; display: grid; place-items: center; background: color-mix(in srgb, var(--k) 16%, white); }
-    .f4-ic svg { width: 30px; height: 30px; stroke: var(--k); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .f4-nm { font-size: 34px; font-weight: 500; letter-spacing: -0.015em; line-height: 1.1; white-space: nowrap; }
-    .f4-fd { font-size: 30px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.15; color: #6b6b73; white-space: nowrap; }
-    #f4-foot { position: absolute; left: 24px; right: 24px; bottom: 20px; height: 52px; display: flex; align-items: center; }
-    #f4-ph-pill { font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 30px; letter-spacing: 0.02em; padding: 6px 20px; border-radius: 999px; background: #eef0f3; color: #54545b; border: 2px solid rgba(0,0,0,.08); line-height: 1.2; }
+    /* the real Find page (offscreen render of the app, sidebar cropped away), 980 x 760, same box frame 5 uses: left 470, top 140 */
+    #f4-cardwrap { position: absolute; left: 470px; top: 140px; width: 980px; height: 760px; border-radius: 28px;
+      box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); }
+    #f4-card { position: absolute; inset: 0; border-radius: 28px; overflow: hidden; background: #fafafb; }
+    #f4-zoom { position: absolute; left: 0; top: 0; width: 980px; height: 760px; transform-origin: 0 0; }
+    #f4-zoom img { position: absolute; left: 0; top: 0; width: 980px; height: 760px; display: block; opacity: 0; }
 
-    /* copy */
-    .f4-line { position: absolute; left: 0; right: 0; text-align: center; color: #fff; white-space: nowrap; font-weight: 700; font-size: 112px; letter-spacing: -0.04em; line-height: 0.98; }
-    #f4-l1 { top: 48px; } #f4-l2 { top: 166px; }
-    #f4-lat { position: absolute; right: 80px; top: 296px; height: 60px; padding: 0 28px; display: flex; align-items: center; justify-content: center; gap: 14px; border-radius: 999px; background: #0b1b44; color: #fff;
-      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 36px; letter-spacing: -0.01em; box-shadow: 0 10px 30px rgba(8,24,70,.35); }
+    .f4-line { position: absolute; left: 0; right: 0; top: 930px; text-align: center; color: #fff; white-space: nowrap; font-weight: 700; font-size: 112px; letter-spacing: -0.04em; line-height: 0.98; }
+    #f4-lat { position: absolute; right: 410px; top: 100px; height: 64px; padding: 0 30px; display: flex; align-items: center; justify-content: center; gap: 14px; border-radius: 999px; background: #0b1b44; color: #fff;
+      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 38px; letter-spacing: -0.01em; box-shadow: 0 10px 30px rgba(8,24,70,.35); }
     #f4-lat i { display: block; width: 14px; height: 14px; border-radius: 50%; background: #30d158; }
-    #f4-slot { position: absolute; left: 56px; bottom: 28px; padding: 8px 18px; border-radius: 12px; background: rgba(11,27,68,.78); color: rgba(255,255,255,.88);
-      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 28px; letter-spacing: 0; line-height: 1.2; white-space: nowrap; }
   </style>
   <div id="root" data-composition-id="f4-find" data-width="1920" data-height="1080">
     <div id="f4-ground"></div>
     <div id="f4-cam" data-layout-allow-overflow>
       <div id="f4-plate"><img src="assets/captures/app-home-light.png" alt=""></div>
-      <div id="f4-card">
-        <div id="f4-field">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
-          <div id="f4-typed"><div id="f4-ph">Search files</div><span id="f4-c1" style="opacity:0">t</span><span id="f4-c2" style="opacity:0">a</span><span id="f4-c3" style="opacity:0">x</span><span id="f4-caret"></span></div>
+      <div id="f4-cardwrap">
+        <div id="f4-card" data-layout-allow-occlusion>
+          <div id="f4-zoom" data-layout-allow-overflow data-layout-allow-occlusion>
+            <img id="f4-t0" src="assets/f4-find/type-0.png" alt="">
+            <img id="f4-t2" src="assets/f4-find/type-2.png" alt="">
+            <img id="f4-t3" src="assets/f4-find/type-3.png" alt="">
+            <img id="f4-t4" src="assets/f4-find/type-4.png" alt="">
+            <img id="f4-t5" src="assets/f4-find/type-5.png" alt="">
+            <img id="f4-t6" src="assets/f4-find/type-6.png" alt="">
+          </div>
         </div>
-        <div id="f4-hl"></div>
-        <div id="f4-rows" data-layout-allow-overlap></div>
-        <div id="f4-foot"><span id="f4-ph-pill">PLACEHOLDER</span></div>
       </div>
       <div class="f4-line" id="f4-l1">Every file on your disk.</div>
       <div class="f4-line" id="f4-l2">Before you finish typing.</div>
-      <div id="f4-lat"><i></i><span id="f4-lat-txt"></span></div>
+      <div id="f4-lat" data-layout-allow-overlap><i></i><span id="f4-lat-txt"></span></div>
     </div>
     <img id="f4-grain" src="assets/f4-find/grain.png" alt="">
   </div>
@@ -64,109 +52,52 @@
     const BEAT = 60 / 130, START = 40, F = 1 / 60;
     const at = b => (b - START) * BEAT;
 
-    const LATENCY_TEXT = "-- ms";      // placeholder: shows the measured keystroke time when instant search ships
-    const SHOW_SLOT_TAG = true;
-    const SLOT_TAG_TEXT = "SLOT 4: replace with the instant search capture";
-
-    document.getElementById('f4-lat-txt').textContent = LATENCY_TEXT;
-    if (SHOW_SLOT_TAG) {
-      const t = document.createElement('div');
-      t.id = 'f4-slot'; t.textContent = SLOT_TAG_TEXT;
-      document.getElementById('root').appendChild(t);
-    }
-
-    // generic file rows (invented names, nothing real)
-    const ICONS = {
-      pdf: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
-      img: '<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 9"/>',
-    };
-    const COL = { pdf: '#ff453a', img: '#bf5af2', doc: '#1a84f3' };
-    const FILES = [
-      { n: 'Tax return 2025.pdf',   f: 'Documents / Taxes',   c: 'pdf' },   // 0
-      { n: 'Tax invoice March.pdf', f: 'Downloads',           c: 'pdf' },   // 1
-      { n: 'Taxi receipt.png',      f: 'Pictures / Receipts', c: 'img' },   // 2
-      { n: 'Tenant agreement.pdf',  f: 'Documents / Home',    c: 'pdf' },   // 3
-      { n: 'Team photo.jpg',        f: 'Pictures / Work',     c: 'img' },   // 4
-      { n: 'Trip itinerary.pdf',    f: 'Documents / Travel',  c: 'pdf' },   // 5
-      { n: 'Tax summary 2024.pdf',  f: 'Documents / Taxes',   c: 'pdf' },   // 6
-      { n: 'Tent photos.jpg',       f: 'Pictures / Camping',  c: 'img' },   // 7
-      { n: 'Tax notes.docx',        f: 'Documents / Taxes',   c: 'doc' },   // 8
-    ];
-    // One shared slot grid (5 slots). STAGES[k] lists the file shown in each slot after k letters.
-    // Staying rows keep their relative order, so sliding rows never cross; leaving rows fade out first,
-    // staying rows then slide to their new slot, entering rows fade in last. Two rows never share a slot.
-    const STAGES = [
-      [4, 5, 3, 0, 7],   // before typing
-      [5, 3, 0, 2, 8],   // "t"
-      [3, 0, 6, 2, 8],   // "ta"
-      [0, 6, 2, 1, 8],   // "tax"
-    ];
-    const ROW_H = 88;
-    const rowsEl = document.getElementById('f4-rows');
-    const rows = FILES.map((f, i) => {
-      const d = document.createElement('div');
-      d.className = 'f4-row'; d.id = 'f4-row' + i; d.style.setProperty('--k', COL[f.c]);
-      d.innerHTML = '<span class="f4-ic"><svg viewBox="0 0 24 24">' + ICONS[f.c === 'img' ? 'img' : 'pdf'] + '</svg></span><span><div class="f4-nm">' + f.n + '</div><div class="f4-fd">' + f.f + '</div></span>';
-      rowsEl.appendChild(d);
-      return d;
-    });
-    const slotOf = (k, id) => STAGES[k].indexOf(id);
+    /* the measured time from a keystroke to a drawn frame: p50 of 14 keystrokes in assets/data/find-report.json (release build, Mac runner) */
+    const LATENCY_MS = 3;
+    document.getElementById('f4-lat-txt').textContent = LATENCY_MS + ' ms';
 
     const tl = gsap.timeline({ paused: true });
-    // an entrance starts one frame BEFORE the beat (expo.out on transform, opacity 0.5 to 1 in 0.08 s, so the first frame already shows it)
+    /* a hit-frame entrance: transform expo-out, opacity 0.5 to 1 in 0.08 s, starting one frame before the beat so the beat frame already shows it */
     const enter = (sel, beat, from, dur = 0.4) => {
       const t = Math.max(0, at(beat) - F);
       tl.fromTo(sel, from, { x: 0, y: 0, duration: dur, ease: 'expo.out', immediateRender: false }, t);
       tl.fromTo(sel, { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, t);
     };
-    gsap.set(['#f4-card', '#f4-l1', '#f4-l2', '#f4-lat', '#f4-hl'], { opacity: 0 });
+    gsap.set(['#f4-l1', '#f4-l2', '#f4-lat'], { opacity: 0 });
+    gsap.set('#f4-t0', { opacity: 1 });
 
-    // initial row state: stage 0 rows visible, every other row parked (hidden) at the slot where it first appears
-    rows.forEach((r, id) => {
-      let first = STAGES.findIndex(st => st.includes(id));
-      gsap.set(r, { y: slotOf(first, id) * ROW_H, opacity: first === 0 ? 1 : 0 });
+    /* the Home plate is on screen exactly as frame 3 ends, then glides away from the first frame */
+    tl.fromTo('#f4-plate', { x: 0, y: 0, scale: 1 }, { x: -330, y: 120, scale: 0.62, duration: 0.5, ease: 'expo.out', transformOrigin: '50% 50%', immediateRender: false }, 0);
+    /* the real Find page lands on beat 40 (already arriving on the first frame) */
+    enter('#f4-cardwrap', 40, { x: 320 }, 0.45);
+
+    /* the push: about 1.7x on the search field and the first rows so the typing reads on a phone (top-left origin, card pixels) */
+    const K = 760 / 1440;              /* card pixels per source pixel */
+    const S1 = 1.7, S2 = 1.3;
+    tl.fromTo('#f4-zoom', { scale: 1, x: 0, y: 0 }, { scale: S1, x: 0, y: -100 * K * S1, duration: 0.6, ease: 'expo.out', immediateRender: false }, at(40.4));
+
+    /* the typing, one real capture per 16th note: re, rep, repo, repor, report */
+    const STEPS = [[41, 't2'], [41.25, 't3'], [41.5, 't4'], [41.75, 't5'], [42, 't6']];
+    STEPS.forEach(([b, id], i) => {
+      tl.set('#f4-' + id, { opacity: 1 }, at(b));
+      tl.set(i === 0 ? '#f4-t0' : '#f4-' + STEPS[i - 1][1], { opacity: 0 }, at(b));
     });
 
-    // plate: already on screen exactly as frame 3 ends (left 210, top 74, 1500 wide, scale 1), glides away from the first frame
-    tl.fromTo('#f4-plate', { x: 0, y: 0, scale: 1 }, { x: -320, y: 101, scale: 0.70, duration: 0.5, ease: 'expo.out', transformOrigin: '50% 50%', immediateRender: false }, 0);
-    // search card is already arriving on the first frame (beat 40)
-    enter('#f4-card', 40, { x: 300 }, 0.45);
-
-    // three letters on three 16ths: 41, 41.25, 41.5
-    const TYPE = [41, 41.25, 41.5];
-    tl.set('#f4-ph', { opacity: 1 }, 0);
-    tl.set('#f4-ph', { opacity: 0 }, at(TYPE[0]));
-    ['#f4-c1', '#f4-c2', '#f4-c3'].forEach((c, k) => tl.set(c, { opacity: 1 }, at(TYPE[k])));
-
-    // the list changes after each letter
-    for (let k = 1; k < STAGES.length; k++) {
-      const T = at(TYPE[k - 1]);
-      rows.forEach((r, id) => {
-        const was = slotOf(k - 1, id), now = slotOf(k, id);
-        if (was >= 0 && now < 0) {
-          tl.fromTo(r, { opacity: 1 }, { opacity: 0, duration: 0.12, ease: 'power1.out', immediateRender: false }, T);
-        } else if (was >= 0 && now >= 0 && was !== now) {
-          tl.fromTo(r, { y: was * ROW_H }, { y: now * ROW_H, duration: 0.25, ease: 'expo.out', immediateRender: false }, T + 0.12);
-        } else if (was < 0 && now >= 0) {
-          tl.fromTo(r, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'power1.out', immediateRender: false }, T + 0.24);
-        }
-      });
-    }
-
-    // copy: legible from the beat it lands on
+    /* copy lands on its beat; the first line leaves one frame before the second lands */
     enter('#f4-l1', 44, { y: 40 });
+    tl.to('#f4-l1', { opacity: 0, y: -30, duration: 0.2, ease: 'power3.in', immediateRender: false }, at(46.5) - F - 0.2);
     enter('#f4-l2', 46.5, { y: 40 });
 
-    // HIT beat 46.5: the latency pill drops in as an impact that ENDS on the beat, and the top result locks (lit in 0.08 s)
+    /* HIT beat 46.5: the latency pill lands as an impact that ENDS on the beat, and the camera pulls back so the whole result list reads */
     tl.fromTo('#f4-lat', { y: -26 }, { y: 0, duration: 0.18, ease: 'power2.in', immediateRender: false }, at(46.5) - 0.18);
     tl.fromTo('#f4-lat', { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, at(46.5) - 0.18);
-    tl.fromTo('#f4-hl', { opacity: 0 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, at(46.5) - F);
+    tl.to('#f4-zoom', { scale: S2, x: 0, y: -40 * K * S2, duration: 0.5, ease: 'expo.out', immediateRender: false }, at(46.5) - F);
 
-    // slow camera drift across the scene
-    tl.fromTo('#f4-cam', { scale: 1 }, { scale: 1.025, duration: 8 * BEAT, ease: 'none' }, 0);
+    /* slow drift across the scene */
+    tl.fromTo('#f4-cam', { scale: 1 }, { scale: 1.02, duration: 8 * BEAT, ease: 'none' }, 0);
 
-    // hard exit one frame before beat 48: the ground stays blue, frame 5 lands on beat 48
-    tl.to(['#f4-cam', '#f4-slot'], { opacity: 0, duration: 0.15, ease: 'power1.in' }, at(48) - 0.15 - F);
+    /* hard exit one frame before beat 48: the ground stays blue, frame 5 lands on beat 48 */
+    tl.to('#f4-cam', { opacity: 0, duration: 0.15, ease: 'power1.in' }, at(48) - 0.15 - F);
 
     window.__timelines["f4-find"] = tl;
   </script>
