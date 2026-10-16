@@ -1,0 +1,73 @@
+// The contract between the Panoply host and a community module.
+//
+// A module is a WebAssembly component that exports `run` and may call only the
+// functions in `host`. There is no file system and no network behind it: a module
+// sees the files the user chose (by handle, never by path) and can write new files
+// into the output folder (the host picks the names). Everything else is denied.
+//
+// Version 0.1.0. Changes to this file are changes to the module ABI.
+package panoply:module@0.1.0;
+
+interface host {
+  /// One file the user handed to the module. Read it through `read` or `read-all`
+  /// with `handle`. The host never gives the module the real path.
+  record input-file {
+    handle: u32,
+    /// File name without folders, for labels and for naming outputs.
+    name: string,
+    /// MIME type sniffed from the file's bytes, not its extension.
+    mime: string,
+    /// Size in bytes.
+    size: u64,
+  }
+
+  /// What a run produced.
+  variant output {
+    /// A file written through `save` or `finish-output`. The string is the name the
+    /// host chose. Files finished but not listed are still kept and reported.
+    file(string),
+    /// One line of a report. Read-only modules (pattern I) answer with notes.
+    note(string),
+  }
+
+  /// Read up to `len` bytes of an input starting at `offset`. Returns fewer bytes
+  /// near the end, and an empty list at the end. One call returns at most 8 MiB.
+  read: func(handle: u32, offset: u64, len: u32) -> result<list<u8>, string>;
+
+  /// Read a whole input. Fails with a plain message when it is over 64 MiB: read
+  /// big files in pieces with `read` so memory stays flat.
+  read-all: func(handle: u32) -> result<list<u8>, string>;
+
+  /// Write one output file in one call and return its name. The host names it
+  /// `<input name> (<label>).<ext>` in the output folder and never overwrites:
+  /// a taken name becomes `(<label> 2)`, `(<label> 3)` and so on. `for-input` picks
+  /// whose name to build on, and `none` is for modules that take no files.
+  save: func(for-input: option<u32>, label: string, ext: string, data: list<u8>) -> result<string, string>;
+
+  /// Start a large output and get a handle to append to. Use with `append-output`
+  /// and `finish-output`. Unfinished outputs are deleted when the job ends.
+  begin-output: func(for-input: option<u32>, label: string, ext: string) -> result<u32, string>;
+
+  /// Append bytes to an output started with `begin-output`.
+  append-output: func(output: u32, data: list<u8>) -> result<_, string>;
+
+  /// Close an output and return its name.
+  finish-output: func(output: u32) -> result<string, string>;
+
+  /// Report progress. `fraction` is 0.0 to 1.0. The host shows it for jobs over 300 ms.
+  progress: func(fraction: f32, label: string);
+
+  /// True once the user cancelled. Poll between chunks of work and return early.
+  /// A module that never polls is still stopped by the host, just less gracefully.
+  cancelled: func() -> bool;
+}
+
+world module {
+  import host;
+  use host.{input-file, output};
+
+  /// Do the job. `options` is a JSON object with every option declared in
+  /// module.toml, defaults already filled in. An error is shown to the user as the
+  /// message, so write it in plain words with a next step.
+  export run: func(inputs: list<input-file>, options: string) -> result<list<output>, string>;
+}

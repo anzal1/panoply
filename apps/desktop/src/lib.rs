@@ -4,8 +4,10 @@
 //! The GPUI views in `ui` draw it, and nothing in them is specific to any module.
 
 pub mod catalog;
+pub mod disk_review;
 pub mod downloads;
 pub mod estimate;
+pub mod finder;
 pub mod form;
 pub mod fuzzy;
 pub mod history;
@@ -27,6 +29,16 @@ mod ui;
 pub fn run_from_args(args: Vec<String>) {
     #[cfg(feature = "snapshot")]
     {
+        if args.iter().any(|a| a == "--selfcheck-find") {
+            let out = args
+                .iter()
+                .position(|a| a == "--out")
+                .and_then(|i| args.get(i + 1))
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| std::path::PathBuf::from("screens"));
+            selfcheck::run_find(out);
+            return;
+        }
         if args.iter().any(|a| a == "--selfcheck-idle") {
             let hold = args
                 .iter()
@@ -45,6 +57,19 @@ pub fn run_from_args(args: Vec<String>) {
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|| std::path::PathBuf::from("review"));
             selfcheck::run_review(out);
+            return;
+        }
+        if args.iter().any(|a| a == "--selfcheck-userpass") {
+            let arg = |name: &str| {
+                args.iter()
+                    .position(|a| a == name)
+                    .and_then(|i| args.get(i + 1))
+                    .map(std::path::PathBuf::from)
+            };
+            selfcheck::run_userpass(
+                arg("--out").unwrap_or_else(|| std::path::PathBuf::from("userpass")),
+                arg("--manifest").unwrap_or_else(|| std::path::PathBuf::from("manifest.json")),
+            );
             return;
         }
         if args.iter().any(|a| a == "--selfcheck-frames") {

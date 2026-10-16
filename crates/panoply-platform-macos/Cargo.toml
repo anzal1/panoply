@@ -13,6 +13,9 @@ keywords = ["macos", "imageio", "heic", "avif"]
 categories = ["os::macos-apis", "multimedia::images"]
 
 [target.'cfg(target_os = "macos")'.dependencies]
+# getattrlistbulk, for reading a whole folder (names, types, modified times) in one call per few hundred
+# entries (src/bulkdir.rs).
+libc = "0.2"
 objc2-core-foundation = { version = "0.3", default-features = false, features = ["std", "CFBase", "CFData", "CFDictionary", "CFNumber", "CFString", "CFArray"] }
 objc2-core-graphics = { version = "0.3", default-features = false, features = ["std", "CGImage", "CGColorSpace", "CGContext", "CGBitmapContext", "CGDataProvider", "CGGeometry", "CGAffineTransform", "CGColor"] }
 # The Objective-C runtime, only for camera RAW through CoreImage (src/raw.rs). CoreImage itself is

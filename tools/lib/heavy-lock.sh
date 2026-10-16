@@ -1,6 +1,8 @@
 # shellcheck shell=bash
-# A machine-wide lock so only one heavy check (a build, clippy, a test run, a VM) runs at a time across
-# every worktree and every agent on this Mac. Source it, then:
+# A machine-wide lock with a small number of slots (PANOPLY_HEAVY_SLOTS, default 2), so at most that many
+# heavy checks (a build, clippy, a test run, a VM) run at once across every worktree and every agent on
+# this Mac. Each holder gets CARGO_BUILD_JOBS=6, so two holders use at most 12 of the 18 cores. Source it,
+# then:
 #
 #     heavy_lock_acquire     waits ("waiting for another check") while another check holds the lock
 #     heavy_lock_release     call it from the EXIT trap
@@ -11,49 +13,62 @@
 #
 # PANOPLY_HEAVY_LOCK moves the lock directory (tests only). tools/preflight-windows.sh sources this too.
 
-HEAVY_LOCK_DIR="${PANOPLY_HEAVY_LOCK:-/Users/anzalhussainabidi/personal/.panoply-heavy.lock}"
+HEAVY_LOCK_BASE="${PANOPLY_HEAVY_LOCK:-/Users/anzalhussainabidi/personal/.panoply-heavy.lock}"
+HEAVY_LOCK_SLOTS="${PANOPLY_HEAVY_SLOTS:-2}"
+HEAVY_LOCK_DIR="$HEAVY_LOCK_BASE"
 HEAVY_LOCK_OWNER=""
 
-heavy_lock_acquire() {
-  local dir="$HEAVY_LOCK_DIR" holder="" announced=0 empty=0 waited_since=$SECONDS
-  # Inherited from a parent that holds it: nothing to do.
-  if [ -n "${PANOPLY_HEAVY_LOCK_HELD:-}" ] && [ "$(cat "$dir/pid" 2>/dev/null || true)" = "$PANOPLY_HEAVY_LOCK_HELD" ] \
-    && kill -0 "$PANOPLY_HEAVY_LOCK_HELD" 2>/dev/null; then
-    return 0
-  fi
-  mkdir -p "$(dirname "$dir")"
-  while ! mkdir "$dir" 2>/dev/null; do
-    holder="$(cat "$dir/pid" 2>/dev/null || true)"
-    if [ -z "$holder" ]; then
-      # The holder made the directory a moment ago and has not written its PID yet. Give it 10 s.
-      empty=$((empty + 1))
-      if [ "$empty" -gt 10 ]; then
-        rm -rf "$dir"
-        empty=0
-      fi
-      sleep 1
-      continue
+# Slot 1 is the base path (older copies of this script only know that one), slot n is base.n.
+heavy_lock_slot() { if [ "$1" = 1 ]; then echo "$HEAVY_LOCK_BASE"; else echo "$HEAVY_LOCK_BASE.$1"; fi; }
+
+# Try every slot once. Clears a slot whose holder is gone. Returns 0 with HEAVY_LOCK_DIR set on success.
+heavy_lock_try() {
+  local i dir holder
+  for i in $(seq 1 "$HEAVY_LOCK_SLOTS"); do
+    dir="$(heavy_lock_slot "$i")"
+    if mkdir "$dir" 2>/dev/null; then
+      HEAVY_LOCK_DIR="$dir"
+      return 0
     fi
-    empty=0
-    if ! kill -0 "$holder" 2>/dev/null; then
+    holder="$(cat "$dir/pid" 2>/dev/null || true)"
+    if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
       echo "heavy lock: holder $holder is gone, taking over a stale lock" >&2
-      # Move it aside first (atomic), and only when it still names the dead PID.
       if [ "$(cat "$dir/pid" 2>/dev/null || true)" = "$holder" ]; then
         mv "$dir" "$dir.stale.$$" 2>/dev/null && rm -rf "$dir.stale.$$"
       fi
-      continue
+    elif [ -z "$holder" ] && [ -d "$dir" ]; then
+      # Made a moment ago and no PID yet, or abandoned empty. Clear it if it stays empty for 10 s.
+      if [ -n "$(find "$dir" -maxdepth 0 -mmin +0.17 2>/dev/null)" ]; then rm -rf "$dir"; fi
     fi
+  done
+  return 1
+}
+
+heavy_lock_acquire() {
+  local announced=0 waited_since=$SECONDS i
+  # Inherited from a parent that holds a slot: nothing to do.
+  if [ -n "${PANOPLY_HEAVY_LOCK_HELD:-}" ] && kill -0 "$PANOPLY_HEAVY_LOCK_HELD" 2>/dev/null; then
+    for i in $(seq 1 "$HEAVY_LOCK_SLOTS"); do
+      if [ "$(cat "$(heavy_lock_slot "$i")/pid" 2>/dev/null || true)" = "$PANOPLY_HEAVY_LOCK_HELD" ]; then
+        return 0
+      fi
+    done
+  fi
+  mkdir -p "$(dirname "$HEAVY_LOCK_BASE")"
+  until heavy_lock_try; do
     if [ "$announced" = 0 ] || [ $((SECONDS - waited_since)) -ge 60 ]; then
-      printf 'waiting for another check (held by pid %s: %s)\n' "$holder" "$(cat "$dir/what" 2>/dev/null || echo unknown)" >&2
+      printf 'waiting for another check (%s slots busy)\n' "$HEAVY_LOCK_SLOTS" >&2
       announced=1
       waited_since=$SECONDS
     fi
     sleep 5
   done
-  printf '%s\n' "$$" >"$dir/pid"
-  printf '%s\n' "$(basename "${0:-check}") in $PWD since $(date +%H:%M:%S)" >"$dir/what"
+  printf '%s\n' "$$" >"$HEAVY_LOCK_DIR/pid"
+  printf '%s\n' "$(basename "${0:-check}") in $PWD since $(date +%H:%M:%S)" >"$HEAVY_LOCK_DIR/what"
   HEAVY_LOCK_OWNER=$$
   export PANOPLY_HEAVY_LOCK_HELD=$$
+  # Two holders at once: keep each to 6 compile jobs.
+  export CARGO_BUILD_JOBS=6
 }
 
 heavy_lock_release() {

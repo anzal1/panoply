@@ -37,7 +37,7 @@ tests of the changed crates inside Ubuntu 24.04 in a small [colima](https://gith
 leaves it running). `tools/preflight.sh --linux` runs it after the macOS checks, and does so by itself when a
 changed file holds Linux-only code. `--smoke` also builds `panoply-desktop` and runs it headless under Xvfb and
 openbox (a window titled Panoply appears, the command bar is not mapped before the hotkey, screenshots are
-saved). Only one heavy check runs on the machine at a time: a second one prints "waiting for another check"
+saved). At most two heavy checks run on the machine at a time: a third one prints "waiting for another check"
 (`tools/lib/heavy-lock.sh`). Details in [docs/CI.md](docs/CI.md).
 
 **The Windows check.** Windows-only errors (the `cfg(windows)` code, a dependency missing from a `cfg(windows)`
@@ -105,8 +105,9 @@ dependencies; `cargo deny check` must pass. Model weights need MIT, Apache-2.0,
 BSD or a similar clean license, verified on the model card.
 
 **Notices.** `THIRD-PARTY-NOTICES.md` is generated and ships in every download. When you change
-`Cargo.lock`, run `cargo fetch --locked && python3 -I tools/notices/generate.py` and commit the result, or
-CI fails. When you add or change a download (a model, an engine, a helper), update
+`Cargo.lock` or the lock file of a module in `modules/examples-wasm`, run `cargo fetch --locked`, the same with
+`--manifest-path modules/examples-wasm/<module>/Cargo.toml` for each module, then
+`python3 -I tools/notices/generate.py`, and commit the result, or CI fails. When you add or change a download (a model, an engine, a helper), update
 `tools/notices/runtime.md` with its source URL and the license you read there. The generator fails if a
 pinned version or commit in the source is missing from that file.
 

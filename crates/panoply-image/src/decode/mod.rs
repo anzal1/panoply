@@ -227,11 +227,8 @@ pub fn open(
         file.seek(SeekFrom::Start(0))?;
         n
     };
-    let format = crate::format::detect(&head[..n], ext_hint).ok_or_else(|| {
-        ImageError::Unsupported(
-            "This file is not an image Panoply can read. Check that it is a JPEG, PNG, WebP, GIF, TIFF, BMP, HEIC or AVIF file.".into(),
-        )
-    })?;
+    let format = crate::format::detect(&head[..n], ext_hint)
+        .ok_or_else(|| ImageError::Unsupported(crate::format::not_an_image_message(&head[..n])))?;
     let reader: Box<dyn RowReader> = match format {
         Format::Jpeg => Box::new(jpeg::JpegReader::open(file, opts)?),
         Format::Png => Box::new(png::PngReader::open(file, opts)?),

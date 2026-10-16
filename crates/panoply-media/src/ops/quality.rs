@@ -52,18 +52,23 @@ pub fn measure(
     let seconds = window.min(duration).max(0.5);
     let start = ((duration - seconds) / 2.0).max(0.0);
     let use_vmaf = engine.has_filter("libvmaf");
+    // Each thread holds frames of float planes at the comparison size; eight of them on a 4K
+    // picture cost 3 GB. Two keep the check under a second of extra time on a clip this short.
     let threads = std::thread::available_parallelism()
-        .map(|n| n.get().min(8))
+        .map(|n| n.get().min(2))
         .unwrap_or(2);
     let sub = 3; // every third frame: enough for a stable mean, a third of the cost
+    // Both pictures are compared at no more than 1080p, the size VMAF's model is made for. At the
+    // source's own 4K the measurement held 3.5 GB resident for a 5 second clip.
+    let (cw, ch) = compare_size(width, height);
     let filter = if use_vmaf {
         format!(
-            "[0:v]scale={width}:{height}:flags=bicubic,format=yuv420p,setpts=PTS-STARTPTS[d];[1:v]format=yuv420p,setpts=PTS-STARTPTS[r];[d][r]libvmaf=n_threads={threads}:n_subsample={sub}:log_fmt=json:log_path={}",
+            "[0:v]scale={cw}:{ch}:flags=bicubic,format=yuv420p,setpts=PTS-STARTPTS[d];[1:v]scale={cw}:{ch}:flags=bicubic,format=yuv420p,setpts=PTS-STARTPTS[r];[d][r]libvmaf=n_threads={threads}:n_subsample={sub}:log_fmt=json:log_path={}",
             filter_path(log)
         )
     } else {
         format!(
-            "[0:v]scale={width}:{height}:flags=bicubic,format=yuv420p,setpts=PTS-STARTPTS[d];[1:v]format=yuv420p,setpts=PTS-STARTPTS[r];[d][r]ssim=stats_file=-"
+            "[0:v]scale={cw}:{ch}:flags=bicubic,format=yuv420p,setpts=PTS-STARTPTS[d];[1:v]scale={cw}:{ch}:flags=bicubic,format=yuv420p,setpts=PTS-STARTPTS[r];[d][r]ssim=stats_file=-"
         )
     };
     let args: Vec<OsString> = [
@@ -108,6 +113,19 @@ pub fn measure(
     } else {
         parse_ssim(&text, seconds)
     })
+}
+
+/// The size both pictures are compared at: the source's own size up to 1080p worth of pixels, then
+/// scaled down keeping the shape, to even numbers.
+pub fn compare_size(width: u32, height: u32) -> (u32, u32) {
+    const LIMIT: u64 = 1920 * 1080;
+    let px = u64::from(width) * u64::from(height);
+    if px <= LIMIT || width == 0 || height == 0 {
+        return (width, height);
+    }
+    let f = (LIMIT as f64 / px as f64).sqrt();
+    let even = |x: f64| ((x / 2.0).round() as u32 * 2).max(2);
+    (even(f64::from(width) * f), even(f64::from(height) * f))
 }
 
 /// The pooled mean from libvmaf's JSON log. The per-frame list also has a "vmaf" key, so the
@@ -162,6 +180,17 @@ mod tests {
         let l = "[Parsed_ssim_5 @ 0x1] SSIM Y:0.98 (17.1) U:0.99 (19.0) V:0.99 (19.2) All:0.981234 (17.2)";
         let q = parse_ssim(l, 5.0).unwrap();
         assert!((q.score - 0.981234).abs() < 1e-9 && !q.vmaf);
+    }
+
+    #[test]
+    fn the_comparison_never_runs_above_1080p() {
+        assert_eq!(compare_size(1280, 720), (1280, 720));
+        assert_eq!(compare_size(1920, 1080), (1920, 1080));
+        assert_eq!(compare_size(1080, 1920), (1080, 1920));
+        assert_eq!(compare_size(3840, 2160), (1920, 1080));
+        assert_eq!(compare_size(7680, 4320), (1920, 1080));
+        let (w, h) = compare_size(4000, 1556);
+        assert!(w % 2 == 0 && h % 2 == 0 && u64::from(w) * u64::from(h) <= 1920 * 1080 + 4000);
     }
 
     #[test]

@@ -19,11 +19,12 @@
 # "panoply" so your own default VM is never touched) runs one container of tools/linux/Dockerfile (Ubuntu
 # 24.04, the toolchain from rust-toolchain.toml, the apt packages of .github/actions/linux-libs). The repo
 # is bind-mounted read-only; inside, it is synced to a work volume (rsync keeps the modification times, so
-# cargo rebuilds only what you changed). Named docker volumes keep the cargo registry, the Linux target
-# folder and the downloaded engines warm between runs. Everything runs at nice 15, and only one heavy check runs on the Mac at a time (tools/lib/heavy-lock.sh). When the check ends the
+# cargo rebuilds only what you changed). Named docker volumes keep the cargo registry, the downloaded
+# engines and, per checkout (keyed on a hash of its path, so branches never share build output), the
+# Linux target folder and the work folder warm between runs. Everything runs at nice 15, and only one heavy check runs on the Mac at a time (tools/lib/heavy-lock.sh). When the check ends the
 # VM is stopped (`colima stop`), so it costs nothing while idle, and your docker context is put back.
 #
-# Environment: PANOPLY_COLIMA_PROFILE (default panoply), PANOPLY_LINUX_JOBS (cargo jobs, default 8),
+# Environment: PANOPLY_COLIMA_PROFILE (default panoply), PANOPLY_LINUX_JOBS (cargo jobs, default 4),
 # PANOPLY_SMOKE_OUT (where the screenshots go, default ~/.cache/panoply/linux-smoke).
 set -euo pipefail
 
@@ -51,7 +52,12 @@ done
 profile="${PANOPLY_COLIMA_PROFILE:-panoply}"
 ctx="colima-$profile"
 [ "$profile" = default ] && ctx=colima
-jobs="${PANOPLY_LINUX_JOBS:-${CARGO_BUILD_JOBS:-8}}"
+# 4 jobs: the VM has 4 CPUs and 3.7 GB, and 8 rustc processes (cranelift-codegen above all) were OOM-killed.
+jobs="${PANOPLY_LINUX_JOBS:-4}"
+# The Linux target and work folders are per checkout: cargo hashes workspace crates the same in every
+# worktree, so one shared target let a build from another branch stand in for this one (and a test ran
+# another branch's code). The registry, git and engine volumes hold content that is the same for all.
+wt="$(printf '%s' "$PWD" | shasum | cut -c1-10)"
 smoke_out="${PANOPLY_SMOKE_OUT:-$HOME/.cache/panoply/linux-smoke}"
 start=$SECONDS
 step() { printf '\n==> [linux] %s\n' "$*"; step_start=$SECONDS; }
@@ -82,12 +88,17 @@ prev_ctx="$(docker context show 2>/dev/null || echo default)"
 cleanup() {
   status=$?
   trap - EXIT
-  if [ "$keep" = 0 ]; then
+  vm_mine=0
+  if [ -n "${vm_lock:-}" ] && [ "$(cat "$vm_lock/pid" 2>/dev/null || true)" = "$$" ]; then vm_mine=1; fi
+  if [ "$vm_mine" = 0 ]; then
+    :  # never got the VM, so never stop it
+  elif [ "$keep" = 0 ]; then
     colima stop "$profile" >/dev/null 2>&1 && echo "[linux] VM stopped (colima stop $profile)" || true
   else
     echo "[linux] VM left running (--keep); stop it with: colima stop $profile"
   fi
   docker context use "$prev_ctx" >/dev/null 2>&1 || true
+  if [ "$vm_mine" = 1 ]; then rm -rf "$vm_lock"; fi
   heavy_lock_release
   exit "$status"
 }
@@ -96,6 +107,20 @@ trap 'exit 130' INT TERM
 
 # Only one heavy check at a time on this Mac (tools/lib/heavy-lock.sh); waits when another holds it.
 heavy_lock_acquire
+# The VM is shared by every worktree. Only one Linux check uses it at a time, and only the holder stops
+# it, so one agent's cleanup never kills another agent's run.
+vm_lock="${PANOPLY_LINUX_VM_LOCK:-/Users/anzalhussainabidi/personal/.panoply-linux-vm.lock}"
+vm_announced=0
+until mkdir "$vm_lock" 2>/dev/null; do
+  vm_holder="$(cat "$vm_lock/pid" 2>/dev/null || true)"
+  if [ -n "$vm_holder" ] && ! kill -0 "$vm_holder" 2>/dev/null; then
+    rm -rf "$vm_lock"
+    continue
+  fi
+  if [ "$vm_announced" = 0 ]; then echo "[linux] waiting for another Linux check to finish with the VM" >&2; vm_announced=1; fi
+  sleep 5
+done
+printf '%s\n' "$$" >"$vm_lock/pid"
 
 if ! colima status "$profile" >/dev/null 2>&1; then
   step "starting the VM (4 CPUs, 4 GB, no windows)"
@@ -148,9 +173,9 @@ d run --rm --cpus 4 --memory 3700m --memory-swap 3700m \
   "${corpus_args[@]}" \
   -v panoply-linux-registry:/usr/local/cargo/registry \
   -v panoply-linux-git:/usr/local/cargo/git \
-  -v panoply-linux-target:/cache/target \
+  -v "panoply-linux-target-$wt":/cache/target \
   -v panoply-linux-engines:/cache/engines \
-  -v panoply-linux-work:/work \
+  -v "panoply-linux-work-$wt":/work \
   -v "$smoke_out":/out \
   -e SCOPE="$scope" -e NEXTEST_PROFILE="$profile_nx" -e SMOKE="$smoke" -e JOBS="$jobs" -e PLAN="$plan" \
   "$tag" bash /src/tools/linux/inner.sh

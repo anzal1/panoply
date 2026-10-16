@@ -1,0 +1,11 @@
+# The community modules that ship inside the release bundles (macOS app, Windows MSI and zip, Linux
+# AppImage and tarball, and next to the command line tool in its archive).
+#
+#   folder under modules/examples-wasm    module id the folder must hold
+#
+# The examples slugify-lines and word-count are for learning from modules/template-rust and stay out of
+# releases. tools/build-shipped-modules.sh builds exactly this list and fails if a folder's module.toml
+# has another id. Adding a line here is how a module gets shipped.
+markdown-to-html   doc.markdown_to_html
+data-format        data.format
+qr-code            image.qr_code

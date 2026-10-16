@@ -15,22 +15,22 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/anzal1/panoply/releases/download/v0.1.2-beta/Panoply-0.1.2-beta-macos-arm64.dmg"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-2D6CDF?style=for-the-badge&logo=apple&logoColor=white"></a>
-  <a href="https://github.com/anzal1/panoply/releases/download/v0.1.2-beta/Panoply-0.1.2-beta-windows-x64.msi"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows-2D6CDF?style=for-the-badge&logo=windows&logoColor=white"></a>
-  <a href="https://github.com/anzal1/panoply/releases/download/v0.1.2-beta/Panoply-0.1.2-beta-linux-x64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux-2D6CDF?style=for-the-badge&logo=linux&logoColor=white"></a>
+  <a href="https://github.com/anzal1/panoply/releases/download/v0.1.3-beta/Panoply-0.1.3-beta-macos-arm64.dmg"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-2D6CDF?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="https://github.com/anzal1/panoply/releases/download/v0.1.3-beta/Panoply-0.1.3-beta-windows-x64.msi"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Windows-2D6CDF?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <a href="https://github.com/anzal1/panoply/releases/download/v0.1.3-beta/Panoply-0.1.3-beta-linux-x64.AppImage"><img alt="Download for Linux" src="https://img.shields.io/badge/Download-Linux-2D6CDF?style=for-the-badge&logo=linux&logoColor=white"></a>
 </p>
 
 <p align="center">
   <sub>
-    macOS: <a href="https://github.com/anzal1/panoply/releases/download/v0.1.2-beta/Panoply-0.1.2-beta-macos-arm64.dmg">Apple silicon</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.2-beta/Panoply-0.1.2-beta-macos-x64.dmg">Intel</a>
+    macOS: <a href="https://github.com/anzal1/panoply/releases/download/v0.1.3-beta/Panoply-0.1.3-beta-macos-arm64.dmg">Apple silicon</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.3-beta/Panoply-0.1.3-beta-macos-x64.dmg">Intel</a>
     &nbsp;&nbsp;|&nbsp;&nbsp;
-    Windows: <a href="https://github.com/anzal1/panoply/releases/download/v0.1.2-beta/Panoply-0.1.2-beta-windows-x64.msi">x64</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.2-beta/Panoply-0.1.2-beta-windows-arm64.msi">arm64</a>
+    Windows: <a href="https://github.com/anzal1/panoply/releases/download/v0.1.3-beta/Panoply-0.1.3-beta-windows-x64.msi">x64</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.3-beta/Panoply-0.1.3-beta-windows-arm64.msi">arm64</a>
     &nbsp;&nbsp;|&nbsp;&nbsp;
-    Linux: <a href="https://github.com/anzal1/panoply/releases/download/v0.1.2-beta/Panoply-0.1.2-beta-linux-x64.AppImage">x64</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.2-beta/Panoply-0.1.2-beta-linux-arm64.AppImage">arm64</a>
+    Linux: <a href="https://github.com/anzal1/panoply/releases/download/v0.1.3-beta/Panoply-0.1.3-beta-linux-x64.AppImage">x64</a> &middot; <a href="https://github.com/anzal1/panoply/releases/download/v0.1.3-beta/Panoply-0.1.3-beta-linux-arm64.AppImage">arm64</a>
   </sub>
 </p>
 
-<p align="center"><sub>v0.1.2 beta &middot; <a href="https://github.com/anzal1/panoply/releases/tag/v0.1.2-beta">all downloads and SHA256SUMS</a> &middot; <a href="CHANGELOG.md">changelog</a></sub></p>
+<p align="center"><sub>v0.1.3 beta &middot; <a href="https://github.com/anzal1/panoply/releases/tag/v0.1.3-beta">all downloads and SHA256SUMS</a> &middot; <a href="CHANGELOG.md">changelog</a></sub></p>
 
 <p align="center">
   <picture>
@@ -112,7 +112,7 @@ Every download, every network path and how each was checked: [docs/PRIVACY.md](d
 
 ## Install
 
-Download the file for your system from the [releases page](https://github.com/anzal1/panoply/releases/tag/v0.1.2-beta) and check it against `SHA256SUMS`. The beta is not code signed, so macOS and Windows ask you to confirm the first start, once.
+Download the file for your system from the [releases page](https://github.com/anzal1/panoply/releases/tag/v0.1.3-beta) and check it against `SHA256SUMS`. The beta is not code signed, so macOS and Windows ask you to confirm the first start, once.
 
 <details>
 <summary><b>macOS</b> (Apple silicon and Intel)</summary>
@@ -145,8 +145,8 @@ The installer adds an Explorer entry, "Open with Panoply", and puts `panoply` on
 <br>
 
 ```bash
-chmod +x Panoply-0.1.2-beta-linux-x64.AppImage
-./Panoply-0.1.2-beta-linux-x64.AppImage
+chmod +x Panoply-0.1.3-beta-linux-x64.AppImage
+./Panoply-0.1.3-beta-linux-x64.AppImage
 ```
 
 If it does not start, add `--appimage-extract-and-run`. The `.tar.gz` holds the same files and an `install.sh`.

@@ -824,6 +824,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bstr"
+version = "1.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bb31b46c14244e20ee9984b11bf5c992b91fb6939fea616e3512c8baecdbe5f"
+dependencies = [
+ "memchr",
+ "serde_core",
+]
+
+[[package]]
 name = "built"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2484,6 +2494,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "globset"
+version = "0.4.20"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07c34a9410465b45bd9787443bc7370f37735bad04b0f0cd57ff1a3186c98988"
+dependencies = [
+ "aho-corasick",
+ "bstr",
+ "log",
+ "regex-automata",
+ "regex-syntax",
+]
+
+[[package]]
 name = "glow"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3462,6 +3485,22 @@ checksum = "c0a05c691e1fae256cf7013d99dad472dc52d5543322761f83ec8d47eab40d2b"
 dependencies = [
  "libc",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "ignore"
+version = "0.4.33"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "00b69833ed729dc5aa7d19541d96d6cf8e9137194207a04916d658e43168402f"
+dependencies = [
+ "crossbeam-deque",
+ "globset",
+ "log",
+ "memchr",
+ "regex-automata",
+ "same-file",
+ "walkdir",
+ "winapi-util",
 ]
 
 [[package]]
@@ -5187,7 +5226,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-bench"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "clap",
  "panoply-core",
@@ -5200,11 +5239,12 @@ dependencies = [
 
 [[package]]
 name = "panoply-cli"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "clap",
  "panoply-convert",
  "panoply-core",
+ "panoply-disk",
  "panoply-host",
  "panoply-manifest",
  "panoply-mcp",
@@ -5216,7 +5256,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-convert"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -5225,7 +5265,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-core"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "infer",
  "libc",
@@ -5238,7 +5278,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-desktop"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "anyhow",
  "futures",
@@ -5251,6 +5291,8 @@ dependencies = [
  "objc2 0.6.5",
  "panoply-convert",
  "panoply-core",
+ "panoply-disk",
+ "panoply-find",
  "panoply-host",
  "panoply-manifest",
  "panoply-wasm",
@@ -5263,12 +5305,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "panoply-disk"
+version = "0.1.3"
+dependencies = [
+ "libc",
+ "objc2-foundation 0.3.2",
+ "thiserror 2.0.21",
+ "windows 0.62.2",
+]
+
+[[package]]
 name = "panoply-ffi"
-version = "0.1.2"
+version = "0.1.3"
+
+[[package]]
+name = "panoply-find"
+version = "0.1.3"
+dependencies = [
+ "ignore",
+ "memchr",
+ "panoply-platform-macos",
+ "panoply-platform-windows",
+ "rayon",
+ "rustix",
+]
 
 [[package]]
 name = "panoply-host"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "panoply-core",
  "panoply-id",
@@ -5286,7 +5350,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-id"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "ort",
  "panoply-core",
@@ -5304,7 +5368,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-image"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytemuck",
  "fast_image_resize",
@@ -5333,7 +5397,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-manifest"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "serde",
  "serde_json",
@@ -5343,7 +5407,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-mcp"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "panoply-manifest",
  "serde_json",
@@ -5351,7 +5415,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-media"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "panoply-core",
  "panoply-manifest",
@@ -5364,7 +5428,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-ocr"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "ort",
  "panoply-core",
@@ -5381,7 +5445,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-pdf"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "fax",
  "jpeg-encoder",
@@ -5401,8 +5465,9 @@ dependencies = [
 
 [[package]]
 name = "panoply-platform-macos"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
+ "libc",
  "objc2 0.6.5",
  "objc2-core-foundation",
  "objc2-core-graphics",
@@ -5410,8 +5475,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "panoply-platform-windows"
+version = "0.1.3"
+dependencies = [
+ "windows-sys 0.61.2",
+]
+
+[[package]]
 name = "panoply-share"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "bytes",
  "clap",
@@ -5437,7 +5509,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-smoke"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "panoply-bench",
  "panoply-core",
@@ -5450,7 +5522,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-vision"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "fast_image_resize",
  "miniz_oxide 0.9.1",
@@ -5465,7 +5537,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-wasm"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
  "panoply-core",
  "panoply-host",
@@ -5558,7 +5630,7 @@ dependencies = [
  "chrono",
  "console_error_panic_hook",
  "console_log",
- "itertools 0.13.0",
+ "itertools 0.14.0",
  "js-sys",
  "libloading 0.9.0",
  "log",
@@ -7226,7 +7298,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",

@@ -261,6 +261,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: cargo fetch --locked
+      # The community modules are their own Cargo projects with their own lock files.
+      - name: Fetch the community modules' crates
+        run: for m in modules/examples-wasm/*/; do cargo fetch --locked --manifest-path "$m/Cargo.toml"; done
       - run: python3 -I tools/notices/generate.py --check
 
   conversions:
@@ -274,11 +277,32 @@ jobs:
           python3 conversions/formats.py
           git diff --exit-code docs/CONVERSIONS.md crates/panoply-convert/data/graph.json
 
+  # The community modules in modules/examples-wasm are their own small Cargo projects (they build for
+  # wasm32-wasip2 and stay out of the workspace). Each one is formatted, linted, unit tested on the
+  # host and built as WebAssembly here; the tests in `test` then run the built modules for real.
+  modules:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          targets: wasm32-wasip2
+          components: rustfmt, clippy
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: modules/examples-wasm/*/target
+          key: modules-${{ runner.os }}-${{ hashFiles('modules/examples-wasm/**', 'crates/panoply-wasm/wit/**') }}
+          restore-keys: modules-${{ runner.os }}-
+      - name: fmt, clippy, unit tests and the WebAssembly build, for each module
+        run: tools/check-modules.sh
+
   # One name to require in branch protection. Skipped jobs (a docs-only push) count as passed;
   # failed or cancelled ones do not.
   ci:
     if: always()
-    needs: [changes, docs, fmt, clippy, test, licenses, advisories, notices, conversions]
+    needs: [changes, docs, fmt, clippy, test, modules, licenses, advisories, notices, conversions]
     runs-on: ubuntu-latest
     steps:
       - name: Every needed job passed or was skipped

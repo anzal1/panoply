@@ -1,11 +1,12 @@
 //! The `panoply` command line. Short, plain output.
 
+mod disk_cmd;
 mod models_cmd;
 mod vision_cmd;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use clap::{Parser, Subcommand};
@@ -106,6 +107,8 @@ enum Command {
         #[command(subcommand)]
         cmd: Option<models_cmd::ModelsCmd>,
     },
+    /// What is using the space under a folder: panoply disk ~/Downloads [--top 15] [--files 10] [--depth 2] [--json]
+    Disk(disk_cmd::DiskArgs),
     /// Print the version
     Version,
 }
@@ -295,6 +298,41 @@ enum ImageTool {
 }
 
 /// Run a built-in module. Says first when its manifest declares network access.
+/// Progress lines on stderr. Slow jobs only (after the 300 ms budget), and one line per ten percent
+/// or per new step, so a log or a pipe gets ten lines for a picture instead of seventy.
+#[derive(Clone)]
+pub(crate) struct Progress(Arc<Mutex<ProgressState>>);
+
+struct ProgressState {
+    started: Instant,
+    last_bucket: i32,
+    last_label: String,
+}
+
+impl Progress {
+    pub(crate) fn new() -> Self {
+        Progress(Arc::new(Mutex::new(ProgressState {
+            started: Instant::now(),
+            last_bucket: -1,
+            last_label: String::new(),
+        })))
+    }
+
+    pub(crate) fn show(&self, fraction: f32, label: &str) {
+        let mut s = self.0.lock().unwrap_or_else(|p| p.into_inner());
+        if s.started.elapsed() <= Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS) {
+            return;
+        }
+        let pct = (fraction * 100.0).round() as i32;
+        let bucket = pct / 10;
+        if bucket != s.last_bucket || label != s.last_label {
+            s.last_bucket = bucket;
+            s.last_label = label.to_string();
+            eprintln!("{pct:>3}%  {label}");
+        }
+    }
+}
+
 pub(crate) fn run_builtin(
     spec: &JobSpec,
     out: Option<&Path>,
@@ -329,6 +367,7 @@ fn main() -> ExitCode {
         Command::Id { tool } => id_cmd(tool),
         Command::Vision(cmd) => vision_cmd::run(cmd),
         Command::Models { cmd } => models_cmd::run(cmd),
+        Command::Disk(args) => disk_cmd::run(args),
         Command::Version => {
             println!("panoply {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
@@ -418,10 +457,16 @@ fn examples_dir(name: &str) -> Option<PathBuf> {
             .map(PathBuf::from)
             .filter(|_| name == "examples"),
         Some(PathBuf::from("modules").join(name)),
-        Some(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../modules")
-                .join(name),
+        // The source tree this binary was built from: for `cargo run` while developing. A release
+        // build must not look there (on the CI runner that folder exists and holds the examples), and
+        // PANOPLY_NO_SOURCE_TREE=1 turns it off in a debug build too (the tests that check what a
+        // shipped folder holds).
+        (cfg!(debug_assertions) && std::env::var_os("PANOPLY_NO_SOURCE_TREE").is_none()).then(
+            || {
+                PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../modules")
+                    .join(name)
+            },
         ),
     ];
     candidates.into_iter().flatten().find(|p| p.is_dir())
@@ -465,18 +510,23 @@ fn modules() -> ExitCode {
             }
         }
     }
-    if let Some(dir) = examples_dir("examples-wasm") {
-        let mut paths: Vec<PathBuf> = std::fs::read_dir(&dir)
-            .into_iter()
-            .flatten()
-            .flatten()
-            .map(|e| e.path().join("module.toml"))
-            .filter(|p| p.is_file())
+    // Community modules: the folders the app scans (the user folder, the folder shipped with the
+    // program) and the examples in a source checkout. A module found twice is listed once.
+    let mut dirs = panoply_core::modules::search_dirs();
+    dirs.extend(examples_dir("examples-wasm"));
+    let mut listed: Vec<String> = Vec::new();
+    {
+        let mut paths: Vec<PathBuf> = dirs
+            .iter()
+            .flat_map(|d| panoply_core::modules::module_folders(d))
+            .map(|d| d.join("module.toml"))
             .collect();
-        paths.sort();
+        paths.dedup();
         for path in paths {
             match Manifest::from_file(&path) {
+                Ok(m) if listed.contains(&m.module.id) => {}
                 Ok(m) => {
+                    listed.push(m.module.id.clone());
                     let info = &m.module;
                     println!(
                         "{:<22}{:<22}{}  community (run with `panoply run {}`)",
@@ -504,6 +554,23 @@ fn builtin_id(module: &Path) -> Option<String> {
 }
 
 fn run_module(module: &Path, files: Vec<PathBuf>, opts: &[String], out: Option<&Path>) -> ExitCode {
+    let text = module.to_string_lossy();
+    let looks_like_an_id = !text.contains(['/', '\\']) && !text.ends_with(".toml");
+    if builtin_id(module).is_none() && !module.exists() && looks_like_an_id {
+        eprintln!(
+            "There is no tool called {}. Run `panoply modules` to see the list.",
+            module.display()
+        );
+        return ExitCode::from(2);
+    }
+    if builtin_id(module).is_some() && files.is_empty() {
+        eprintln!(
+            "Give {} at least one file, for example: panoply run {} photo.jpg",
+            module.display(),
+            module.display()
+        );
+        return ExitCode::from(2);
+    }
     let result = (|| {
         let (registry, module_id, options) = match builtin_id(module) {
             Some(id) => {
@@ -529,14 +596,11 @@ fn run_module(module: &Path, files: Vec<PathBuf>, opts: &[String], out: Option<&
             options,
         };
         // Progress is for jobs that take a while: stay quiet under 300 ms.
-        let started = Instant::now();
-        let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+        let progress = crate::Progress::new();
         models_cmd::show_network_notice(&registry, &spec.module_id);
         registry.run_job(&spec, out, CancelToken::new(), move |event| {
-            if let JobEvent::Progress { fraction, label } = event
-                && started.elapsed() > slow
-            {
-                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+            if let JobEvent::Progress { fraction, label } = event {
+                progress.show(fraction, &label);
             }
         })
     })();
@@ -762,17 +826,14 @@ fn pdf(tool: PdfTool) -> ExitCode {
         inputs: files,
         options: Value::Object(o),
     };
-    let started = Instant::now();
-    let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+    let progress = crate::Progress::new();
     report(run_builtin(
         &spec,
         out.out.as_deref(),
         CancelToken::new(),
         move |event| {
-            if let JobEvent::Progress { fraction, label } = event
-                && started.elapsed() > slow
-            {
-                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+            if let JobEvent::Progress { fraction, label } = event {
+                progress.show(fraction, &label);
             }
         },
     ))
@@ -806,13 +867,10 @@ fn image(tool: ImageTool) -> ExitCode {
         inputs: files,
         options: serde_json::Value::Object(o),
     };
-    let started = Instant::now();
-    let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+    let progress = crate::Progress::new();
     let result = run_builtin(&spec, out.as_deref(), CancelToken::new(), move |event| {
-        if let JobEvent::Progress { fraction, label } = event
-            && started.elapsed() > slow
-        {
-            eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+        if let JobEvent::Progress { fraction, label } = event {
+            progress.show(fraction, &label);
         }
     });
     match result {
@@ -1089,17 +1147,14 @@ fn media_run(
         inputs: files,
         options: serde_json::Value::Object(o),
     };
-    let started = Instant::now();
-    let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+    let progress = crate::Progress::new();
     report(run_builtin(
         &spec,
         out.out.as_deref(),
         CancelToken::new(),
         move |event| {
-            if let JobEvent::Progress { fraction, label } = event
-                && started.elapsed() > slow
-            {
-                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+            if let JobEvent::Progress { fraction, label } = event {
+                progress.show(fraction, &label);
             }
         },
     ))
@@ -1606,17 +1661,14 @@ fn id_cmd(tool: IdTool) -> ExitCode {
         inputs: files,
         options: Value::Object(o),
     };
-    let started = Instant::now();
-    let slow = Duration::from_millis(panoply_core::budgets::PROGRESS_AFTER_MS);
+    let progress = crate::Progress::new();
     report(run_builtin(
         &spec,
         out.out.as_deref(),
         CancelToken::new(),
         move |event| {
-            if let JobEvent::Progress { fraction, label } = event
-                && started.elapsed() > slow
-            {
-                eprintln!("{:>3.0}%  {label}", fraction * 100.0);
+            if let JobEvent::Progress { fraction, label } = event {
+                progress.show(fraction, &label);
             }
         },
     ))

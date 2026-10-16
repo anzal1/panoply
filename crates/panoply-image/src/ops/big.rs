@@ -1064,6 +1064,7 @@ fn jpeg_candidate(
                 .map(|e| (e as u32 + 8).min(100))
                 .unwrap_or(qhi_all)
                 .max(30);
+            let qlo = super::search::quality_floor(target, hi);
             let mut q = smallest_passing(qlo, hi, |q| {
                 check_cancel(a.io)?;
                 let bytes = sample_bytes(sample, q as f32, false)?;

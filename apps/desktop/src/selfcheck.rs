@@ -21,7 +21,18 @@ use crate::ui::app::{AppView, Route};
 use crate::ui::bar::{Bar, BarMode};
 use crate::ui::icons::Icons;
 use crate::ui::live::{app_window_options_at, bar_window_options};
-use crate::ui::{Hub, Recents};
+use crate::ui::{FindStatus, Hub, Recents};
+
+mod find;
+pub(crate) use find::run_find;
+
+/// The file index parts of a hub for runs that do not look at files: switched off, so nothing
+/// ever scans and the bar and Find page show their "unavailable" state.
+fn find_off(cx: &mut App) -> (crate::finder::Finder, Entity<FindStatus>) {
+    let f = crate::finder::Finder::off();
+    let st = f.state();
+    (f, cx.new(|_| FindStatus { state: st }))
+}
 
 struct Drv<'a> {
     cx: &'a mut AsyncApp,
@@ -299,7 +310,8 @@ pub(crate) fn run(out: PathBuf) {
         let catalog_ms = t_catalog.elapsed().as_secs_f64() * 1000.0;
         let now = crate::units::now_secs();
         let recents = cx.new(|_| Recents { entries: seeded_recents(now, Path::new("/Users/me/Documents")), loaded: true });
-        let hub = Hub { catalog, history: History::at(work.join("history.jsonl")), recents };
+        let (finder, find_status) = find_off(cx);
+        let hub = Hub { catalog, history: History::at(work.join("history.jsonl")), recents, finder, find_status };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
         let bar = cx
@@ -747,10 +759,13 @@ pub(crate) fn run_idle(hold_secs: u64) {
             entries: Vec::new(),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(std::env::temp_dir().join("panoply-idle-history.jsonl")),
             recents,
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
@@ -824,6 +839,60 @@ fn shot<V: 'static>(
     log.push(d.png(h, path));
 }
 
+/// A small synthetic home folder for the disk map renders: about 40 MB of zero-filled files with the
+/// shapes a real one has (a few big videos, many small files, a build folder, downloads).
+fn synthetic_disk_tree(root: &Path) -> std::io::Result<()> {
+    let put = |rel: &str, n: usize| -> std::io::Result<()> {
+        let p = root.join(rel);
+        if let Some(dir) = p.parent() {
+            std::fs::create_dir_all(dir)?;
+        }
+        std::fs::write(p, vec![0u8; n])
+    };
+    put("Movies/trip-2025.mp4", 6_000_000)?;
+    put("Movies/birthday.mov", 3_000_000)?;
+    put("Movies/clip-a.mp4", 1_500_000)?;
+    for i in 0..40 {
+        put(&format!("Pictures/Photos/IMG_{i:04}.jpg"), 80_000)?;
+    }
+    for i in 0..4 {
+        put(&format!("Pictures/RAW/DSC_{i:04}.dng"), 1_000_000)?;
+    }
+    for i in 0..8 {
+        put(&format!("Music/Album/track-{i:02}.mp3"), 400_000)?;
+    }
+    put("Documents/Lease.pdf", 2_000_000)?;
+    put("Documents/Taxes/2024-return.pdf", 600_000)?;
+    put("Documents/Taxes/2023-return.pdf", 500_000)?;
+    put("Documents/budget.xlsx", 400_000)?;
+    for i in 0..30 {
+        put(&format!("Documents/Notes/note-{i:02}.txt"), 2_000)?;
+    }
+    for i in 0..30 {
+        put(
+            &format!("Developer/app/target/debug/deps/dep-{i:02}.o"),
+            100_000,
+        )?;
+    }
+    put("Developer/app/target/debug/libapp.rlib", 2_000_000)?;
+    for i in 0..60 {
+        put(&format!("Developer/app/src/mod{i:02}.rs"), 3_000)?;
+    }
+    for i in 0..100 {
+        put(
+            &format!("Developer/web/node_modules/pkg{}/index{i:03}.js", i % 12),
+            15_000,
+        )?;
+    }
+    put("Downloads/installer.dmg", 3_000_000)?;
+    put("Downloads/archive.zip", 2_000_000)?;
+    put("Downloads/export.sqlite", 1_000_000)?;
+    put("Downloads/payload.bin", 2_000_000)?;
+    put("Library/Caches/com.example.browser/cache.db", 1_500_000)?;
+    put("Library/Caches/com.example.browser/thumbs.dat", 700_000)?;
+    Ok(())
+}
+
 /// `--selfcheck-review --out DIR`: every screen and state of the bar and the app window in light and
 /// dark, one PNG each (`<state>-light.png`, `<state>-dark.png`, rendered at the display's 2x), plus
 /// one contact sheet of the options panel of every tool. Nothing is shown on screen. The files in
@@ -850,10 +919,13 @@ pub(crate) fn run_review(out: PathBuf) {
             entries: seeded_recents(now, Path::new("/Users/me/Documents")),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(work.join("history.jsonl")),
             recents: recents.clone(),
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
@@ -912,6 +984,129 @@ pub(crate) fn run_review(out: PathBuf) {
                     });
                 }
                 let file = |name: &str| out2.join(format!("{name}-{tag}.png"));
+
+                // ---- the disk map (a real scan of a small synthetic folder) ----
+                {
+                    let home = work2.join("Home");
+                    let _ = std::fs::remove_dir_all(&home);
+                    synthetic_disk_tree(&home).expect("make the synthetic tree");
+                    let scan = panoply_disk::scan(&home, &panoply_disk::ScanOptions::default())
+                        .expect("scan the synthetic tree");
+                    let root = home.clone();
+                    let home_for_picks = home.clone();
+                    d.change(app_win, move |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| {
+                            v.load(scan, root, cx);
+                            v.preview_home(home_for_picks.clone(), cx);
+                        });
+                        a.go(Route::Disk, cx);
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map",
+                        &file("disk-map"),
+                        &mut log,
+                        &mut times,
+                    );
+                    // The review panel with three picks and the Full Disk Access note. Nothing is
+                    // moved: the render only draws the panel, and the tree is a temp folder.
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| {
+                            v.pick_named(&["Movies", "Downloads"], cx);
+                            // Library itself is protected, so its box is locked; a cache folder inside
+                            // it can be picked, with a note.
+                            v.pick_path(&["Library", "Caches", "com.example.browser"], cx);
+                            v.preview_fda_banner(true, cx);
+                            v.show_review(true, cx);
+                        });
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-review",
+                        &file("disk-map-review"),
+                        &mut log,
+                        &mut times,
+                    );
+                    // The move's result with Undo (a fake mover: nothing leaves the temp folder or
+                    // reaches the real Trash), one item refused so the failure line shows, then
+                    // the Undo result.
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.preview_move(false, cx));
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-moved",
+                        &file("disk-map-moved"),
+                        &mut log,
+                        &mut times,
+                    );
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.preview_move(true, cx));
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-undone",
+                        &file("disk-map-undone"),
+                        &mut log,
+                        &mut times,
+                    );
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.show_review(false, cx));
+                    });
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| {
+                            v.open_named("Developer", cx);
+                            v.preview_fda_banner(true, cx);
+                        });
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-drilled",
+                        &file("disk-map-drilled"),
+                        &mut log,
+                        &mut times,
+                    );
+                    // The pages around the map: before a scan, mid-scan, a failed start.
+                    for (kind, name) in [
+                        ("idle", "disk-start"),
+                        ("scanning", "disk-scanning"),
+                        ("failed", "disk-failed"),
+                    ] {
+                        d.change(app_win, move |a, _, cx| {
+                            let dv = a.disk_view();
+                            dv.update(cx, |v, cx| {
+                                v.preview_fda_banner(false, cx);
+                                v.preview_phase(kind, cx);
+                            });
+                        });
+                        d.settle(app_win).await;
+                        shot(&mut d, app_win, name, &file(name), &mut log, &mut times);
+                    }
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.preview_done(cx));
+                        a.go(Route::Home, cx);
+                    });
+                    if std::env::args().any(|a| a == "--only-disk") {
+                        continue;
+                    }
+                }
 
                 // ---- the bar ----
                 d.change(bar, |b, window, cx| {
@@ -1247,6 +1442,16 @@ pub(crate) fn run_review(out: PathBuf) {
                     &mut log,
                     &mut times,
                 );
+                d.change(app_win, |a, _, cx| a.scroll_modules_to_model_tools(cx));
+                d.settle(app_win).await;
+                shot(
+                    &mut d,
+                    app_win,
+                    "app-modules-models",
+                    &file("app-modules-models"),
+                    &mut log,
+                    &mut times,
+                );
                 d.change(app_win, |a, _, cx| a.go(Route::History, cx));
                 d.settle(app_win).await;
                 shot(
@@ -1543,10 +1748,13 @@ pub(crate) fn run_frames(out: PathBuf) {
                 .collect(),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(work.join("history.jsonl")),
             recents,
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
@@ -1757,6 +1965,217 @@ pub(crate) fn run_frames(out: PathBuf) {
                 let _ = std::fs::remove_dir_all(out2.join("consent-data"));
             }
             println!("{{\"tools\": {tools}}}");
+            let _ = std::fs::remove_dir_all(&work2);
+            d.cx.update(|cx| cx.quit());
+        })
+        .detach();
+    });
+}
+
+/// `--selfcheck-userpass --manifest FILE --out DIR`: the user pass. For every entry of the manifest
+/// (`[{"label", "tool", "files": [...], "options": {...}, "cancel_ms": null}]`) it opens the tool in
+/// the offscreen app window, runs it through the same job path a person's Return key takes, and
+/// saves the options, running, done, failed or cancelled screen in light and dark at the display's
+/// 2x. `userpass.jsonl` records the outcome, the time and the slowest frame while the job ran.
+/// Nothing is shown on screen. Files are written next to the inputs, so point it at copies.
+pub(crate) fn run_userpass(out: PathBuf, manifest: PathBuf) {
+    let _ = std::fs::create_dir_all(&out);
+    let work = std::env::temp_dir().join(format!("panoply-userpass-{}", std::process::id()));
+    let _ = std::fs::create_dir_all(&work);
+    let entries: Vec<Value> = std::fs::read_to_string(&manifest)
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+        .unwrap_or_default();
+    let app = gpui_platform::application().with_assets(Icons);
+    app.run(move |cx: &mut App| {
+        gpui_base::init(cx);
+        crate::ui::live::bind_input_keys(cx);
+        cx.set_activation_policy(ActivationPolicy::Accessory);
+        crate::ui::theme::force_appearance(Some(false));
+        platform::set_trash_dir(work.join("trash"));
+        let mut dirs = crate::paths::module_search_dirs();
+        dirs.push(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../modules/examples-wasm"),
+        );
+        let catalog = Arc::new(Catalog::with_dirs(&dirs));
+        let recents = cx.new(|_| Recents {
+            entries: Vec::new(),
+            loaded: true,
+        });
+        let hub = Hub {
+            catalog,
+            history: History::at(work.join("history.jsonl")),
+            recents: recents.clone(),
+        };
+        cx.set_global(hub.clone());
+        let app_hub = hub.clone();
+        let app_win = cx
+            .open_window(app_window_options_at(true, None), move |window, cx| {
+                cx.new(|cx| AppView::new(window, cx, app_hub))
+            })
+            .expect("open the offscreen app window");
+        let out2 = out.clone();
+        let work2 = work.clone();
+        cx.spawn(async move |cx| {
+            let mut d = Drv {
+                cx,
+                dark: false,
+                update_ms: vec![],
+                draw_ms: vec![],
+                tag: String::new(),
+                slow: vec![],
+            };
+            d.settle(app_win).await;
+            let only_dark = std::env::args().skip_while(|a| a != "--appearance").nth(1);
+            let only_tool = std::env::args().skip_while(|a| a != "--only").nth(1);
+            let mut jsonl = String::new();
+            for entry in &entries {
+                let label = entry["label"].as_str().unwrap_or("x").to_string();
+                let tool_id = entry["tool"].as_str().unwrap_or("").to_string();
+                if only_tool.as_deref().is_some_and(|o| !label.starts_with(o)) {
+                    continue;
+                }
+                let Some(ti) = hub.catalog.index_of(&tool_id) else {
+                    jsonl.push_str(&format!(
+                        "{}\n",
+                        json!({"label": label, "tool": tool_id, "state": "unknown tool"})
+                    ));
+                    continue;
+                };
+                let files: Vec<PathBuf> = entry["files"]
+                    .as_array()
+                    .map(|a| {
+                        a.iter()
+                            .filter_map(|v| v.as_str().map(PathBuf::from))
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let preset: Vec<(String, Value)> = entry["options"]
+                    .as_object()
+                    .map(|o| o.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+                    .unwrap_or_default();
+                let cancel_ms = entry["cancel_ms"].as_u64();
+                for dark in [false, true] {
+                    if only_dark.as_deref().is_some_and(|o| (o == "dark") != dark) {
+                        continue;
+                    }
+                    let tag = if dark { "dark" } else { "light" };
+                    crate::ui::theme::force_appearance(Some(dark));
+                    d.dark = dark;
+                    let file = |name: &str| out2.join(format!("{label}-{name}-{tag}.png"));
+                    let profiles: Vec<FileProfile> =
+                        files.iter().map(|p| FileProfile::read(p)).collect();
+                    let t_open = Instant::now();
+                    let p2 = preset.clone();
+                    d.change(app_win, move |a, window, cx| {
+                        a.open_tool(ti, profiles, p2, false, window, cx)
+                    });
+                    d.draw(app_win);
+                    let first_frame_ms = t_open.elapsed().as_secs_f64() * 1000.0;
+                    d.settle(app_win).await;
+                    let mut log = Vec::new();
+                    let mut times = Vec::new();
+                    shot(&mut d, app_win, "options", &file("options"), &mut log, &mut times);
+                    // The pass is for the job; run it once, in light.
+                    if dark {
+                        continue;
+                    }
+                    d.draw_ms.clear();
+                    let panel = d.change(app_win, |a, _, _| a.panel.clone()).flatten();
+                    let Some(p) = panel else { continue };
+                    let blocker = d
+                        .win(app_win, |_, cx| p.read(cx).blocker())
+                        .flatten();
+                    if let Some(b) = blocker {
+                        jsonl.push_str(&format!(
+                            "{}\n",
+                            json!({"label": label, "tool": tool_id, "state": "blocked", "message": b, "first_frame_ms": first_frame_ms})
+                        ));
+                        continue;
+                    }
+                    let p_run = p.clone();
+                    d.win(app_win, move |window, cx| {
+                        p_run.update(cx, |p, cx| p.run(window, cx))
+                    });
+                    let ran_at = Instant::now();
+                    let mut saw_running = false;
+                    let mut cancelled_sent = false;
+                    let mut state = "timeout";
+                    let mut headline = String::new();
+                    let mut notes: Vec<String> = Vec::new();
+                    let mut outputs: Vec<String> = Vec::new();
+                    for _ in 0..4800 {
+                        d.cx.background_executor()
+                            .timer(Duration::from_millis(25))
+                            .await;
+                        d.draw(app_win);
+                        let snapshot = d
+                            .win(app_win, |_, cx| {
+                                let r = p.read(cx);
+                                if r.is_done() {
+                                    let h = r.result_headline().unwrap_or_default();
+                                    Some(("done", h, r.outputs()))
+                                } else if let Some(f) = r.failure() {
+                                    Some((
+                                        "error",
+                                        format!("{} || {}", f.message, f.next_step),
+                                        Vec::new(),
+                                    ))
+                                } else if r.is_options() && cancelled_sent {
+                                    Some(("cancelled", String::new(), Vec::new()))
+                                } else {
+                                    None
+                                }
+                            })
+                            .flatten();
+                        if let Some((s, h, o)) = snapshot {
+                            state = s;
+                            headline = h;
+                            outputs = o.iter().map(|p| p.display().to_string()).collect();
+                            break;
+                        }
+                        let el = ran_at.elapsed();
+                        if !saw_running && el > Duration::from_millis(400) {
+                            saw_running = true;
+                            shot(&mut d, app_win, "running", &file("running"), &mut log, &mut times);
+                        }
+                        if let Some(c) = cancel_ms
+                            && !cancelled_sent
+                            && el > Duration::from_millis(c)
+                        {
+                            cancelled_sent = true;
+                            d.win(app_win, |_, cx| p.update(cx, |p, _| p.cancel()));
+                        }
+                    }
+                    let elapsed_ms = ran_at.elapsed().as_secs_f64() * 1000.0;
+                    let max_draw = d.draw_ms.iter().cloned().fold(0.0, f64::max);
+                    d.settle(app_win).await;
+                    let name = match state {
+                        "done" => "done",
+                        "error" => "error",
+                        "cancelled" => "cancelled",
+                        _ => "timeout",
+                    };
+                    shot(&mut d, app_win, name, &file(name), &mut log, &mut times);
+                    // Notes live on the card; read them from the report via the clipboard path is
+                    // not possible offscreen, so the CLI log has the full list.
+                    let _ = &mut notes;
+                    jsonl.push_str(&format!(
+                        "{}\n",
+                        json!({
+                            "label": label, "tool": tool_id, "state": state,
+                            "elapsed_ms": elapsed_ms.round(), "max_draw_ms": (max_draw * 100.0).round() / 100.0,
+                            "first_frame_ms": (first_frame_ms * 100.0).round() / 100.0,
+                            "headline": headline, "outputs": outputs,
+                        })
+                    ));
+                    let _ = std::fs::write(out2.join("userpass.jsonl"), &jsonl);
+                    // Back to the home screen so the next tool opens clean.
+                    d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+                }
+            }
+            let _ = std::fs::write(out2.join("userpass.jsonl"), &jsonl);
             let _ = std::fs::remove_dir_all(&work2);
             d.cx.update(|cx| cx.quit());
         })

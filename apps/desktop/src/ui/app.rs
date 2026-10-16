@@ -13,14 +13,18 @@ use gpui::prelude::*;
 use gpui::*;
 use gpui_base::input::{Input as KitInput, InputEvent, InputState};
 
+mod find_page;
+
 use super::Hub;
 use super::chrome;
+use super::disk::DiskView;
 use super::live;
 use super::panel::{PanelEvent, ToolPanel};
 use super::theme::{Theme, is_dark, radius, sp, tile_colors, ty};
 use super::widgets::{
     ButtonKind, Ramp, badge, button, card, category_tile, chip, cmd, editor_style, file_icon,
-    focus_border, heading, icon, icon_button, keycap, link, notice, rule, scroll_thumb, tip,
+    focus_border, heading, icon, icon_button, keycap, link, network_words, notice, rule,
+    scroll_thumb, tip,
 };
 use crate::catalog::{Category, Source};
 use crate::history::Entry;
@@ -44,6 +48,8 @@ pub(crate) enum Route {
     History,
     Nearby,
     Modules,
+    /// The disk map: what is using the space.
+    Disk,
     Settings,
     Category(Category),
     /// Tools for a search or for dropped files.
@@ -61,8 +67,11 @@ pub(crate) struct AppView {
     query: String,
     files: Vec<FileProfile>,
     results: Results,
+    typing: search::Typing,
     selected: usize,
     pub(crate) panel: Option<Entity<ToolPanel>>,
+    /// The disk map page. It lives as long as the window, so a scan survives a visit to another page.
+    disk: Entity<DiskView>,
     _panel_sub: Option<Subscription>,
     drag_active: bool,
     /// The downloadable models and engines, read from disk when the Modules page opens.
@@ -74,16 +83,16 @@ pub(crate) struct AppView {
     bounds_token: u64,
     /// The page's scroll position, reset when the page changes.
     page_scroll: ScrollHandle,
+    /// The Find page: its own search field, the latest answer and what is chosen.
+    find: find_page::FindState,
     _subs: Vec<Subscription>,
 }
 
 impl AppView {
     pub(crate) fn new(window: &mut Window, cx: &mut Context<Self>, hub: Hub) -> Self {
         let search = cx.new(|cx| {
-            InputState::new(window, cx).placeholder(format!(
-                "Search {} tools and files",
-                hub.catalog.tools().len()
-            ))
+            InputState::new(window, cx)
+                .placeholder(format!("Search {} tools", hub.catalog.tools().len()))
         });
         let search_sub = cx.subscribe_in(
             &search,
@@ -98,6 +107,7 @@ impl AppView {
             },
         );
         let recents_sub = cx.observe(&hub.recents, |_, _, cx| cx.notify());
+        let (find, find_subs) = find_page::FindState::new(window, cx, &hub);
         let entity = cx.entity();
         let appearance = window.observe_window_appearance(move |_, cx| {
             entity.update(cx, |_, cx| cx.notify());
@@ -108,6 +118,7 @@ impl AppView {
         // before anything is clicked.
         let focus = cx.focus_handle();
         window.focus(&focus, cx);
+        let disk = cx.new(DiskView::new);
         Self {
             hub,
             route: Route::Home,
@@ -116,8 +127,10 @@ impl AppView {
             query: String::new(),
             files: Vec::new(),
             results: Results::default(),
+            typing: search::Typing::default(),
             selected: 0,
             panel: None,
+            disk,
             _panel_sub: None,
             drag_active: false,
             downloads: Vec::new(),
@@ -125,7 +138,12 @@ impl AppView {
             persist_bounds: false,
             bounds_token: 0,
             page_scroll: ScrollHandle::new(),
-            _subs: vec![search_sub, recents_sub, appearance, bounds_sub],
+            find,
+            _subs: {
+                let mut subs = vec![search_sub, recents_sub, appearance, bounds_sub];
+                subs.extend(find_subs);
+                subs
+            },
         }
     }
 
@@ -181,7 +199,7 @@ impl AppView {
 
     fn rebuild(&mut self, cx: &App) {
         let history = self.recents(cx);
-        self.results = search::search(
+        self.results = self.typing.search(
             &search::Context {
                 catalog: &self.hub.catalog,
                 files: &self.files,
@@ -193,11 +211,38 @@ impl AppView {
         self.selected = 0;
     }
 
+    /// The disk map page, for the review renders.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn disk_view(&self) -> Entity<DiskView> {
+        self.disk.clone()
+    }
+
+    /// Dev only: scroll the Modules page so the rows of the tools that download a model once are on
+    /// screen (`first` of them, counted in rows), for the review pictures.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn scroll_modules_to_model_tools(&mut self, cx: &mut Context<Self>) {
+        let first = self
+            .hub
+            .catalog
+            .tools()
+            .iter()
+            .position(|t| {
+                t.manifest.capabilities.network_use() == panoply_manifest::NetworkUse::ModelDownload
+            })
+            .unwrap_or(0);
+        let y = (first as f32 * 52.0).max(0.0);
+        self.page_scroll.set_offset(point(px(0.), px(-y)));
+        cx.notify();
+    }
+
     pub(crate) fn go(&mut self, route: Route, cx: &mut Context<Self>) {
         self.panel = None;
         self._panel_sub = None;
         self.route = route;
         self.page_scroll.set_offset(point(px(0.), px(0.)));
+        if route == Route::Find {
+            self.find.arrive();
+        }
         if route == Route::Modules {
             // Reading the disk once on arrival keeps drawing free.
             self.downloads = crate::downloads::rows();
@@ -343,6 +388,7 @@ impl AppView {
                 };
                 self.rerun(&e, window, cx);
             }
+            Action::OpenFile { path } => self.find_open_path(path, false, cx),
             Action::Unavailable(_) => {}
         }
     }
@@ -387,6 +433,9 @@ impl AppView {
         if self.panel.is_some() {
             return;
         }
+        if self.route == Route::Find && self.find_key(ev, cx) {
+            return;
+        }
         match ev.keystroke.key.as_str() {
             "down" if self.route == Route::Results => {
                 let n = self.results.len();
@@ -398,6 +447,9 @@ impl AppView {
             "up" if self.route == Route::Results => {
                 self.selected = self.selected.saturating_sub(1);
                 cx.notify();
+            }
+            "backspace" if self.route == Route::Disk => {
+                self.disk.update(cx, |d, cx| d.go_up(cx));
             }
             "escape" => {
                 if !self.query.is_empty() || !self.files.is_empty() {
@@ -609,7 +661,7 @@ fn empty_state(
 }
 
 /// The 52 pt toolbar zone at the top of a page: the title, and anything for the right.
-fn toolbar(title: &str, trailing: Option<AnyElement>, t: Theme) -> Div {
+pub(super) fn toolbar(title: &str, trailing: Option<AnyElement>, t: Theme) -> Div {
     div()
         .flex()
         .flex_col()
@@ -785,6 +837,17 @@ impl AppView {
                 go(Route::Nearby),
             ))
             .child(side_item(
+                "nav-disk",
+                "Disk map",
+                "hard-drive",
+                t.ink2,
+                None,
+                route == Route::Disk,
+                None,
+                t,
+                go(Route::Disk),
+            ))
+            .child(side_item(
                 "nav-modules",
                 "Modules",
                 "layout-grid",
@@ -855,7 +918,7 @@ impl AppView {
                 div()
                     .id("app-search")
                     .role(Role::SearchInput)
-                    .aria_label("Search tools and files")
+                    .aria_label("Search tools")
                     .aria_keyshortcuts("Meta+F")
                     .aria_value(self.query.clone())
                     .track_focus(&focus)
@@ -1372,10 +1435,10 @@ impl AppView {
             .skip(first)
             .take(end - first)
             .map(|(i, tool)| {
-                let network = tool.manifest.capabilities.network;
+                let network = network_words(&tool.manifest.capabilities);
                 let community = matches!(tool.source, Source::Community(_));
-                let perms = if network {
-                    "Uses the network"
+                let perms = if let Some(n) = &network {
+                    n.meta
                 } else if tool.takes_files() {
                     "Chosen files only"
                 } else {
@@ -1397,7 +1460,9 @@ impl AppView {
                         .flex_row()
                         .items_center()
                         .gap(px(sp::S))
-                        .when(network, |d| d.child(badge("Network", Some(t.warn), t)))
+                        .when_some(network, |d, n| {
+                            d.child(badge(n.badge, n.warn.then_some(t.warn), t))
+                        })
                         .child(badge(
                             if community {
                                 "Community, sandboxed"
@@ -1770,27 +1835,23 @@ impl Render for AppView {
             (Route::Home, _) => self.home(t, cx),
             (Route::Results, _) => self.results_page(t, cx),
             (Route::Category(c), _) => self.category_page(c, t, cx),
+            (Route::Disk, _) => div()
+                .flex_1()
+                .min_w_0()
+                .h_full()
+                .child(self.disk.clone())
+                .into_any_element(),
             (Route::Modules, _) => self.modules_page(t, cx),
             (Route::History, _) => self.history_page(t, cx),
             (Route::Settings, _) => self.settings_page(t, cx),
-            (Route::Find, _) => self.later_page(
-                "find",
-                "Find",
-                (
-                    "search",
-                    "Find arrives with the file index",
-                    "Searching inside your files, screenshots and photos comes in a later phase. Until then, the search box on Home finds tools and takes files.",
-                ),
-                t,
-                cx,
-            ),
+            (Route::Find, _) => self.find_page(t, window, cx),
             (Route::Nearby, _) => self.later_page(
                 "nearby",
                 "Nearby",
                 (
                     "radio",
                     "Nearby arrives with sharing",
-                    "Sending to your phone and other computers comes in a later phase, over your own network.",
+                    "Sending to your phone and other computers is not in the app yet. From the command line, panoply share already does it over your own network.",
                 ),
                 t,
                 cx,

@@ -4,12 +4,34 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
-## Unreleased
+## v0.1.3-beta (2026-10-16)
+
+Fixes found by running the app on real Windows and Linux desktops.
+
+### Added
+
+- **Three community plugins, built from the module template.** They run in the sandbox, work offline, and
+  show up in the app (Modules page, "Community, sandboxed"), in the command bar and in `panoply run`:
+  `doc.markdown_to_html` (Markdown to one HTML page that prints to PDF), `data.format` (tidy, convert or
+  check JSON, YAML and TOML, with line and column for mistakes) and `image.qr_code` (links or text in a file
+  to PNG or SVG QR codes). They live in `modules/examples-wasm`, each with its own README.
+- **The plugins ship in the app.** The release workflow builds exactly the modules in `modules/shipped.txt` and
+  puts them in the macOS app (`Resources/modules`), the Windows MSI and zip, and the Linux AppImage and
+  tarball, in the folder the app's catalog loads from. The learning examples stay out of releases.
+  `panoply modules` lists them from a release build too: the command line and the app now share one
+  module search path (`panoply_core::modules`).
+- `tools/check-modules.sh` and a `modules` CI job: fmt, clippy, unit tests and the WebAssembly build for every
+  community module.
 
 ### Fixed
 
-- **Linux: the hotkey always hides the command bar.** With a compositing window manager it could bring the
-  bar straight back.
+- **Windows and Linux: type straight after the hotkey.** The command bar opened without the cursor in the
+  search box, so typing did nothing until you clicked it.
+- **"Under 50 kb" on a photo saved as PNG.** It used to promise the size and then fail. When PNG cannot get
+  that small, Panoply now tries JPG, then WebP, and tells you which it used. If nothing fits, it says so and
+  shows the smallest size it reached.
+- **Windows at 150% scaling.** The first window now fits the screen, with the close button in view.
+- **Linux: the hotkey always hides the command bar,** also with a compositing window manager.
 
 ## v0.1.2-beta (2026-10-15)
 
@@ -93,7 +115,7 @@ first-open steps and for what is not here yet.
   QR link for devices without an app.
 - **Command line.** `panoply` runs every tool: `panoply run image.compress photo.jpg`. `panoply modules`
   lists them. `panoply route docx jpg` shows how one format reaches another through the conversion graph.
-- **Community modules.** A module is a manifest and a WebAssembly file that runs in a sandbox. Two examples
+- **Community modules.** A module is a manifest and a WebAssembly file that runs in a sandbox. Examples
   are in `modules/examples-wasm`.
 - **Third-party notices.** `THIRD-PARTY-NOTICES.md` lists every Rust dependency with its license text, the
   vendored GPUI input code, and each engine and model that is downloaded at run time with its source and

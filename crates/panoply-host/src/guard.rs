@@ -77,10 +77,13 @@ impl CapabilityGuard {
         if !self.can_read(input) {
             return Err(ModuleError::NotAllowed(input.to_path_buf()));
         }
-        let real = input.canonicalize().map_err(|e| io_err(input, e))?;
-        real.parent()
-            .map(Path::to_path_buf)
-            .ok_or_else(|| ModuleError::NotAllowed(input.to_path_buf()))
+        // The folder of the file as the person chose it. For a symlink that is the folder holding
+        // the link, not the folder it points into (that one may be someone else's, or read-only).
+        let abs = std::path::absolute(input).map_err(|e| io_err(input, e))?;
+        let dir = abs
+            .parent()
+            .ok_or_else(|| ModuleError::NotAllowed(input.to_path_buf()))?;
+        dir.canonicalize().map_err(|e| io_err(dir, e))
     }
 
     /// Open a chosen input for reading.
@@ -177,6 +180,24 @@ mod tests {
         std::os::unix::fs::symlink(d.join("secret.txt"), inner.join("link.txt")).unwrap();
         let g = CapabilityGuard::new(std::slice::from_ref(&inner), None, false).unwrap();
         assert!(!g.can_read(&inner.join("link.txt")));
+        std::fs::remove_dir_all(&d).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_result_goes_beside_the_link_the_person_chose_not_beside_its_target() {
+        let d = scratch("beside-link");
+        let (here, there) = (d.join("here"), d.join("there"));
+        std::fs::create_dir_all(&here).unwrap();
+        std::fs::create_dir_all(&there).unwrap();
+        std::fs::write(there.join("real.txt"), "r").unwrap();
+        let link = here.join("shortcut.txt");
+        std::os::unix::fs::symlink(there.join("real.txt"), &link).unwrap();
+        let g = CapabilityGuard::new(std::slice::from_ref(&link), None, false).unwrap();
+        assert_eq!(
+            g.output_dir_for(&link).unwrap(),
+            here.canonicalize().unwrap()
+        );
         std::fs::remove_dir_all(&d).unwrap();
     }
 
