@@ -1,2 +1,2 @@
 video looks 60
-# run 16: same 412,438 count in Find and the map, one date format, no blank frame at 1743 or 2298
+# run 17: final pass, clean crops, real scan time, no 1743 gap, no options flash

@@ -71,10 +71,11 @@
       const TYPED_FIRST = 1;           /* first typed frame; the last typed frame is DEMO_LAST - 1 */
       const TYPE_START = 20;           /* beat of typed frame TYPED_FIRST */
       const TYPE_STEP = 0.25;          /* beats per typed frame (a 16th note); shrinks if more frames are captured */
-      const RETURN_BEAT = 23.5;        /* Return: hard cut to the last frame */
+      const RETURN_BEAT = 23;          /* Return: hard cut to the last frame, together with the start of the pull-back (the options page then shows for a whole beat, not a flash) */
       const PULL_BEAT = 23;            /* the pull-back starts here (the understood chip beat) */
       /* camera: top-centre origin on the plate, so the search field stays put while the plate grows downward */
-      const PUSH_SCALE = 1.8, PULL_SCALE = 1.06;   /* frame 3 starts at 1.06 about the plate centre (PLATE_SCALE_START in 03-tools.html) */
+      const PUSH_SCALE = 1.45, PUSH_LIFT = -246, PULL_SCALE = 1.06;   /* the push lifts the plate to top 150 so the whole bar stays inside the frame: no row is cut by the frame edge */
+         /* frame 3 starts at 1.06 about the plate centre (PLATE_SCALE_START in 03-tools.html) */
       /* final plate geometry, shared with frame 3 (bar renders are 1440 x 920) */
       const PLATE_W = 920, PLATE_TOP = 396, PLATE_LEFT = (1920 - PLATE_W) / 2, PLATE_H = Math.round(PLATE_W * 920 / 1440);
       const CHIP_BEAT = 18, CHIP_XFADE = 18.25;
@@ -136,13 +137,13 @@
       /* camera: a slow drift while the bar settles, then a push to about 1.8x on the search field so "under 50 kb" reads on a phone
          while it types, a near-still hold, then a pull-back on Return so the whole bar reads and frame 3 can take over at 1.06 */
       tl.fromTo('#f2-push', { scale: 1 }, { scale: 1.05, duration: at(19.4), ease: 'none' }, 0);
-      tl.to('#f2-push', { scale: PUSH_SCALE, duration: at(20.4) - at(19.4), ease: 'power2.inOut' }, at(19.4));
-      tl.to('#f2-push', { scale: PUSH_SCALE + 0.02, duration: at(PULL_BEAT) - at(20.4), ease: 'none' }, at(20.4));
+      tl.fromTo('#f2-push', { scale: 1.05, y: 0 }, { scale: PUSH_SCALE, y: PUSH_LIFT, duration: at(20.4) - at(19.4), ease: 'power2.inOut', immediateRender: false }, at(19.4));
+      tl.fromTo('#f2-push', { scale: PUSH_SCALE, y: PUSH_LIFT }, { scale: PUSH_SCALE + 0.02, y: PUSH_LIFT, duration: at(PULL_BEAT) - at(20.4), ease: 'none', immediateRender: false }, at(20.4));
       /* the keycaps and the headline fade out completely BEFORE the pull-back starts (done a frame before beat 23), so nothing is under the growing plate */
-      tl.fromTo(['#f2-head', '#f2-caps-win'], { opacity: 1 }, { opacity: 0, duration: 0.2, ease: 'none', immediateRender: false }, at(PULL_BEAT) - F - 0.2);
+      tl.fromTo(['#f2-head', '#f2-caps-win'], { opacity: 1 }, { opacity: 0, duration: 0.2, ease: 'none', immediateRender: false }, at(19.4) - F - 0.2);
       /* the pull-back starts ON beat 23 (frame 637) and runs to the last frame of this file, landing on frame 3's start pose: scale 1.06 about the plate centre equals
          scale 1.06 about the top centre shifted up by H/2 * (1 - 1.06), so the cut at beat 24 does not jump */
-      tl.fromTo('#f2-push', { scale: PUSH_SCALE + 0.02, y: 0 }, { scale: PULL_SCALE, y: (PLATE_H / 2) * (1 - PULL_SCALE), duration: at(24) - F - at(PULL_BEAT), ease: 'power2.inOut', immediateRender: false }, at(PULL_BEAT));
+      tl.fromTo('#f2-push', { scale: PUSH_SCALE + 0.02, y: PUSH_LIFT }, { scale: PULL_SCALE, y: (PLATE_H / 2) * (1 - PULL_SCALE), duration: at(24) - F - at(PULL_BEAT), ease: 'power2.inOut', immediateRender: false }, at(PULL_BEAT));
 
       /* the real captures are translucent (alpha about 90 percent), so every swap hides the previous frame; frames never stack */
       /* the typing: real captured frames, hard swap on each 16th note */
