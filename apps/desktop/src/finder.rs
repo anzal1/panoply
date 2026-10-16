@@ -722,7 +722,7 @@ mod tests {
     #[test]
     fn highlighting_handles_words_subsequences_accents_and_paths() {
         assert_eq!(highlight("Report.pdf", "rep"), vec![0, 1, 2]);
-        assert_eq!(highlight("Report.pdf", "rpt"), vec![0, 3, 5]);
+        assert_eq!(highlight("Report.pdf", "rpt"), vec![0, 2, 5]);
         assert_eq!(highlight("Café menu.txt", "cafe"), vec![0, 1, 2, 3]);
         assert_eq!(highlight("lib.rs", "src/lib"), vec![0, 1, 2]);
         assert_eq!(highlight("a b", "zzz"), Vec::<usize>::new());
@@ -856,6 +856,53 @@ mod tests {
             std::thread::sleep(Duration::from_millis(50));
         }
         f.shutdown();
+    }
+
+    #[test]
+    fn a_fixed_state_is_reported_as_is_and_never_searches() {
+        let f = Finder::fixed(State::Indexing { entries: 7 }, PathBuf::from("/h"));
+        assert_eq!(f.state(), State::Indexing { entries: 7 });
+        assert!(f.search("anything", 5).is_empty(), "no index yet, no hits");
+        assert_eq!(f.home(), Path::new("/h"));
+        let off = Finder::off();
+        match off.state() {
+            State::Unavailable { reason } => assert!(reason.contains("switched off"), "{reason}"),
+            other => panic!("{other:?}"),
+        }
+        assert!(off.search("a", 5).is_empty());
+        // Shutting down a service with no files on disk is a no-op, not a panic.
+        off.shutdown();
+    }
+
+    #[test]
+    fn a_ready_service_reports_its_entry_count_and_no_watcher() {
+        let t = tree();
+        let f = Finder::with_index(small_index(t.path()), t.path().to_path_buf());
+        match f.state() {
+            State::Ready { entries, fresh } => {
+                assert!(entries >= 12, "{entries}");
+                assert!(!fresh, "no watcher was started");
+            }
+            other => panic!("{other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_file_row_opens_its_own_path_and_a_folder_gets_the_folder_icon() {
+        let t = tree();
+        let f = Finder::with_index(small_index(t.path()), t.path().to_path_buf());
+        let hits = f.search("taxes", 10);
+        let dir = hits.iter().find(|h| h.is_dir).expect("the Taxes folder");
+        let row = dir.row(crate::units::now_secs());
+        assert_eq!(row.icon, "folder");
+        match &row.action {
+            Action::OpenFile { path } => assert_eq!(path, &dir.path),
+            other => panic!("{other:?}"),
+        }
+        // Rows of one answer keep the index's order.
+        let notes = f.search("notes", 10);
+        assert_eq!(notes.len(), 1);
+        assert_eq!(notes[0].row(0).trailing.is_empty(), notes[0].mtime == 0);
     }
 
     #[test]
