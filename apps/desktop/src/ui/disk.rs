@@ -1887,6 +1887,24 @@ impl DiskView {
         cx.notify();
     }
 
+    /// Launch film renders: the same fake move, but every item goes through, so the result reads
+    /// "Moved 3 items" with Undo and no failure line. Nothing touches the disk or the real Trash.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn preview_move_clean(&mut self, cx: &mut Context<Self>) {
+        let mut picks = std::mem::replace(&mut self.picks, Picks::new());
+        picks.open = true;
+        picks.run_move(
+            |p| {
+                Ok(Some(
+                    PathBuf::from("/Users/you/.Trash").join(p.file_name().unwrap()),
+                ))
+            },
+            |_| {},
+        );
+        self.picks = picks;
+        cx.notify();
+    }
+
     fn start_state(&self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
         let body = match &self.phase {
             Phase::Scanning { root, started } => {

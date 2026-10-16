@@ -984,6 +984,8 @@ pub(crate) fn run_review(out: PathBuf) {
                     });
                 }
                 let file = |name: &str| out2.join(format!("{name}-{tag}.png"));
+                // Launch film renders (docs/launch): no Full Disk Access preview banner, and a move that goes through.
+                let film = std::env::args().any(|a| a == "--film");
 
                 // ---- the disk map (a real scan of a small synthetic folder) ----
                 {
@@ -1013,14 +1015,14 @@ pub(crate) fn run_review(out: PathBuf) {
                     );
                     // The review panel with three picks and the Full Disk Access note. Nothing is
                     // moved: the render only draws the panel, and the tree is a temp folder.
-                    d.change(app_win, |a, _, cx| {
+                    d.change(app_win, move |a, _, cx| {
                         let dv = a.disk_view();
                         dv.update(cx, |v, cx| {
                             v.pick_named(&["Movies", "Downloads"], cx);
                             // Library itself is protected, so its box is locked; a cache folder inside
                             // it can be picked, with a note.
                             v.pick_path(&["Library", "Caches", "com.example.browser"], cx);
-                            v.preview_fda_banner(true, cx);
+                            v.preview_fda_banner(!film, cx);
                             v.show_review(true, cx);
                         });
                     });
@@ -1036,9 +1038,15 @@ pub(crate) fn run_review(out: PathBuf) {
                     // The move's result with Undo (a fake mover: nothing leaves the temp folder or
                     // reaches the real Trash), one item refused so the failure line shows, then
                     // the Undo result.
-                    d.change(app_win, |a, _, cx| {
+                    d.change(app_win, move |a, _, cx| {
                         let dv = a.disk_view();
-                        dv.update(cx, |v, cx| v.preview_move(false, cx));
+                        dv.update(cx, |v, cx| {
+                            if film {
+                                v.preview_move_clean(cx)
+                            } else {
+                                v.preview_move(false, cx)
+                            }
+                        });
                     });
                     d.settle(app_win).await;
                     shot(
@@ -1066,11 +1074,11 @@ pub(crate) fn run_review(out: PathBuf) {
                         let dv = a.disk_view();
                         dv.update(cx, |v, cx| v.show_review(false, cx));
                     });
-                    d.change(app_win, |a, _, cx| {
+                    d.change(app_win, move |a, _, cx| {
                         let dv = a.disk_view();
                         dv.update(cx, |v, cx| {
                             v.open_named("Developer", cx);
-                            v.preview_fda_banner(true, cx);
+                            v.preview_fda_banner(!film, cx);
                         });
                     });
                     d.settle(app_win).await;
