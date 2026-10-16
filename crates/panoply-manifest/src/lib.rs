@@ -26,8 +26,8 @@ mod validate;
 
 pub use pattern::Pattern;
 pub use schema::{
-    Capabilities, FilesAccess, Manifest, ModelSpec, ModuleInfo, NetworkUse, OptionSpec, OptionType,
-    Surfaces,
+    Capabilities, EngineSpec, FilesAccess, Manifest, ModelSpec, ModuleInfo, NetworkUse, OptionSpec,
+    OptionType, Surfaces,
 };
 pub use validate::ALLOWED_MODEL_LICENSES;
 

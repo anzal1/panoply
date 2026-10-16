@@ -11,7 +11,7 @@ use std::time::Instant;
 use panoply_image::ops::FsIo;
 use panoply_image::ops::common::Animation;
 use panoply_vision::px::dilate;
-use panoply_vision::watermark::{Search, detect};
+use panoply_vision::watermark::{Search, detect_with};
 use panoply_vision::work::load_source;
 
 fn files(dir: &Path, ext: &str) -> Vec<PathBuf> {
@@ -53,7 +53,8 @@ fn main() {
             .map(|p| u8::from(p[0] > 127))
             .collect();
         let t = Instant::now();
-        let d = detect(&src.rgb, src.w, src.h, search);
+        let faces = panoply_vision::faces::find(&src.rgb, src.w, src.h);
+        let d = detect_with(&src.rgb, src.w, src.h, search, &faces);
         let ms = t.elapsed().as_millis();
         let near = dilate(&gtm, src.w, src.h, (src.h / 100).max(3));
         let gt_px = gtm.iter().filter(|&&v| v != 0).count().max(1);
@@ -110,7 +111,8 @@ fn main() {
     println!("-- clean pictures (every detected pixel is a false positive)");
     for c in files(&dir.join("clean"), "jpg") {
         let src = load_source(&io, &c, Animation::First, 24_000_000).unwrap();
-        let d = detect(&src.rgb, src.w, src.h, search);
+        let faces = panoply_vision::faces::find(&src.rgb, src.w, src.h);
+        let d = detect_with(&src.rgb, src.w, src.h, search, &faces);
         let det_px = d.mask.iter().filter(|&&v| v != 0).count();
         println!(
             "{}\t{:.3}% detected, {} regions",

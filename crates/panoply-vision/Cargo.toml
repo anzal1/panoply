@@ -32,6 +32,10 @@ ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "
 panoply-platform-macos = { path = "../panoply-platform-macos" }
 ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "coreml"] }
 
+# Off macOS the YuNet face engine (already in panoply-id) finds the faces Remove watermark must not touch.
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+panoply-id.workspace = true
+
 # DirectML where the runtime build has it; the CPU provider otherwise.
 [target.'cfg(windows)'.dependencies]
 ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic", "directml"] }

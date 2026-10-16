@@ -29,7 +29,7 @@ use panoply_image::ops::options::Opts;
 use crate::VisionIo;
 use crate::inpaint::{Inpainter, clusters};
 use crate::px::{
-    Kernel, Rect, box_mean, dilate, gaussian_blur, parse_rects, reduce_box, resize_u8,
+    Kernel, Rect, box_mean, dilate, gaussian_blur, parse_rects, reduce_box, reduce_map, resize_u8,
 };
 use crate::runtime;
 use crate::work::{
@@ -86,6 +86,9 @@ pub struct Detection {
     pub regions: Vec<Region>,
     /// One byte a pixel at full resolution: 1 on the strokes of the marks (before expansion).
     pub mask: Vec<u8>,
+    /// How many candidates were left alone because they sit on a face (or a mark was cut short
+    /// where it crosses one).
+    pub spared: usize,
 }
 
 /// The longest side detection works at.
@@ -290,6 +293,85 @@ struct Blob {
     strokes: Vec<u8>,
 }
 
+/// The most the three channels may disagree about a mark's opacity (median over its strokes).
+const OVERLAY_SPREAD_MAX: f32 = 0.15;
+
+/// How far apart the three colour channels' opacity estimates are, as a median over the strokes
+/// of the blob in `r`, or `None` when the picture under the mark has no colour contrast with it
+/// to judge by. A stroke pixel `v` over a background `b` that was blended toward white (or black)
+/// by an opacity `a` has `(v - b) / (255 - b) = a` in every channel; `b` is the average of the
+/// pixels nearby that are not marked.
+fn overlay_spread(
+    planes: &[Vec<f32>; 3],
+    m: &[u8],
+    weak: &[u8],
+    aw: usize,
+    ah: usize,
+    r: Rect,
+    white: bool,
+) -> Option<f32> {
+    let reach = (r.h / 5).clamp(3, 10);
+    let target = if white { 1.0f32 } else { 0.0 };
+    let mut spreads: Vec<f32> = Vec::new();
+    let step = ((r.w * r.h) / 3000).max(1);
+    let mut seen = 0usize;
+    for yy in r.y..r.y + r.h {
+        for xx in r.x..r.x + r.w {
+            let i = yy * aw + xx;
+            if m[i] == 0 {
+                continue;
+            }
+            seen += 1;
+            if seen % step != 0 {
+                continue;
+            }
+            let x0 = xx.saturating_sub(reach);
+            let y0 = yy.saturating_sub(reach);
+            let x1 = (xx + reach + 1).min(aw);
+            let y1 = (yy + reach + 1).min(ah);
+            let mut bg = [0f32; 3];
+            let mut n = 0f32;
+            for y2 in y0..y1 {
+                for x2 in x0..x1 {
+                    let j = y2 * aw + x2;
+                    if weak[j] == 0 && m[j] == 0 {
+                        for c in 0..3 {
+                            bg[c] += planes[c][j];
+                        }
+                        n += 1.0;
+                    }
+                }
+            }
+            if n < 6.0 {
+                continue;
+            }
+            let mut a = [0f32; 3];
+            let mut ok = 0;
+            let mut lo = f32::MAX;
+            let mut hi = f32::MIN;
+            for c in 0..3 {
+                let b = bg[c] / n;
+                let room = (target - b).abs();
+                if room > 0.18 {
+                    let ac = ((planes[c][i] - b) / (target - b)).clamp(-0.5, 1.5);
+                    a[c] = ac;
+                    lo = lo.min(ac);
+                    hi = hi.max(ac);
+                    ok += 1;
+                }
+            }
+            if ok >= 2 {
+                spreads.push(hi - lo);
+            }
+        }
+    }
+    if spreads.len() < 20 {
+        return None;
+    }
+    spreads.sort_by(f32::total_cmp);
+    Some(spreads[spreads.len() / 2])
+}
+
 /// Mean of `v` over the pixels where `m` is set inside `r`, with its standard deviation.
 fn masked_stats(v: &[f32], m: &[u8], aw: usize, r: Rect) -> (f32, f32, usize) {
     let (mut s, mut s2, mut n) = (0f32, 0f32, 0usize);
@@ -313,13 +395,20 @@ fn masked_stats(v: &[f32], m: &[u8], aw: usize, r: Rect) -> (f32, f32, usize) {
 
 /// Blobs of strokes of one polarity (`white` strokes are brighter than their surroundings, `black`
 /// darker), scored for how much they look like an overlay.
-fn blobs_for(y: &[f32], aw: usize, ah: usize, white: bool, search: Search) -> Vec<Blob> {
+fn blobs_for(
+    y: &[f32],
+    planes: &[Vec<f32>; 3],
+    aw: usize,
+    ah: usize,
+    white: bool,
+    search: Search,
+) -> Vec<Blob> {
     // Three widths of stroke: fine print, ordinary text and bold text. A structure element is
     // wider than the strokes it keeps, so the narrow one cannot fuse a letter with a wide object
     // that happens to touch it.
     let mut out = Vec::new();
     for frac in [0.004f32, 0.011, 0.028] {
-        out.extend(blobs_at_scale(y, aw, ah, white, search, frac));
+        out.extend(blobs_at_scale(y, planes, aw, ah, white, search, frac));
     }
     out
 }
@@ -327,6 +416,7 @@ fn blobs_for(y: &[f32], aw: usize, ah: usize, white: bool, search: Search) -> Ve
 /// Blobs of strokes no wider than `frac` of the picture's long side.
 fn blobs_at_scale(
     y: &[f32],
+    planes: &[Vec<f32>; 3],
     aw: usize,
     ah: usize,
     white: bool,
@@ -350,11 +440,20 @@ fn blobs_at_scale(
         let mut local = vec![0f32; aw * ah];
         box_mean(&clipped, aw, ah, (r * 4).max(8), &mut local);
         for i in 0..aw * ah {
-            if t[i] > (2.2 * local[i]).max(0.09) {
+            // How much room the background leaves for this polarity of mark: a white overlay on
+            // a bright sky can only add a little, and a black one on a dark suit only take a
+            // little, however opaque it is. The bar a stroke must clear shrinks with that room
+            // (never under a noise floor), so a pale mark on a pale ground is not lost, and the
+            // alpha it implies (stroke over room) is what the mark's consistency is judged on.
+            let bg = if white { y[i] - t[i] } else { y[i] + t[i] };
+            let room = if white { 1.0 - bg } else { bg }.max(0.1);
+            let strong = (0.3 * room).clamp(0.03, 0.09);
+            let faint = (0.15 * room).clamp(0.02, 0.045);
+            if t[i] > (2.2 * local[i]).max(strong) {
                 m[i] = 1;
-                strength[i] = strength[i].max(t[i]);
+                strength[i] = (t[i] / room).min(1.0);
             }
-            if t[i] > (1.5 * local[i]).max(0.045) {
+            if t[i] > (1.5 * local[i]).max(faint) {
                 weak[i] = 1;
             }
         }
@@ -497,6 +596,13 @@ fn blobs_at_scale(
         if score < bar {
             continue;
         }
+        // A real overlay blends one colour into whatever is under it, so every colour channel
+        // shows the same opacity. Printed letters, stars on a flag, a label on a bottle and the
+        // texture of a wall each have a colour of their own and the channels disagree.
+        let spread = overlay_spread(planes, &m, &weak, aw, ah, r, white);
+        if spread.is_some_and(|s| s > OVERLAY_SPREAD_MAX) {
+            continue;
+        }
         // The strokes of the mark: the strong ones, plus the faint ones right next to them.
         let mut core = vec![0u8; r.w * r.h];
         for yy in 0..r.h {
@@ -525,6 +631,44 @@ fn blobs_at_scale(
 
 /// Finds watermark-like marks in an 8 bit sRGB picture.
 pub fn detect(rgb: &[u8], w: usize, h: usize, search: Search) -> Detection {
+    detect_with(rgb, w, h, search, &[])
+}
+
+/// The head around a detected face box: the box grown for hair above, and a little on the sides
+/// and below. Nothing in it is ever taken for a mark (UP-38).
+pub fn head_box(face: &Rect, w: usize, h: usize) -> Rect {
+    let up = face.h * 6 / 10;
+    let side = face.w / 4;
+    let down = face.h / 5;
+    let x0 = face.x.saturating_sub(side);
+    let y0 = face.y.saturating_sub(up);
+    let x1 = (face.x + face.w + side).min(w);
+    let y1 = (face.y + face.h + down).min(h);
+    Rect {
+        x: x0,
+        y: y0,
+        w: x1.saturating_sub(x0),
+        h: y1.saturating_sub(y0),
+    }
+}
+
+/// How much of `r` lies inside `o`, 0 to 1.
+fn covered_by(r: &Rect, o: &Rect) -> f32 {
+    let x0 = r.x.max(o.x);
+    let y0 = r.y.max(o.y);
+    let x1 = (r.x + r.w).min(o.x + o.w);
+    let y1 = (r.y + r.h).min(o.y + o.h);
+    if x1 <= x0 || y1 <= y0 {
+        return 0.0;
+    }
+    ((x1 - x0) * (y1 - y0)) as f32 / (r.w * r.h).max(1) as f32
+}
+
+/// Like [`detect`], with the faces of the picture (full resolution boxes, as the face engines
+/// give them). A candidate mostly on a head is not a mark, and where a mark crosses a head the
+/// head is cut out of the mask, so a face is never filled in. The caller reads
+/// [`Detection::spared`] to say so.
+pub fn detect_with(rgb: &[u8], w: usize, h: usize, search: Search, faces: &[Rect]) -> Detection {
     // Work on a reduced copy.
     let f = w.max(h).div_ceil(ANALYSIS_LONG).max(1);
     let lum: Vec<f32> = rgb
@@ -546,17 +690,19 @@ pub fn detect(rgb: &[u8], w: usize, h: usize, search: Search) -> Detection {
             } else {
                 0.0
             };
-            f32::from(u8::from(r >= g && g >= b && mx > 165.0 && sat > 0.5))
+            f32::from(u8::from(r >= g && g >= b && mx > 165.0 && sat > 0.65))
         })
         .collect();
     let (warm_lo, _, _) = reduce_box(&warm, w, h, f);
+    let planes: [Vec<f32>; 3] =
+        std::array::from_fn(|c| reduce_map(w, h, f, |i| f32::from(rgb[i * 3 + c]) / 255.0).0);
     drop(warm);
     let long = aw.max(ah);
     let gap = ((long as f32 * 0.012).round() as usize).max(2);
 
     let mut blobs: Vec<Blob> = Vec::new();
     for white in [true, false] {
-        blobs.extend(blobs_for(&y, aw, ah, white, search));
+        blobs.extend(blobs_for(&y, &planes, aw, ah, white, search));
     }
 
     // Date stamps: warm saturated digits near a corner.
@@ -583,6 +729,38 @@ pub fn detect(rgb: &[u8], w: usize, h: usize, search: Search) -> Detection {
         if digits < 4 {
             continue;
         }
+        // Digits are alike: one height, standing on one line. Skin, a flag stripe or a warm
+        // sunset make parts of every size and no line.
+        let parts: Vec<&Comp> = warm_letters
+            .iter()
+            .filter(|l| {
+                l.rect.x >= r.x
+                    && l.rect.y >= r.y
+                    && l.rect.x + l.rect.w <= r.x + r.w
+                    && l.rect.y + l.rect.h <= r.y + r.h
+                    && l.pixels >= 3
+            })
+            .collect();
+        let mut hs: Vec<usize> = parts.iter().map(|l| l.rect.h).collect();
+        hs.sort_unstable();
+        let med = hs[hs.len() / 2] as f32;
+        let like: Vec<&&Comp> = parts
+            .iter()
+            .filter(|l| (l.rect.h as f32) >= med * 0.6 && (l.rect.h as f32) <= med * 1.5)
+            .collect();
+        if like.len() < 4 || (like.len() as f32) < parts.len() as f32 * 0.6 {
+            continue;
+        }
+        let mut bottoms: Vec<usize> = like.iter().map(|l| l.rect.y + l.rect.h).collect();
+        bottoms.sort_unstable();
+        let base = bottoms[bottoms.len() / 2] as f32;
+        let on_line = bottoms
+            .iter()
+            .filter(|&&b| (b as f32 - base).abs() <= 0.25 * med)
+            .count();
+        if (on_line as f32) < like.len() as f32 * 0.7 {
+            continue;
+        }
         let mut sub = vec![0u8; r.w * r.h];
         for yy in 0..r.h {
             for xx in 0..r.w {
@@ -596,6 +774,26 @@ pub fn detect(rgb: &[u8], w: usize, h: usize, search: Search) -> Detection {
             strokes: sub,
         });
     }
+
+    // A candidate that sits mostly on a head is skin, hair, teeth or a collar, not an overlay. It
+    // is dropped before the best of each group is picked, so it cannot hide a real mark beside it.
+    let heads: Vec<Rect> = faces.iter().map(|f| head_box(f, w, h)).collect();
+    let heads_lo: Vec<Rect> = heads
+        .iter()
+        .map(|r| Rect {
+            x: r.x / f,
+            y: r.y / f,
+            w: (r.w / f).max(1),
+            h: (r.h / f).max(1),
+        })
+        .collect();
+    let before = blobs.len();
+    blobs.retain(|b| {
+        !heads_lo
+            .iter()
+            .any(|hd| covered_by(&b.rect, hd) >= 0.4 || contains_center(hd, &b.rect))
+    });
+    let spared = before - blobs.len();
 
     // Overlapping candidates are one mark: keep the best scoring one of each group.
     blobs.sort_by(|a, b| b.score.total_cmp(&a.score));
@@ -627,6 +825,19 @@ pub fn detect(rgb: &[u8], w: usize, h: usize, search: Search) -> Detection {
             .map(|m| m.iter().map(|&v| u8::from(v > 60)).collect())
             .unwrap_or_else(|_| vec![0; w * h])
     };
+    // Where a mark crosses a head, the head stays as it is.
+    let mut mask = mask;
+    let mut clipped = false;
+    for hd in &heads {
+        for y in hd.y..(hd.y + hd.h).min(h) {
+            for v in &mut mask[y * w + hd.x..y * w + (hd.x + hd.w).min(w)] {
+                if *v != 0 {
+                    *v = 0;
+                    clipped = true;
+                }
+            }
+        }
+    }
     let regions = kept
         .into_iter()
         .map(|b| Region {
@@ -640,7 +851,18 @@ pub fn detect(rgb: &[u8], w: usize, h: usize, search: Search) -> Detection {
             kind: b.kind,
         })
         .collect();
-    Detection { regions, mask }
+    Detection {
+        regions,
+        mask,
+        spared: spared + usize::from(clipped),
+    }
+}
+
+/// True when the middle of `r` is inside `o`.
+fn contains_center(o: &Rect, r: &Rect) -> bool {
+    let cx = r.x + r.w / 2;
+    let cy = r.y + r.h / 2;
+    cx >= o.x && cx < o.x + o.w && cy >= o.y && cy < o.y + o.h
 }
 
 /// Where a rectangle sits in words ("bottom right", "top left", "center").
@@ -723,9 +945,21 @@ fn one(io: &dyn VisionIo, path: &std::path::Path, opts: &Opts) -> Result<Option<
     let mut src = load_source(io, path, animation, MAX_WORK_PIXELS)?;
     let name = src.name.clone();
     let (w, h) = (src.w, src.h);
+    // Faces are found first and never filled in: not by the detector, not by a box typed by hand.
+    let faces = crate::faces::find(&src.rgb, w, h);
+    let mut spared = 0usize;
     let (regions, mask) = match opts.str("rect") {
         Some(t) => {
             let rects = parse_rects(t, w, h)?;
+            if rects.iter().any(|r| {
+                faces
+                    .iter()
+                    .any(|f| covered_by(f, r) >= 0.5 || contains_center(f, r))
+            }) {
+                return Err(ImageError::Unsupported(
+                    "That area is a face. Panoply never fills in a face, because the result would be a stranger's. Mark only the watermark itself with rect, or leave the face out of the box.".into(),
+                ));
+            }
             let mut m = vec![0u8; w * h];
             for r in &rects {
                 for y in r.y..r.y + r.h {
@@ -743,10 +977,21 @@ fn one(io: &dyn VisionIo, path: &std::path::Path, opts: &Opts) -> Result<Option<
             (regions, m)
         }
         None => {
-            let d = detect(&src.rgb, w, h, search);
+            let d = detect_with(&src.rgb, w, h, search, &faces);
+            spared = d.spared;
             (d.regions, d.mask)
         }
     };
+    if spared > 0 {
+        io.note(format!(
+            "{name}: left {} on a face alone; Panoply never fills in a face",
+            if spared == 1 {
+                "one spot".to_string()
+            } else {
+                format!("{spared} spots")
+            }
+        ));
+    }
     if regions.is_empty() {
         io.note(format!(
             "{name}: no watermark, logo or date stamp found; nothing changed"
@@ -1005,5 +1250,120 @@ mod tests {
         }
         // The bright dot is gone.
         assert!(img[(55 * w + 90) * 3] < 200);
+    }
+
+    /// A picture with a face-sized patch of skin and teeth: bright small parts in a row, the kind
+    /// of structure that read as "text on the chin" before UP-38.
+    fn portrait(w: usize, h: usize) -> (Vec<u8>, Rect) {
+        let mut img = background(w, h);
+        let face = Rect {
+            x: w / 3,
+            y: h / 5,
+            w: w / 3,
+            h: h / 2,
+        };
+        for y in face.y..face.y + face.h {
+            for x in face.x..face.x + face.w {
+                let i = (y * w + x) * 3;
+                img[i..i + 3].copy_from_slice(&[205, 150, 120]);
+            }
+        }
+        // Teeth: a row of light blocks across the lower face.
+        let ty = face.y + face.h * 7 / 10;
+        stamp_letters(&mut img, w, face.x + face.w / 6, ty, 8, 0.5);
+        (img, face)
+    }
+
+    #[test]
+    fn a_row_of_light_parts_on_a_face_is_not_a_mark_and_is_never_filled() {
+        let (w, h) = (640usize, 400usize);
+        let (img, face) = portrait(w, h);
+        // Without the face the row of teeth looks like text.
+        let bare = detect(&img, w, h, Search::Anywhere);
+        assert!(
+            !bare.regions.is_empty(),
+            "the test picture needs a candidate"
+        );
+        let d = detect_with(&img, w, h, Search::Anywhere, &[face]);
+        assert!(d.regions.is_empty(), "{:?}", d.regions);
+        assert!(d.mask.iter().all(|&v| v == 0));
+        assert!(d.spared >= 1);
+    }
+
+    #[test]
+    fn a_mark_that_crosses_a_face_is_found_beside_it_and_the_head_is_cut_out_of_the_mask() {
+        let (w, h) = (640usize, 400usize);
+        let (mut img, face) = portrait(w, h);
+        // A stamp in the corner, far from the head, and a long row across the head and beyond.
+        stamp_letters(&mut img, w, 470, 360, 10, 0.55);
+        let d = detect_with(&img, w, h, Search::Anywhere, &[face]);
+        assert!(
+            d.regions.iter().any(|r| r.rect.y > 330),
+            "the corner mark is still found: {:?}",
+            d.regions
+        );
+        let head = head_box(&face, w, h);
+        for y in head.y..head.y + head.h {
+            for x in head.x..head.x + head.w {
+                assert_eq!(d.mask[y * w + x], 0, "({x},{y}) is on the head");
+            }
+        }
+    }
+
+    #[test]
+    fn the_head_box_is_taller_than_the_face_for_hair_and_stays_in_the_picture() {
+        let f = Rect {
+            x: 100,
+            y: 20,
+            w: 80,
+            h: 100,
+        };
+        let b = head_box(&f, 300, 400);
+        assert!(b.y == 0 && b.h >= f.h + 20 && b.x < f.x && b.x + b.w > f.x + f.w);
+        let edge = Rect {
+            x: 250,
+            y: 380,
+            w: 50,
+            h: 20,
+        };
+        let b = head_box(&edge, 300, 400);
+        assert!(b.x + b.w <= 300 && b.y + b.h <= 400);
+    }
+
+    /// Cream letters printed on a blue ground, the way stars sit on a flag or a label on a bottle:
+    /// a colour of their own, not a blend of white into what is under them.
+    #[test]
+    fn printed_lettering_is_not_taken_for_an_overlay_but_a_translucent_blend_is() {
+        let (w, h) = (640usize, 400usize);
+        let blue = |img: &mut Vec<u8>| {
+            for p in img.chunks_exact_mut(3) {
+                p.copy_from_slice(&[20, 30, 110]);
+            }
+        };
+        let mut printed = background(w, h);
+        blue(&mut printed);
+        // Opaque cream ink, edge distance within the corner band.
+        for k in 0..10 {
+            for y in 360..374 {
+                for x in 0..8 {
+                    if x > 2 && x < 5 && y > 363 && y < 370 {
+                        continue;
+                    }
+                    let i = (y * w + 470 + k * 13 + x) * 3;
+                    printed[i..i + 3].copy_from_slice(&[238, 226, 170]);
+                }
+            }
+        }
+        assert!(
+            detect(&printed, w, h, Search::Anywhere).regions.is_empty(),
+            "printed cream letters are scene text"
+        );
+        let mut blended = background(w, h);
+        blue(&mut blended);
+        stamp_letters(&mut blended, w, 470, 360, 10, 0.55);
+        assert!(
+            !detect(&blended, w, h, Search::Anywhere).regions.is_empty(),
+            "a white overlay at 55% is still found"
+        );
     }
 }

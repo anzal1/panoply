@@ -2220,15 +2220,67 @@ mod result_notes_tests {
             n.sentence("Downloads a model once, after you say yes.")
                 .ends_with("Your files never leave this computer.")
         );
-        // An engine download and a plain network user keep the network wording.
+        // An engine download is told the same way, with the word "engine".
         let mut c = caps.clone();
         c.models.clear();
+        c.engines.push(panoply_manifest::EngineSpec {
+            id: "ffmpeg".into(),
+            size_mb: 140,
+            license: "LGPL-3.0-or-later".into(),
+        });
+        let n = super::network_words(&c).unwrap();
+        assert_eq!(
+            (n.status, n.meta, n.badge, n.warn),
+            (
+                "Downloads an engine once",
+                "Downloads an engine once",
+                "Engine download",
+                false
+            )
+        );
+        assert!(
+            super::consent_lead("Compress video", AssetKind::Engine).contains("fetched once"),
+            "the sheet already says an engine is fetched once"
+        );
+        assert!(
+            n.sentence("")
+                .starts_with("Downloads an engine once, after you say yes.")
+        );
+        assert!(
+            n.sentence("Downloads the video engine once.")
+                .ends_with("Your files never leave this computer.")
+        );
+        // A reason that already makes the promise is not followed by a second one.
+        let said = n.sentence("Downloads the engine once. Nothing else leaves your device.");
+        assert_eq!(said.matches("leave").count(), 1, "{said}");
+        // A module that asks for the network and lists nothing it fetches keeps the clear label.
+        c.engines.clear();
         let n = super::network_words(&c).unwrap();
         assert_eq!(
             (n.badge, n.meta, n.warn),
             ("Network", "Uses the network", true)
         );
+        assert_eq!(n.sentence(""), "Uses the network.");
         c.network = false;
         assert!(super::network_words(&c).is_none());
+    }
+
+    /// The real video and PDF tools read as an engine download, never as a use of the network.
+    #[test]
+    fn the_shipped_video_and_pdf_tools_say_engine_download() {
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../modules/builtin");
+        for id in [
+            "media-compress",
+            "media-info",
+            "pdf-compress",
+            "pdf-to-images",
+        ] {
+            let m =
+                panoply_manifest::Manifest::from_file(&dir.join(id).join("module.toml")).unwrap();
+            let n = super::network_words(&m.capabilities).unwrap();
+            assert_eq!(n.meta, "Downloads an engine once", "{id}");
+            assert_eq!(n.badge, "Engine download", "{id}");
+            assert!(!n.warn, "{id}");
+        }
     }
 }
