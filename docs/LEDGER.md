@@ -12,15 +12,15 @@ quality bar does not move to make the date. Owner is who drives it; "crew" means
 
 | | Item | Owner | Status |
 |---|---|---|---|
-| [ ] | User pass of every tool, every state, light and dark, keyboard only: zero open P0 and P1 | crew (user pass) | 14 P1 found, 10 fixed |
+| [x] | User pass of every tool, every state, light and dark, keyboard only: zero open P0 and P1 | crew (user pass) | 15 P1 found, 15 fixed (#13, #15) |
 | [x] | Command bar: no "No tools match" flash or list jitter while typing a request | crew (user pass) | fixed on qa/user-pass |
-| [ ] | Instant search: under 10 ms per keystroke on 1M files, live index, Find page, files in the command bar | crew (search) | engine passes (0.75 ms p50), phase 2 |
-| [ ] | Instant search on Windows (USN journal) and Linux (fanotify or inotify) | crew (search) | not started |
-| [ ] | Disk map: scan, treemap or sunburst, review and move to trash with Undo, CLI | crew (disk map) | scanner passes (9x du), phase 2 |
-| [ ] | Disk map home scan under 300 MB peak | crew (disk map) | 333 MB, fixing |
-| [ ] | Three real community plugins people would search for, so the plugin moment is true | Claude | not started |
-| [ ] | v0.2.0 release with all of the above, smoke-tested on real Windows and Linux desktops | Claude | not started |
-| [ ] | Scripted user journeys on real Windows and Linux desktops in CI (launch, hotkey, compress, merge, OCR, Undo, tray, themes, memory) | crew (journeys) | building |
+| [x] | Instant search: under 10 ms per keystroke on 1M files, live index, Find page, files in the command bar | crew (search) | merged (#14) |
+| [x] | Instant search on Windows (ReadDirectoryChangesW, USN opt-in) and Linux (inotify) | crew (search) | merged (#14) |
+| [x] | Disk map: scan, treemap, review and move to trash with Undo, protected system folders, CLI | crew (disk map) | merged (#12) |
+| [x] | Disk map home scan under 300 MB peak | crew (disk map) | 289 MB on 8.1M files |
+| [x] | Three real community plugins, bundled in every package | crew (plugins) | merged (#10) |
+| [ ] | v0.2.0 release with all of the above, smoke-tested on real Windows and Linux desktops | Claude | release candidate building, journeys queued |
+| [x] | Scripted user journeys on real Windows and Linux desktops in CI | crew (journeys) | on main; caught the v0.1.2 typing P0, fixed in v0.1.3 |
 
 ### Launch assets
 
@@ -28,7 +28,7 @@ quality bar does not move to make the date. Owner is who drives it; "crew" means
 |---|---|---|---|
 | [x] | Teaser posted on X (16:9, Adrenaline) | Anzal | posted 2026-10-15 |
 | [ ] | Teaser final: zero P0 and P1 in review, vertical cut for Reels and Shorts | crew (video) | fixing pass-2 review |
-| [ ] | Launch film on Shinji with real search and disk map captures, zero P0 and P1 | crew (video) | draft 2, slots 4 and 5 waiting |
+| [ ] | Launch film on Shinji with real search and disk map captures, zero P0 and P1 | crew (video) | draft 3 with real captures, under review |
 | [ ] | Launch post in Anzal's voice, every number checked against the v0.2.0 build | Claude | drafted |
 | [ ] | README, social preview and download links on v0.2.0 | Claude | not started |
 | [ ] | Music license proof saved (Shinji, Adrenaline) | crew (video) | done in docs/launch/music-proof |
@@ -61,9 +61,9 @@ quality bar does not move to make the date. Owner is who drives it; "crew" means
 - **Launch film and teaser** (crew). Branch `launch/video`, plans in `docs/launch/`.
 - **Windows CI speed-up** (paused).
 
-## Ready for the next release (v0.1.3)
+## Shipped since the checklist
 
-- Linux: the hotkey always hides the command bar, also with a compositing window manager.
+- v0.1.3-beta (2026-10-16): type straight after the hotkey on Windows and Linux, photo PNGs under a target size, 150% scaling, the Linux hotkey race.
 
 ## Shipped
 
