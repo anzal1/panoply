@@ -70,7 +70,7 @@
       const TYPE_STEP = 0.25;          /* beats per typed frame (a 16th note); shrinks if more frames are captured */
       const RETURN_BEAT = 23.5;        /* Return: cross-fade to the last frame */
       /* camera: top-centre origin on the plate, so the search field stays put while the plate grows downward */
-      const PUSH_SCALE = 1.8, PULL_SCALE = 1.25, END_SCALE = 1.04;   /* frame 3 starts at 1.04 about the plate centre */
+      const PUSH_SCALE = 1.8, PULL_SCALE = 1.25;   /* frame 3 starts at 1.25 about the plate centre (PLATE_SCALE_START in 03-tools.html) */
       /* final plate geometry, shared with frame 3 (bar renders are 1440 x 920) */
       const PLATE_W = 920, PLATE_TOP = 396, PLATE_LEFT = (1920 - PLATE_W) / 2, PLATE_H = Math.round(PLATE_W * 920 / 1440);
       const CHIP_BEAT = 18, CHIP_XFADE = 18.25;
@@ -129,13 +129,12 @@
       REVEAL.forEach(([b, pc]) => tl.set(D(0), { clipPath: `inset(0% 0% ${100 - pc}% 0%)` }, at(b)));
 
       /* camera: a slow drift while the bar settles, then a push to about 1.8x on the search field so "under 50 kb" reads on a phone
-         while it types, a near-still hold, then a pull-back on Return so the whole bar reads and frame 3 can take over at 1.04 */
+         while it types, a near-still hold, then a pull-back on Return so the whole bar reads and frame 3 can take over at 1.25 */
       tl.fromTo('#f2-push', { scale: 1 }, { scale: 1.05, duration: at(19.4), ease: 'none' }, 0);
       tl.to('#f2-push', { scale: PUSH_SCALE, duration: at(20.4) - at(19.4), ease: 'power2.inOut' }, at(19.4));
       tl.to('#f2-push', { scale: PUSH_SCALE + 0.02, duration: at(RETURN_BEAT) - at(20.4), ease: 'none' }, at(20.4));
-      tl.to('#f2-push', { scale: PULL_SCALE, duration: at(RETURN_BEAT + 0.25) - at(RETURN_BEAT), ease: 'power2.out' }, at(RETURN_BEAT));
-      /* settle onto frame 3's start pose: scale 1.04 about the plate centre equals scale 1.04 about the top centre shifted up by H/2 * 0.04 */
-      tl.to('#f2-push', { scale: END_SCALE, y: (PLATE_H / 2) * (1 - END_SCALE), duration: at(24) - at(RETURN_BEAT + 0.25), ease: 'power1.inOut' }, at(RETURN_BEAT + 0.25));
+      /* the pull-back lands on frame 3's start pose: scale 1.25 about the plate centre equals scale 1.25 about the top centre shifted up by H/2 * (1 - 1.25), so the cut at beat 24 does not jump */
+      tl.to('#f2-push', { scale: PULL_SCALE, y: (PLATE_H / 2) * (1 - PULL_SCALE), duration: at(RETURN_BEAT + 0.25) - at(RETURN_BEAT), ease: 'power2.out' }, at(RETURN_BEAT));
 
       /* the real captures are translucent (alpha about 90 percent), so every swap hides the previous frame; frames never stack */
       /* the typing: real captured frames, hard swap on each 16th note */

@@ -1,2 +1,2 @@
-teaser looks 60
-# run 10: 16:9 teaser after review 4 P1 fixes (chips land on beat, solid scrim, header swap, counter follows cards)
+video looks 60
+# run 11: Shinji cut, frame 6 real Modules list (34 installed, 3 from the community), 2 to 3 cut lands on 1.25x
