@@ -1,0 +1,39 @@
+# Tidy, convert and check JSON, YAML and TOML. Pattern A, instant transform.
+accepts = ["application/json", "application/yaml", "application/toml", "*.json", "*.yaml", "*.yml", "*.toml"]
+outputs = ["application/json", "application/yaml", "application/toml", "*.json", "*.yaml", "*.toml"]
+
+[module]
+id = "data.format"
+name = "Format JSON, YAML and TOML"
+version = "0.1.0"
+pattern = "A"
+summary = "Tidy, convert or check JSON, YAML and TOML files."
+
+[options.to]
+type = "choice"
+values = ["same", "json", "yaml", "toml"]
+default = "same"
+label = "Save as"
+help = "Same keeps the file's own format. TOML needs a table at the top and has no null."
+
+[options.indent]
+type = "choice"
+values = ["2", "4", "tab", "compact"]
+default = "2"
+label = "Indent"
+help = "Compact writes JSON on one line. YAML and TOML ignore tab and compact."
+
+[options.sort_keys]
+type = "bool"
+default = false
+label = "Sort keys A to Z"
+
+[options.check_only]
+type = "bool"
+default = false
+label = "Only check, write nothing"
+help = "Reports that the file is valid, or exactly where it is not."
+
+[capabilities]
+files = "chosen"
+network = false

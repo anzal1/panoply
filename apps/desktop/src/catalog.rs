@@ -274,18 +274,7 @@ impl Catalog {
 
 /// The module folders inside `dir`, or `dir` itself when it holds a `module.toml`.
 fn module_folders(dir: &Path) -> Vec<PathBuf> {
-    if dir.join("module.toml").is_file() {
-        return vec![dir.to_path_buf()];
-    }
-    let mut v: Vec<PathBuf> = std::fs::read_dir(dir)
-        .into_iter()
-        .flatten()
-        .flatten()
-        .map(|e| e.path())
-        .filter(|p| p.join("module.toml").is_file())
-        .collect();
-    v.sort();
-    v
+    panoply_core::modules::module_folders(dir)
 }
 
 #[cfg(test)]
@@ -325,6 +314,27 @@ mod tests {
                 assert_eq!(c.tool(i).category, Category::Text);
             }
             None => assert!(!c.notes.is_empty(), "no module and no note"),
+        }
+    }
+
+    #[test]
+    fn the_community_plugins_are_community_and_sit_in_the_right_category() {
+        let examples =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../modules/examples-wasm");
+        let c = Catalog::with_dirs(&[examples]);
+        if c.index_of("image.qr_code").is_none() {
+            return; // wasm examples not built on this machine
+        }
+        for (id, category) in [
+            ("image.qr_code", Category::Images),
+            ("doc.markdown_to_html", Category::Documents),
+            ("data.format", Category::Developer),
+        ] {
+            let i = c
+                .index_of(id)
+                .unwrap_or_else(|| panic!("{id} is not in the catalog"));
+            assert!(matches!(c.tool(i).source, Source::Community(_)), "{id}");
+            assert_eq!(c.tool(i).category, category, "{id}");
         }
     }
 

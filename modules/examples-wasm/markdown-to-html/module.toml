@@ -1,0 +1,45 @@
+# Markdown to one HTML page that prints cleanly to PDF. Pattern A, instant transform.
+accepts = ["text/markdown", "*.md", "*.markdown"]
+outputs = ["text/html"]
+
+[module]
+id = "doc.markdown_to_html"
+name = "Markdown to HTML"
+version = "0.1.0"
+pattern = "A"
+summary = "Turn a Markdown file into one clean HTML page that prints straight to PDF."
+
+[options.theme]
+type = "choice"
+values = ["auto", "light", "dark"]
+default = "auto"
+label = "Look"
+help = "Auto follows the reader's light or dark setting. Printing is always black on white."
+
+[options.paper]
+type = "choice"
+values = ["A4", "Letter"]
+default = "A4"
+label = "Paper size"
+help = "Sets the page size when the page is printed or saved as PDF."
+
+[options.title]
+type = "text"
+default = ""
+label = "Page title"
+help = "Leave empty to use the first heading."
+
+[options.toc]
+type = "bool"
+default = false
+label = "Table of contents"
+
+[options.page]
+type = "bool"
+default = true
+label = "Whole page"
+help = "Off gives only the converted body, to paste into your own page."
+
+[capabilities]
+files = "chosen"
+network = false

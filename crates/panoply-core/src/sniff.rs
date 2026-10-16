@@ -169,6 +169,9 @@ pub fn family_for_mime(mime: &str) -> FamilyHint {
 pub fn mime_for_ext(ext: &str) -> Option<&'static str> {
     Some(match ext {
         "txt" | "log" => "text/plain",
+        // Contact cards and Windows internet shortcuts are plain text with no magic bytes.
+        "vcf" | "vcard" => "text/vcard",
+        "url" => "text/plain",
         "md" | "markdown" => "text/markdown",
         "csv" => "text/csv",
         "tsv" => "text/tab-separated-values",
@@ -242,6 +245,31 @@ mod tests {
         let s = sniff_bytes(b"1\n00:00:01,000 --> 00:00:02,000\nhi\n", Some("srt"));
         assert_eq!(s.ext, "srt");
         assert!(!s.from_bytes);
+    }
+
+    #[test]
+    fn text_formats_without_magic_bytes_are_text_by_extension() {
+        for (ext, head, mime) in [
+            (
+                "vcf",
+                &b"BEGIN:VCARD\nVERSION:3.0\nFN:Asha Rao\nEND:VCARD\n"[..],
+                "text/vcard",
+            ),
+            (
+                "url",
+                &b"[InternetShortcut]\nURL=https://example.com\n"[..],
+                "text/plain",
+            ),
+            ("md", &b"# Title\n"[..], "text/markdown"),
+            ("yaml", &b"a: 1\n"[..], "application/yaml"),
+            ("yml", &b"a: 1\n"[..], "application/yaml"),
+            ("toml", &b"a = 1\n"[..], "application/toml"),
+        ] {
+            let s = sniff_bytes(head, Some(ext));
+            assert_eq!(s.mime, mime, ".{ext}");
+            assert_eq!(s.ext, ext, ".{ext}");
+            assert_eq!(s.family_hint, FamilyHint::Text, ".{ext}");
+        }
     }
 
     #[test]

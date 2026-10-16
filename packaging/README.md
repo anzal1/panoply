@@ -35,10 +35,31 @@ Release > Run workflow from `main` with "Only warm the build caches" ticked, onc
 |---|---|---|
 | `plan` | ubuntu | version, MSI version, and whether `apps/desktop` is in the workspace |
 | `build` (6 legs) | macos-latest (arm64 and x64 cross), windows-latest, windows-11-arm, ubuntu-22.04, ubuntu-22.04-arm | `panoply` and `panoply-desktop` per target |
+| `modules` | ubuntu | the community modules in `modules/shipped.txt`, built once for wasm32-wasip2 (`tools/build-shipped-modules.sh`) |
 | `package-macos` (arm64, x64) | macos-latest | `.app` in `.zip` and `.dmg` per architecture, ad-hoc signed, not notarized |
 | `package-windows` (x64, arm64) | windows-latest, windows-11-arm | `.zip` and `.msi` (WiX v4), MSI installed, checked and removed on the runner |
 | `package-linux` (x64, arm64) | ubuntu-22.04, ubuntu-22.04-arm | `.tar.gz` and `.AppImage` |
 | `publish` (tags only) | ubuntu | `SHA256SUMS`, filled manifests, provenance attestation, draft release |
+
+### Community modules in the bundles
+
+Three community modules ship with the app: `doc.markdown_to_html`, `data.format` and `image.qr_code`.
+`modules/shipped.txt` is the list (folder in `modules/examples-wasm` and the module id it must hold); the
+learning examples `slugify-lines` and `word-count` are not in it and never ship. The `modules` job builds
+exactly that list, and each package job downloads the result into `stage/modules`. They are placed where the
+catalog looks (`panoply_core::modules::search_dirs`):
+
+| Bundle | Folder |
+|---|---|
+| macOS app | `Panoply.app/Contents/Resources/modules/<name>/` |
+| Windows MSI and zip | `modules\<name>\` next to `panoply-desktop.exe` |
+| Linux AppImage | `usr/bin/modules/<name>/` |
+| Linux tarball (and `install.sh`) | `bin/modules/<name>/` |
+| `panoply-cli-*` archives | `modules/<name>/` next to the `panoply` binary |
+
+Each package script refuses to run without the built modules, checks the result (the macOS app and disk
+image, the AppImage, the Windows MSI after it is installed), and runs the packaged `panoply modules` to see
+the three listed and no example. `verify_release.py` checks every `.zip` and `.tar.gz` for exactly the shipped list.
 
 Linux builds on 22.04 so the binaries run on older glibc. Windows builds link the C runtime statically
 (no VC++ redistributable needed).
