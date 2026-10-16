@@ -89,6 +89,23 @@ pub fn info(path: &Path) -> io::Result<VolumeInfo> {
     })
 }
 
+/// How many files and folders the volume `path` is on holds right now, from the filesystem's own counters.
+/// A scan uses it to size the tree up front. None where the system does not say (Windows, odd filesystems).
+pub(crate) fn used_inodes(path: &Path) -> Option<u64> {
+    #[cfg(unix)]
+    {
+        use std::ffi::CString;
+        use std::os::unix::ffi::OsStrExt;
+        let c = CString::new(path.as_os_str().as_bytes()).ok()?;
+        return imp::used_inodes(&c);
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = path;
+        None
+    }
+}
+
 fn covers_volume(path: &Path) -> bool {
     let Some(parent) = path.parent() else {
         return true;
@@ -166,6 +183,18 @@ mod imp {
                 s.f_bsize as u64
             };
             Ok((s.f_blocks as u64 * frsize, s.f_bavail as u64 * frsize))
+        }
+    }
+
+    pub(super) fn used_inodes(path: &CStr) -> Option<u64> {
+        // SAFETY: valid NUL-terminated path and a zeroed out-buffer.
+        unsafe {
+            let mut s: libc::statvfs = std::mem::zeroed();
+            if libc::statvfs(path.as_ptr(), &mut s) != 0 {
+                return None;
+            }
+            let (files, free) = (s.f_files as u64, s.f_ffree as u64);
+            (files > 0 && files >= free).then(|| files - free)
         }
     }
 

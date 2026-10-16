@@ -106,9 +106,10 @@ impl Tree {
         self.nodes.is_empty()
     }
 
-    /// Bytes of heap this tree holds: nodes plus names.
+    /// Bytes of heap this tree uses: nodes plus names. Room that was reserved for a scan and never written
+    /// is not counted, because it holds no memory.
     pub fn heap_bytes(&self) -> usize {
-        self.nodes.capacity() * std::mem::size_of::<Node>() + self.names.capacity()
+        self.nodes.len() * std::mem::size_of::<Node>() + self.names.len()
     }
 
     /// The root.

@@ -197,11 +197,27 @@ struct LinkRec {
     node: u32,
 }
 
+/// One file that shares blocks with another. 16 bytes, because a home folder has millions of them: the shared
+/// size is kept in 512 byte units (APFS allocates in 4 KiB, so nothing is lost; the largest value is 2 TiB).
 #[derive(Clone, Copy)]
 struct CloneRec {
     clone_id: u64,
-    shared: u64,
     node: u32,
+    shared_512: u32,
+}
+
+impl CloneRec {
+    fn new(clone_id: u64, shared: u64, node: u32) -> Self {
+        CloneRec {
+            clone_id,
+            node,
+            shared_512: shared.div_ceil(512).min(u64::from(u32::MAX)) as u32,
+        }
+    }
+
+    fn shared(&self) -> u64 {
+        u64::from(self.shared_512) * 512
+    }
 }
 
 #[derive(Default)]
@@ -287,9 +303,11 @@ pub fn scan(root: &Path, opts: &ScanOptions) -> Result<Scan, ScanError> {
         .map_err(|e| ScanError::Root(root.clone(), e))?;
 
     // Reading metadata waits on the disk far more than it computes, so twice the cores keeps the disk's queue
-    // full (8 threads took 10 s on a million files where 16 to 32 took 6 s on an 18-core Mac).
+    // full (8 threads took 10 s on a million files where 16 to 32 took 6 s on an 18-core Mac). Past 16 the
+    // disk gains nothing: on a 440 GiB home folder 16 threads took 35.6 s and 32 took 39.1 s, and each thread
+    // holds a folder's entries, so 16 also held about 12 MB less.
     let threads = if opts.threads == 0 {
-        std::thread::available_parallelism().map_or(8, |n| (n.get() * 2).clamp(8, 32))
+        std::thread::available_parallelism().map_or(8, |n| (n.get() * 2).clamp(8, 16))
     } else {
         opts.threads
     }
@@ -309,6 +327,7 @@ pub fn scan(root: &Path, opts: &ScanOptions) -> Result<Scan, ScanError> {
     }
 
     let mut builder = Builder::default();
+    reserve_room(&mut builder, volume::used_inodes(&root));
     builder.names.extend_from_slice(&root_bytes(&root));
     builder.nodes.push(Node {
         size: info.alloc,
@@ -386,14 +405,38 @@ pub fn scan(root: &Path, opts: &ScanOptions) -> Result<Scan, ScanError> {
     report.skipped.sort_by_key(|s| s.node.0);
     report.elapsed = started.elapsed();
     report.volume = volume::info(&root).ok();
-    // Giving back slack copies the whole array, which is itself the peak; only worth it for real waste.
-    if tree.nodes.capacity() > tree.nodes.len() + tree.nodes.len() / 4 {
+    // Giving back slack copies the whole array, which is itself the peak. Slack that was never written costs
+    // no memory, so only a small tree is trimmed (the copy is nothing there).
+    const TRIM_BELOW: usize = 8 << 20;
+    if tree.nodes.capacity() * std::mem::size_of::<Node>() <= TRIM_BELOW
+        && tree.nodes.capacity() > tree.nodes.len() + tree.nodes.len() / 4
+    {
         tree.nodes.shrink_to_fit();
     }
-    if tree.names.capacity() > tree.names.len() + tree.names.len() / 4 {
+    if tree.names.capacity() <= TRIM_BELOW
+        && tree.names.capacity() > tree.names.len() + tree.names.len() / 4
+    {
         tree.names.shrink_to_fit();
     }
     Ok(Scan { tree, report })
+}
+
+/// Room for the tree before the walk starts. A big Vec that grows by doubling is copied each time (macOS maps
+/// the old pages into the new block and keeps both until the copy is written), which held about 150 MB more
+/// than the tree itself at the peak of a 3 million node scan. Memory that is reserved and never written
+/// costs nothing, so reserve for the most the volume could hold, one entry per used inode, and let the Vecs
+/// grow past it the usual way if a volume lies. Small volumes and unknown counts get no reservation.
+fn reserve_room(b: &mut Builder, used_inodes: Option<u64>) {
+    const MIN_ENTRIES: u64 = 500_000;
+    const MAX_ENTRIES: u64 = 48_000_000;
+    let Some(n) = used_inodes.filter(|n| *n >= MIN_ENTRIES) else {
+        return;
+    };
+    let n = n.min(MAX_ENTRIES) as usize;
+    let _ = b.nodes.try_reserve_exact(n);
+    let _ = b.names.try_reserve_exact(n * 24);
+    #[cfg(target_os = "macos")]
+    let _ = b.clones.try_reserve_exact(n);
 }
 
 fn worker(sh: &Shared<'_>) {
@@ -491,11 +534,9 @@ fn read_one(
                     batch.small_files += 1;
                     if e.clone_shared > 0 {
                         // A folded clone still gives its bytes back, from the folder's folded entry.
-                        batch.clones.push(CloneRec {
-                            clone_id: e.clone_id,
-                            shared: e.clone_shared,
-                            node: IN_SMALL,
-                        });
+                        batch
+                            .clones
+                            .push(CloneRec::new(e.clone_id, e.clone_shared, IN_SMALL));
                     }
                     return;
                 }
@@ -556,11 +597,9 @@ fn read_one(
                         });
                     }
                     if e.clone_shared > 0 {
-                        batch.clones.push(CloneRec {
-                            clone_id: e.clone_id,
-                            shared: e.clone_shared,
-                            node: idx,
-                        });
+                        batch
+                            .clones
+                            .push(CloneRec::new(e.clone_id, e.clone_shared, idx));
                     }
                 }
                 batch.recs.push(Rec {
@@ -700,7 +739,6 @@ fn finish(
         i = j;
     }
     drop(links);
-
     resolve_clones(tree, clones, threads, probe_big_files, report);
 
     // Add sizes and item counts up the tree. A child always has a higher index than its parent.
@@ -789,11 +827,11 @@ fn resolve_clones(
         });
         for (i, hit) in hits.into_iter().enumerate() {
             if hit {
-                big.push(CloneRec {
-                    clone_id: 0,
-                    shared: tree.nodes[candidates[i] as usize].size,
-                    node: candidates[i],
-                });
+                big.push(CloneRec::new(
+                    0,
+                    tree.nodes[candidates[i] as usize].size,
+                    candidates[i],
+                ));
             }
         }
     }
@@ -865,7 +903,7 @@ fn give_back_groups(tree: &mut Tree, mut recs: Vec<CloneRec>, report: &mut ScanR
     recs.sort_unstable_by(|a, c| {
         a.clone_id
             .cmp(&c.clone_id)
-            .then(c.shared.cmp(&a.shared))
+            .then(c.shared_512.cmp(&a.shared_512))
             .then(a.node.cmp(&c.node))
     });
     let mut i = 0;
@@ -874,7 +912,7 @@ fn give_back_groups(tree: &mut Tree, mut recs: Vec<CloneRec>, report: &mut ScanR
         while j < recs.len() && recs[j].clone_id == recs[i].clone_id {
             let n = &mut tree.nodes[recs[j].node as usize];
             if n.flags & flags::HARD_LINK_DUPLICATE == 0 {
-                let give = recs[j].shared.min(n.size);
+                let give = recs[j].shared().min(n.size);
                 n.size -= give;
                 n.flags |= flags::CLONE_SHARED;
                 report.clone_bytes_saved += give;
