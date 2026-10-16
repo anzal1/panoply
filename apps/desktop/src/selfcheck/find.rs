@@ -237,6 +237,20 @@ pub(crate) fn run_find(out: PathBuf) {
                 });
                 d.settle(app_win).await;
                 log.push(d.png(app_win, &png("22-find-indexing")));
+                // Stale hits from the last query must not leak a count into the field.
+                tag(&mut d, "find permission note");
+                find_status.update(d.cx, |s, cx| {
+                    s.state = State::Ready {
+                        entries,
+                        fresh: true,
+                    };
+                    cx.notify();
+                });
+                d.change(app_win, |a, window, cx| a.find_show("report", window, cx));
+                d.settle(app_win).await;
+                d.change(app_win, |a, _, cx| a.find_show_note("Quarterly report final.pdf", true, cx));
+                d.settle(app_win).await;
+                log.push(d.png(app_win, &png("31-find-note")));
                 tag(&mut d, "find unavailable");
                 find_status.update(d.cx, |s, cx| {
                     s.state = State::Unavailable {
@@ -261,6 +275,11 @@ pub(crate) fn run_find(out: PathBuf) {
                 d.change(bar, |b, window, cx| b.set_query("split", window, cx));
                 d.settle(bar).await;
                 log.push(d.png(bar, &png("27-bar-tools-only")));
+
+                tag(&mut d, "bar no results");
+                d.change(bar, |b, window, cx| b.set_query("zqxjvkw", window, cx));
+                d.settle(bar).await;
+                log.push(d.png(bar, &png("32-bar-no-results")));
 
                 tag(&mut d, "bar tools and files");
                 let t0 = Instant::now();

@@ -23,6 +23,10 @@ use crate::ui::widgets::{
 pub(crate) const LIMIT: usize = 200;
 /// Height of one result row.
 const ROW: f32 = 52.0;
+/// The width of the date column: fits "11 Sep 2025" at the small size.
+const DATE_W: f32 = 80.0;
+/// The column the reveal button sits in, on every row.
+const REVEAL_W: f32 = crate::ui::theme::HIT;
 /// Rows built above and below the visible ones.
 const SPARE: usize = 4;
 
@@ -61,6 +65,46 @@ pub(crate) fn visible_rows(
     let end = (((offset + viewport) / row_h).ceil().max(0.0) as usize + SPARE).min(n);
     let first = first.min(end);
     (first, end, first as f32 * row_h, (n - end) as f32 * row_h)
+}
+
+/// The match count in the search field. Only a ready index has an answer: while it is still being
+/// built there is nothing to count (the body says it is reading, and the list is not shown), so the
+/// field stays quiet instead of contradicting the body.
+fn match_count_label(state: &State, hits: usize) -> Option<String> {
+    if !matches!(state, State::Ready { .. }) || hits == 0 {
+        return None;
+    }
+    Some(if hits >= LIMIT {
+        format!("Best {LIMIT}")
+    } else if hits == 1 {
+        "1 match".to_string()
+    } else {
+        format!("{hits} matches")
+    })
+}
+
+/// The words of the indexing screen: the body, and the hint under it.
+fn indexing_copy(entries: u64, typed: bool) -> (String, &'static str) {
+    (
+        format!(
+            "{} files so far. Panoply does this once, in the background, and keeps the list current after that.",
+            thousands(entries)
+        ),
+        if typed {
+            "Your search runs as soon as this is done."
+        } else {
+            "You can keep using Panoply. Search works when this finishes."
+        },
+    )
+}
+
+/// The footer line when opening or showing a file failed.
+fn open_failure_note(name: &str, exists: bool) -> String {
+    if exists {
+        format!("Could not open {name}.")
+    } else {
+        format!("{name} is gone. The list updates in a moment.")
+    }
 }
 
 /// "1,284,331": a count with thousands separators.
@@ -249,11 +293,7 @@ impl AppView {
                 .await;
             if let Err(exists) = r {
                 let _ = this.update(cx, |app, cx| {
-                    app.find.note = Some(if exists {
-                        format!("Could not open {name}.")
-                    } else {
-                        format!("{name} is gone. The list updates in a moment.")
-                    });
+                    app.find.note = Some(open_failure_note(&name, exists));
                     cx.notify();
                 });
             }
@@ -267,6 +307,13 @@ impl AppView {
         let input = self.find.input().clone();
         input.update(cx, |s, cx| s.set_value(query.to_string(), window, cx));
         self.find_set_query(query.to_string(), cx);
+    }
+
+    /// Show the footer note a failed open leaves (the snapshot renderer).
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn find_show_note(&mut self, name: &str, exists: bool, cx: &mut Context<Self>) {
+        self.find.note = Some(open_failure_note(name, exists));
+        cx.notify();
     }
 
     /// Scroll the result list to its last row (the snapshot renderer).
@@ -329,7 +376,7 @@ impl AppView {
 
         let typed = !self.find.query.trim().is_empty();
         let ready = matches!(status, State::Ready { .. });
-        let field = self.find_field(t, &input_focus);
+        let field = self.find_field(t, &input_focus, &status);
 
         let body: AnyElement = match (&status, typed) {
             (State::Unavailable { reason }, _) => empty_state(
@@ -386,8 +433,8 @@ impl AppView {
             .into_any_element()
     }
 
-    fn find_field(&self, t: Theme, focus: &FocusHandle) -> Div {
-        let n = self.find.hits.len();
+    fn find_field(&self, t: Theme, focus: &FocusHandle, status: &State) -> Div {
+        let count = match_count_label(status, self.find.hits.len());
         div()
             .flex()
             .flex_row()
@@ -414,19 +461,13 @@ impl AppView {
                     .text_color(t.ink)
                     .child(KitInput::new(&self.find.input)),
             )
-            .when(n > 0, |d| {
+            .when_some(count, |d, label| {
                 d.child(
                     div()
                         .flex_none()
                         .ramp(ty::SMALL)
                         .text_color(t.ink2)
-                        .child(if n >= LIMIT {
-                            format!("Best {LIMIT}")
-                        } else if n == 1 {
-                            "1 match".to_string()
-                        } else {
-                            format!("{n} matches")
-                        }),
+                        .child(label),
                 )
             })
     }
@@ -633,22 +674,37 @@ fn file_row(
                 ),
         )
         .child(
+            // A fixed width that fits "11 Sep 2025", right aligned, so every date ends on one edge.
             div()
                 .flex_none()
+                .w(px(DATE_W))
+                .text_right()
+                .whitespace_nowrap()
                 .ramp(ty::SMALL)
                 .text_color(t.ink3)
                 .child(when),
         )
-        .when(selected, |d| {
-            d.child(icon_button(
-                ("find-reveal", i),
-                &format!("Show in {}", file_manager()),
-                "folder-open",
-                false,
-                t,
-                on_reveal,
-            ))
-        })
+        .child(
+            // The reveal button's column is on every row, so the date does not move when a row is
+            // chosen. The button itself is only built for the chosen row (a hidden button would still
+            // take the Tab key).
+            div()
+                .flex()
+                .flex_none()
+                .items_center()
+                .justify_center()
+                .size(px(REVEAL_W))
+                .when(selected, |d| {
+                    d.child(icon_button(
+                        ("find-reveal", i),
+                        &format!("Show in {}", file_manager()),
+                        "folder-open",
+                        false,
+                        t,
+                        on_reveal,
+                    ))
+                }),
+        )
 }
 
 fn ready_state(entries: usize, t: Theme) -> AnyElement {
@@ -667,20 +723,8 @@ fn ready_state(entries: usize, t: Theme) -> AnyElement {
 }
 
 fn indexing_state(entries: u64, typed: bool, t: Theme) -> AnyElement {
-    state_block(
-        "files",
-        "Reading your files",
-        &format!(
-            "{} files so far. Panoply does this once, in the background, and keeps the list current after that.",
-            thousands(entries)
-        ),
-        Some(if typed {
-            "Your search runs as soon as this is done."
-        } else {
-            "You can keep using Panoply. Search works when this finishes."
-        }),
-        t,
-    )
+    let (body, hint) = indexing_copy(entries, typed);
+    state_block("files", "Reading your files", &body, Some(hint), t)
 }
 
 fn no_results_state(query: &str, t: Theme) -> AnyElement {
@@ -725,7 +769,10 @@ fn state_block(
 #[cfg(test)]
 mod tests {
     // Not `super::*`: it would bring in gpui's own `test` attribute and shadow the standard one.
-    use super::{ROW, step, thousands, visible_rows};
+    use super::{
+        LIMIT, ROW, State, indexing_copy, match_count_label, open_failure_note, step, thousands,
+        visible_rows,
+    };
 
     #[test]
     fn the_selection_stays_inside_the_list() {
@@ -759,5 +806,40 @@ mod tests {
         // Past the end it clamps.
         let (first, end, _, _) = visible_rows(10, ROW, 9_000.0, 500.0);
         assert_eq!((first, end), (10, 10));
+    }
+
+    #[test]
+    fn the_field_count_agrees_with_the_body_while_indexing() {
+        let ready = State::Ready {
+            entries: 10,
+            fresh: true,
+        };
+        let indexing = State::Indexing { entries: 5 };
+        let off = State::Unavailable { reason: "x".into() };
+        // Even with stale hits in hand, an index that is being built shows no count.
+        assert_eq!(match_count_label(&indexing, 6), None);
+        assert_eq!(match_count_label(&off, 6), None);
+        assert_eq!(match_count_label(&ready, 0), None);
+        assert_eq!(match_count_label(&ready, 1).as_deref(), Some("1 match"));
+        assert_eq!(match_count_label(&ready, 6).as_deref(), Some("6 matches"));
+        assert_eq!(
+            match_count_label(&ready, LIMIT).as_deref(),
+            Some(format!("Best {LIMIT}").as_str())
+        );
+    }
+
+    #[test]
+    fn the_indexing_screen_says_the_search_waits_only_when_something_is_typed() {
+        let (body, hint) = indexing_copy(412_331, true);
+        assert!(body.starts_with("412,331 files so far."), "{body}");
+        assert_eq!(hint, "Your search runs as soon as this is done.");
+        let (_, hint) = indexing_copy(0, false);
+        assert!(hint.starts_with("You can keep using Panoply"), "{hint}");
+    }
+
+    #[test]
+    fn a_failed_open_says_whether_the_file_is_gone() {
+        assert_eq!(open_failure_note("a.pdf", true), "Could not open a.pdf.");
+        assert!(open_failure_note("a.pdf", false).starts_with("a.pdf is gone."));
     }
 }
