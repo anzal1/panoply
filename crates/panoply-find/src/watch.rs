@@ -148,7 +148,54 @@ fn platform_watch(
     Ok(Box::new(stream))
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "linux")]
+fn platform_watch(
+    index: &Arc<RwLock<LiveIndex>>,
+    roots: &[PathBuf],
+    _since: Option<u64>,
+    tx: Sender<WatchMsg>,
+) -> io::Result<Box<dyn std::any::Any + Send>> {
+    let exclude = index
+        .read()
+        .map_err(|_| io::Error::other("index lock poisoned"))?
+        .exclusions()
+        .clone();
+    let watcher = crate::watch_linux::InotifyWatcher::start(roots, exclude, tx)?;
+    Ok(Box::new(watcher))
+}
+
+#[cfg(windows)]
+fn platform_watch(
+    index: &Arc<RwLock<LiveIndex>>,
+    roots: &[PathBuf],
+    _since: Option<u64>,
+    tx: Sender<WatchMsg>,
+) -> io::Result<Box<dyn std::any::Any + Send>> {
+    use panoply_platform_windows as pw;
+    let exclude = index
+        .read()
+        .map_err(|_| io::Error::other("index lock poisoned"))?
+        .exclusions()
+        .clone();
+    let roots_cb: Vec<PathBuf> = roots.to_vec();
+    let watcher = pw::start_with(roots, pw::Options::from_env(), move |event| match event {
+        pw::Event::Rescan(p) => {
+            let _ = tx.send(WatchMsg::Rescan(p));
+        }
+        pw::Event::Changed(p) => {
+            // Drop events from folders the index never reads before they wake the worker.
+            let under = roots_cb.iter().find(|r| p.starts_with(r));
+            if under.is_none_or(|r| exclude.has_excluded_ancestor(r, &p)) {
+                return;
+            }
+            let _ = tx.send(WatchMsg::Changed(p));
+        }
+    })
+    .map_err(|e| io::Error::other(e.to_string()))?;
+    Ok(Box::new(watcher))
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]
 fn platform_watch(
     _index: &Arc<RwLock<LiveIndex>>,
     _roots: &[PathBuf],

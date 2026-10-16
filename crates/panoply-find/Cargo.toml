@@ -24,6 +24,14 @@ ignore = { version = "0.4", optional = true }
 [target.'cfg(unix)'.dependencies]
 rustix = { version = "1", default-features = false, features = ["std", "fs"] }
 
+# Linux: inotify (rustix::fs::inotify, safe API) plus poll and eventfd to sleep until an event or a stop.
+[target.'cfg(target_os = "linux")'.dependencies]
+rustix = { version = "1", default-features = false, features = ["std", "fs", "event"] }
+
+# Windows: the USN journal and ReadDirectoryChangesW live in the one crate allowed to use unsafe.
+[target.'cfg(windows)'.dependencies]
+panoply-platform-windows = { path = "../panoply-platform-windows" }
+
 # macOS: bulk folder reads (getattrlistbulk) live in the one crate allowed to use unsafe.
 [target.'cfg(target_os = "macos")'.dependencies]
 panoply-platform-macos = { path = "../panoply-platform-macos" }

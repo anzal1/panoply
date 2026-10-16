@@ -5312,6 +5312,7 @@ dependencies = [
  "ignore",
  "memchr",
  "panoply-platform-macos",
+ "panoply-platform-windows",
  "rayon",
  "rustix",
 ]
@@ -5458,6 +5459,13 @@ dependencies = [
  "objc2-core-foundation",
  "objc2-core-graphics",
  "objc2-image-io",
+]
+
+[[package]]
+name = "panoply-platform-windows"
+version = "0.1.2"
+dependencies = [
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

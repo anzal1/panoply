@@ -193,7 +193,10 @@ fn read_entries_native(
                         };
                     }
                     if ft == FileType::Unknown {
-                        is_dir = (st.st_mode as u32 & 0o170000) == 0o040000;
+                        // `st_mode` is a u16 on macOS and a u32 on Linux.
+                        #[allow(clippy::unnecessary_cast)]
+                        let mode = st.st_mode as u32;
+                        is_dir = (mode & 0o170000) == 0o040000;
                     }
                 }
                 Err(_) => stat_failed = true,

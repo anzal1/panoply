@@ -19,12 +19,15 @@ mod exclude;
 pub mod fold;
 pub mod fuzzy;
 mod index;
+mod inotify_table;
 mod live;
 mod mounts;
 mod query;
 pub mod segment;
 mod walk;
 pub mod watch;
+#[cfg(target_os = "linux")]
+mod watch_linux;
 
 pub use exclude::Exclusions;
 pub use index::{EntryInfo, Index};
