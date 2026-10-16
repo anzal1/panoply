@@ -98,6 +98,12 @@ fn indexing_copy(entries: u64, typed: bool) -> (String, &'static str) {
     )
 }
 
+/// The footer shows the failed-open note only while the result list it is about is on screen, so a
+/// state change (indexing, unavailable) never leaves a stale note under it.
+fn footer_note(note: Option<&str>, showing_list: bool) -> Option<String> {
+    note.filter(|_| showing_list).map(str::to_string)
+}
+
 /// The footer line when opening or showing a file failed.
 fn open_failure_note(name: &str, exists: bool) -> String {
     if exists {
@@ -544,6 +550,7 @@ impl AppView {
 
     /// The strip under the list: what the keys do, or what went wrong with the last open.
     fn find_footer(&self, showing_list: bool, t: Theme) -> Div {
+        let note = footer_note(self.find.note.as_deref(), showing_list);
         let c = crate::ui::widgets::cmd();
         let key_hint = |label: String, caps: Vec<&'static str>| {
             div()
@@ -584,12 +591,8 @@ impl AppView {
                             .whitespace_nowrap()
                             .text_ellipsis()
                             .ramp(ty::SMALL)
-                            .text_color(if self.find.note.is_some() {
-                                t.warn
-                            } else {
-                                t.ink3
-                            })
-                            .child(self.find.note.clone().unwrap_or_else(|| {
+                            .text_color(if note.is_some() { t.warn } else { t.ink3 })
+                            .child(note.clone().unwrap_or_else(|| {
                                 "Names only. Nothing leaves this computer.".into()
                             })),
                     )
@@ -770,8 +773,8 @@ fn state_block(
 mod tests {
     // Not `super::*`: it would bring in gpui's own `test` attribute and shadow the standard one.
     use super::{
-        LIMIT, ROW, State, indexing_copy, match_count_label, open_failure_note, step, thousands,
-        visible_rows,
+        LIMIT, ROW, State, footer_note, indexing_copy, match_count_label, open_failure_note, step,
+        thousands, visible_rows,
     };
 
     #[test]
@@ -840,6 +843,8 @@ mod tests {
     #[test]
     fn a_failed_open_says_whether_the_file_is_gone() {
         assert_eq!(open_failure_note("a.pdf", true), "Could not open a.pdf.");
+        assert_eq!(footer_note(Some("x"), true).as_deref(), Some("x"));
+        assert_eq!(footer_note(Some("x"), false), None);
         assert!(open_failure_note("a.pdf", false).starts_with("a.pdf is gone."));
     }
 }
