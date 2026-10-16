@@ -24,7 +24,9 @@
 # The whole workspace is used instead of the changed crates when Cargo.lock or a Cargo.toml in the root
 # changed, or when --all is given: the rule of tools/preflight.sh (tools/ci/changed_crates.py). The run is at low
 # priority (nice -n 15, 8 build jobs), holds the machine wide heavy build lock (only one heavy build at
-# a time), and builds into ~/personal/panoply-win.noindex (a .noindex name, so Spotlight skips it).
+# a time), and builds into <worktree>-win.noindex next to the worktree, one per worktree (cargo hashes
+# workspace crates the same in every worktree, so a shared folder mixes branches). The .noindex name keeps
+# Spotlight out.
 # Clippy only checks, so it never links or runs a Windows program. The first run compiles every
 # dependency for Windows and is slow; later runs only recheck what changed.
 set -euo pipefail
@@ -74,7 +76,8 @@ if ! rustup target list --installed | grep -qx "$TARGET"; then
 fi
 
 # ---- environment ---------------------------------------------------------------------------------
-export CARGO_TARGET_DIR="${PANOPLY_WIN_TARGET_DIR:-$HOME/personal/panoply-win.noindex}"
+repo_root="$(git rev-parse --show-toplevel)"
+export CARGO_TARGET_DIR="${PANOPLY_WIN_TARGET_DIR:-${repo_root}-win.noindex}"
 export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-8}"
 export CARGO_INCREMENTAL=0 PANOPLY_YES=1 CARGO_TERM_COLOR=always
 # The Windows SDK and CRT cache of cargo-xwin. Keep it where cargo-xwin puts it by default, outside the
