@@ -39,7 +39,7 @@ MD_NOT_DOCS = ("/src/", "/tests/", "/patches/", "/fixtures/")
 
 # Own jobs, not Rust jobs.
 CONVERSION_FILES = ("docs/CONVERSIONS.md", "conversions/*")
-NOTICE_FILES = ("THIRD-PARTY-NOTICES.md", "tools/notices/*", "Cargo.lock")
+NOTICE_FILES = ("THIRD-PARTY-NOTICES.md", "tools/notices/*", "Cargo.lock", "modules/examples-wasm/*/Cargo.lock")
 DEP_FILES = ("Cargo.lock", "Cargo.toml", "*/Cargo.toml", "*/*/Cargo.toml", "deny.toml", ".github/workflows/*")
 
 

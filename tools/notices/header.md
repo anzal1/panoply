@@ -2,7 +2,7 @@
 
 Panoply is licensed under MIT OR Apache-2.0 (see LICENSE-MIT and LICENSE-APACHE). It is built on the
 open-source software and data listed here. This file ships inside every Panoply download. It is generated
-by `tools/notices/generate.py` from Cargo.lock, so the list of Rust crates always matches the build.
+by `tools/notices/generate.py` from Cargo.lock and the lock files of the community modules that ship in the app, so the list of Rust crates always matches the build.
 
 What is in this file:
 

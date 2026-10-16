@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-"""Builds THIRD-PARTY-NOTICES.md from Cargo.lock and the hand-written parts in this folder.
+"""Builds THIRD-PARTY-NOTICES.md from Cargo.lock, the Cargo.lock of every shipped community module
+(modules/examples-wasm/*) and the hand-written parts in this folder.
 
     python3 -I tools/notices/generate.py            write THIRD-PARTY-NOTICES.md
     python3 -I tools/notices/generate.py --check    exit 1 if the file on disk is not what this would write
 
-Needs the crate sources on disk, so run `cargo fetch --locked` first (CI does).
+Needs the crate sources on disk, so run `cargo fetch --locked` first, and the same with
+`--manifest-path modules/examples-wasm/<module>/Cargo.toml` for each module (CI does; see MODULE_FETCH).
 
 What goes in: every package that the shipped programs can link, which is every package reachable from a
 workspace member through normal (not dev, not build-only) dependencies, on every platform and with the
-workspace's default features. Panoply's own crates are left out. The vendored gpui-base is third-party code
+workspace's default features. Panoply's own crates are left out. The community modules in modules/examples-wasm ship inside the
+macOS app and are their own Cargo projects, so each one's lock file is read the same way, for the
+wasm32-wasip2 target the modules are built for. The vendored gpui-base is third-party code
 and is listed. Each package contributes the license, notice and copying files found in its source folder.
 Identical texts are printed once with the list of packages that carry them.
 
@@ -45,11 +49,27 @@ PIN_FILES = [
 ]
 
 
-def run_metadata():
-    out = subprocess.run(
-        ["cargo", "metadata", "--format-version", "1", "--locked"],
-        cwd=ROOT, check=True, capture_output=True, text=True,
-    ).stdout
+MODULES_DIR = os.path.join(ROOT, "modules", "examples-wasm")
+
+
+def module_manifests():
+    """Cargo.toml of every shipped community module that has a lock file."""
+    if not os.path.isdir(MODULES_DIR):
+        return []
+    found = []
+    for name in sorted(os.listdir(MODULES_DIR)):
+        d = os.path.join(MODULES_DIR, name)
+        if os.path.isfile(os.path.join(d, "Cargo.toml")) and os.path.isfile(os.path.join(d, "Cargo.lock")):
+            found.append(os.path.join(d, "Cargo.toml"))
+    return found
+
+
+def run_metadata(manifest=None):
+    cmd = ["cargo", "metadata", "--format-version", "1", "--locked"]
+    if manifest:
+        # Modules are built for WebAssembly only, so only what that target links is shipped.
+        cmd += ["--manifest-path", manifest, "--filter-platform", "wasm32-wasip2"]
+    out = subprocess.run(cmd, cwd=ROOT, check=True, capture_output=True, text=True).stdout
     return json.loads(out)
 
 
@@ -206,7 +226,7 @@ def crates_section(pkgs):
     lines.append("## 3. Rust crates\n")
     lines.append(
         f"{len(pkgs)} crates can be linked into the Panoply programs on one platform or another (the list is built "
-        "from Cargo.lock by `tools/notices/generate.py`). For a crate offered under several licenses (for "
+        "from Cargo.lock and the lock files of the community modules by `tools/notices/generate.py`). For a crate offered under several licenses (for "
         "example MIT OR Apache-2.0), Panoply uses it under the permissive choice. The index comes first, "
         "then every distinct license and notice text once, with the crates that carry it.\n"
     )
@@ -280,8 +300,15 @@ def read(name):
 
 
 def build():
-    meta = run_metadata()
-    pkgs = shipped_packages(meta)
+    pkgs = shipped_packages(run_metadata())
+    seen = {(p["name"], p["version"], p["source"]) for p in pkgs}
+    for manifest in module_manifests():
+        for p in shipped_packages(run_metadata(manifest)):
+            key = (p["name"], p["version"], p["source"])
+            if key not in seen:
+                seen.add(key)
+                pkgs.append(p)
+    pkgs.sort(key=lambda p: (p["name"], p["version"]))
     section, ntexts, no_files = crates_section(pkgs)
     runtime = read("runtime.md")
     missing = [t for t in pin_tokens() if t not in runtime]
@@ -307,8 +334,8 @@ def main():
             cur = ""
         if cur != doc:
             sys.stderr.write(
-                "THIRD-PARTY-NOTICES.md is out of date (Cargo.lock or tools/notices changed).\n"
-                "Run: cargo fetch --locked && python3 -I tools/notices/generate.py\n"
+                "THIRD-PARTY-NOTICES.md is out of date (a Cargo.lock or tools/notices changed).\n"
+                "Run: cargo fetch --locked && for m in modules/examples-wasm/*/; do cargo fetch --locked --manifest-path $m/Cargo.toml; done && python3 -I tools/notices/generate.py\n"
                 "and commit the result.\n"
             )
             sys.exit(1)

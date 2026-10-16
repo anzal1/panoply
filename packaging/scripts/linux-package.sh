@@ -3,7 +3,9 @@
 #
 #   linux-package.sh --version 0.1.0-beta.1 --arch x64|arm64 --stage DIR --out DIR --desktop real|stub|none
 #
-# --stage holds `panoply` and, with --desktop real, `panoply-desktop`.
+# --stage holds `panoply` and, with --desktop real, `panoply-desktop`, and `modules/` (the output of
+# tools/build-shipped-modules.sh). The shipped community modules go to bin/modules in the tarball, usr/bin/modules
+# in the AppImage and next to the CLI in its archive: the folder next to the executable is where the catalog looks.
 #   real  ships the desktop app
 #   stub  uses the CLI as the desktop binary to exercise the tarball and AppImage paths while the
 #         desktop crate is absent; outputs get a `selftest-` prefix and are never released
@@ -49,12 +51,17 @@ case "$ARCH" in
   *) echo "unknown arch $ARCH"; exit 2 ;;
 esac
 
+[ "$DESKTOP" = none ] || ls "$STAGE"/modules/*/module.wasm >/dev/null 2>&1 \
+  || { echo "no built modules in $STAGE/modules (tools/build-shipped-modules.sh)"; exit 1; }
+MODS=(); MODS_BIN=()
+if [ -d "$STAGE/modules" ]; then MODS=("$STAGE/modules=modules"); MODS_BIN=("$STAGE/modules=bin/modules"); fi
+
 # ---- CLI ------------------------------------------------------------------------------------------
 CLI_NAME="panoply-cli-$VERSION-linux-$ARCH"
 EXTRA=()
 [ -f "$ROOT/THIRD-PARTY-NOTICES.md" ] && EXTRA+=("$ROOT/THIRD-PARTY-NOTICES.md")
 $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
-  "$STAGE/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md" ${EXTRA[@]+"${EXTRA[@]}"}
+  "$STAGE/panoply=panoply" ${MODS[@]+"${MODS[@]}"} "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md" ${EXTRA[@]+"${EXTRA[@]}"}
 [ "$DESKTOP" = none ] && exit 0
 
 if [ "$DESKTOP" = stub ]; then cp "$STAGE/panoply" "$STAGE/panoply-desktop"; fi
@@ -75,6 +82,7 @@ fi
 APP_NAME="${PREFIX}Panoply-$VERSION-linux-$ARCH"
 $PY "$HERE/mkarchive.py" "$OUT/$APP_NAME.tar.gz" "$APP_NAME" \
   "$STAGE/panoply=bin/panoply" "$STAGE/panoply-desktop=bin/panoply-desktop" \
+  ${MODS_BIN[@]+"${MODS_BIN[@]}"} \
   "$DESKTOP_FILE=share/applications/panoply.desktop" \
   "$ICON_SPEC" \
   "$PKG/linux/install.sh=install.sh" \
@@ -95,6 +103,7 @@ chmod +x "$TOOLS/appimagetool"
 APPDIR="$WORK/Panoply.AppDir"
 mkdir -p "$APPDIR/usr/bin"
 cp "$STAGE/panoply" "$STAGE/panoply-desktop" "$APPDIR/usr/bin/"
+[ -d "$STAGE/modules" ] && cp -R "$STAGE/modules" "$APPDIR/usr/bin/modules"
 mkdir -p "$APPDIR/usr/share/doc/panoply"
 cp "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" ${EXTRA[@]+"${EXTRA[@]}"} "$APPDIR/usr/share/doc/panoply/"
 cp "$DESKTOP_FILE" "$APPDIR/panoply.desktop"
@@ -116,6 +125,18 @@ ARCH="$APPIMAGE_ARCH" APPIMAGE_EXTRACT_AND_RUN=1 "$TOOLS/appimagetool" --no-apps
   --runtime-file "$TOOLS/runtime" "$APPDIR" "$APPIMAGE"
 chmod +x "$APPIMAGE"
 
+# ---- the CLI in the tarball finds the shipped modules ---------------------------------------------
+if [ "$(uname -m)" = "$APPIMAGE_ARCH" ]; then
+  mkdir -p "$WORK/untar" && tar -xzf "$OUT/$APP_NAME.tar.gz" -C "$WORK/untar"
+  # From a neutral folder: in a source checkout the CLI also lists modules/examples-wasm from here.
+  listing="$(cd "$WORK/untar" && "$WORK/untar/$APP_NAME/bin/panoply" modules)"
+  while read -r _ id _; do
+    printf '%s\n' "$listing" | grep -q "^$id " || { echo "panoply modules does not list $id:"; echo "$listing"; exit 1; }
+  done < <(grep -v '^#' "$ROOT/modules/shipped.txt" | grep .)
+  if printf '%s\n' "$listing" | grep -E 'text\.slugify_lines|text\.word_count'; then echo "an example module leaked into the bundle"; exit 1; fi
+  echo "panoply lists the shipped modules"
+fi
+
 # ---- smoke test -----------------------------------------------------------------------------------
 file "$APPIMAGE" | grep -q ELF
 if [ "$DESKTOP" = stub ]; then
@@ -125,6 +146,9 @@ else
   (cd "$WORK" && "$APPIMAGE" --appimage-extract >/dev/null)
   test -x "$WORK/squashfs-root/usr/bin/panoply-desktop"
   test -x "$WORK/squashfs-root/usr/bin/panoply"
+  for m in "$STAGE"/modules/*/; do
+    test -s "$WORK/squashfs-root/usr/bin/modules/$(basename "$m")/module.wasm"
+  done
   test -f "$WORK/squashfs-root/usr/share/doc/panoply/THIRD-PARTY-NOTICES.md"
   test -f "$WORK/squashfs-root/panoply.png"
 fi

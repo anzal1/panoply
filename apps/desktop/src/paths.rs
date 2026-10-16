@@ -10,34 +10,23 @@ pub fn data_dir() -> PathBuf {
 
 /// Where the user drops community modules: one folder per module with its `module.toml`.
 pub fn user_modules_dir() -> PathBuf {
-    data_dir().join("modules")
+    panoply_core::modules::user_modules_dir()
 }
 
 /// Every folder scanned for community modules, in order.
 ///
-/// `PANOPLY_MODULES` (several allowed, separated like `PATH`), the user folder, the folder shipped
-/// inside the app (`Resources/modules` in a macOS bundle, `modules` next to the executable
-/// elsewhere), and in debug builds the example modules in the source tree.
+/// The folders the command line scans too (`panoply_core::modules::search_dirs`: `PANOPLY_MODULES`,
+/// the user folder, the folder shipped inside the app), and in debug builds the example modules in
+/// the source tree.
 pub fn module_search_dirs() -> Vec<PathBuf> {
-    let mut dirs = Vec::new();
-    if let Some(v) = std::env::var_os("PANOPLY_MODULES") {
-        dirs.extend(std::env::split_paths(&v));
-    }
-    dirs.push(user_modules_dir());
-    if let Ok(exe) = std::env::current_exe()
-        && let Some(bin_dir) = exe.parent()
-    {
-        if cfg!(target_os = "macos")
-            && let Some(contents) = bin_dir.parent()
-        {
-            dirs.push(contents.join("Resources/modules"));
-        }
-        dirs.push(bin_dir.join("modules"));
-    }
+    let mut dirs = panoply_core::modules::search_dirs();
     if cfg!(debug_assertions) {
-        dirs.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../modules/examples-wasm"));
+        let examples =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../modules/examples-wasm");
+        if examples.is_dir() {
+            dirs.push(examples);
+        }
     }
-    dirs.retain(|d| d.is_dir());
     dirs.dedup();
     dirs
 }

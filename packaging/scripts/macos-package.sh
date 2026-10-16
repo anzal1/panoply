@@ -3,7 +3,9 @@
 #
 #   macos-package.sh --version 0.1.0-beta.1 --arch arm64|x64 --stage DIR --out DIR --desktop real|stub|none
 #
-# --stage holds `panoply` (the CLI) and, with --desktop real, `panoply-desktop`, both built for --arch.
+# --stage holds `panoply` (the CLI) and, with --desktop real, `panoply-desktop`, both built for --arch,
+# and `modules/` (the output of tools/build-shipped-modules.sh): the shipped community modules go into
+# Panoply.app/Contents/Resources/modules and beside the CLI in its archive.
 #   real  builds Panoply.app with apps/desktop/packaging/macos/bundle.sh
 #   stub  builds a throwaway app around the CLI to exercise the zip, dmg and signing paths while the
 #         desktop crate is absent. Outputs get a `selftest-` prefix and are never released.
@@ -43,6 +45,10 @@ for b in "$STAGE"/panoply "$STAGE"/panoply-desktop; do
   [ -f "$b" ] || continue
   [ "$(lipo -archs "$b")" = "$LIPO_ARCH" ] || { echo "$b is $(lipo -archs "$b"), expected $LIPO_ARCH"; exit 1; }
 done
+
+# The shipped community modules must be there: a release without them would quietly lose its plugins.
+[ "$DESKTOP" = none ] || { [ -d "$STAGE/modules" ] && ls "$STAGE"/modules/*/module.wasm >/dev/null 2>&1; } \
+  || { echo "no built modules in $STAGE/modules (tools/build-shipped-modules.sh)"; exit 1; }
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 PKG="$(cd "$HERE/.." && pwd)"
@@ -115,9 +121,10 @@ if [ "$NOTARIZE" = 1 ]; then
 fi
 CLI_NAME="panoply-cli-$VERSION-macos-$ARCH"
 EXTRA=()
+MODS=(); [ -d "$STAGE/modules" ] && MODS=("$STAGE/modules=modules")
 [ -f "$ROOT/THIRD-PARTY-NOTICES.md" ] && EXTRA+=("$ROOT/THIRD-PARTY-NOTICES.md")
 $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
-  "$WORK/cli/panoply=panoply" "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md" ${EXTRA[@]+"${EXTRA[@]}"}
+  "$WORK/cli/panoply=panoply" ${MODS[@]+"${MODS[@]}"} "$ROOT/LICENSE-MIT" "$ROOT/LICENSE-APACHE" "$ROOT/README.md" ${EXTRA[@]+"${EXTRA[@]}"}
 
 [ "$DESKTOP" = none ] && exit 0
 
@@ -125,7 +132,7 @@ $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
 APPW="$WORK/Panoply.app"
 if [ "$DESKTOP" = real ]; then
   chmod +x "$STAGE/panoply-desktop"   # artifacts lose the executable bit in transit
-  "$ROOT/apps/desktop/packaging/macos/bundle.sh" --binary "$STAGE/panoply-desktop" --sign -
+  "$ROOT/apps/desktop/packaging/macos/bundle.sh" --binary "$STAGE/panoply-desktop" --modules "$STAGE/modules" --sign -
   ditto "$ROOT/apps/desktop/dist/Panoply.app" "$APPW"
 else
   mkdir -p "$APPW/Contents/MacOS" "$APPW/Contents/Resources"
@@ -141,6 +148,11 @@ else
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
 </dict></plist>
 PLIST
+fi
+# The stub app carries the modules too, so the same checks below see them.
+if [ "$DESKTOP" = stub ] && [ -d "$STAGE/modules" ]; then
+  mkdir -p "$APPW/Contents/Resources/modules"
+  cp -R "$STAGE/modules/." "$APPW/Contents/Resources/modules/"
 fi
 for f in LICENSE-MIT LICENSE-APACHE THIRD-PARTY-NOTICES.md; do
   [ -f "$ROOT/$f" ] && [ ! -f "$APPW/Contents/Resources/$f" ] && cp "$ROOT/$f" "$APPW/Contents/Resources/$f"
@@ -170,6 +182,14 @@ fi
 sign "$APPW/Contents/MacOS/panoply-cli"
 sign "$APPW"
 codesign --verify --deep --strict --verbose=2 "$APPW"
+# Exactly the shipped modules, each with its manifest and compiled component, where the catalog loads from.
+for m in "$STAGE"/modules/*/; do
+  name="$(basename "$m")"
+  test -f "$APPW/Contents/Resources/modules/$name/module.toml"
+  test -s "$APPW/Contents/Resources/modules/$name/module.wasm"
+done
+[ "$(ls "$APPW/Contents/Resources/modules" | wc -l)" -eq "$(ls "$STAGE/modules" | wc -l)" ] \
+  || { echo "Resources/modules does not match the shipped list"; exit 1; }
 lipo -archs "$APPW/Contents/MacOS/Panoply"
 
 APP_NAME="${PREFIX}Panoply-$VERSION-macos-$ARCH"
@@ -202,10 +222,23 @@ MNT="$WORK/mnt"; mkdir -p "$MNT"
 hdiutil attach "$DMG" -readonly -nobrowse -mountpoint "$MNT" >/dev/null
 trap 'hdiutil detach "$MNT" -force >/dev/null 2>&1 || true' EXIT
 test -f "$MNT/Panoply.app/Contents/Resources/THIRD-PARTY-NOTICES.md"
+test "$(ls "$MNT"/Panoply.app/Contents/Resources/modules/*/module.wasm | wc -l)" -eq "$(ls "$STAGE/modules" | wc -l)"
 ls "$MNT"/Panoply.app/Contents/Resources/*.icns >/dev/null
 test -L "$MNT/Applications"
 hdiutil detach "$MNT" >/dev/null
 trap - EXIT
+
+# ---- the CLI inside the app finds the shipped modules (it can only run on its own architecture) ----
+if [ "$(uname -m)" = "$([ "$ARCH" = x64 ] && echo x86_64 || echo arm64)" ]; then
+  # From a neutral folder: in a source checkout the CLI also lists modules/examples-wasm from here.
+  listing="$(cd "$WORK" && "$APPW/Contents/MacOS/panoply-cli" modules)"
+  while read -r _ id _; do
+    case "$id" in ''|'#'*|'') continue ;; esac
+    printf '%s\n' "$listing" | grep -q "^$id " || { echo "panoply-cli modules does not list $id:"; echo "$listing"; exit 1; }
+  done < <(grep -v '^#' "$ROOT/modules/shipped.txt")
+  printf '%s\n' "$listing" | grep -E 'text\.slugify_lines|text\.word_count' && { echo "an example module leaked into the bundle"; exit 1; }
+  echo "panoply-cli lists the shipped modules"
+fi
 
 # ---- smoke test (stub builds only: the real app opens windows) -------------------------------------
 if [ "$DESKTOP" = stub ]; then
