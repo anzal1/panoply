@@ -56,7 +56,7 @@
       const at = b => Math.max(0, (b - START) * BEAT - SNAP);
 
     /* the measured time from a keystroke to a drawn frame: p50 of 20 keystrokes in assets/data/find-report.json (release build, Mac runner) */
-    const LATENCY_MS = 2;
+    const LATENCY_MS = 4;
     document.getElementById('f4-lat-txt').textContent = LATENCY_MS + ' ms';
 
     const tl = gsap.timeline({ paused: true });

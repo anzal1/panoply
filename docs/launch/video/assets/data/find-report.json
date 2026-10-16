@@ -3,97 +3,157 @@
   "fixture_entries": 412438,
   "long_list_hits": 200,
   "keystroke_to_frame_ms": {
-    "p50": 2.23175,
-    "p95": 4.770667,
-    "max": 6.141125,
+    "p50": 4.2419579999999995,
+    "p95": 8.537542,
+    "max": 13.4165,
     "samples": 20
   },
   "ui_state_change_ms": {
-    "p50": 0.042125,
-    "p95": 0.307875,
-    "max": 0.8800840000000001
+    "p50": 0.054167,
+    "p95": 0.28420799999999996,
+    "max": 0.42075
   },
   "ui_frame_ms": {
-    "p50": 1.3765830000000001,
-    "p95": 5.4597500000000005,
-    "max": 17.951375
+    "p50": 1.865708,
+    "p95": 6.825792,
+    "max": 21.022917
   },
   "frames_over_4ms": [
     {
+      "state": "",
+      "ms": 4.094375
+    },
+    {
+      "state": "",
+      "ms": 4.098375
+    },
+    {
       "state": "find empty",
-      "ms": 7.8171669999999995
+      "ms": 5.3816250000000005
     },
     {
       "state": "find typing",
-      "ms": 4.608125
+      "ms": 6.825792
     },
     {
       "state": "find typing",
-      "ms": 6.058459
+      "ms": 13.37175
+    },
+    {
+      "state": "find typing",
+      "ms": 8.440334
+    },
+    {
+      "state": "find typing",
+      "ms": 5.965833
+    },
+    {
+      "state": "find typing",
+      "ms": 7.531541
+    },
+    {
+      "state": "find typing",
+      "ms": 6.43775
+    },
+    {
+      "state": "find typing",
+      "ms": 4.3147910000000005
+    },
+    {
+      "state": "find typing",
+      "ms": 8.025125
     },
     {
       "state": "find long list",
-      "ms": 8.823917
+      "ms": 4.432250000000001
     },
     {
       "state": "find long list",
-      "ms": 4.659459
+      "ms": 4.100375
     },
     {
       "state": "find long list",
-      "ms": 4.939375
+      "ms": 4.479583
     },
     {
       "state": "find long list",
-      "ms": 4.9475
+      "ms": 4.523125
     },
     {
       "state": "find long list",
-      "ms": 4.2275
+      "ms": 5.171666
+    },
+    {
+      "state": "find long list",
+      "ms": 5.733750000000001
+    },
+    {
+      "state": "find indexing",
+      "ms": 5.344875
+    },
+    {
+      "state": "find permission note",
+      "ms": 4.380459
+    },
+    {
+      "state": "find permission note",
+      "ms": 5.152584
     },
     {
       "state": "bar tools only",
-      "ms": 5.021791
-    },
-    {
-      "state": "bar files only",
-      "ms": 4.47125
-    },
-    {
-      "state": "bar files only",
-      "ms": 11.908875
-    },
-    {
-      "state": "find empty",
-      "ms": 5.4597500000000005
-    },
-    {
-      "state": "find typing",
-      "ms": 4.0502910000000005
-    },
-    {
-      "state": "find typing",
-      "ms": 4.6930000000000005
-    },
-    {
-      "state": "find long list",
-      "ms": 5.937375
-    },
-    {
-      "state": "find long list",
-      "ms": 17.951375
+      "ms": 10.902875
     },
     {
       "state": "bar tools and files",
-      "ms": 6.712709
-    },
-    {
-      "state": "bar file selected",
-      "ms": 10.684875
+      "ms": 5.802084
     },
     {
       "state": "bar files only",
-      "ms": 5.618709
+      "ms": 5.108125
+    },
+    {
+      "state": "bar files only",
+      "ms": 16.812209000000003
+    },
+    {
+      "state": "bar files only",
+      "ms": 21.022917
+    },
+    {
+      "state": "find typing",
+      "ms": 4.136458
+    },
+    {
+      "state": "find typing",
+      "ms": 4.136540999999999
+    },
+    {
+      "state": "find typing",
+      "ms": 7.225750000000001
+    },
+    {
+      "state": "find typing",
+      "ms": 4.001209
+    },
+    {
+      "state": "find typing",
+      "ms": 4.247542
+    },
+    {
+      "state": "find long list",
+      "ms": 8.645415999999999
+    },
+    {
+      "state": "find long list",
+      "ms": 5.356875
+    },
+    {
+      "state": "find long list",
+      "ms": 5.036917
+    },
+    {
+      "state": "bar no results",
+      "ms": 4.181292
     }
   ],
   "bar_tools_on_list_before_files": true,

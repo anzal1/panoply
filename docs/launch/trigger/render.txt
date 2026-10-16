@@ -1,2 +1,2 @@
 video looks 60
-# run 15: events snapped to the frame grid (counter locks on 914), exact-frame checks
+# run 16: same 412,438 count in Find and the map, one date format, no blank frame at 1743 or 2298
