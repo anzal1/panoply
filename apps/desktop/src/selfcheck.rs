@@ -841,6 +841,103 @@ fn shot<V: 'static>(
 
 /// A small synthetic home folder for the disk map renders: about 40 MB of zero-filled files with the
 /// shapes a real one has (a few big videos, many small files, a build folder, downloads).
+/// Launch film renders: a believable home folder of about 108 GB, as (path, bytes) pairs. Nothing is
+/// written to disk: `Scan::synthetic` builds the tree straight from these.
+fn film_home_listing() -> Vec<(String, u64)> {
+    const MB: u64 = 1_000_000;
+    const GB: u64 = 1_000_000_000;
+    let mut v: Vec<(String, u64)> = Vec::new();
+    let mut add = |p: &str, n: u64| v.push((p.to_string(), n));
+    // Movies: several colours when drilled into (video, photos, audio).
+    add("Movies/trip-2025.mp4", 18 * GB + 400 * MB);
+    add("Movies/wedding-cut-v3.mov", 9 * GB + 600 * MB);
+    add("Movies/birthday.mov", 3 * GB + 100 * MB);
+    add("Movies/clip-a.mp4", 1 * GB + 500 * MB);
+    for (i, mb) in [1200u64, 900, 700].iter().enumerate() {
+        add(
+            &format!("Movies/Rough cuts/rough-{:02}.mp4", i + 1),
+            mb * MB,
+        );
+    }
+    for i in 0..10 {
+        add(&format!("Movies/Stills/DSC_{:04}.jpg", 4410 + i), 85 * MB);
+    }
+    for i in 0..5 {
+        add(&format!("Movies/Edit music/bed-{:02}.wav", i + 1), 120 * MB);
+    }
+    // Pictures
+    for i in 0..80 {
+        add(&format!("Pictures/RAW/DSC_{:04}.dng", 1000 + i), 48 * MB);
+    }
+    for i in 0..400 {
+        add(&format!("Pictures/Photos/IMG_{:04}.jpg", 1 + i), 4 * MB);
+    }
+    // Music
+    for i in 0..240 {
+        add(&format!("Music/Albums/track-{:03}.mp3", i + 1), 8 * MB);
+    }
+    for i in 0..60 {
+        add(&format!("Music/Lossless/track-{:03}.flac", i + 1), 38 * MB);
+    }
+    // Documents
+    add("Documents/Lease.pdf", 4 * MB);
+    add("Documents/Taxes/2024-return.pdf", 7 * MB);
+    add("Documents/Taxes/2023-return.pdf", 5 * MB);
+    for i in 0..40 {
+        add(&format!("Documents/Scans/scan-{:03}.pdf", i + 1), 25 * MB);
+    }
+    add("Documents/budget.xlsx", 2 * MB);
+    // Developer
+    for i in 0..40 {
+        add(
+            &format!("Developer/app/target/debug/deps/libdep{:02}.rlib", i),
+            280 * MB,
+        );
+    }
+    for i in 0..20 {
+        add(
+            &format!("Developer/app/target/debug/incremental/unit-{:02}.o", i),
+            450 * MB,
+        );
+    }
+    for i in 0..300 {
+        add(
+            &format!("Developer/web/node_modules/pkg{}/index{:03}.js", i % 12, i),
+            11 * MB,
+        );
+    }
+    // Downloads
+    add("Downloads/installer.dmg", 6 * GB + 400 * MB);
+    add("Downloads/ubuntu-24.04.iso", 5 * GB + 800 * MB);
+    add(
+        "Downloads/Screen Recording 2026-10-12.mov",
+        4 * GB + 400 * MB,
+    );
+    add("Downloads/archive.zip", 2 * GB + 200 * MB);
+    add("Downloads/payload.bin", 2 * GB + 100 * MB);
+    add("Downloads/export.sqlite", 1 * GB);
+    // Library (its own row is locked; a cache folder inside it can be picked)
+    for i in 0..30 {
+        add(
+            &format!(
+                "Library/Caches/com.google.Chrome/Default/Cache/data_{:02}",
+                i
+            ),
+            100 * MB,
+        );
+    }
+    for i in 0..12 {
+        add(
+            &format!(
+                "Library/Caches/com.apple.Safari/Cache/fsCachedData/{:02}",
+                i
+            ),
+            100 * MB,
+        );
+    }
+    v
+}
+
 fn synthetic_disk_tree(root: &Path) -> std::io::Result<()> {
     let put = |rel: &str, n: usize| -> std::io::Result<()> {
         let p = root.join(rel);
@@ -989,6 +1086,91 @@ pub(crate) fn run_review(out: PathBuf) {
 
                 // ---- the disk map (a real scan of a small synthetic folder) ----
                 {
+                    if film {
+                        // Launch film: a believable ~108 GB home folder built in memory (no disk read), shown under /Users/maya.
+                        let listing = film_home_listing();
+                        let refs: Vec<(&str, u64)> =
+                            listing.iter().map(|(p, n)| (p.as_str(), *n)).collect();
+                        let scan = panoply_disk::Scan::synthetic("/Users/maya", &refs);
+                        let root = PathBuf::from("/Users/maya");
+                        let root2 = root.clone();
+                        d.change(app_win, move |a, _, cx| {
+                            let dv = a.disk_view();
+                            dv.update(cx, |v, cx| {
+                                v.load(scan, root2.clone(), cx);
+                                v.preview_home(root2.clone(), cx);
+                            });
+                            a.go(Route::Disk, cx);
+                        });
+                        d.settle(app_win).await;
+                        shot(
+                            &mut d,
+                            app_win,
+                            "film-map",
+                            &file("film-map"),
+                            &mut log,
+                            &mut times,
+                        );
+                        d.change(app_win, |a, _, cx| {
+                            let dv = a.disk_view();
+                            dv.update(cx, |v, cx| v.open_named("Movies", cx));
+                        });
+                        d.settle(app_win).await;
+                        shot(
+                            &mut d,
+                            app_win,
+                            "film-drilled",
+                            &file("film-drilled"),
+                            &mut log,
+                            &mut times,
+                        );
+                        d.change(app_win, |a, _, cx| {
+                            let dv = a.disk_view();
+                            dv.update(cx, |v, cx| v.pick_path(&["trip-2025.mp4"], cx));
+                        });
+                        d.settle(app_win).await;
+                        shot(
+                            &mut d,
+                            app_win,
+                            "film-drilled-picked",
+                            &file("film-drilled-picked"),
+                            &mut log,
+                            &mut times,
+                        );
+                        d.change(app_win, |a, _, cx| {
+                            let dv = a.disk_view();
+                            dv.update(cx, |v, cx| {
+                                v.open_root(cx);
+                                v.pick_path(&["Downloads", "installer.dmg"], cx);
+                                v.pick_path(&["Library", "Caches", "com.google.Chrome"], cx);
+                                v.show_review(true, cx);
+                            });
+                        });
+                        d.settle(app_win).await;
+                        shot(
+                            &mut d,
+                            app_win,
+                            "film-review",
+                            &file("film-review"),
+                            &mut log,
+                            &mut times,
+                        );
+                        d.change(app_win, |a, _, cx| {
+                            let dv = a.disk_view();
+                            dv.update(cx, |v, cx| v.preview_move_clean(cx));
+                        });
+                        d.settle(app_win).await;
+                        shot(
+                            &mut d,
+                            app_win,
+                            "film-moved",
+                            &file("film-moved"),
+                            &mut log,
+                            &mut times,
+                        );
+                        continue;
+                    }
+
                     let home = work2.join("Home");
                     let _ = std::fs::remove_dir_all(&home);
                     synthetic_disk_tree(&home).expect("make the synthetic tree");

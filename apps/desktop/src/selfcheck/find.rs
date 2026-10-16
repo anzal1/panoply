@@ -45,6 +45,10 @@ fn fixture_files() -> Vec<(String, u64)> {
         ("Pictures/Goa 2025/IMG_0413.heic", 330 * DAY),
         ("Music/Albums/Kind of Blue/01 So What.flac", 700 * DAY),
         ("Movies/Wedding/ceremony-cut-v3.mov", 60 * DAY),
+        ("Documents/Finance/Quarterly budget.xlsx", 3 * DAY),
+        ("Documents/Finance/Quarterly review slides.key", 8 * DAY),
+        ("Downloads/Quarterly newsletter Q3.pdf", 14 * DAY),
+        ("Documents/Finance/quarter-end checklist.txt", 21 * DAY),
         ("projects/panoply/README.md", 6 * 3600),
         ("projects/panoply/src/main.rs", 3 * DAY),
         (
@@ -188,7 +192,7 @@ pub(crate) fn run_find(out: PathBuf) {
                 tag(&mut d, "find typing");
                 // Type it one letter at a time, as a person does, and time each keystroke to a frame.
                 let mut typed = String::new();
-                for ch in "report".chars() {
+                for ch in "quarterly".chars() {
                     typed.push(ch);
                     let q = typed.clone();
                     let t0 = Instant::now();
@@ -196,7 +200,9 @@ pub(crate) fn run_find(out: PathBuf) {
                     d.draw(app_win);
                     keystroke_ms.push(t0.elapsed().as_secs_f64() * 1000.0);
                     // One plate per keystroke, for the launch film (docs/launch): film-find-type-1 .. 6.
-                    let _ = d.png(app_win, &png(&format!("film-find-type-{}", typed.chars().count())));
+                    if typed.chars().count() >= 2 {
+                        let _ = d.png(app_win, &png(&format!("film-find-type-{}", typed.chars().count())));
+                    }
                     d.cx.background_executor()
                         .timer(Duration::from_millis(15))
                         .await;

@@ -96,6 +96,70 @@ pub struct Tree {
 }
 
 impl Tree {
+    /// A tree built from `(path below the root, bytes)` pairs, with no disk read at all. For renders and
+    /// tests (the launch film draws a believable home folder this way); a real scan never calls it.
+    /// `root` is the name of the root entry and also the start of every path ("/Users/maya").
+    pub fn from_files(root: &str, files: &[(&str, u64)]) -> Tree {
+        use std::collections::BTreeMap;
+        #[derive(Default)]
+        struct D {
+            dirs: BTreeMap<String, D>,
+            files: Vec<(String, u64)>,
+        }
+        let mut top = D::default();
+        for (path, bytes) in files {
+            let parts: Vec<&str> = path.split('/').filter(|p| !p.is_empty()).collect();
+            let Some((name, dirs)) = parts.split_last() else {
+                continue;
+            };
+            let mut cur = &mut top;
+            for d in dirs {
+                cur = cur.dirs.entry((*d).to_string()).or_default();
+            }
+            cur.files.push(((*name).to_string(), *bytes));
+        }
+        let mut tree = Tree::default();
+        let push = |tree: &mut Tree, name: &str, kind: Kind, parent: u32| -> u32 {
+            let off = tree.names.len() as u32;
+            tree.names.extend_from_slice(name.as_bytes());
+            tree.nodes.push(Node {
+                size: 0,
+                items: if kind == Kind::File { 1 } else { 0 },
+                name_off: off,
+                parent,
+                first_child: 0,
+                child_count: 0,
+                name_len: name.len() as u16,
+                kind: kind as u8,
+                flags: 0,
+            });
+            (tree.nodes.len() - 1) as u32
+        };
+        let r = push(&mut tree, root, Kind::Dir, 0);
+        let mut queue = std::collections::VecDeque::new();
+        queue.push_back((&top, r));
+        while let Some((d, idx)) = queue.pop_front() {
+            let first = tree.nodes.len() as u32;
+            tree.nodes[idx as usize].first_child = first;
+            tree.nodes[idx as usize].child_count = (d.dirs.len() + d.files.len()) as u32;
+            for (name, sub) in &d.dirs {
+                let ci = push(&mut tree, name, Kind::Dir, idx);
+                queue.push_back((sub, ci));
+            }
+            for (name, bytes) in &d.files {
+                let ci = push(&mut tree, name, Kind::File, idx);
+                tree.nodes[ci as usize].size = *bytes;
+            }
+        }
+        for i in (1..tree.nodes.len()).rev() {
+            let p = tree.nodes[i].parent as usize;
+            let (sz, it) = (tree.nodes[i].size, tree.nodes[i].items);
+            tree.nodes[p].size += sz;
+            tree.nodes[p].items += it;
+        }
+        tree
+    }
+
     /// Number of entries, root included.
     pub fn len(&self) -> usize {
         self.nodes.len()

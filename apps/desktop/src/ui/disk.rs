@@ -722,6 +722,12 @@ impl DiskView {
         }
     }
 
+    /// Launch film renders: go back to the top folder of the scan, no animation.
+    #[cfg(feature = "snapshot")]
+    pub(crate) fn open_root(&mut self, cx: &mut Context<Self>) {
+        self.jump(NodeId::ROOT, cx);
+    }
+
     /// Review renders: show the banner as if the scan had been refused folders.
     #[cfg(feature = "snapshot")]
     pub(crate) fn preview_fda_banner(&mut self, on: bool, cx: &mut Context<Self>) {

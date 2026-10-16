@@ -141,6 +141,22 @@ pub struct Scan {
     pub report: ScanReport,
 }
 
+impl Scan {
+    /// A finished scan of a made-up folder (see [`Tree::from_files`]), for renders and tests. Nothing is read.
+    pub fn synthetic(root: &str, files: &[(&str, u64)]) -> Scan {
+        let tree = Tree::from_files(root, files);
+        let report = ScanReport {
+            backend: "synthetic",
+            threads: 1,
+            total_bytes: tree.size(tree.root()),
+            files: files.len() as u64,
+            nodes: tree.len() as u64,
+            ..ScanReport::default()
+        };
+        Scan { tree, report }
+    }
+}
+
 struct Task {
     node: u32,
     path: PathBuf,
