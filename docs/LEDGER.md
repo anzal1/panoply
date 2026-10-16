@@ -53,7 +53,11 @@ quality bar does not move to make the date. Owner is who drives it; "crew" means
 
 - **User pass** (crew). Findings in `docs/research/user-pass-macos.md` (the tools, run on a Mac) and `docs/research/user-pass.md` (the scripted journeys on Windows and Linux), fixes on branch `qa/user-pass`.
 - **Instant search** (crew). Branch `feat/instant-search`, results in `docs/research/instant-search-index.md`.
-- **Disk map** (crew). Branch `feat/disk-map`.
+- **Disk map** (crew, branch `feat/disk-map`). Scanner built and measured: a 440 GiB home folder (8.1 million
+  files) in about 38 s, 9x faster than `du`, clones and hard links counted once, peak memory 289 MB. The
+  treemap view, the largest-items sidebar, the Review and move to trash flow with Undo, the Full Disk Access
+  explainer and `panoply disk <path>` are built. Left before the gate: a run on a real Windows PC, and the
+  view on a full disk by hand.
 - **Launch film and teaser** (crew). Branch `launch/video`, plans in `docs/launch/`.
 - **Windows CI speed-up** (paused).
 

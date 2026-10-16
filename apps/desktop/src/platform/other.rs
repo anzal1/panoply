@@ -475,3 +475,88 @@ pub(crate) fn increase_contrast() -> bool {
 pub(crate) fn accent_rgb() -> (f32, f32, f32) {
     (0.0, 0.478, 1.0)
 }
+
+/// The command that opens a file or folder with its default app.
+pub(crate) fn open_command(path: &std::path::Path) -> std::process::Command {
+    #[cfg(windows)]
+    {
+        // Explorer opens a file with its default app and takes the path as one argument, so a
+        // name with spaces or `&` is never split or run by a shell.
+        let mut c = std::process::Command::new("explorer.exe");
+        c.arg(path);
+        c
+    }
+    #[cfg(not(windows))]
+    {
+        let mut c = std::process::Command::new("xdg-open");
+        c.arg(path);
+        c
+    }
+}
+
+/// The command that shows a file selected in the file manager.
+pub(crate) fn reveal_command(path: &std::path::Path) -> std::process::Command {
+    #[cfg(windows)]
+    {
+        let mut arg = std::ffi::OsString::from("/select,");
+        arg.push(path);
+        let mut c = std::process::Command::new("explorer.exe");
+        c.arg(arg);
+        c
+    }
+    #[cfg(not(windows))]
+    {
+        // The freedesktop file manager interface selects the file; without it the folder opens.
+        let uri = format!("file://{}", path.display());
+        let mut c = std::process::Command::new("dbus-send");
+        c.args([
+            "--session",
+            "--print-reply",
+            "--dest=org.freedesktop.FileManager1",
+            "--type=method_call",
+            "/org/freedesktop/FileManager1",
+            "org.freedesktop.FileManager1.ShowItems",
+        ])
+        .arg(format!("array:string:{uri}"))
+        .arg("string:");
+        c
+    }
+}
+
+fn run_launcher(mut c: std::process::Command) -> std::io::Result<()> {
+    let st = c
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()?;
+    // Explorer reports 1 even when it worked, so only a failure to start counts there.
+    if st.success() || cfg!(windows) {
+        Ok(())
+    } else {
+        Err(std::io::Error::other("the system could not open it"))
+    }
+}
+
+/// Open a file or folder with its default app. Returns when the system has taken the request.
+pub(crate) fn open_path(path: &std::path::Path) -> std::io::Result<()> {
+    run_launcher(open_command(path))
+}
+
+/// Show a file selected in the file manager. Without a file manager that answers on the session
+/// bus (Linux), the folder that holds it is opened instead.
+pub(crate) fn reveal_path(path: &std::path::Path) -> std::io::Result<()> {
+    if run_launcher(reveal_command(path)).is_ok() {
+        return Ok(());
+    }
+    reveal_fallback(path)
+}
+
+#[cfg(not(windows))]
+fn reveal_fallback(path: &std::path::Path) -> std::io::Result<()> {
+    open_path(path.parent().unwrap_or(path))
+}
+
+#[cfg(windows)]
+fn reveal_fallback(_path: &std::path::Path) -> std::io::Result<()> {
+    Err(std::io::Error::other("the system could not open it"))
+}

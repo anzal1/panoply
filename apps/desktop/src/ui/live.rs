@@ -16,8 +16,9 @@ use gpui::*;
 use super::app::{APP_HEIGHT, APP_MIN, APP_WIDTH, AppView, Route};
 use super::bar::{Bar, BarMode, HEIGHT, WIDTH};
 use super::icons::Icons;
-use super::{Hub, Recents};
+use super::{FindStatus, Hub, Recents};
 use crate::catalog::Catalog;
+use crate::finder::{Config as FinderConfig, Finder};
 use crate::history::History;
 
 actions!(
@@ -489,13 +490,51 @@ pub(crate) fn run(args: Vec<String>) {
             entries: Vec::new(),
             loaded: false,
         });
+        // The file index starts on its own thread; its notifications come back here over a channel
+        // and update one entity the Find page and the bar watch. Nothing polls.
+        let (find_tx, mut find_rx) = mpsc::unbounded::<()>();
+        let finder = if std::env::var("PANOPLY_FIND").is_ok_and(|v| v == "off") {
+            Finder::off()
+        } else {
+            Finder::start(FinderConfig::app(), move || {
+                let _ = find_tx.unbounded_send(());
+            })
+        };
+        let find_status = cx.new(|_| FindStatus {
+            state: finder.state(),
+        });
         let hub = Hub {
             catalog,
             history: history.clone(),
             recents: recents.clone(),
+            finder: finder.clone(),
+            find_status: find_status.clone(),
         };
         cx.set_global(hub.clone());
         cx.set_global(AppWindow::default());
+        {
+            let finder = finder.clone();
+            cx.spawn(async move |cx| {
+                while find_rx.next().await.is_some() {
+                    // Several updates may be queued; one redraw covers them.
+                    while find_rx.try_recv().is_ok() {}
+                    let state = finder.state();
+                    find_status.update(cx, |s, cx| {
+                        if s.state != state {
+                            s.state = state;
+                            cx.notify();
+                        }
+                    });
+                }
+            })
+            .detach();
+        }
+        // Quit: stop the watcher and save the index, so the next start loads it.
+        cx.on_app_quit(move |_| {
+            finder.shutdown();
+            async {}
+        })
+        .detach();
 
         // Recent jobs load off the UI thread.
         cx.spawn(async move |cx| {

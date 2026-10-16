@@ -117,12 +117,44 @@ More about the gaps:
   because the system's decoder holds it. Everything else stays under 300 MB. Pictures over 24
   megapixels are processed at a reduced size for cutout, erase and watermark, and the result card says
   so. On macOS, OCR reads pictures and pages at no more than 6 million pixels (A4 at about 250 dpi).
+- **The disk map counts what a file costs on disk.** Sizes are allocated bytes, so a sparse or compressed file
+  shows what it occupies, a hard link is counted once, and an APFS clone is counted once. A clone you edited
+  after copying it is found exactly only for files of 1 MiB or more; a small edited clone can be counted
+  twice for the blocks it still shares, under 1 MiB per file. Other volumes and network drives are skipped
+  unless you ask. Without Full Disk Access on macOS some folders in your Library cannot be read: the map
+  says which, and why. A scan of a whole home folder holds about 290 MB while it runs.
+- **The disk map will not move folders the system needs.** Drive roots, the home folder and what holds it,
+  `/System`, `/Library`, `/Applications`, `~/Library` (except cache folders inside it), `C:\Windows`,
+  `Program Files`, `AppData` and `/usr`, `/etc`, `~/.config` on Linux have a locked box that says why. The same
+  list sits under the Trash call itself. A few cache folders inside a protected one can be moved, with a note.
+- **Undo after Move to Trash puts the files back where they were.** It works on macOS and Linux, where the
+  system tells Panoply where the Trash put each item. On Windows the Recycle Bin gives no location, so Undo
+  says so and you restore from the Recycle Bin yourself. If something new already sits at the old path, that
+  file is left in the Trash and listed.
 - **Compress video picks a hardware encoder first.** Hardware encoders are fast and less efficient than
   x264 at tight sizes. Pass `--codec av1` when you need the smallest file and have time.
 - **A tool that cannot reach a target says so.** "Under 1 MB" on a scan may produce a bigger file than
   asked. Panoply writes the smallest it reached and tells you.
 - **Results are new files.** They sit next to the original, such as
   `name (compressed).jpg`, numbered on a clash. Nothing is ever overwritten.
+
+## Instant search (Find)
+
+- **macOS** keeps the file list current with FSEvents, in about 220 ms, at no cost while nothing changes.
+- **Linux** uses inotify. The kernel caps watches per user (`fs.inotify.max_user_watches`). On a very large
+  tree Panoply stops adding watches at the cap, says so once on stderr, and folders past it are not
+  watched until you raise the limit and restart the app. After a kernel queue overflow Panoply scans
+  your folders again, so a burst of changes can show up a moment late. It does not poll.
+- **Windows** watches with `ReadDirectoryChangesW`, one reader per folder root, and scans again after a
+  buffer overflow. Between one read finishing and the next starting there is a short gap, and a change in
+  it can be missed until the next scan. Searching is still instant: the list is in memory either way.
+- **Windows USN journal is off by default.** It would watch a whole volume with no scan after a restart,
+  but it was written and reviewed on a Mac and has not run against a real Windows volume, and it needs an
+  elevated process. It is opt in with `PANOPLY_FIND_USN=1`. Any journal problem (a different file system,
+  a wrapped journal, a damaged record, missing rights) falls back to `ReadDirectoryChangesW` and a scan,
+  never to a stale list. Its position is not saved between runs yet.
+- **First start reads your files once.** Until that ends, the Find page shows how many files it has read
+  and no match count. The list is saved, so later starts are quick.
 
 ## Reporting a problem
 

@@ -21,7 +21,18 @@ use crate::ui::app::{AppView, Route};
 use crate::ui::bar::{Bar, BarMode};
 use crate::ui::icons::Icons;
 use crate::ui::live::{app_window_options_at, bar_window_options};
-use crate::ui::{Hub, Recents};
+use crate::ui::{FindStatus, Hub, Recents};
+
+mod find;
+pub(crate) use find::run_find;
+
+/// The file index parts of a hub for runs that do not look at files: switched off, so nothing
+/// ever scans and the bar and Find page show their "unavailable" state.
+fn find_off(cx: &mut App) -> (crate::finder::Finder, Entity<FindStatus>) {
+    let f = crate::finder::Finder::off();
+    let st = f.state();
+    (f, cx.new(|_| FindStatus { state: st }))
+}
 
 struct Drv<'a> {
     cx: &'a mut AsyncApp,
@@ -299,7 +310,8 @@ pub(crate) fn run(out: PathBuf) {
         let catalog_ms = t_catalog.elapsed().as_secs_f64() * 1000.0;
         let now = crate::units::now_secs();
         let recents = cx.new(|_| Recents { entries: seeded_recents(now, Path::new("/Users/me/Documents")), loaded: true });
-        let hub = Hub { catalog, history: History::at(work.join("history.jsonl")), recents };
+        let (finder, find_status) = find_off(cx);
+        let hub = Hub { catalog, history: History::at(work.join("history.jsonl")), recents, finder, find_status };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
         let bar = cx
@@ -747,10 +759,13 @@ pub(crate) fn run_idle(hold_secs: u64) {
             entries: Vec::new(),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(std::env::temp_dir().join("panoply-idle-history.jsonl")),
             recents,
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
@@ -824,6 +839,60 @@ fn shot<V: 'static>(
     log.push(d.png(h, path));
 }
 
+/// A small synthetic home folder for the disk map renders: about 40 MB of zero-filled files with the
+/// shapes a real one has (a few big videos, many small files, a build folder, downloads).
+fn synthetic_disk_tree(root: &Path) -> std::io::Result<()> {
+    let put = |rel: &str, n: usize| -> std::io::Result<()> {
+        let p = root.join(rel);
+        if let Some(dir) = p.parent() {
+            std::fs::create_dir_all(dir)?;
+        }
+        std::fs::write(p, vec![0u8; n])
+    };
+    put("Movies/trip-2025.mp4", 6_000_000)?;
+    put("Movies/birthday.mov", 3_000_000)?;
+    put("Movies/clip-a.mp4", 1_500_000)?;
+    for i in 0..40 {
+        put(&format!("Pictures/Photos/IMG_{i:04}.jpg"), 80_000)?;
+    }
+    for i in 0..4 {
+        put(&format!("Pictures/RAW/DSC_{i:04}.dng"), 1_000_000)?;
+    }
+    for i in 0..8 {
+        put(&format!("Music/Album/track-{i:02}.mp3"), 400_000)?;
+    }
+    put("Documents/Lease.pdf", 2_000_000)?;
+    put("Documents/Taxes/2024-return.pdf", 600_000)?;
+    put("Documents/Taxes/2023-return.pdf", 500_000)?;
+    put("Documents/budget.xlsx", 400_000)?;
+    for i in 0..30 {
+        put(&format!("Documents/Notes/note-{i:02}.txt"), 2_000)?;
+    }
+    for i in 0..30 {
+        put(
+            &format!("Developer/app/target/debug/deps/dep-{i:02}.o"),
+            100_000,
+        )?;
+    }
+    put("Developer/app/target/debug/libapp.rlib", 2_000_000)?;
+    for i in 0..60 {
+        put(&format!("Developer/app/src/mod{i:02}.rs"), 3_000)?;
+    }
+    for i in 0..100 {
+        put(
+            &format!("Developer/web/node_modules/pkg{}/index{i:03}.js", i % 12),
+            15_000,
+        )?;
+    }
+    put("Downloads/installer.dmg", 3_000_000)?;
+    put("Downloads/archive.zip", 2_000_000)?;
+    put("Downloads/export.sqlite", 1_000_000)?;
+    put("Downloads/payload.bin", 2_000_000)?;
+    put("Library/Caches/com.example.browser/cache.db", 1_500_000)?;
+    put("Library/Caches/com.example.browser/thumbs.dat", 700_000)?;
+    Ok(())
+}
+
 /// `--selfcheck-review --out DIR`: every screen and state of the bar and the app window in light and
 /// dark, one PNG each (`<state>-light.png`, `<state>-dark.png`, rendered at the display's 2x), plus
 /// one contact sheet of the options panel of every tool. Nothing is shown on screen. The files in
@@ -850,10 +919,13 @@ pub(crate) fn run_review(out: PathBuf) {
             entries: seeded_recents(now, Path::new("/Users/me/Documents")),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(work.join("history.jsonl")),
             recents: recents.clone(),
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
@@ -912,6 +984,129 @@ pub(crate) fn run_review(out: PathBuf) {
                     });
                 }
                 let file = |name: &str| out2.join(format!("{name}-{tag}.png"));
+
+                // ---- the disk map (a real scan of a small synthetic folder) ----
+                {
+                    let home = work2.join("Home");
+                    let _ = std::fs::remove_dir_all(&home);
+                    synthetic_disk_tree(&home).expect("make the synthetic tree");
+                    let scan = panoply_disk::scan(&home, &panoply_disk::ScanOptions::default())
+                        .expect("scan the synthetic tree");
+                    let root = home.clone();
+                    let home_for_picks = home.clone();
+                    d.change(app_win, move |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| {
+                            v.load(scan, root, cx);
+                            v.preview_home(home_for_picks.clone(), cx);
+                        });
+                        a.go(Route::Disk, cx);
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map",
+                        &file("disk-map"),
+                        &mut log,
+                        &mut times,
+                    );
+                    // The review panel with three picks and the Full Disk Access note. Nothing is
+                    // moved: the render only draws the panel, and the tree is a temp folder.
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| {
+                            v.pick_named(&["Movies", "Downloads"], cx);
+                            // Library itself is protected, so its box is locked; a cache folder inside
+                            // it can be picked, with a note.
+                            v.pick_path(&["Library", "Caches", "com.example.browser"], cx);
+                            v.preview_fda_banner(true, cx);
+                            v.show_review(true, cx);
+                        });
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-review",
+                        &file("disk-map-review"),
+                        &mut log,
+                        &mut times,
+                    );
+                    // The move's result with Undo (a fake mover: nothing leaves the temp folder or
+                    // reaches the real Trash), one item refused so the failure line shows, then
+                    // the Undo result.
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.preview_move(false, cx));
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-moved",
+                        &file("disk-map-moved"),
+                        &mut log,
+                        &mut times,
+                    );
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.preview_move(true, cx));
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-undone",
+                        &file("disk-map-undone"),
+                        &mut log,
+                        &mut times,
+                    );
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.show_review(false, cx));
+                    });
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| {
+                            v.open_named("Developer", cx);
+                            v.preview_fda_banner(true, cx);
+                        });
+                    });
+                    d.settle(app_win).await;
+                    shot(
+                        &mut d,
+                        app_win,
+                        "disk-map-drilled",
+                        &file("disk-map-drilled"),
+                        &mut log,
+                        &mut times,
+                    );
+                    // The pages around the map: before a scan, mid-scan, a failed start.
+                    for (kind, name) in [
+                        ("idle", "disk-start"),
+                        ("scanning", "disk-scanning"),
+                        ("failed", "disk-failed"),
+                    ] {
+                        d.change(app_win, move |a, _, cx| {
+                            let dv = a.disk_view();
+                            dv.update(cx, |v, cx| {
+                                v.preview_fda_banner(false, cx);
+                                v.preview_phase(kind, cx);
+                            });
+                        });
+                        d.settle(app_win).await;
+                        shot(&mut d, app_win, name, &file(name), &mut log, &mut times);
+                    }
+                    d.change(app_win, |a, _, cx| {
+                        let dv = a.disk_view();
+                        dv.update(cx, |v, cx| v.preview_done(cx));
+                        a.go(Route::Home, cx);
+                    });
+                    if std::env::args().any(|a| a == "--only-disk") {
+                        continue;
+                    }
+                }
 
                 // ---- the bar ----
                 d.change(bar, |b, window, cx| {
@@ -1553,10 +1748,13 @@ pub(crate) fn run_frames(out: PathBuf) {
                 .collect(),
             loaded: true,
         });
+        let (finder, find_status) = find_off(cx);
         let hub = Hub {
             catalog,
             history: History::at(work.join("history.jsonl")),
             recents,
+            finder,
+            find_status,
         };
         cx.set_global(hub.clone());
         let bar_hub = hub.clone();
