@@ -4,6 +4,37 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
+## v0.2.0-beta (2026-10-16)
+
+Find any file as you type, see what is filling your disk, and three community plugins in the box.
+
+### Added
+
+- **Find.** Every file on your disk by name, as you type: a few milliseconds a keystroke on a million files. The
+  index builds once in the background and stays current as files change, with no work while idle. Files
+  also show up in the command bar under the tools. Enter opens, Cmd+Enter shows it in its folder. Names
+  only, and nothing leaves your computer.
+- **Disk map.** See what is filling your disk as a map you can click into, coloured by file type. Pick
+  files or folders, review them with the total, and move them to the Trash with Undo. System folders such as
+  Library, Applications and Windows are locked so they cannot be picked. Copies and hard links are counted
+  once. Also on the command line as `panoply disk <path>`.
+- **Community plugins.** Markdown to HTML, Format JSON, YAML and TOML, and QR code maker ship in every
+  download. Each runs sandboxed with only the files you choose and no network, and shows "Community,
+  sandboxed" on the Modules page. Writing your own starts from `modules/template-rust`.
+- **Result card.** A thumbnail of what you made, with a Before and After toggle for pictures.
+
+### Changed
+
+- **Honest labels.** Tools that fetch a model or an engine once now say so ("Downloads a model once",
+  "Downloads an engine once") with a neutral badge. Your files never leave the computer.
+- **Quality floor.** Compressing a JPEG never goes below quality 40 by default, so a smaller file never
+  comes at a visibly worse picture.
+
+### Fixed
+
+- **Remove watermark never touches faces,** and no longer mistakes labels or scene text for a watermark.
+- **Fixes from testing every tool** the way a person would, on macOS, Windows and Linux.
+
 ## v0.1.3-beta (2026-10-16)
 
 Fixes found by running the app on real Windows and Linux desktops.
