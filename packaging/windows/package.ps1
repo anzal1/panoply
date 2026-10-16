@@ -85,8 +85,36 @@ $bytes = $md5.ComputeHash([Text.Encoding]::UTF8.GetBytes("panoply|$Arch|$MsiVers
 $productCode = ([guid]::new($bytes)).ToString().ToUpper()
 
 $msi = Join-Path $Out "$appName.msi"
-wix build (Join-Path $PSScriptRoot 'panoply.wxs') -arch $Arch -ext WixToolset.UI.wixext -pdbtype none `
-  -d "Version=$MsiVersion" -d "ProductCode={$productCode}" -d "BinDir=$Stage" -d "ModulesDir=$modulesDir" -d "AssetDir=$work" `
+# The shipped modules as WiX source: a folder per module under ModulesFolder, a component per file. Written
+# out explicitly, so the install holds exactly the folders that were built. Ids may not hold a hyphen.
+$modWxs = Join-Path $work 'modules.wxs'
+$dirs = New-Object System.Collections.Generic.List[string]
+$comps = New-Object System.Collections.Generic.List[string]
+foreach ($m in $shipped) {
+  $id = 'Mod_' + ($m -replace '[^A-Za-z0-9]', '_')
+  $dirs.Add("      <Directory Id=`"$id`" Name=`"$m`" />")
+  foreach ($f in 'module.toml', 'module.wasm') {
+    $fid = $id + '_' + ($f -replace '[^A-Za-z0-9]', '_')
+    $src = Join-Path $modulesDir "$m/$f"
+    $comps.Add("    <Component Id=`"$fid`" Directory=`"$id`"><File Id=`"$fid`" Source=`"$src`" KeyPath=`"yes`" /></Component>")
+  }
+}
+$xml = @(
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">',
+  '  <Fragment>',
+  '    <DirectoryRef Id="ModulesFolder">'
+) + $dirs + @(
+  '    </DirectoryRef>',
+  '    <ComponentGroup Id="ModuleFiles">'
+) + $comps + @(
+  '    </ComponentGroup>',
+  '  </Fragment>',
+  '</Wix>'
+)
+Set-Content -Path $modWxs -Value $xml -Encoding utf8
+wix build (Join-Path $PSScriptRoot 'panoply.wxs') $modWxs -arch $Arch -ext WixToolset.UI.wixext -pdbtype none `
+  -d "Version=$MsiVersion" -d "ProductCode={$productCode}" -d "BinDir=$Stage" -d "AssetDir=$work" `
   -d "LicenseRtf=$(Join-Path $work 'license.rtf')" -o $msi
 # SIGNING HOOK (MSI): sign $msi here.
 "PRODUCT_CODE={$productCode}" | Set-Content (Join-Path $Out "state/windows-$Arch.env") -Encoding ascii
