@@ -122,6 +122,24 @@ More about the gaps:
 - **Results are new files.** They sit next to the original, such as
   `name (compressed).jpg`, numbered on a clash. Nothing is ever overwritten.
 
+## Instant search (Find)
+
+- **macOS** keeps the file list current with FSEvents, in about 220 ms, at no cost while nothing changes.
+- **Linux** uses inotify. The kernel caps watches per user (`fs.inotify.max_user_watches`). On a very large
+  tree Panoply stops adding watches at the cap, says so once on stderr, and folders past it are not
+  watched until you raise the limit and restart the app. After a kernel queue overflow Panoply scans
+  your folders again, so a burst of changes can show up a moment late. It does not poll.
+- **Windows** watches with `ReadDirectoryChangesW`, one reader per folder root, and scans again after a
+  buffer overflow. Between one read finishing and the next starting there is a short gap, and a change in
+  it can be missed until the next scan. Searching is still instant: the list is in memory either way.
+- **Windows USN journal is off by default.** It would watch a whole volume with no scan after a restart,
+  but it was written and reviewed on a Mac and has not run against a real Windows volume, and it needs an
+  elevated process. It is opt in with `PANOPLY_FIND_USN=1`. Any journal problem (a different file system,
+  a wrapped journal, a damaged record, missing rights) falls back to `ReadDirectoryChangesW` and a scan,
+  never to a stale list. Its position is not saved between runs yet.
+- **First start reads your files once.** Until that ends, the Find page shows how many files it has read
+  and no match count. The list is saved, so later starts are quick.
+
 ## Reporting a problem
 
 Open an issue at https://github.com/anzal1/panoply/issues with your system, the tool and the sentence

@@ -858,3 +858,33 @@ pub(crate) fn popup_menu(
             ),
     )
 }
+
+/// Text with the characters at `matched` (character indices) in semibold: a search match.
+pub(crate) fn matched_text(text: &str, matched: &[usize]) -> StyledText {
+    let mut runs: Vec<(std::ops::Range<usize>, HighlightStyle)> = vec![];
+    if !matched.is_empty() {
+        let offs: Vec<usize> = text
+            .char_indices()
+            .map(|(b, _)| b)
+            .chain(std::iter::once(text.len()))
+            .collect();
+        let mut i = 0;
+        while i < matched.len() {
+            let mut j = i;
+            while j + 1 < matched.len() && matched[j + 1] == matched[j] + 1 {
+                j += 1;
+            }
+            if matched[j] + 1 < offs.len() {
+                runs.push((
+                    offs[matched[i]]..offs[matched[j] + 1],
+                    HighlightStyle {
+                        font_weight: Some(FontWeight::SEMIBOLD),
+                        ..Default::default()
+                    },
+                ));
+            }
+            i = j + 1;
+        }
+    }
+    StyledText::new(text.to_string()).with_highlights(runs)
+}

@@ -35,3 +35,8 @@ pub fn module_search_dirs() -> Vec<PathBuf> {
 pub fn history_file() -> PathBuf {
     data_dir().join("history.jsonl")
 }
+
+/// The folder for the file index: the saved index, and the file system event ids that go with it.
+pub fn find_dir() -> PathBuf {
+    data_dir().join("find")
+}

@@ -22,12 +22,19 @@ pub(crate) struct Recents {
     pub loaded: bool,
 }
 
-/// What every view needs: the tools, the history, and the live recents.
+/// What the file index is doing, as an entity so the Find page and the bar redraw when it changes.
+pub(crate) struct FindStatus {
+    pub state: crate::finder::State,
+}
+
+/// What every view needs: the tools, the history, the live recents, and the file index.
 #[derive(Clone)]
 pub(crate) struct Hub {
     pub catalog: std::sync::Arc<Catalog>,
     pub history: History,
     pub recents: Entity<Recents>,
+    pub finder: crate::finder::Finder,
+    pub find_status: Entity<FindStatus>,
 }
 
 impl Global for Hub {}

@@ -44,10 +44,12 @@
 
 #![cfg(target_os = "macos")]
 
+mod bulkdir;
 mod cf;
 mod decode;
 mod encode;
 mod error;
+pub mod fsevents;
 pub mod ocr;
 mod props;
 mod raw;
@@ -56,6 +58,7 @@ mod vision;
 
 pub mod faces;
 
+pub use bulkdir::{BulkEntry, EntryKind, read_dir_bulk};
 pub use decode::{
     Decoder, FrameGeometry, Info, MAX_DIMENSION, MAX_PIXELS, MAX_UNTILED_PIXELS, Reduce, Space,
     Thumb, can_decode_uti,
