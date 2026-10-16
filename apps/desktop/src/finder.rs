@@ -470,7 +470,13 @@ pub fn home_relative(dir: &Path, home: &Path) -> String {
         return if rest.as_os_str().is_empty() {
             "~".to_string()
         } else {
-            format!("~{}{}", std::path::MAIN_SEPARATOR, rest.display())
+            // Rebuilt from components so a path with mixed separators still reads one way.
+            let mut out = String::from("~");
+            for part in rest.components() {
+                out.push(std::path::MAIN_SEPARATOR);
+                out.push_str(&part.as_os_str().to_string_lossy());
+            }
+            out
         };
     }
     dir.display().to_string()
