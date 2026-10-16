@@ -10,15 +10,15 @@
     #f1-content { position: absolute; inset: 0; }
     #f1-wall { position: absolute; inset: 0; transform-origin: 50% 50%; }
     #f1-scrim, #f1-scrim2 { position: absolute; inset: 0; opacity: 0; }
-    /* the first scrim is at full strength from frame 0: solid (1.0) under the words, nothing of a window shows through */
+    /* the scrim is OFF on frame 0 (the poster shows bright windows) and comes in just ahead of Upload. on beat 4, solid under the words */
     #f1-scrim { background: radial-gradient(ellipse 62% 58% at 50% 50%, rgba(12,12,15,1) 0%, rgba(12,12,15,1) 60%, rgba(12,12,15,.30) 100%); }
     #f1-scrim2 { background: rgba(12,12,15,.55); }
 
     /* the generic upload-site windows (unbranded on purpose) */
     .f1-slot { position: absolute; width: 560px; height: 380px; }
     .f1-win { position: absolute; inset: 0; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; font-size: 20px;
-      background: #1e1e22; color: #e4e4ea; box-shadow: 0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.07); }
-    .f1-win .bar { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: #2a2a30; }
+      background: #2a2a30; color: #ececf1; box-shadow: 0 24px 60px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.07); }
+    .f1-win .bar { height: 46px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 16px; background: #3a3a42; }
     .f1-win .bar i { width: 11px; height: 11px; border-radius: 50%; display: block; background: #4a4a52; }
     .f1-win .bar .url { margin-left: 14px; height: 24px; flex: 1; border-radius: 12px; background: #1a1a1e; }
     .f1-win .body { flex: 1; padding: 26px 30px; position: relative; }
@@ -44,7 +44,7 @@
 
     /* the four words and the sub line */
     #f1-words { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .f1-line { font-size: 184px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; text-align: center; }
+    .f1-line { text-shadow: 0 6px 48px rgba(0,0,0,.55); font-size: 184px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; text-align: center; }
     .f1-w { display: inline-block; opacity: 0; }
     #f1-w4 { color: #ff6961; }
     #f1-sub { margin-top: 34px; font-size: 52px; font-weight: 500; letter-spacing: -0.015em; color: #a9a9b3; opacity: 0; }
@@ -75,13 +75,14 @@
       const at = (b) => (b - START) * BEAT;
 
       /* every cue in beats, in one place */
-      const WORD_BEATS = [0, 6, 8, 10];            /* Upload. is already fully down on frame 0 (the poster); Wait. Sign up. Pay. land one frame early, ON their beats (the hit at 8 is measured) */
+      const WORD_BEATS = [4, 6, 8, 10];            /* Upload. beat 4 (frame 111), Wait. beat 6, Sign up. beat 8 (the measured hit), Pay. beat 10; each lands one frame early so its beat frame already shows it */
       const WORD_DIM = [0.38, 0.55, 0.75];         /* settled opacity of words 1..3 once the next lands */
       const SUB_BEAT = 11;
       const WORD_RISE = 0.4;                       /* seconds, the move STARTS one frame before the beat (expo.out) */
       const STOP_BEAT = 13.32, LINE_BEAT = 14.0, STOP_END = 15.93;
-      /* entrance beat per window, in entrance order (slot 0 of ORDER is already in at frame 0); two land on the hit at beat 8 */
-      const WIN_BEATS = [0, 1, 2, 3, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8, 8, 10, 11];
+      /* entrance beat per window, in entrance order (the first three, beat 0, are already in on frame 0: the poster); beats 1, 2, 3 add one each before the first word; two land on the hit at beat 8 */
+      const WIN_BEATS = [0, 0, 0, 1, 2, 3, 4.5, 5, 5.5, 6, 7, 7.5, 8, 8, 10];
+      const POSTER = 3;
       const ORDER = [7, 11, 3, 9, 5, 1, 13, 8, 0, 14, 6, 2, 10, 4, 12];  /* grid slots, spread so each early window lands somewhere new */
 
       /* ---------- build the wall (copied from the style frame, ids and classes prefixed) ---------- */
@@ -133,16 +134,14 @@
       const dim = (sel, o, b) => tl.to(sel, { opacity: o, duration: 0.08, ease: 'none' }, Math.max(0, at(b) - F));
 
       /* everything that enters later is invisible until its beat; the wall windows are scenery under the full scrim */
-      const later = ORDER.filter((_, n) => n > 0).map((i) => wins[i]);
+      const later = ORDER.filter((_, n) => n >= POSTER).map((i) => wins[i]);
       gsap.set(later, { opacity: 0 });
-      gsap.set(['#f1-w2', '#f1-w3', '#f1-w4', '#f1-sub', '#f1-stopline'], { opacity: 0 });
-      gsap.set('#f1-w1', { opacity: 1 });                        /* frame 0 poster: the first word is fully visible */
-      gsap.set('#f1-scrim', { opacity: 1 });                     /* and the scrim is solid under it from the first frame */
-      gsap.set(wins[ORDER[0]], { opacity: 1 });                    /* the drop-zone window is already in on frame 0 */
+      gsap.set(['#f1-w1', '#f1-w2', '#f1-w3', '#f1-w4', '#f1-sub', '#f1-stopline'], { opacity: 0 });
+      gsap.set(ORDER.slice(0, POSTER).map((i) => wins[i]), { opacity: 1 });   /* frame 0 poster: three bright windows, no words, no scrim */
 
       /* windows land one frame early on each beat: expo.out 0.45 s, opacity 0.5 to 1 in 0.08 s */
       ORDER.forEach((slotIdx, n) => {
-        if (n === 0) return;
+        if (n < POSTER) return;
         const t = at(WIN_BEATS[n]) - F;
         tl.fromTo(wins[slotIdx], { scale: 1.04, y: 20 }, { scale: 1, y: 0, duration: 0.45, ease: XO, immediateRender: false }, t);
         tl.fromTo(wins[slotIdx], { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, t);
@@ -151,9 +150,12 @@
       /* the wall drifts to rest on the stop */
       tl.fromTo('#f1-wall', { scale: 1, x: 0 }, { scale: 1.015, x: -16, duration: at(STOP_BEAT), ease: 'none' }, 0);
 
-      /* the words: Upload. is down on frame 0; the others land on beats 6, 8, 10; earlier words settle dimmer on the same frame */
+      /* the scrim comes in just ahead of beat 4 (no flash, 0.1 s power2.out, done a frame before the beat), so Upload. reads on the beat frame */
+      tl.fromTo('#f1-scrim', { opacity: 0 }, { opacity: 1, duration: 0.1, ease: 'power2.out', immediateRender: false }, at(WORD_BEATS[0]) - 0.1 - F);
+
+      /* the words land on beats 4, 6, 8, 10; earlier words settle dimmer on the same frame */
       WORD_BEATS.forEach((b, n) => {
-        if (n > 0) land('#f1-w' + (n + 1), b, { y: 30 });
+        land('#f1-w' + (n + 1), b, { y: 30 });
         if (n > 0) dim('#f1-w' + n, WORD_DIM[n - 1], b);
       });
       land('#f1-sub', SUB_BEAT, { y: 14 });

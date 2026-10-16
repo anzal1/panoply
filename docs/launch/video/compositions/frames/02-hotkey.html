@@ -21,7 +21,7 @@
 
     /* the camera: the plate group pushes in around the bar's centre */
     #f2-push { position: absolute; transform-origin: 50% 50%; }
-    #f2-open { position: absolute; inset: 0; transform-origin: 50% 50%; opacity: 0; }
+    #f2-open { position: absolute; inset: 0; transform-origin: 50% 50%; visibility: hidden; }
     #f2-plate { position: absolute; inset: 0; overflow: hidden; background: #f1f2f5;
       box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 100px rgba(8,24,70,.5); }
     #f2-plate img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
@@ -68,7 +68,8 @@
       const TYPED_FIRST = 1;           /* first typed frame; the last typed frame is DEMO_LAST - 1 */
       const TYPE_START = 20;           /* beat of typed frame TYPED_FIRST */
       const TYPE_STEP = 0.25;          /* beats per typed frame (a 16th note); shrinks if more frames are captured */
-      const RETURN_BEAT = 23.5;        /* Return: cross-fade to the last frame */
+      const RETURN_BEAT = 23.5;        /* Return: hard cut to the last frame */
+      const PULL_BEAT = 23;            /* the pull-back starts here (the understood chip beat) */
       /* camera: top-centre origin on the plate, so the search field stays put while the plate grows downward */
       const PUSH_SCALE = 1.8, PULL_SCALE = 1.25;   /* frame 3 starts at 1.25 about the plate centre (PLATE_SCALE_START in 03-tools.html) */
       /* final plate geometry, shared with frame 3 (bar renders are 1440 x 920) */
@@ -102,13 +103,14 @@
         tl.fromTo(sel, { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: ir }, t);
       };
 
-      /* THE DROP (beat 16.0 = frame 0 of this file): a hard cut from the Midnight stop to solid brand blue.
-         The blue, the headline, the keycaps and the bar all arrive on this very frame. No wipe, no blank frame. */
-      
+      /* THE DROP (beat 16.0 = frame 0 of this file, frame 443): a hard cut from the Midnight stop to solid brand blue.
+         The blue, the headline and the keycaps are in on this very frame; the command bar is hidden and opens on beat 16.5 (frame 457). */
       land('#f2-head', 0, { y: 30 });
       land('#f2-caps-mac', 0, { y: 30 });
-      tl.fromTo('#f2-open', { scale: 0.96 }, { scale: 1, duration: 0.45, ease: XO }, 0);
-      tl.fromTo('#f2-open', { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out' }, 0);
+      /* the bar: hidden (visibility, so a backward seek stays hidden too) until beat 16.5, then expo-out scale and a 0.08 s fade from 0.5 */
+      tl.set('#f2-open', { visibility: 'visible' }, at(16.5));
+      tl.fromTo('#f2-open', { scale: 0.96 }, { scale: 1, duration: 0.45, ease: XO, immediateRender: false }, at(16.5));
+      tl.fromTo('#f2-open', { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, at(16.5));
 
       /* 17.0 (a measured small hit): the Mac row is cut and the Windows and Linux row lands on the same frame, never two rows at once */
       tl.set('#f2-caps-mac', { opacity: 0 }, at(17) - F);
@@ -132,9 +134,12 @@
          while it types, a near-still hold, then a pull-back on Return so the whole bar reads and frame 3 can take over at 1.25 */
       tl.fromTo('#f2-push', { scale: 1 }, { scale: 1.05, duration: at(19.4), ease: 'none' }, 0);
       tl.to('#f2-push', { scale: PUSH_SCALE, duration: at(20.4) - at(19.4), ease: 'power2.inOut' }, at(19.4));
-      tl.to('#f2-push', { scale: PUSH_SCALE + 0.02, duration: at(RETURN_BEAT) - at(20.4), ease: 'none' }, at(20.4));
-      /* the pull-back lands on frame 3's start pose: scale 1.25 about the plate centre equals scale 1.25 about the top centre shifted up by H/2 * (1 - 1.25), so the cut at beat 24 does not jump */
-      tl.to('#f2-push', { scale: PULL_SCALE, y: (PLATE_H / 2) * (1 - PULL_SCALE), duration: at(RETURN_BEAT + 0.25) - at(RETURN_BEAT), ease: 'power2.out' }, at(RETURN_BEAT));
+      tl.to('#f2-push', { scale: PUSH_SCALE + 0.02, duration: at(PULL_BEAT) - at(20.4), ease: 'none' }, at(20.4));
+      /* the keycaps and the headline fade out completely BEFORE the pull-back starts (done a frame before beat 23), so nothing is under the growing plate */
+      tl.fromTo(['#f2-head', '#f2-caps-win'], { opacity: 1 }, { opacity: 0, duration: 0.2, ease: 'none', immediateRender: false }, at(PULL_BEAT) - F - 0.2);
+      /* the pull-back starts ON beat 23 (frame 637) and runs to the last frame of this file, landing on frame 3's start pose: scale 1.25 about the plate centre equals
+         scale 1.25 about the top centre shifted up by H/2 * (1 - 1.25), so the cut at beat 24 does not jump */
+      tl.fromTo('#f2-push', { scale: PUSH_SCALE + 0.02, y: 0 }, { scale: PULL_SCALE, y: (PLATE_H / 2) * (1 - PULL_SCALE), duration: at(24) - F - at(PULL_BEAT), ease: 'power2.inOut', immediateRender: false }, at(PULL_BEAT));
 
       /* the real captures are translucent (alpha about 90 percent), so every swap hides the previous frame; frames never stack */
       /* the typing: real captured frames, hard swap on each 16th note */
@@ -145,9 +150,9 @@
         tl.set(D(k - 1), { opacity: 0 }, t);
       }
 
-      /* 23.5 Return: cross-fade to the last frame, then hold it to the end of the frame, no fade out */
-      tl.fromTo(D(DEMO_LAST), { opacity: 0 }, { opacity: 1, duration: 0.08, ease: 'none', immediateRender: false }, at(RETURN_BEAT));
-      tl.set(D(DEMO_LAST - 1), { opacity: 0 }, at(RETURN_BEAT) + 0.08);
+      /* 23.5 Return: a hard cut on the beat frame, typed screen out and result screen in on the same frame (same plate, same size, never two screens together), then hold to the end */
+      tl.set(D(DEMO_LAST), { opacity: 1 }, at(RETURN_BEAT));
+      tl.set(D(DEMO_LAST - 1), { opacity: 0 }, at(RETURN_BEAT));
 
       window.__timelines["f2-hotkey"] = tl;
     })();

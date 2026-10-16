@@ -39,8 +39,11 @@
     #f3-head { position: absolute; left: 0; right: 0; top: 0; height: 300px; }
     #f3-count { position: absolute; left: 0; right: 0; top: 70px; height: 160px; display: flex; justify-content: center; align-items: center;
       font-weight: 700; font-size: 168px; line-height: 160px; letter-spacing: -0.04em; white-space: nowrap; opacity: 0; }
-    #f3-nb { position: relative; width: 184px; height: 160px; flex: none; text-align: right; font-variant-numeric: tabular-nums; }
-    #f3-tools { display: block; margin-left: 24px; opacity: 0; }
+    /* one layer per count, each always "N tool(s)." (a number never shows without its unit); layers are switched with seek-safe sets */
+    .f3-cl { position: absolute; left: 0; right: 7px; top: 0; /* right 7px: optical centring of the ink of "31 tools." */ height: 160px; display: flex; justify-content: center; align-items: center; opacity: 0; }
+    .f3-nb { display: block; width: 184px; flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+    .f3-wd { display: block; margin-left: 24px; }
+    .f3-wd i { font-style: normal; visibility: hidden; }
     #f3-labels { position: absolute; left: 0; right: 0; top: 236px; height: 52px; }
     .f3-label { position: absolute; left: 0; right: 0; top: 0; text-align: center; opacity: 0;
       font-weight: 600; font-size: 44px; line-height: 52px; letter-spacing: -0.015em; white-space: nowrap; color: rgba(255,255,255,.9); }
@@ -57,10 +60,10 @@
     <div id="f3-slide" data-layout-allow-overflow><div id="f3-push" data-layout-allow-overflow><div id="f3-plate">
       <img id="f3-res-img" src="assets/captures/bar-result-light.png" alt="">
     </div></div></div>
-    <div id="f3-result" data-layout-allow-overlap aria-label="35% smaller"><span id="f3-pct">0</span><span id="f3-pct-sfx">% smaller</span></div>
+    <div id="f3-result" data-layout-allow-overlap aria-label="35% smaller"><span id="f3-pct">10</span><span id="f3-pct-sfx">% smaller</span></div>
     <div id="f3-grid" data-layout-allow-overflow></div>
     <div id="f3-head" data-layout-allow-overflow>
-      <div id="f3-count"><div id="f3-nb">1</div><div id="f3-tools">tools.</div></div>
+      <div id="f3-count"></div>
       <div id="f3-labels"></div>
     </div>
     <div id="f3-home"><img src="assets/captures/app-home-light.png" alt=""></div>
@@ -149,9 +152,14 @@
 
     /* the cards, impact entrances: each one STARTS 0.18 s before its beat and ENDS on it (power2.in, an impact).
        Beats chosen on the level jumps of the edit (27.0, 28.51, 30.01, 30.76, 31.5) so every landing is a picture event. */
-    const EARLY = [26, 27, 28, 28.5, 29, 30, 30.75, 31.5, 32];
-    const $c = id => document.getElementById(id);
-    const cEl = $c("f3-nb");
+    /* the cue sheet: first tile on 26, one per beat 27 to 30, then on 8ths from 31 (31, 31.5, 32, 32.5); STOP 32.6 to 32.9, HIT 33 */
+    const EARLY = [26, 27, 28, 29, 30, 31, 31.5, 32, 32.5];
+    /* frame grid of the film: this composition starts at project 11.07692 s, 60 fps. A beat lands on frame round(project * 60);
+       an entrance starts so that its first visible frame is the frame BEFORE the beat frame (just before that frame's time). */
+    const PROJ0 = 11.07692, FR = 60;
+    const beatFrame = b => Math.round((PROJ0 + at(b)) * FR);
+    const frameT = n => n / FR - PROJ0;                       /* local seconds of project frame n */
+    const firstVisible = n => frameT(n) - 0.003;              /* a tween starting here is already running (just) on frame n */
     const labels = $("f3-labels");
     const labelEls = CAT_ORDER.map(k => {
       const d = document.createElement("div");
@@ -176,9 +184,11 @@
 
     /* ---- beats 24 to 26: the result card, on screen from frame 0, nothing else moves ---- */
     /* the big number counts 0 to 35 with an impact (power2.in) that ENDS exactly on beat 25, then rests with the card */
-    const cnt = { v: 0 };
-    tl.to(cnt, { v: RESULT.pct, duration: at(25) - at(24.25), ease: "power2.in", ...NF,
-      onUpdate: () => { $("f3-pct").textContent = String(Math.round(cnt.v)); } }, at(24.25));
+    /* it starts on a real value (never 0): the first frame the number is visible already reads "10% smaller" */
+    const cnt = { v: 10 };
+    $("f3-pct").textContent = String(RESULT.pct);
+    tl.fromTo(cnt, { v: 10 }, { v: RESULT.pct, duration: at(25) - at(24.25), ease: "power2.in", ...NF,
+      onUpdate: () => { $("f3-pct").textContent = String(Math.max(10, Math.round(cnt.v))); } }, at(24.25));
     tl.fromTo("#f3-result", { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: FADE, ...NF }, at(24.25));
     /* the number leaves ending one frame before beat 26, the plate and the first card take over on beat 26 */
     tl.to("#f3-result", { opacity: 0, duration: 0.15, ease: "power1.in" }, at(26) - 0.15 - F);
@@ -188,43 +198,49 @@
     tl.fromTo("#f3-slide", { opacity: 1 }, { opacity: 0, duration: 0.3, ease: "power1.in", ...NF }, at(26) - F);
 
     /* the big counter lands with the first card */
-    enter("#f3-count", at(26) - F, { y: 24 });
+    const T_FIRST = firstVisible(beatFrame(26) - 1);          /* first card and the counter share this frame */
     tl.set("#f3-count", { opacity: 0 }, 0);
-    tl.fromTo("#f3-count", { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: FADE, ...NF }, at(26) - F);
+    enter("#f3-count", T_FIRST, { y: 24 });
 
-    /* ---- cards: early ones as impacts that end on their beat ---- */
-    const IMPACT = 0.18;
-    EARLY.forEach((b, i) => {
-      tl.fromTo(posEls[i], { y: 80 }, { y: 0, duration: IMPACT, ease: "power2.in", ...NF }, at(b) - IMPACT);
-      tl.fromTo(posEls[i], { opacity: 0 }, { opacity: 1, duration: IMPACT * 0.7, ease: FADE, ...NF }, at(b) - IMPACT);
-    });
-
-    /* STOP, beats 32.61 to 32.93: nothing moves (the last early card has landed at 32, the drift tweens end at 32.61).
-       HIT at beat 33.0: ordered ripple, row by row, 40 ms steps, every move starts on the hit frame + row * 40 ms. */
+    /* ---- cards ----
+       early cards (beats 26 to 32.5): each entrance starts so its first visible frame is the frame before its beat frame (expo.out, lands on the beat).
+       HIT (beat 33, frame 914): STOP 32.6 to 32.9 holds, then ALL the remaining cards arrive on the hit frame (row by row only in how long the rise
+       takes, 40 ms per row), so the counter can lock on the real total on that same frame without ever running below the cards on screen. */
     const STOP_A = 32.61, STOP_B = 32.93, HIT = 33;
-    const RIPPLE_STEP = 0.04, RIPPLE_DUR = 0.3, RIPPLE_OP = 0.08, LAND_AT = 0.1;
+    const EARLY_DUR = 0.28, EARLY_Y = 44;
+    const startT = [];                                         /* local second each card first shows (index = tool) */
+    EARLY.forEach((b, i) => {
+      const t = firstVisible(beatFrame(b) - 1);
+      startT.push(t);
+      tl.fromTo(posEls[i], { y: EARLY_Y }, { y: 0, duration: EARLY_DUR, ease: OUT, ...NF }, t);
+      tl.fromTo(posEls[i], { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: FADE, ...NF }, t);
+    });
+    const T_HIT = firstVisible(beatFrame(HIT));                /* first visible frame = the beat frame (914) */
+    const RIPPLE_STEP = 0.04, RIPPLE_DUR = 0.3;
     const rippleStart = EARLY.length;
-    const landTimes = EARLY.map(b => at(b));                 /* the moment each card is in place */
     for (let i = rippleStart; i < TOOLS.length; i++) {
       const r = ROW_OF[i] - ROW_OF[rippleStart];
-      const t0 = at(HIT) - F + r * RIPPLE_STEP;
-      tl.fromTo(posEls[i], { y: 80 }, { y: 0, duration: RIPPLE_DUR, ease: OUT, ...NF }, t0);
-      tl.fromTo(posEls[i], { opacity: 0.5 }, { opacity: 1, duration: RIPPLE_OP, ease: FADE, ...NF }, t0);
-      landTimes.push(t0 + LAND_AT);
+      startT.push(T_HIT);
+      tl.fromTo(posEls[i], { y: 80 }, { y: 0, duration: RIPPLE_DUR + r * RIPPLE_STEP, ease: OUT, ...NF }, T_HIT);
+      tl.fromTo(posEls[i], { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: FADE, ...NF }, T_HIT);
     }
-    /* the word "tools." lands on the hit frame */
-    tl.set("#f3-tools", { opacity: 0 }, 0);
-    enter("#f3-tools", at(HIT) - F, { y: 24 });
 
-    /* ONE monotone counter: it shows how many cards are on screen. It steps with each early card, runs up with the ripple rows,
-       and locks on the real count (31) when the last card is in. It never runs ahead of the cards. */
-    const COUNT_A = at(26) - 0.2, COUNT_B = Math.max.apply(null, landTimes) + 0.05;
-    const cp = { p: 0 };
-    tl.to(cp, { p: 1, duration: COUNT_B - COUNT_A, ease: "none",
-      onUpdate: () => {
-        const t = COUNT_A + cp.p * (COUNT_B - COUNT_A) + 1e-6;
-        cEl.textContent = String(Math.max(1, landTimes.filter(x => x <= t).length));
-      } }, COUNT_A);
+    /* The counter always reads the number of cards on screen (a card counts from its first visible frame), as "N tool(s).".
+       One layer per value, switched by seek-safe sets on the same time the cards appear: 1..9 with the early cards, then 31 on the hit frame. */
+    const steps = [...new Set(startT)].sort((x, y) => x - y).map(t => ({ t, n: startT.filter(x => x <= t).length }));
+    const countLayers = {};
+    steps.forEach(st => {
+      const d = document.createElement("div");
+      d.className = "f3-cl";
+      d.innerHTML = '<span class="f3-nb">' + st.n + '</span><span class="f3-wd">' + (st.n === 1 ? "tool.<i>s</i>" : "tools.") + '</span>';
+      $("f3-count").appendChild(d);
+      countLayers[st.n] = d;
+    });
+    steps.forEach((st, k) => {
+      if (k > 0) tl.set(countLayers[steps[k - 1].n], { opacity: 0 }, st.t);
+      tl.set(countLayers[st.n], { opacity: 1 }, st.t);
+    });
+    if (steps[steps.length - 1].n !== TOOL_COUNT) { throw new Error("f3-tools: counter does not lock on " + TOOL_COUNT); }
 
     /* slow 3 degree orbit of the grid and slow drift of the counter, in two segments around the stop */
     const SEGS = [[26, STOP_A], [STOP_B, 39]];

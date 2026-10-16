@@ -1,195 +1,175 @@
 {
   "build": "release",
-  "fixture_entries": 282,
+  "fixture_entries": 287,
   "long_list_hits": 200,
   "keystroke_to_frame_ms": {
-    "p50": 3.070583,
-    "p95": 6.83425,
-    "max": 6.83425,
-    "samples": 14
+    "p50": 2.880792,
+    "p95": 7.3303329999999995,
+    "max": 9.140374999999999,
+    "samples": 20
   },
   "ui_state_change_ms": {
-    "p50": 0.041124999999999995,
-    "p95": 0.229875,
-    "max": 0.30495799999999995
+    "p50": 0.048,
+    "p95": 0.38787499999999997,
+    "max": 0.5924170000000001
   },
   "ui_frame_ms": {
-    "p50": 2.062,
-    "p95": 6.8593329999999995,
-    "max": 19.019000000000002
+    "p50": 2.0527919999999997,
+    "p95": 6.139417,
+    "max": 38.917624999999994
   },
   "frames_over_4ms": [
     {
-      "state": "find empty",
-      "ms": 8.357125
+      "state": "find typing",
+      "ms": 6.139417
     },
     {
       "state": "find typing",
-      "ms": 6.432875
+      "ms": 7.275166
     },
     {
       "state": "find typing",
-      "ms": 6.212959
+      "ms": 4.4905409999999994
     },
     {
-      "state": "find long path",
-      "ms": 4.400875
+      "state": "find typing",
+      "ms": 38.917624999999994
     },
     {
-      "state": "find long list",
-      "ms": 4.297667
-    },
-    {
-      "state": "find long list",
-      "ms": 4.745959
+      "state": "find no results",
+      "ms": 4.363333
     },
     {
       "state": "find long list",
-      "ms": 4.759667
+      "ms": 7.624
     },
     {
       "state": "find long list",
-      "ms": 4.14525
+      "ms": 4.856625
     },
     {
       "state": "find long list",
-      "ms": 5.891333
+      "ms": 5.207458
     },
     {
       "state": "find long list",
-      "ms": 6.425417
+      "ms": 4.694875000000001
     },
     {
       "state": "find long list",
-      "ms": 4.75025
+      "ms": 4.409792
     },
     {
       "state": "find long list",
-      "ms": 6.716749999999999
+      "ms": 6.117832999999999
     },
     {
       "state": "find long list",
-      "ms": 7.394709
-    },
-    {
-      "state": "find long list",
-      "ms": 5.192125
-    },
-    {
-      "state": "find long list",
-      "ms": 4.17375
-    },
-    {
-      "state": "find indexing",
-      "ms": 4.244833
+      "ms": 5.995625
     },
     {
       "state": "find permission note",
-      "ms": 5.68525
+      "ms": 4.161042
     },
     {
       "state": "find permission note",
-      "ms": 5.353
+      "ms": 4.534833
     },
     {
       "state": "bar tools only",
-      "ms": 5.626875
-    },
-    {
-      "state": "bar files only",
-      "ms": 5.614415999999999
-    },
-    {
-      "state": "bar files only",
-      "ms": 7.429291999999999
-    },
-    {
-      "state": "bar files only",
-      "ms": 19.019000000000002
-    },
-    {
-      "state": "find empty",
-      "ms": 4.945208
-    },
-    {
-      "state": "find typing",
-      "ms": 6.7935419999999995
-    },
-    {
-      "state": "find typing",
-      "ms": 4.318458
-    },
-    {
-      "state": "find typing",
-      "ms": 4.099958
-    },
-    {
-      "state": "find long list",
-      "ms": 4.497542
-    },
-    {
-      "state": "find long list",
-      "ms": 4.701458000000001
-    },
-    {
-      "state": "find long list",
-      "ms": 4.201084
-    },
-    {
-      "state": "find long list",
-      "ms": 8.068792
-    },
-    {
-      "state": "find long list",
-      "ms": 5.764583
-    },
-    {
-      "state": "find long list",
-      "ms": 8.337208
-    },
-    {
-      "state": "find long list",
-      "ms": 8.213542
-    },
-    {
-      "state": "find long list",
-      "ms": 8.128666999999998
-    },
-    {
-      "state": "find long list",
-      "ms": 6.8593329999999995
-    },
-    {
-      "state": "find permission note",
-      "ms": 5.730916
-    },
-    {
-      "state": "find permission note",
-      "ms": 5.7620830000000005
-    },
-    {
-      "state": "find permission note",
-      "ms": 4.816875
-    },
-    {
-      "state": "find permission note",
-      "ms": 6.037417
-    },
-    {
-      "state": "find permission note",
-      "ms": 5.427208
-    },
-    {
-      "state": "find permission note",
-      "ms": 4.908833
-    },
-    {
-      "state": "bar tools only",
-      "ms": 4.7999160000000005
+      "ms": 4.326875
     },
     {
       "state": "bar tools and files",
-      "ms": 6.028167
+      "ms": 4.49525
+    },
+    {
+      "state": "bar files only",
+      "ms": 4.715625
+    },
+    {
+      "state": "bar files only",
+      "ms": 9.340542000000001
+    },
+    {
+      "state": "bar files only",
+      "ms": 10.623459
+    },
+    {
+      "state": "bar files only",
+      "ms": 4.508500000000001
+    },
+    {
+      "state": "find empty",
+      "ms": 4.052709
+    },
+    {
+      "state": "find typing",
+      "ms": 9.067792
+    },
+    {
+      "state": "find typing",
+      "ms": 4.599417
+    },
+    {
+      "state": "find typing",
+      "ms": 5.3019169999999995
+    },
+    {
+      "state": "find typing",
+      "ms": 4.628
+    },
+    {
+      "state": "find typing",
+      "ms": 4.522167
+    },
+    {
+      "state": "find typing",
+      "ms": 4.872792
+    },
+    {
+      "state": "find typing",
+      "ms": 4.164666
+    },
+    {
+      "state": "find no results",
+      "ms": 5.559833
+    },
+    {
+      "state": "find long list",
+      "ms": 5.463082999999999
+    },
+    {
+      "state": "find long list",
+      "ms": 5.272749999999999
+    },
+    {
+      "state": "find long list",
+      "ms": 4.970625
+    },
+    {
+      "state": "find long list",
+      "ms": 4.899083999999999
+    },
+    {
+      "state": "find indexing",
+      "ms": 5.834583
+    },
+    {
+      "state": "find indexing",
+      "ms": 5.6132919999999995
+    },
+    {
+      "state": "find permission note",
+      "ms": 7.165375
+    },
+    {
+      "state": "bar tools and files",
+      "ms": 7.521875
+    },
+    {
+      "state": "bar tools and files",
+      "ms": 9.107708
     }
   ],
   "bar_tools_on_list_before_files": true,

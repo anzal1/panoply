@@ -8,17 +8,24 @@
     #f5-ground { position: absolute; inset: 0; background: #2d6cdf; }
     #f5-grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .08; mix-blend-mode: soft-light; pointer-events: none; }
     #f5-cam { position: absolute; inset: 0; transform-origin: 50% 50%; }
-    .f5-line { position: absolute; left: 0; right: 0; top: 930px; text-align: center; color: #fff; white-space: nowrap; font-weight: 700; font-size: 112px; letter-spacing: -0.04em; line-height: 0.98; }
+    .f5-line { position: absolute; left: 0; right: 0; top: 810px; text-align: center; color: #fff; white-space: nowrap; font-weight: 700; font-size: 112px; letter-spacing: -0.04em; line-height: 0.98; }
 
-    /* FINAL CARD GEOMETRY (frame 6 morphs from it): 980 x 760, left 470, top 140, radius 28, scale 1, at rest from beat 55.
+    /* FINAL CARD GEOMETRY (frame 6 shrinks it into the fan): 902 x 700, left 509, top 70, radius 28, content at pose 1 (the whole page) from beat 55.
        The real Disk map page (offscreen render of the app, sidebar cropped away) sits inside it. */
-    #f5-cardwrap { position: absolute; left: 470px; top: 140px; width: 980px; height: 760px; border-radius: 28px;
+    #f5-cardwrap { position: absolute; left: 509px; top: 70px; width: 902px; height: 700px; border-radius: 28px;
       box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 120px rgba(8,24,70,.45); }
     #f5-card { position: absolute; inset: 0; border-radius: 28px; overflow: hidden; background: #fafafb; }
-    #f5-zoom { position: absolute; left: 0; top: 0; width: 980px; height: 760px; transform-origin: 0 0; }
-    #f5-zoom img { position: absolute; left: 0; top: 0; width: 980px; height: 760px; display: block; opacity: 0; }
-    #f5-freed { position: absolute; right: 410px; top: 100px; height: 64px; padding: 0 30px; display: flex; align-items: center; justify-content: center; gap: 14px; border-radius: 999px; background: #0b1b44; color: #fff;
-      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 38px; letter-spacing: -0.01em; box-shadow: 0 10px 30px rgba(8,24,70,.35); font-variant-numeric: tabular-nums; }
+    #f5-zoom { position: absolute; left: 0; top: 0; width: 902px; height: 700px; transform-origin: 0 0; }
+    #f5-zoom img.pl { position: absolute; left: 0; top: 0; width: 902px; height: 700px; display: block; opacity: 0; }
+    /* the three review rows, cut out of the review capture so they can leave on the click (same pixels, same place) */
+    .f5-row { position: absolute; left: 0; top: 0; width: 902px; height: 700px; opacity: 0; background: url("assets/f5-diskmap/review.png") 0 0 / 902px 700px no-repeat; }
+    #f5-row1 { clip-path: inset(118px 306px 527px 28px); }
+    #f5-row2 { clip-path: inset(172.6px 306px 481px 28px); }
+    #f5-row3 { clip-path: inset(218.8px 306px 424px 28px); }
+    #f5-cursor { position: absolute; left: 0; top: 0; width: 40px; height: 40px; opacity: 0; transform-origin: 6px 4px; }
+    #f5-cursor svg { width: 40px; height: 40px; display: block; overflow: visible; filter: drop-shadow(0 3px 5px rgba(0,0,0,.35)); }
+    #f5-freed { position: absolute; left: 1450px; top: 84px; height: 64px; padding: 0 30px; display: flex; align-items: center; justify-content: center; gap: 14px; border-radius: 999px; background: #0b1b44; color: #fff;
+      font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 38px; letter-spacing: -0.01em; box-shadow: 0 10px 30px rgba(8,24,70,.35); font-variant-numeric: tabular-nums; white-space: nowrap; }
     #f5-freed i { display: block; width: 14px; height: 14px; border-radius: 50%; background: #30d158; }
   </style>
   <div id="root" data-composition-id="f5-diskmap" data-width="1920" data-height="1080">
@@ -28,14 +35,19 @@
       <div id="f5-cardwrap">
         <div id="f5-card" data-layout-allow-occlusion>
           <div id="f5-zoom" data-layout-allow-overflow data-layout-allow-occlusion>
-            <img id="f5-map" src="assets/f5-diskmap/map.png" alt="">
-            <img id="f5-drilled" src="assets/f5-diskmap/drilled.png" alt="">
-            <img id="f5-review" src="assets/f5-diskmap/review.png" alt="">
-            <img id="f5-moved" src="assets/f5-diskmap/moved.png" alt="">
+            <img class="pl" id="f5-map" src="assets/f5-diskmap/map.png" alt="">
+            <img class="pl" id="f5-drilled" src="assets/f5-diskmap/drilled.png" alt="">
+            <img class="pl" id="f5-picked" src="assets/f5-diskmap/picked.png" alt="">
+            <img class="pl" id="f5-review" src="assets/f5-diskmap/review.png" alt="">
+            <img class="pl" id="f5-moved" src="assets/f5-diskmap/moved.png" alt="">
+            <div class="f5-row" id="f5-row1"></div>
+            <div class="f5-row" id="f5-row2"></div>
+            <div class="f5-row" id="f5-row3"></div>
+            <div id="f5-cursor"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6.2 1.6L9.6 19z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
           </div>
         </div>
       </div>
-      <div id="f5-freed" data-layout-allow-overlap><i></i><span id="f5-freed-txt">0 MB freed</span></div>
+      <div id="f5-freed" data-layout-allow-overlap><i></i><span id="f5-freed-txt">0 GB freed</span></div>
     </div>
     <img id="f5-grain" src="assets/f5-diskmap/grain.png" alt="">
   </div>
@@ -43,8 +55,8 @@
     const BEAT = 60 / 130, START = 48, F = 1 / 60;
     const at = b => (b - START) * BEAT;
 
-    /* the freed number is the real result of the render: "Moved 3 items, 21 MB, to the Trash" (moved.png); the three picks are Movies, Downloads and a cache folder inside Library */
-    const FREED_MB = 21;
+    /* the freed number is the real result of the render: "Moved 3 items, 27.8 GB, to the Trash" (moved.png). The three picks are the trip video, an installer and a browser cache folder */
+    const FREED_GB = 27.8;
 
     const tl = gsap.timeline({ paused: true });
     /* a hit-frame entrance: transform expo-out, opacity 0.5 to 1 in 0.08 s, starting one frame before the beat */
@@ -56,43 +68,65 @@
     gsap.set(['#f5-title', '#f5-freed'], { opacity: 0 });
     gsap.set('#f5-map', { opacity: 1 });
 
-    /* camera in card pixels (top-left origin). K = card pixels per source pixel; focus is given in cropped-plate source pixels */
-    const K = 760 / 1440, CW = 980, CH = 760;
-    /* a pose is given as a scale and the cropped-plate source pixel that sits at the card's top-left corner */
+    /* camera in card pixels (top-left origin). K = card pixels per source pixel; a pose is a scale and the cropped-plate source pixel at the card's top-left corner */
+    const K = 700 / 1440;
     const pose = (s, x0, y0) => ({ scale: s, x: -x0 * K * s, y: -y0 * K * s });
     let cur = pose(1, 0, 0);   /* every move starts from the pose the last one ended on, so any seek order gives the same picture */
     const move = (to, beat, dur = 0.55) => { const nx = pose(...to); tl.fromTo('#f5-zoom', Object.assign({}, cur), Object.assign({ duration: dur, ease: 'expo.out', immediateRender: false }, nx), at(beat)); cur = nx; };
-    const ZS = 1.45;   /* the view is then 1281 source pixels wide, which stops just short of the file list */
+    const ZS = 1.45;   /* the view is then 1280 source pixels wide, which stops just short of the file list */
+    /* source pixel to card pixel inside the zoom layer */
+    const px = v => v * K;
 
-    /* HIT beat 48: the real Disk map lands on the first frame (the Find card was cut one frame earlier, the blue stays) */
-    enter('#f5-cardwrap', 48, { y: 60 }, 0.45);
-    /* the push: about 1.45x on the treemap so the folders and sizes read on a phone */
-    move([ZS, 0, 150], 48.5, 0.7);
+    /* HIT beat 48: the real Disk map is on screen at full opacity from the first frame (hard cut from the Find card), and the push starts on that frame */
+    move([ZS, 0, 150], 48, 0.8);
 
-    /* 50.0 drill into Developer: the captured drilled view takes the beat frame (same camera, the picture itself changes) */
+    /* 50.0 DRILL into Movies on the beat: the captured drilled view takes the beat frame (several coloured children), same camera */
     tl.set('#f5-drilled', { opacity: 1 }, at(50));
     tl.set('#f5-map', { opacity: 0 }, at(50));
 
-    /* 52.0 the review: the picks (Movies, Downloads, a cache folder in Library) as rows, "3 selected, 21 MB" reads in the header */
-    tl.set('#f5-review', { opacity: 1 }, at(52));
-    tl.set('#f5-drilled', { opacity: 0 }, at(52));
-    move([ZS, 0, 100], 52, 0.5);
+    /* 51.0 the trip video is ticked (checkbox and "1 selected, 18.4 GB"), the camera slides right to the header button */
+    tl.set('#f5-picked', { opacity: 1 }, at(51));
+    tl.set('#f5-drilled', { opacity: 0 }, at(51));
+    move([ZS, 576, 0], 51, 0.55);
 
-    /* 53.0 moved: the result with Undo, and the freed number counts up with it */
+    /* 52.0 the review: three rows with real paths; the camera comes back left to read them */
+    tl.set('#f5-review', { opacity: 1 }, at(52));
+    tl.set('#f5-picked', { opacity: 0 }, at(52));
+    move([ZS, 0, 200], 52, 0.5);
+    /* the rows are read for 0.7 beats, then the camera widens so the rows and the Move to Trash button are both in view while the cursor travels to it */
+    move([1.25, 0, 240], 52.7, 0.3);
+    const BTN = [1107, 1358], FROM = [1020, 1030];   /* source pixels (cropped plate): the button centre, and where the cursor comes from */
+    const place = (xy) => ({ x: px(xy[0]) - 6, y: px(xy[1]) - 4 });
+    tl.fromTo('#f5-cursor', Object.assign({ opacity: 0, scale: 1 }, place(FROM)), Object.assign({ opacity: 1, duration: 0.12, ease: 'none', immediateRender: false }, place(FROM)), at(52.55));
+    tl.to('#f5-cursor', Object.assign({ duration: at(53) - at(52.7), ease: 'power2.inOut', immediateRender: false }, place(BTN)), at(52.7));
+    tl.to('#f5-cursor', { scale: 0.82, duration: 0.07, ease: 'power1.in', immediateRender: false }, at(53) - 0.07);
+    tl.to('#f5-cursor', { scale: 1, duration: 0.1, ease: 'power1.out', immediateRender: false }, at(53));
+    tl.to('#f5-cursor', { opacity: 0, duration: 0.15, ease: 'power1.in', immediateRender: false }, at(53) + 0.25);
+
+    /* 53.0 CLICK: the result takes the beat frame ("Moved 3 items, 27.8 GB, to the Trash") and the three real rows leave, one after another, sliding right and fading */
     tl.set('#f5-moved', { opacity: 1 }, at(53));
     tl.set('#f5-review', { opacity: 0 }, at(53));
-    move([1, 0, 0], 53, 0.6);   /* pull back to the whole page; the chip carries the number */
+    [1, 2, 3].forEach((n, i) => {
+      const sel = '#f5-row' + n, t = at(53) + i * 0.06;
+      tl.set(sel, { opacity: 1 }, at(53));
+      tl.fromTo(sel, { x: 0 }, { x: 260, duration: 0.32, ease: 'power2.in', immediateRender: false }, t);
+      tl.fromTo(sel, { opacity: 1 }, { opacity: 0, duration: 0.3, ease: 'power1.in', immediateRender: false }, t + 0.02);
+    });
+    /* the pill sits outside the card, clear of the header buttons, and counts with the result */
     enter('#f5-freed', 53, { y: -20 }, 0.35);
     const st = { v: 0 };
-    tl.to(st, { v: FREED_MB, duration: 0.45, ease: 'power2.out', immediateRender: false, onUpdate() {
-      document.getElementById('f5-freed-txt').textContent = Math.round(st.v) + ' MB freed';
+    tl.to(st, { v: FREED_GB, duration: 0.5, ease: 'power2.out', immediateRender: false, onUpdate() {
+      document.getElementById('f5-freed-txt').textContent = st.v.toFixed(1) + ' GB freed';
     } }, at(53));
-
-    /* the chip leaves with the card still, before the cut */
-    tl.to('#f5-freed', { opacity: 0, y: -14, duration: 0.2, ease: 'power3.in', immediateRender: false }, at(55.2));
+    tl.set('#f5-row1, #f5-row2, #f5-row3', { opacity: 0 }, at(53) + 0.45);
+    /* pull back to the whole page; this is the pose frame 6 shrinks into the fan */
+    move([1, 0, 0], 53.6, 0.7);
 
     /* 54.0 the line lands */
     enter('#f5-title', 54, { y: 40 });
+
+    /* the pill leaves with the page still, before the cut */
+    tl.to('#f5-freed', { opacity: 0, y: -14, duration: 0.2, ease: 'power3.in', immediateRender: false }, at(55));
 
     /* slow drift that ends at scale 1 on beat 55, so the card is exactly at rest from there on */
     tl.fromTo('#f5-cam', { scale: 1.02 }, { scale: 1, duration: 7 * BEAT, ease: 'none' }, 0);
