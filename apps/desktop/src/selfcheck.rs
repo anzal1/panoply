@@ -950,6 +950,35 @@ fn film_home_listing() -> Vec<(String, u64)> {
     v
 }
 
+/// Launch film renders: how long the real scanner takes on a tree with as many files as the film's home (412,438), measured here on
+/// this machine, once. The page then says "scanned in N s" with a time that is true for that many files (the sizes are made up,
+/// the file count and the walk are real). The tree is made of empty files in a temp folder and removed again.
+fn film_scan_time() -> std::time::Duration {
+    use std::sync::OnceLock;
+    static T: OnceLock<std::time::Duration> = OnceLock::new();
+    *T.get_or_init(|| {
+        let root = std::env::temp_dir().join(format!("panoply-film-scan-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        for i in 0..412_438usize {
+            if i % 1000 == 0 {
+                let _ = std::fs::create_dir_all(root.join(format!("d{:03}", i / 1000)));
+            }
+            let _ = std::fs::File::create(root.join(format!("d{:03}/f{:05}", i / 1000, i % 1000)));
+        }
+        let t0 = std::time::Instant::now();
+        let scan = panoply_disk::scan(&root, &panoply_disk::ScanOptions::default());
+        let dt = t0.elapsed();
+        eprintln!(
+            "film scan: {} files in {:.2} s ({:?})",
+            scan.as_ref().map(|s| s.report.files).unwrap_or(0),
+            dt.as_secs_f64(),
+            scan.as_ref().map(|s| s.report.backend)
+        );
+        let _ = std::fs::remove_dir_all(&root);
+        dt
+    })
+}
+
 /// The same home after the three picks went to the Trash.
 fn film_after_listing(all: &[(String, u64)]) -> Vec<(String, u64)> {
     all.iter()
@@ -1115,7 +1144,8 @@ pub(crate) fn run_review(out: PathBuf) {
                         let listing = film_home_listing();
                         let refs: Vec<(&str, u64)> =
                             listing.iter().map(|(p, n)| (p.as_str(), *n)).collect();
-                        let scan = panoply_disk::Scan::synthetic("/Users/maya", &refs);
+                        let scan =
+                            panoply_disk::Scan::synthetic("/Users/maya", &refs, film_scan_time());
                         let root = PathBuf::from("/Users/maya");
                         let root2 = root.clone();
                         d.change(app_win, move |a, _, cx| {
@@ -1196,7 +1226,8 @@ pub(crate) fn run_review(out: PathBuf) {
                         let after = film_after_listing(&listing);
                         let arefs: Vec<(&str, u64)> =
                             after.iter().map(|(p, n)| (p.as_str(), *n)).collect();
-                        let scan2 = panoply_disk::Scan::synthetic("/Users/maya", &arefs);
+                        let scan2 =
+                            panoply_disk::Scan::synthetic("/Users/maya", &arefs, film_scan_time());
                         let root3 = PathBuf::from("/Users/maya");
                         d.change(app_win, move |a, _, cx| {
                             let dv = a.disk_view();

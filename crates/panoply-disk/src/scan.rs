@@ -142,12 +142,14 @@ pub struct Scan {
 }
 
 impl Scan {
-    /// A finished scan of a made-up folder (see [`Tree::from_files`]), for renders and tests. Nothing is read.
-    pub fn synthetic(root: &str, files: &[(&str, u64)]) -> Scan {
+    /// A finished scan of a made-up folder (see [`Tree::from_files`]), for renders and tests. Nothing is read; `elapsed` is the time the page will say the scan took
+    /// (a render passes the time a real scan of a tree with the same number of files took).
+    pub fn synthetic(root: &str, files: &[(&str, u64)], elapsed: Duration) -> Scan {
         let tree = Tree::from_files(root, files);
         let report = ScanReport {
             backend: "synthetic",
             threads: 1,
+            elapsed,
             total_bytes: tree.size(tree.root()),
             files: files.len() as u64,
             nodes: tree.len() as u64,
