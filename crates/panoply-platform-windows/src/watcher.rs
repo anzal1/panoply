@@ -15,7 +15,7 @@ use crate::sys::{self, Handle, IoOp, Signal};
 use crate::usn::{
     JournalData, WANTED_REASONS, encode_read_request, parse_journal_data, parse_records,
 };
-use crate::{Backend, Error, Event};
+use crate::{Backend, Error, Event, Options};
 
 type Callback = Arc<dyn Fn(Event) + Send + Sync + 'static>;
 
@@ -55,6 +55,15 @@ pub fn start(
     roots: &[PathBuf],
     callback: impl Fn(Event) + Send + Sync + 'static,
 ) -> Result<Watcher, Error> {
+    start_with(roots, Options::default(), callback)
+}
+
+/// Like [`start`], with explicit [`Options`].
+pub fn start_with(
+    roots: &[PathBuf],
+    options: Options,
+    callback: impl Fn(Event) + Send + Sync + 'static,
+) -> Result<Watcher, Error> {
     let cb: Callback = Arc::new(callback);
     let stop = Arc::new(Signal::new()?);
     let mut groups: HashMap<String, Vec<Root>> = HashMap::new();
@@ -70,8 +79,8 @@ pub fn start(
                     resolved: res.clone(),
                 };
                 match volume_device(&res) {
-                    Some(dev) => groups.entry(dev).or_default().push(root),
-                    None => singles.push(root),
+                    Some(dev) if options.usn_journal => groups.entry(dev).or_default().push(root),
+                    _ => singles.push(root),
                 }
             }
             Err(e) => return Err(Error::new(format!("cannot open {}: {e}", r.display()))),
@@ -129,8 +138,7 @@ impl UsnVolume {
         let n = op
             .wait(stop)?
             .ok_or_else(|| std::io::Error::other("stopped"))?;
-        parse_journal_data(op.bytes(n))
-            .ok_or_else(|| std::io::Error::other("short journal reply"))
+        parse_journal_data(op.bytes(n)).ok_or_else(|| std::io::Error::other("short journal reply"))
     }
 
     /// Opens the volume and proves a path can be turned back into a name: the root folder opened by its
@@ -191,13 +199,14 @@ fn usn_loop(vol: &UsnVolume, roots: &[Root], stop: &Signal, cb: &Callback) -> En
             Ok(Some(n)) => n,
             Ok(None) => return Ended::Stopped,
             Err(e) if e.raw_os_error() == Some(sys::ERROR_JOURNAL_ENTRY_DELETED) => {
-                // The journal wrapped past our position: changes were lost.
-                rescan_all(roots, cb);
+                // The journal wrapped past our position: changes were lost. Take the new position first and
+                // rescan after, so a change made between the two is read by the rescan or seen next round.
                 match UsnVolume::query(&vol.handle, stop) {
                     Ok(j) => {
                         journal = j;
                         next = j.next;
                         folders.clear();
+                        rescan_all(roots, cb);
                         continue;
                     }
                     Err(_) => return Ended::Degrade,
@@ -205,10 +214,18 @@ fn usn_loop(vol: &UsnVolume, roots: &[Root], stop: &Signal, cb: &Callback) -> En
             }
             Err(_) => return Ended::Degrade,
         };
-        let (new_next, records) = parse_records(op.bytes(n));
-        if new_next > next {
+        let parsed = parse_records(op.bytes(n));
+        if let Some(new_next) = parsed.next
+            && new_next > next
+        {
             next = new_next;
         }
+        if parsed.unusable > 0 || parsed.damaged {
+            // Records we could not read are changes we cannot place: read the roots again.
+            rescan_all(roots, cb);
+            folders.clear();
+        }
+        let records = parsed.records;
         let mut seen: HashSet<PathBuf> = HashSet::new();
         let mut drop_cache = false;
         for rec in &records {

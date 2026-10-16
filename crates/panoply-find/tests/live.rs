@@ -229,3 +229,127 @@ fn fsevents_keeps_the_index_fresh() {
     assert!(panoply_find::watch::read_event_id(&state).is_some_and(|id| id > 0));
     let _ = fs::remove_dir_all(&root);
 }
+
+/// Polls the index until `q` has `want` results; fails after six seconds.
+#[cfg(any(target_os = "linux", windows))]
+fn wait_for(l: &std::sync::RwLock<LiveIndex>, q: &str, want: usize) -> std::time::Duration {
+    let t = std::time::Instant::now();
+    loop {
+        let n = find(&l.read().unwrap(), q).len();
+        if n == want {
+            return t.elapsed();
+        }
+        assert!(
+            t.elapsed() < std::time::Duration::from_secs(6),
+            "query {q:?} still has {n} results, wanted {want}"
+        );
+        std::thread::sleep(std::time::Duration::from_millis(20));
+    }
+}
+
+/// The Linux (inotify) and Windows (ReadDirectoryChangesW) watchers keep the index fresh: a new file, a
+/// rename, a new folder with a file in it (the watcher must add a watch for the folder), a folder moved
+/// to a new name, a removed tree and a burst.
+#[cfg(any(target_os = "linux", windows))]
+#[test]
+fn watcher_keeps_the_index_fresh() {
+    use std::sync::{Arc, RwLock};
+    use std::time::Duration;
+    let root = scratch("watcher");
+    touch(&root.join("seed/seedling.txt"));
+    let l = Arc::new(RwLock::new(live(&root)));
+    let updater = panoply_find::watch::start(l.clone(), None, None).unwrap();
+    std::thread::sleep(Duration::from_millis(400));
+
+    touch(&root.join("seed/fresh file.txt"));
+    let created = wait_for(&l, "fresh file", 1);
+    fs::rename(
+        root.join("seed/fresh file.txt"),
+        root.join("seed/renamed file.txt"),
+    )
+    .unwrap();
+    wait_for(&l, "renamed file", 1);
+    wait_for(&l, "fresh file", 0);
+
+    // A folder that did not exist when the watcher started.
+    touch(&root.join("newdir/deep/inner.txt"));
+    wait_for(&l, "inner.txt", 1);
+    // A file added later inside it only shows up if the folder itself got a watch.
+    std::thread::sleep(Duration::from_millis(500));
+    touch(&root.join("newdir/deep/later.txt"));
+    wait_for(&l, "later.txt", 1);
+
+    // A folder renamed: the old names go, the new names come, and the moved folder still reports.
+    fs::rename(root.join("newdir"), root.join("moved")).unwrap();
+    let t = std::time::Instant::now();
+    while !find(&l.read().unwrap(), "inner.txt")
+        .iter()
+        .any(|p| p.contains("moved"))
+    {
+        assert!(
+            t.elapsed() < Duration::from_secs(6),
+            "the moved folder never showed up"
+        );
+        std::thread::sleep(Duration::from_millis(20));
+    }
+    wait_for(&l, "inner.txt", 1);
+    std::thread::sleep(Duration::from_millis(500));
+    touch(&root.join("moved/deep/after move.txt"));
+    wait_for(&l, "after move", 1);
+
+    fs::remove_dir_all(root.join("seed")).unwrap();
+    wait_for(&l, "seedling", 0);
+    for i in 0..500 {
+        touch(&root.join(format!("burst/f{i}.dat")));
+    }
+    let burst = wait_for(&l, ".dat", 500);
+    eprintln!("created file visible after {created:?}; 500-file burst visible after {burst:?}");
+    let t = std::time::Instant::now();
+    drop(updater);
+    assert!(
+        t.elapsed() < Duration::from_secs(2),
+        "stopping the watcher took {:?}",
+        t.elapsed()
+    );
+    let _ = fs::remove_dir_all(&root);
+}
+
+/// An idle watcher uses no CPU: its thread sleeps in `poll` with no timeout.
+#[cfg(target_os = "linux")]
+#[test]
+fn idle_inotify_watcher_uses_no_cpu() {
+    use std::sync::{Arc, RwLock};
+    use std::time::Duration;
+    let root = scratch("idle");
+    for i in 0..50 {
+        touch(&root.join(format!("d{i}/f.txt")));
+    }
+    let l = Arc::new(RwLock::new(live(&root)));
+    let updater = panoply_find::watch::start(l, None, None).unwrap();
+    std::thread::sleep(Duration::from_millis(500));
+    // utime + stime (fields 14 and 15 of /proc/<pid>/task/<tid>/stat) of every thread of this process
+    // that belongs to the watcher or the updater, in clock ticks (10 ms).
+    let ticks = || -> u64 {
+        let mut total = 0;
+        for t in fs::read_dir("/proc/self/task").unwrap().flatten() {
+            let comm = fs::read_to_string(t.path().join("comm")).unwrap_or_default();
+            if !comm.starts_with("panoply-find-") {
+                continue;
+            }
+            let stat = fs::read_to_string(t.path().join("stat")).unwrap_or_default();
+            // The command name is in parentheses and may hold spaces: count fields after the last ')'.
+            let rest = stat.rsplit_once(')').map_or("", |x| x.1);
+            let f: Vec<&str> = rest.split_whitespace().collect();
+            let get = |i: usize| f.get(i).and_then(|v| v.parse::<u64>().ok()).unwrap_or(0);
+            // After ')' the state is field 3, so utime (14) is index 11 and stime (15) is index 12.
+            total += get(11) + get(12);
+        }
+        total
+    };
+    let before = ticks();
+    std::thread::sleep(Duration::from_secs(2));
+    let used = ticks() - before;
+    drop(updater);
+    assert!(used <= 1, "idle watcher used {used} ticks of CPU in 2 s");
+    let _ = fs::remove_dir_all(&root);
+}

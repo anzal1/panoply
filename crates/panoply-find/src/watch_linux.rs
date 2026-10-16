@@ -127,7 +127,9 @@ impl State {
                     Ok(ev) => events.push((
                         ev.wd(),
                         ev.events().bits(),
-                        ev.file_name().map(|c| c.to_bytes().to_vec()).unwrap_or_default(),
+                        ev.file_name()
+                            .map(|c| c.to_bytes().to_vec())
+                            .unwrap_or_default(),
                     )),
                     Err(Errno::INTR) => {}
                     Err(Errno::AGAIN) => break,
@@ -143,8 +145,11 @@ impl State {
     fn handle(&mut self, wd: i32, mask: u32, name: &[u8]) {
         match classify(mask) {
             Kind::Overflow => {
-                for r in &self.roots {
-                    let _ = self.tx.send(WatchMsg::Rescan(r.clone()));
+                // Folders created while events were being lost have no watch yet: walk every root again
+                // (a folder that is already watched keeps its descriptor), then ask for a rescan.
+                for root in self.roots.clone() {
+                    self.add_tree(&root, &root);
+                    let _ = self.tx.send(WatchMsg::Rescan(root));
                 }
             }
             Kind::WatchGone => {
@@ -163,7 +168,12 @@ impl State {
                 let Some(dir) = self.table.dir(wd) else {
                     return;
                 };
-                let path = dir.join(OsStr::from_bytes(name));
+                // An event about the watched folder itself has no name; `join("")` would add a slash.
+                let path = if name.is_empty() {
+                    dir.to_path_buf()
+                } else {
+                    dir.join(OsStr::from_bytes(name))
+                };
                 let Some(root) = self.roots.iter().find(|r| path.starts_with(r)).cloned() else {
                     return;
                 };
@@ -173,7 +183,8 @@ impl State {
                 match kind {
                     Kind::NewDir => {
                         let name = String::from_utf8_lossy(name);
-                        let has_cargo = path.parent().is_some_and(|p| p.join("Cargo.toml").exists());
+                        let has_cargo =
+                            path.parent().is_some_and(|p| p.join("Cargo.toml").exists());
                         // An excluded folder is indexed by name but gets no watch.
                         if !dir_skipped(&self.exclude, &name, &path, has_cargo) {
                             self.add_tree(&root, &path);

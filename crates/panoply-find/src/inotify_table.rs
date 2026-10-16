@@ -11,8 +11,10 @@ use std::path::{Path, PathBuf};
 use crate::Exclusions;
 
 /// `IN_ATTRIB`.
+#[cfg(test)]
 pub(crate) const IN_ATTRIB: u32 = 0x4;
 /// `IN_CLOSE_WRITE`.
+#[cfg(test)]
 pub(crate) const IN_CLOSE_WRITE: u32 = 0x8;
 /// `IN_MOVED_FROM`.
 pub(crate) const IN_MOVED_FROM: u32 = 0x40;
@@ -21,6 +23,7 @@ pub(crate) const IN_MOVED_TO: u32 = 0x80;
 /// `IN_CREATE`.
 pub(crate) const IN_CREATE: u32 = 0x100;
 /// `IN_DELETE`.
+#[cfg(test)]
 pub(crate) const IN_DELETE: u32 = 0x200;
 /// `IN_DELETE_SELF`.
 pub(crate) const IN_DELETE_SELF: u32 = 0x400;
@@ -166,12 +169,27 @@ mod tests {
     #[test]
     fn skip_rules() {
         let ex = Exclusions::defaults();
-        assert!(dir_skipped(&ex, "node_modules", Path::new("/r/node_modules"), false));
+        assert!(dir_skipped(
+            &ex,
+            "node_modules",
+            Path::new("/r/node_modules"),
+            false
+        ));
         assert!(dir_skipped(&ex, ".git", Path::new("/r/.git"), false));
-        assert!(dir_skipped(&ex, "build.noindex", Path::new("/r/build.noindex"), false));
+        assert!(dir_skipped(
+            &ex,
+            "build.noindex",
+            Path::new("/r/build.noindex"),
+            false
+        ));
         assert!(!dir_skipped(&ex, "src", Path::new("/r/src"), false));
         assert!(dir_skipped(&ex, "target", Path::new("/r/target"), true));
         assert!(!dir_skipped(&ex, "target", Path::new("/r/target"), false));
-        assert!(!dir_skipped(&Exclusions::none(), "node_modules", Path::new("/r/node_modules"), false));
+        assert!(!dir_skipped(
+            &Exclusions::none(),
+            "node_modules",
+            Path::new("/r/node_modules"),
+            false
+        ));
     }
 }

@@ -76,35 +76,61 @@ fn u64_at(b: &[u8], o: usize) -> Option<u64> {
     Some(u64::from_le_bytes(b.get(o..o + 8)?.try_into().ok()?))
 }
 
-/// Decodes the output of `FSCTL_READ_USN_JOURNAL`: the next USN to ask for, then the records. Records of
-/// a major version other than 2 are skipped by their length.
-pub fn parse_records(buf: &[u8]) -> (i64, Vec<UsnRecord>) {
+/// What one `FSCTL_READ_USN_JOURNAL` reply holds.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Parsed {
+    /// The next USN to ask for. `None` when the reply is too short to hold one.
+    pub next: Option<i64>,
+    /// The version 2 records, in order.
+    pub records: Vec<UsnRecord>,
+    /// How many records could not be used (another major version, or damaged). The caller must treat any
+    /// as lost changes and rescan: skipping them quietly would leave the index stale.
+    pub unusable: usize,
+    /// True when the buffer ended inside a record or a length was impossible. Everything after the
+    /// damage is lost, so the caller rescans as for `unusable`.
+    pub damaged: bool,
+}
+
+/// Decodes the output of `FSCTL_READ_USN_JOURNAL`: the next USN to ask for, then the records. A record
+/// of a major version other than 2 is counted in `unusable` and skipped by its length.
+pub fn parse_records(buf: &[u8]) -> Parsed {
+    let mut out = Parsed::default();
     let Some(next) = u64_at(buf, 0) else {
-        return (0, Vec::new());
+        out.damaged = !buf.is_empty();
+        return out;
     };
-    let mut out = Vec::new();
+    out.next = Some(next as i64);
     let mut off = 8usize;
-    while let Some(len) = u32_at(buf, off) {
+    // Nothing after the first 8 bytes: the journal had no record for us.
+    while off < buf.len() {
+        let Some(len) = u32_at(buf, off) else {
+            out.damaged = true;
+            break;
+        };
         let len = len as usize;
-        // A record is at least its fixed part and never runs past the buffer.
-        if len < 60 || off + len > buf.len() {
+        // A record is at least its fixed part, a multiple of 8 and never runs past the buffer. (An
+        // overflowing `off + len` cannot happen: both are far below `usize::MAX`.)
+        if len < 60 || !len.is_multiple_of(8) || len > buf.len() - off {
+            out.damaged = true;
             break;
         }
         let rec = &buf[off..off + len];
-        if u16_at(rec, 4) == Some(2)
-            && let Some(r) = decode_v2(rec)
-        {
-            out.push(r);
+        match (u16_at(rec, 4), decode_v2(rec)) {
+            (Some(2), Some(r)) => out.records.push(r),
+            _ => out.unusable += 1,
         }
-        // Records are 8 byte aligned and their length already includes the padding.
         off += len;
     }
-    (next as i64, out)
+    out
 }
 
 fn decode_v2(rec: &[u8]) -> Option<UsnRecord> {
     let name_len = u16_at(rec, 56)? as usize;
     let name_off = u16_at(rec, 58)? as usize;
+    // The name lies after the fixed part.
+    if name_off < 60 {
+        return None;
+    }
     let raw = rec.get(name_off..name_off + name_len)?;
     let name = raw
         .chunks_exact(2)
@@ -197,8 +223,11 @@ mod tests {
             ATTRIBUTE_DIRECTORY,
             "d\u{e9}j\u{e0} vu",
         ));
-        let (next, recs) = parse_records(&buf);
-        assert_eq!(next, 4242);
+        let p = parse_records(&buf);
+        assert_eq!(p.next, Some(4242));
+        assert!(!p.damaged);
+        assert_eq!(p.unusable, 0);
+        let recs = p.records;
         assert_eq!(recs.len(), 2);
         assert_eq!(recs[0].frn, 7);
         assert_eq!(recs[0].parent, 5);
@@ -212,37 +241,78 @@ mod tests {
     }
 
     #[test]
+    fn an_empty_reply_is_not_damage() {
+        let p = parse_records(&77u64.to_le_bytes());
+        assert_eq!(p.next, Some(77));
+        assert!(p.records.is_empty());
+        assert!(!p.damaged);
+        assert_eq!(parse_records(&[]), Parsed::default());
+    }
+
+    #[test]
     fn damaged_buffers_never_panic() {
-        assert_eq!(parse_records(&[]), (0, Vec::new()));
-        assert_eq!(parse_records(&[1, 2, 3]), (0, Vec::new()));
+        assert!(parse_records(&[1, 2, 3]).damaged);
         let mut buf = 5u64.to_le_bytes().to_vec();
         buf.extend(record(1, 2, 3, REASON_FILE_DELETE, 0, "x"));
-        // Cut anywhere: the complete records before the cut survive, nothing panics.
+        // Cut anywhere: the complete records before the cut survive, nothing panics, and a cut inside the
+        // record is reported as damage.
         for cut in 0..buf.len() {
-            let (_, recs) = parse_records(&buf[..cut]);
-            assert!(recs.len() <= 1);
+            let p = parse_records(&buf[..cut]);
+            assert!(p.records.len() <= 1);
+            if cut > 8 && cut < buf.len() {
+                assert!(p.damaged, "cut at {cut}");
+            }
         }
         // A length that runs past the buffer stops the walk.
         let mut bad = 5u64.to_le_bytes().to_vec();
         bad.extend(record(1, 2, 3, 0, 0, "x"));
         bad[8..12].copy_from_slice(&9999u32.to_le_bytes());
-        assert!(parse_records(&bad).1.is_empty());
-        // A length of zero must not loop forever.
+        let p = parse_records(&bad);
+        assert!(p.records.is_empty() && p.damaged);
+        // A length of zero must not loop forever; so must a huge one.
         let mut zero = 5u64.to_le_bytes().to_vec();
         zero.extend([0u8; 64]);
-        assert!(parse_records(&zero).1.is_empty());
+        let p = parse_records(&zero);
+        assert!(p.records.is_empty() && p.damaged);
+        let mut huge = 5u64.to_le_bytes().to_vec();
+        huge.extend(record(1, 2, 3, 0, 0, "x"));
+        huge[8..12].copy_from_slice(&u32::MAX.to_le_bytes());
+        assert!(parse_records(&huge).damaged);
+        // A length that is not a multiple of 8 is damage.
+        let mut odd = 5u64.to_le_bytes().to_vec();
+        odd.extend(record(1, 2, 3, 0, 0, "x"));
+        odd[8..12].copy_from_slice(&61u32.to_le_bytes());
+        assert!(parse_records(&odd).damaged);
     }
 
     #[test]
-    fn other_versions_are_skipped_by_length() {
+    fn a_name_that_leaves_its_record_is_unusable_not_a_panic() {
+        let mut buf = 5u64.to_le_bytes().to_vec();
+        let mut r = record(1, 2, 3, REASON_FILE_CREATE, 0, "abc");
+        // Name offset inside the fixed part.
+        r[58..60].copy_from_slice(&4u16.to_le_bytes());
+        buf.extend(r.clone());
+        // Name length past the record end.
+        r[58..60].copy_from_slice(&60u16.to_le_bytes());
+        r[56..58].copy_from_slice(&4000u16.to_le_bytes());
+        buf.extend(r);
+        let p = parse_records(&buf);
+        assert!(p.records.is_empty());
+        assert_eq!(p.unusable, 2);
+        assert!(!p.damaged);
+    }
+
+    #[test]
+    fn other_versions_are_counted_and_skipped_by_length() {
         let mut buf = 1u64.to_le_bytes().to_vec();
         let mut v3 = record(1, 2, 3, REASON_FILE_CREATE, 0, "v3");
         v3[4..6].copy_from_slice(&3u16.to_le_bytes());
         buf.extend(v3);
         buf.extend(record(8, 5, 9, REASON_FILE_CREATE, 0, "v2"));
-        let (_, recs) = parse_records(&buf);
-        assert_eq!(recs.len(), 1);
-        assert_eq!(String::from_utf16_lossy(&recs[0].name), "v2");
+        let p = parse_records(&buf);
+        assert_eq!(p.unusable, 1);
+        assert_eq!(p.records.len(), 1);
+        assert_eq!(String::from_utf16_lossy(&p.records[0].name), "v2");
     }
 
     #[test]

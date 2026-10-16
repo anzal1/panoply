@@ -178,7 +178,7 @@ fn platform_watch(
         .exclusions()
         .clone();
     let roots_cb: Vec<PathBuf> = roots.to_vec();
-    let watcher = pw::start(roots, move |event| match event {
+    let watcher = pw::start_with(roots, pw::Options::from_env(), move |event| match event {
         pw::Event::Rescan(p) => {
             let _ = tx.send(WatchMsg::Rescan(p));
         }

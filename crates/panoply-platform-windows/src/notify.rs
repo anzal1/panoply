@@ -80,6 +80,27 @@ mod tests {
     }
 
     #[test]
+    fn names_keep_non_bmp_characters_and_an_odd_byte_is_dropped() {
+        // A character outside the BMP is two UTF-16 units; a stray last byte is ignored.
+        let b = rec(ACTION_ADDED, "a\u{1F4C4}b", true);
+        let n = parse_notices(&b);
+        assert_eq!(String::from_utf16_lossy(&n[0].name), "a\u{1F4C4}b");
+        let mut odd = b.clone();
+        let len = u32::from_le_bytes([odd[8], odd[9], odd[10], odd[11]]) + 1;
+        odd[8..12].copy_from_slice(&len.to_le_bytes());
+        odd.push(0);
+        assert_eq!(parse_notices(&odd)[0].name.len(), n[0].name.len());
+    }
+
+    #[test]
+    fn a_next_offset_that_goes_nowhere_ends_the_walk() {
+        let mut b = rec(ACTION_ADDED, "x", false);
+        // Points far past the end: the first record is kept and the walk stops.
+        b[0..4].copy_from_slice(&100_000u32.to_le_bytes());
+        assert_eq!(parse_notices(&b).len(), 1);
+    }
+
+    #[test]
     fn damage_and_empty() {
         assert!(parse_notices(&[]).is_empty());
         let b = rec(ACTION_MODIFIED, "file", true);

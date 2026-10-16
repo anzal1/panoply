@@ -69,7 +69,10 @@ mod tests {
             rebase(r"C:\Users\Me", r"c:\users\me\docs\a.txt", orig),
             Some(orig.join(r"docs\a.txt"))
         );
-        assert_eq!(rebase(r"C:\Users\me\", r"C:\Users\me", orig), Some(orig.to_path_buf()));
+        assert_eq!(
+            rebase(r"C:\Users\me\", r"C:\Users\me", orig),
+            Some(orig.to_path_buf())
+        );
         // A sibling that merely shares the prefix is not below the root.
         assert_eq!(rebase(r"C:\Users\me", r"C:\Users\meow\a", orig), None);
         assert_eq!(rebase(r"C:\Users\me", r"C:\Other\a", orig), None);

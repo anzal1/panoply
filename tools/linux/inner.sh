@@ -4,7 +4,11 @@ set -euo pipefail
 
 export CARGO_TARGET_DIR=/cache/target CARGO_BUILD_JOBS="${JOBS:-8}" PANOPLY_YES=1
 # lld, not GNU ld: parallel links of the big test binaries were OOM-killed in the 4 GB VM.
-export RUSTFLAGS="${RUSTFLAGS:-} -C link-arg=-fuse-ld=lld"
+# Set for the host target only (not RUSTFLAGS): the wasm32-wasip2 builds, which the wasm and cli tests start
+# themselves, link with wasm-component-ld, which rejects this argument.
+host_triple="$(uname -m)-unknown-linux-gnu"
+host_var="CARGO_TARGET_$(echo "$host_triple" | tr 'a-z-' 'A-Z_')_RUSTFLAGS"
+export "$host_var=${!host_var:-} -C link-arg=-fuse-ld=lld"
 export PANOPLY_ENGINES_DIR=/cache/engines PANOPLY_DATA_DIR=/tmp/panoply-data
 start=$SECONDS
 tests_failed=0

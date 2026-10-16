@@ -12,14 +12,17 @@
 //!
 //! # How changes are found
 //!
-//! **The USN journal.** On an NTFS volume the file system keeps a change journal: one record per change,
+//! **The USN journal (off by default).** It is reviewed but has never run against a real Windows volume
+//! (the code was written and checked on a Mac), and it only works for an elevated process, so it is opt in:
+//! [`Options::usn_journal`], or the environment variable `PANOPLY_FIND_USN=1` through
+//! [`Options::from_env`]. The default is `ReadDirectoryChangesW`. When it is on: on an NTFS volume the file system keeps a change journal: one record per change,
 //! with the file reference number of the file and of its parent folder. One reader per volume blocks in
 //! `FSCTL_READ_USN_JOURNAL` (with `BytesToWaitFor` set, so the kernel wakes it when a record exists), turns
 //! each record into a path by opening the parent folder by its reference number, and reports the path if it
 //! lies below a watched root. Idle cost is zero: no timer, no polling. A journal that wrapped past our
 //! position (`ERROR_JOURNAL_ENTRY_DELETED`) is reported as a rescan of the roots.
 //!
-//! **`ReadDirectoryChangesW`.** Used when the volume is not NTFS, the journal is not enabled, the process
+//! **`ReadDirectoryChangesW`.** The default. Also used, with the journal on, when the volume is not NTFS, the journal is not enabled, the process
 //! lacks the privilege to open the volume, or a root has no drive letter. One worker per root waits on an
 //! overlapped read with an infinite timeout, recursive. A buffer overflow is reported as a rescan.
 //!
@@ -49,6 +52,22 @@ pub enum Event {
     Rescan(PathBuf),
 }
 
+/// Choices for [`start_with`].
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Options {
+    /// Try the NTFS USN journal first. Off by default: see the crate docs.
+    pub usn_journal: bool,
+}
+
+impl Options {
+    /// The defaults, with the USN journal on when `PANOPLY_FIND_USN` is `1`.
+    pub fn from_env() -> Self {
+        Options {
+            usn_journal: std::env::var_os("PANOPLY_FIND_USN").is_some_and(|v| v == "1"),
+        }
+    }
+}
+
 /// What reports changes for a watched root.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Backend {
@@ -64,4 +83,14 @@ mod sys;
 mod watcher;
 
 #[cfg(windows)]
-pub use watcher::{Watcher, start};
+pub use watcher::{Watcher, start, start_with};
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_journal_is_off_by_default() {
+        assert!(!Options::default().usn_journal);
+    }
+}
