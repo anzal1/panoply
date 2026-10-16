@@ -346,3 +346,38 @@ fn an_encoder_that_will_not_go_lower_is_given_a_smaller_picture() {
     assert!(size(&out[0]) <= 2_000_000, "{}: {notes:?}", size(&out[0]));
     assert!(decode_errors(&out[0]).is_empty());
 }
+
+#[test]
+fn a_clip_that_comes_out_visibly_worse_is_encoded_again_or_says_so() {
+    if !engine() || !has_hw(VCodec::Hevc) {
+        return;
+    }
+    // Two clips the default plan used to leave at VMAF 59 and 52 with a card that said nothing.
+    for rel in [
+        "video/commons/phone-clip-vid20240601.webm",
+        "video/commons/camera-clip-mvi0131.ogv",
+    ] {
+        let Some(src) = corpus(rel) else { continue };
+        let s = Scratch::new("compress-floor");
+        let (out, notes) = run_ok("media.compress", &src, json!({}), s.path());
+        let text = notes.join("\n");
+        if out.is_empty() {
+            assert!(text.contains("left as it is"), "{rel}: {text}");
+            continue;
+        }
+        let vmaf = text
+            .split("Quality VMAF ")
+            .nth(1)
+            .and_then(|t| t.split(' ').next())
+            .and_then(|t| t.parse::<f64>().ok());
+        let warned = text.contains("below the 75 Panoply recommends");
+        assert!(
+            vmaf.is_some_and(|v| v >= 75.0) || warned,
+            "{rel}: {vmaf:?} with no warning: {text}"
+        );
+        assert!(
+            size(&out[0]) < size(&src),
+            "{rel}: the result is not smaller"
+        );
+    }
+}

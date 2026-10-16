@@ -203,8 +203,9 @@ impl Stage {
                 Err(e) if e.kind() == ErrorKind::AlreadyExists => continue,
                 Err(e) => {
                     return Err(MediaError::Io(format!(
-                        "Could not write in {} ({e}). Check the folder and the free space, then try again.",
-                        dir.display()
+                        "Could not write in {}: {}. Check the folder and the free space, then try again.",
+                        dir.display(),
+                        panoply_core::naming::plain_io(&e)
                     )));
                 }
             }
@@ -296,8 +297,9 @@ impl Stage {
                 }
                 Err(e) => {
                     return Err(MediaError::Io(format!(
-                        "Could not write {} ({e}). Check the folder and the free space, then try again.",
-                        target.display()
+                        "Could not write {}: {}. Check the folder and the free space, then try again.",
+                        target.display(),
+                        panoply_core::naming::plain_io(&e)
                     )));
                 }
             }
@@ -336,8 +338,9 @@ impl Stage {
                 }
                 Err(e) => {
                     return Err(MediaError::Io(format!(
-                        "Could not write {} ({e}). Check the folder and the free space, then try again.",
-                        target.display()
+                        "Could not write {}: {}. Check the folder and the free space, then try again.",
+                        target.display(),
+                        panoply_core::naming::plain_io(&e)
                     )));
                 }
             }

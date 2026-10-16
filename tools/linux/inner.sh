@@ -52,7 +52,8 @@ if [ -n "${PLAN:-}" ]; then
   if [ "$SCOPE" = "--workspace --exclude gpui-base" ] || [[ " $SCOPE " == *" panoply-wasm "* ]]; then
     step "building the WebAssembly test modules"
     for d in crates/panoply-wasm/tests/fixtures/* modules/examples-wasm/*; do
-      [ -f "$d/Cargo.toml" ] && nice -n 15 cargo build --release --target wasm32-wasip2 --quiet --manifest-path "$d/Cargo.toml"
+      # RUSTFLAGS without the lld link argument: wasm-component-ld does not take it.
+      [ -f "$d/Cargo.toml" ] && RUSTFLAGS="" nice -n 15 cargo build --release --target wasm32-wasip2 --quiet --manifest-path "$d/Cargo.toml"
     done
     done_step
   fi

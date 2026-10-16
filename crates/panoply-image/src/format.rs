@@ -229,3 +229,47 @@ mod tests {
         assert_eq!(Format::from_name("xyz"), None);
     }
 }
+
+/// The sentence for a file that is not a picture Panoply reads. When the bytes say what it really
+/// is (a PDF named .jpg, a video, an SVG), say that, so the next step is clear.
+pub fn not_an_image_message(head: &[u8]) -> String {
+    use panoply_core::sniff::FamilyHint;
+    let text_start = String::from_utf8_lossy(&head[..head.len().min(64)]).to_ascii_lowercase();
+    if text_start.contains("<svg") || (text_start.contains("<?xml") && head.len() < 64) {
+        return "This is an SVG drawing, which Panoply cannot open yet. Export it as a PNG or JPG first.".into();
+    }
+    let s = panoply_core::sniff_bytes(head, None);
+    if s.from_bytes {
+        if s.mime == "application/pdf" {
+            return "This file is a PDF, not a picture. Use PDF to images to turn its pages into pictures.".into();
+        }
+        let kind = match s.family_hint {
+            FamilyHint::Video => Some("a video"),
+            FamilyHint::Audio => Some("a sound file"),
+            FamilyHint::Document => Some("a document"),
+            FamilyHint::Archive => Some("an archive"),
+            _ => None,
+        };
+        if let Some(kind) = kind {
+            return format!("This file is {kind}, not a picture. Pick a tool for {kind} instead.");
+        }
+    }
+    "This file is not an image Panoply can read. Check that it is a JPEG, PNG, WebP, GIF, TIFF, BMP, HEIC or AVIF file.".into()
+}
+
+#[cfg(test)]
+mod not_an_image_tests {
+    use super::not_an_image_message;
+
+    #[test]
+    fn a_pdf_named_like_a_picture_is_called_a_pdf() {
+        assert!(not_an_image_message(b"%PDF-1.7\n%\xE2\xE3").contains("PDF"));
+        assert!(
+            not_an_image_message(b"<svg xmlns=\"http://www.w3.org/2000/svg\">").contains("SVG")
+        );
+        assert!(
+            not_an_image_message(&[0x13, 0x37, 0x42, 0x99, 1, 2, 3])
+                .contains("not an image Panoply can read")
+        );
+    }
+}

@@ -20,8 +20,9 @@ use super::Hub;
 use super::theme::{Theme, is_dark, radius, sp, ty};
 use super::widgets::{
     ButtonKind, Ramp, button, button_ex, caption, card, category_tile, cmd, editor_style,
-    file_category, file_icon, fits_segmented, focus_ring, icon, icon_button, keycap, note, notice,
-    popup_button, popup_menu, progress_bar, rule, scroll_thumb, segmented, switch, tip,
+    file_category, file_icon, fits_segmented, focus_ring, icon, icon_button, keycap, network_words,
+    note, notice, popup_button, popup_menu, progress_bar, rule, scroll_thumb, segmented, switch,
+    tip,
 };
 use crate::catalog::Tool;
 use crate::form::{Control, Field, Form, display, number};
@@ -91,6 +92,8 @@ pub(crate) struct ToolPanel {
     /// True when the person answered Not now to a download, so the job that stops because of it
     /// goes back to the options quietly instead of showing a failure.
     declined: bool,
+    /// True after the person cancelled a run, so the options say that nothing was written.
+    cancelled_note: bool,
     _subs: Vec<Subscription>,
 }
 
@@ -191,7 +194,8 @@ impl ToolPanel {
             }
         }
         let focus = cx.focus_handle();
-        match inputs.values().next() {
+        // The first option on screen, when it is a text box (see `focus_default`).
+        match form.primary().first().and_then(|f| inputs.get(&f.key)) {
             Some(first) => first.update(cx, |s, cx| s.focus(window, cx)),
             None => window.focus(&focus, cx),
         }
@@ -212,6 +216,7 @@ impl ToolPanel {
             est_token: 0,
             phase: Phase::Options,
             declined: false,
+            cancelled_note: false,
             job: None,
             _subs: subs,
         };
@@ -222,7 +227,15 @@ impl ToolPanel {
     /// Put keyboard focus where the current screen needs it: the first text field while editing
     /// options, the panel itself otherwise, so Return, Escape and Command+Z reach it.
     fn focus_default(&self, window: &mut Window, cx: &mut Context<Self>) {
-        match (&self.phase, self.inputs.values().next()) {
+        // The first option on screen, when it is a text box. `inputs` is keyed by name, so its first
+        // entry is the alphabetically first option, which is often one further down the panel (or
+        // one that does not apply to the chosen target) and drew the focus ring there.
+        let first_shown = self
+            .form
+            .primary()
+            .first()
+            .and_then(|f| self.inputs.get(&f.key));
+        match (&self.phase, first_shown) {
             (Phase::Options, Some(first)) => first.update(cx, |s, cx| s.focus(window, cx)),
             _ => window.focus(&self.focus, cx),
         }
@@ -508,6 +521,7 @@ impl ToolPanel {
         });
         self.job = Some(job);
         self.declined = false;
+        self.cancelled_note = false;
         self.phase = Phase::Running {
             started: Instant::now(),
             fraction: 0.0,
@@ -613,6 +627,7 @@ impl ToolPanel {
                     }
                     Err(f) => {
                         if f.cancelled || std::mem::take(&mut self.declined) {
+                            self.cancelled_note = f.cancelled;
                             self.phase = Phase::Options;
                         } else {
                             self.phase = Phase::Failed(f);
@@ -1225,24 +1240,21 @@ impl ToolPanel {
     }
 
     fn header(&self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
-        let network = self.tool.manifest.capabilities.network;
-        let (status, status_icon) = if network {
-            ("Uses the network", "radio")
-        } else {
-            ("Processed on this computer", "lock")
-        };
-        let full = if network {
-            format!(
-                "Uses the network: {}",
-                self.tool
-                    .manifest
-                    .capabilities
-                    .network_reason
-                    .clone()
-                    .unwrap_or_default()
-            )
-        } else {
-            "Processed on this computer. Nothing is uploaded.".to_string()
+        let reason = self
+            .tool
+            .manifest
+            .capabilities
+            .network_reason
+            .clone()
+            .unwrap_or_default();
+        let (status, status_icon, full) = match network_words(&self.tool.manifest.capabilities) {
+            Some(n) if n.warn => (n.status, n.icon, format!("Uses the network: {reason}")),
+            Some(n) => (n.status, n.icon, n.sentence(&reason)),
+            None => (
+                "Processed on this computer",
+                "lock",
+                "Processed on this computer. Nothing is uploaded.".to_string(),
+            ),
         };
         div()
             .flex()
@@ -1380,7 +1392,7 @@ impl ToolPanel {
             .children(more_views);
         let blocker = self.blocker();
         let estimate = self.estimate.clone();
-        let network = self.tool.manifest.capabilities.network;
+        let network = network_words(&self.tool.manifest.capabilities);
         let reason = self
             .tool
             .manifest
@@ -1406,17 +1418,26 @@ impl ToolPanel {
                         .aria_label(format!("Estimate: {e}")),
                 )
             })
-            .when(network, |d| {
+            .when_some(network, |d, n| {
                 d.child(note(
-                    "radio",
-                    t.warn,
-                    if reason.is_empty() {
-                        "Uses the network.".to_string()
-                    } else {
-                        format!("Uses the network. {reason}")
-                    },
+                    n.icon,
+                    if n.warn { t.warn } else { t.ink2 },
+                    n.sentence(&reason),
                     t,
                 ))
+            })
+            .when(self.cancelled_note, |d| {
+                d.child(
+                    notice(
+                        "circle-check",
+                        t.ink2,
+                        "Cancelled. Nothing was written.".to_string(),
+                        t,
+                    )
+                    .id("cancelled")
+                    .role(Role::Status)
+                    .aria_label("Cancelled. Nothing was written."),
+                )
             })
             .when_some(
                 blocker.filter(|_| !self.files.is_empty() || !self.tool.takes_files()),
@@ -1757,10 +1778,12 @@ impl ToolPanel {
                                     .child(format!("Download the {}?", info.name)),
                             ),
                     )
-                    .child(div().ramp(ty::BODY).text_color(t.ink2).child(format!(
-                        "{} needs it to work. It is fetched once and kept on this computer.",
-                        self.tool.name
-                    )))
+                    .child(
+                        div()
+                            .ramp(ty::BODY)
+                            .text_color(t.ink2)
+                            .child(consent_lead(&self.tool.name, info.kind)),
+                    )
                     .child(card(t).children(facts.into_iter().enumerate().map(
                         |(n, (label, value))| {
                             div()
@@ -1837,6 +1860,33 @@ impl ToolPanel {
         };
         let outputs: Vec<PathBuf> = done.outputs.iter().take(5).cloned().collect();
         let last = outputs.len().saturating_sub(1);
+        // A tool that answers with text (Image to text) has the text itself as its headline. It
+        // belongs in a text block under a short title, not in the title.
+        let text_answer = done.after_bytes.is_none()
+            && (headline.contains('\n') || headline.chars().count() > 90);
+        let title_line = if text_answer {
+            done.notes
+                .iter()
+                .rev()
+                .find(|n| !n.contains(&headline))
+                .cloned()
+                .unwrap_or_else(|| "Done".to_string())
+        } else {
+            headline.clone()
+        };
+        let (shown_notes, hidden_notes) = if text_answer {
+            result_notes(
+                &done
+                    .notes
+                    .iter()
+                    .filter(|n| **n != title_line)
+                    .cloned()
+                    .collect::<Vec<_>>(),
+                &headline,
+            )
+        } else {
+            result_notes(&done.notes, &headline)
+        };
         let card_body = div()
             .id("result-card")
             .role(Role::Group)
@@ -1866,10 +1916,19 @@ impl ToolPanel {
                             .text_color(t.ink)
                             .child(match undone {
                                 Some(u) => u.title().to_string(),
-                                None => headline.clone(),
+                                None => title_line.clone(),
                             }),
                     ),
             )
+            .when(text_answer, |d| {
+                d.child(
+                    card(t)
+                        .p(px(14.))
+                        .ramp(ty::BODY)
+                        .text_color(t.ink)
+                        .child(headline.clone()),
+                )
+            })
             .when_some(done.after_bytes.filter(|_| !fully_undone), |d, after| {
                 d.child(
                     div()
@@ -1895,13 +1954,19 @@ impl ToolPanel {
                     ),
                 )
             })
-            .children(
-                done.notes
-                    .iter()
-                    .filter(|n| !n.contains(&headline) && !n.contains(": wrote "))
-                    .take(6)
-                    .map(|n| div().ramp(ty::BODY).text_color(t.ink2).child(n.clone())),
-            )
+            .children(shown_notes.iter().map(|(n, important)| {
+                div()
+                    .ramp(ty::BODY)
+                    .text_color(if *important { t.warn } else { t.ink2 })
+                    .when(*important, |d| d.font_weight(FontWeight::MEDIUM))
+                    .child(n.clone())
+            }))
+            .when(hidden_notes > 0, |d| {
+                d.child(div().ramp(ty::SMALL).text_color(t.ink2).child(format!(
+                    "and {hidden_notes} more {}",
+                    if hidden_notes == 1 { "line" } else { "lines" }
+                )))
+            })
             .when(!outputs.is_empty() && !fully_undone, |d| {
                 d.child(
                     div()
@@ -2055,5 +2120,115 @@ impl Render for ToolPanel {
             .child(rule(t))
             .child(body)
             .child(footer)
+    }
+}
+
+/// The report lines a result card shows. Warnings and failures always come first and are always
+/// shown, so a "2 warnings" headline never hides what the warnings are; the rest fill what is left
+/// up to a screenful. The second number is how many lines did not fit.
+pub(crate) fn result_notes(notes: &[String], headline: &str) -> (Vec<(String, bool)>, usize) {
+    const ROOM: usize = 8;
+    let is_warning = |n: &str| {
+        let l = n.to_ascii_lowercase();
+        l.contains(": warn:")
+            || l.contains(": fail:")
+            || l.starts_with("warn:")
+            || l.starts_with("fail:")
+    };
+    let candidates: Vec<&String> = notes
+        .iter()
+        .filter(|n| !n.contains(headline) && !n.contains(": wrote "))
+        .collect();
+    let warnings: Vec<(String, bool)> = candidates
+        .iter()
+        .filter(|n| is_warning(n))
+        .map(|n| ((*n).clone(), true))
+        .collect();
+    let room = ROOM.saturating_sub(warnings.len()).max(3);
+    let mut rest = candidates.iter().filter(|n| !is_warning(n));
+    // The module's own summary line (the first one) leads, then what needs attention, then the
+    // rest.
+    let mut out: Vec<(String, bool)> = Vec::new();
+    if candidates.first().is_some_and(|n| !is_warning(n)) {
+        out.extend(rest.by_ref().take(1).map(|n| ((*n).clone(), false)));
+    }
+    out.extend(warnings);
+    out.extend(rest.by_ref().take(room).map(|n| ((*n).clone(), false)));
+    let hidden = rest.count();
+    (out, hidden)
+}
+
+/// The sentence under the consent sheet's title. A model reads like the panel header and the Modules
+/// page say it ("Downloads a model once"); an engine is a program the tool needs.
+fn consent_lead(tool: &str, kind: panoply_core::assets::AssetKind) -> String {
+    match kind {
+        panoply_core::assets::AssetKind::Model => {
+            format!("{tool} downloads a model once and keeps it on this computer.")
+        }
+        panoply_core::assets::AssetKind::Engine => {
+            format!("{tool} needs it to work. It is fetched once and kept on this computer.")
+        }
+    }
+}
+
+#[cfg(test)]
+mod result_notes_tests {
+    use super::result_notes;
+
+    #[test]
+    fn warnings_are_never_cut_even_after_many_passes() {
+        let mut notes = vec!["a.jpg: India passport photo, 2 warnings".to_string()];
+        for i in 0..10 {
+            notes.push(format!("a.jpg: pass: Check {i}. fine"));
+        }
+        notes.push("a.jpg: warn: Lighting. uneven".to_string());
+        notes.push("a.jpg: warn: Neutral expression. mouth open".to_string());
+        let (shown, hidden) = result_notes(&notes, "1.6 MB to 236 KB");
+        assert!(
+            shown[0].0.contains("2 warnings") && !shown[0].1,
+            "the summary leads"
+        );
+        assert!(shown[1].0.contains("warn: Lighting") && shown[1].1);
+        assert!(shown[2].0.contains("warn: Neutral") && shown[2].1);
+        assert!(shown.len() >= 5, "room is left for the other lines");
+        assert_eq!(shown.len() + hidden, 13);
+    }
+
+    #[test]
+    fn the_consent_sheet_and_the_header_say_the_same_thing_about_a_model() {
+        use panoply_core::assets::AssetKind;
+        let caps = panoply_manifest::Capabilities {
+            network: true,
+            network_reason: Some("Downloads a model once, after you say yes.".into()),
+            models: vec![panoply_manifest::ModelSpec {
+                id: "m".into(),
+                size_mb: 28,
+                license: "MIT".into(),
+            }],
+            ..Default::default()
+        };
+        let n = super::network_words(&caps).unwrap();
+        assert_eq!(n.status, "Downloads a model once");
+        assert_eq!(n.meta, "Downloads a model once");
+        assert_eq!(n.badge, "Model download");
+        assert!(!n.warn, "a model download is not a warning");
+        assert!(
+            super::consent_lead("Erase object", AssetKind::Model)
+                .contains(n.status.to_lowercase().as_str())
+        );
+        assert!(
+            n.sentence("Downloads a model once, after you say yes.")
+                .ends_with("Your files never leave this computer.")
+        );
+        // An engine download and a plain network user keep the network wording.
+        let mut c = caps.clone();
+        c.models.clear();
+        let n = super::network_words(&c).unwrap();
+        assert_eq!(
+            (n.badge, n.meta, n.warn),
+            ("Network", "Uses the network", true)
+        );
+        c.network = false;
+        assert!(super::network_words(&c).is_none());
     }
 }

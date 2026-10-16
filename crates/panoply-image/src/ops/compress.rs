@@ -569,7 +569,10 @@ fn compress_one(io: &dyn Io, path: &std::path::Path, opts: &Opts) -> Result<Opti
                                 },
                             )
                         }),
-                        qlo: 10,
+                        qlo: match mode {
+                            Mode::Smallest(target) => super::search::quality_floor(target, hi),
+                            _ => 10,
+                        },
                         qhi: hi,
                     };
                     lossy_candidate(io, &c, jpeg_img, mode, embed)
