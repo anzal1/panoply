@@ -97,7 +97,7 @@ pub(crate) fn used_inodes(path: &Path) -> Option<u64> {
         use std::ffi::CString;
         use std::os::unix::ffi::OsStrExt;
         let c = CString::new(path.as_os_str().as_bytes()).ok()?;
-        return imp::used_inodes(&c);
+        imp::used_inodes(&c)
     }
     #[cfg(not(unix))]
     {
