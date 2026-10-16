@@ -5244,6 +5244,7 @@ dependencies = [
  "clap",
  "panoply-convert",
  "panoply-core",
+ "panoply-disk",
  "panoply-host",
  "panoply-manifest",
  "panoply-mcp",
@@ -5290,6 +5291,7 @@ dependencies = [
  "objc2 0.6.5",
  "panoply-convert",
  "panoply-core",
+ "panoply-disk",
  "panoply-find",
  "panoply-host",
  "panoply-manifest",
@@ -5300,6 +5302,16 @@ dependencies = [
  "serde_json",
  "tray-icon",
  "x11rb",
+]
+
+[[package]]
+name = "panoply-disk"
+version = "0.1.3"
+dependencies = [
+ "libc",
+ "objc2-foundation 0.3.2",
+ "thiserror 2.0.21",
+ "windows 0.62.2",
 ]
 
 [[package]]
