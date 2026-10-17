@@ -61,8 +61,11 @@ In `~/.cursor/mcp.json` (or `.cursor/mcp.json` in a project), use the same `mcpS
 - A tool can read only the files it was given and write only into the output folder, or next to the
   originals when none is given. This is the same capability guard the app and the command line use.
 - A tool that fails comes back as an error result the model can read: what happened and what to do next.
-- Progress is sent as `notifications/progress` when the client sends a progress token, and
-  `notifications/cancelled` stops the running job.
+- Progress is sent as `notifications/progress` when the client sends a progress token.
+  `notifications/cancelled` asks the running job to stop; a job stops at its next check, so a long step can
+  finish first. A call that is still queued is skipped and answered as cancelled.
+- A long job does not hold anything up. `ping` and `tools/list` are answered at once, and up to four calls run
+  at the same time. If a tool crashes, that call comes back as an error and the server keeps running.
 
 ## Downloads
 
@@ -90,7 +93,8 @@ Messages are one JSON object per line. Only protocol messages go to stdout. Logs
 ## Protocol
 
 Stdio transport, JSON-RPC 2.0. `initialize` answers with the client's protocol version when it is one of
-2025-11-25, 2025-06-18, 2025-03-26 or 2024-11-05, and 2025-11-25 otherwise. Methods: `initialize`, `ping`,
+2025-11-25 or 2025-06-18, and 2025-11-25 otherwise. Older versions allow JSON-RPC batches, which this server
+does not read. Methods: `initialize`, `ping`,
 `tools/list` and `tools/call`. The server is hand written in `crates/panoply-mcp/src/server.rs`: the official
 Rust SDK needs an async runtime, which the start-time and memory budgets in
 [FLOWS.md](FLOWS.md#budgets-every-module-must-meet) do not leave room for.

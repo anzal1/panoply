@@ -6,10 +6,10 @@
 //! nothing can ask: stdin carries the protocol, so a download that was not allowed ahead of time
 //! fails with a plain message that says how to allow it.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use panoply_core::{CancelToken, JobEvent, JobSpec};
 use panoply_host::{ModuleError, Registry};
@@ -49,6 +49,8 @@ struct PanoplyBackend {
     registry: Registry,
     /// MCP tool name to module id.
     names: BTreeMap<String, String>,
+    /// Modules whose network line has been printed on stderr already.
+    noticed: Mutex<HashSet<String>>,
 }
 
 impl PanoplyBackend {
@@ -83,7 +85,11 @@ impl PanoplyBackend {
             }
             names.insert(name, manifest.module.id.clone());
         }
-        Self { registry, names }
+        Self {
+            registry,
+            names,
+            noticed: Mutex::new(HashSet::new()),
+        }
     }
 
     fn manifests(&self) -> impl Iterator<Item = &Manifest> {
@@ -114,7 +120,15 @@ impl Backend for PanoplyBackend {
         let cancel = CancelToken::new();
         let hook = cancel.clone();
         ctx.on_cancel(move || hook.cancel());
-        crate::models_cmd::show_network_notice(&self.registry, id);
+        // Once per module for the life of the server, not on every call.
+        if self
+            .noticed
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .insert(id.clone())
+        {
+            crate::models_cmd::show_network_notice(&self.registry, id);
+        }
         let progress = ctx.progress_sink();
         let result = self
             .registry
