@@ -18,7 +18,7 @@ pkgbase = panoply-bin
 	depends = libxkbcommon-x11
 	depends = vulkan-icd-loader
 	depends = wayland
-	provides = panoply
+	provides = panoply=@PKGVER@
 	conflicts = panoply
 	options = !strip
 	options = !debug

@@ -1,11 +1,15 @@
-# Flatpak manifest for Flathub, filled by packaging/scripts/render_manifests.py. It installs the prebuilt Linux
-# release tarball (the same files the AppImage and the AUR package use), one source per architecture.
-# Submission steps: packaging/README.md, section "Package managers". Local build:
+# Flathub manifest for Panoply: builds from the tagged source, offline, with the crates listed in
+# cargo-sources.json. Filled by packaging/scripts/render_manifests.py. cargo-sources.json is generated from
+# the tag's Cargo.lock by tools/validate-packaging.sh (flatpak-cargo-generator, pinned) and committed next to
+# this file in the Flathub repository. Local build:
 #   flatpak-builder --user --install --force-clean build io.github.anzal1.Panoply.yml
+# The prebuilt-tarball variant for sideloading is io.github.anzal1.Panoply.sideload.yml.
 app-id: io.github.anzal1.Panoply
 runtime: org.freedesktop.Platform
-runtime-version: '24.08'
+runtime-version: '26.08'
 sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
 command: panoply-desktop
 
 finish-args:
@@ -16,37 +20,56 @@ finish-args:
   - --device=dri
   # Files come in through the file chooser portal and drag and drop; no blanket filesystem access.
   # Add --filesystem=home only if a Flathub reviewer or real use shows the portal is not enough.
-  # Panoply asks before it downloads anything. Its PDF engine (pdfium) and models are fetched on first
-  # use, so the network is needed for that; drop this line once pdfium is bundled
-  # (PANOPLY_PDFIUM_LIB would point at it).
+  - --env=PANOPLY_PDFIUM_LIB=/app/lib/pdfium/libpdfium.so
+  # Panoply works offline and asks before every download. The network is only for the on-device models
+  # the user chooses to fetch.
   - --share=network
 
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+  env:
+    CARGO_HOME: /run/build/panoply/cargo
+
 modules:
+  # The PDF engine, at the release pinned in crates/panoply-pdf/src/pdfium.rs (same SHA-256 values).
+  - name: pdfium
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 lib/libpdfium.so /app/lib/pdfium/libpdfium.so
+      - if [ -d licenses ]; then cp -R licenses /app/share/licenses-pdfium; fi
+    sources:
+      - type: archive
+        url: https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7881/pdfium-linux-x64.tgz
+        sha256: 1470e21b8b4a3b4ad7f85684e2da11d94f3b69a86d81dee11b9b6709d927ac1d
+        strip-components: 0
+        only-arches: [x86_64]
+      - type: archive
+        url: https://github.com/bblanchon/pdfium-binaries/releases/download/chromium/7881/pdfium-linux-arm64.tgz
+        sha256: ee7f7b7d5468958336a818c1cd580bdd20972846b7377b13f9a923d92d1d4674
+        strip-components: 0
+        only-arches: [aarch64]
+
   - name: panoply
     buildsystem: simple
     build-commands:
-      # The community modules sit next to the programs: that is where Panoply looks for them.
-      - install -Dm755 bin/panoply-desktop /app/bin/panoply-desktop
-      - install -Dm755 bin/panoply /app/bin/panoply
-      - if [ -d bin/modules ]; then cp -R bin/modules /app/bin/modules; fi
-      - install -Dm644 share/applications/panoply.desktop /app/share/applications/io.github.anzal1.Panoply.desktop
+      - cargo --offline build --release --locked -p panoply-desktop -p panoply-cli
+      - install -Dm755 target/release/panoply-desktop /app/bin/panoply-desktop
+      - install -Dm755 target/release/panoply /app/bin/panoply
+      - install -Dm644 apps/desktop/packaging/linux/panoply.desktop /app/share/applications/io.github.anzal1.Panoply.desktop
       - sed -i 's/^Icon=panoply$/Icon=io.github.anzal1.Panoply/' /app/share/applications/io.github.anzal1.Panoply.desktop
       - |
-        for f in share/icons/hicolor/*/apps/panoply.*; do
-          d="${f#share/icons/}"; d="${d%/panoply.*}"
+        for f in apps/desktop/packaging/linux/icons/hicolor/*/apps/panoply.*; do
+          d="${f#apps/desktop/packaging/linux/icons/}"; d="${d%/panoply.*}"
           install -Dm644 "$f" "/app/share/icons/$d/io.github.anzal1.Panoply.${f##*.}"
         done
       - install -Dm644 io.github.anzal1.Panoply.metainfo.xml /app/share/metainfo/io.github.anzal1.Panoply.metainfo.xml
       - install -Dm644 LICENSE-MIT /app/share/licenses/io.github.anzal1.Panoply/LICENSE-MIT
       - install -Dm644 LICENSE-APACHE /app/share/licenses/io.github.anzal1.Panoply/LICENSE-APACHE
     sources:
-      - type: archive
-        url: https://github.com/@REPO@/releases/download/v@VERSION@/Panoply-@VERSION@-linux-x64.tar.gz
-        sha256: @SHA256_LINUX_X64_TGZ@
-        only-arches: [x86_64]
-      - type: archive
-        url: https://github.com/@REPO@/releases/download/v@VERSION@/Panoply-@VERSION@-linux-arm64.tar.gz
-        sha256: @SHA256_LINUX_ARM64_TGZ@
-        only-arches: [aarch64]
+      - type: git
+        url: https://github.com/@REPO@.git
+        tag: v@VERSION@
+        commit: @COMMIT@
+      - cargo-sources.json
       - type: file
         path: io.github.anzal1.Panoply.metainfo.xml

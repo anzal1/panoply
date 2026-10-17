@@ -102,6 +102,8 @@ jobs:
             echo "profile=$profile"
           } >> "$GITHUB_OUTPUT"
           echo "Release $version (tag '${tag:-none}'), msi $msi_version, desktop: $desktop, profile: $profile" | tee -a "$GITHUB_STEP_SUMMARY"
+          # The MSI ProductCode must differ between 0.2.0-beta and 0.2.0, which share an MSI version.
+          python3 -I packaging/scripts/test_msi_codes.py
 
   # ------------------------------------------------------------------------------------------------
   # Compile the release binaries, one leg per platform. macOS builds both architectures on the arm
@@ -353,9 +355,12 @@ jobs:
           notarized="$(sed -n 's/^NOTARIZED=//p' staging/state/macos-arm64.env 2>/dev/null | head -1 || true)"
           python3 -I packaging/scripts/render_manifests.py --version "$VERSION" --repo "$GITHUB_REPOSITORY" \
             --sums SHA256SUMS --out manifests --commit "$GITHUB_SHA" \
-            --macos-notarized "${notarized:-0}" --state staging/state
+            --macos-notarized "${notarized:-0}" --state staging/state \
+            --msi-version "${{ needs.plan.outputs.msi_version }}"
           # winget YAML against Microsoft's schemas. A warning only: the schemas come from GitHub raw.
-          if pip install --quiet pyyaml jsonschema && python3 packaging/scripts/validate_manifests.py manifests; then :; else
+          # A venv, because pip refuses to install into the runner's system Python (PEP 668).
+          if python3 -m venv .venv-validate && .venv-validate/bin/pip install --quiet pyyaml jsonschema \
+            && .venv-validate/bin/python packaging/scripts/validate_manifests.py manifests; then :; else
             echo "::warning title=Manifest validation::winget manifests did not validate; see the log."
           fi
           python3 -I packaging/scripts/mkarchive.py "release/panoply-package-manifests-$VERSION.zip" \

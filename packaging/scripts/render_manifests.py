@@ -4,6 +4,7 @@
     render_manifests.py --version 0.1.0 --repo anzal1/panoply --sums SHA256SUMS --out DIR
                         [--commit SHA] [--macos-notarized 0|1] [--state STATE_DIR]
     render_manifests.py --tag v0.2.0-beta [--repo anzal1/panoply] --out DIR     (needs the gh CLI)
+                        [--msi-version 0.2.0.0]   (default: derived from the version like release.yml's plan job)
 
 The second form renders every channel for a published release in one run: it downloads SHA256SUMS and the
 release's own panoply-package-manifests zip with gh (the zip holds the MSI ProductCodes the Windows jobs
@@ -20,6 +21,7 @@ import argparse
 import datetime
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -48,6 +50,7 @@ OUTPUTS = {
     "winget/anzal1.Panoply.installer.yaml.in": "winget/{v}/anzal1.Panoply.installer.yaml",
     "winget/anzal1.Panoply.locale.en-US.yaml.in": "winget/{v}/anzal1.Panoply.locale.en-US.yaml",
     "flatpak/io.github.anzal1.Panoply.yml.in": "flatpak/io.github.anzal1.Panoply.yml",
+    "flatpak/io.github.anzal1.Panoply.sideload.yml.in": "flatpak/io.github.anzal1.Panoply.sideload.yml",
     "flatpak/io.github.anzal1.Panoply.metainfo.xml.in": "flatpak/io.github.anzal1.Panoply.metainfo.xml",
     "aur/PKGBUILD.in": "aur/PKGBUILD",
     "aur/SRCINFO.in": "aur/.SRCINFO",
@@ -71,8 +74,25 @@ def read_sums(path):
     return sums
 
 
+ZERO_GUID = "{00000000-0000-0000-0000-000000000000}"
+
+
+def msi_version(version):
+    """The MSI version for a release version, the way the `plan` job in release.yml derives it:
+    the numeric base plus the trailing number of the prerelease (0.2.0 -> 0.2.0.0, 0.2.0-beta.3 -> 0.2.0.3)."""
+    base, _, pre = version.partition("-")
+    m = re.search(r"([0-9]*)$", pre)
+    return f"{base}.{(m.group(1) if m else '') or 0}"
+
+
 def gh(*args):
-    return subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
+    try:
+        return subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
+    except FileNotFoundError:
+        sys.exit("render_manifests: --tag needs the gh CLI (https://cli.github.com), which is not installed. "
+                 "Pass --version and --sums instead.")
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"render_manifests: gh {' '.join(args[:2])} failed: {(e.stderr or '').strip()}")
 
 
 def fetch_release(tag, repo, work):
@@ -98,6 +118,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--version")
     ap.add_argument("--tag", help="render a published release: the version, sums, ProductCodes and date come from gh")
+    ap.add_argument("--msi-version", default=None, help="MSI ProductVersion (release.yml plan.msi_version)")
     ap.add_argument("--repo", default="anzal1/panoply")
     ap.add_argument("--sums")
     ap.add_argument("--out", required=True)
@@ -106,20 +127,33 @@ def main():
     ap.add_argument("--state", default=None)
     a = ap.parse_args()
 
+    workdirs = []
+    try:
+        _render(a, workdirs)
+    finally:
+        for d in workdirs:
+            shutil.rmtree(d, ignore_errors=True)
+
+
+def _render(a, workdirs):
     release_date = datetime.date.today().isoformat()
     if a.tag:
         a.version = a.version or a.tag.removeprefix("v")
         work = Path(tempfile.mkdtemp(prefix="panoply-render-"))
+        workdirs.append(work)
         sums_path, state, date = fetch_release(a.tag, a.repo, work)
         a.sums = a.sums or str(sums_path)
         a.state = a.state or str(state)
         release_date = date or release_date
+        if a.commit == "0" * 40:  # the Flatpak source manifest pins the tagged commit
+            a.commit = gh("api", f"repos/{a.repo}/commits/{a.tag}", "--jq", ".sha").strip()
     if not (a.version and a.sums):
-        ap.error("give --tag, or --version and --sums")
+        sys.exit("render_manifests: give --tag, or --version and --sums")
 
     sums = read_sums(a.sums)
     subs = {
         "VERSION": a.version,
+        "MSI_VERSION": a.msi_version or msi_version(a.version),
         "PKGVER": a.version.replace("-", "_"),  # an Arch pkgver cannot hold a hyphen
         "REPO": a.repo,
         "COMMIT": a.commit,
@@ -135,13 +169,14 @@ def main():
             subs[f"SHA256_{key}"] = "0" * 64
             missing.append(name)
     for arch in ("x64", "arm64"):
-        code = "{00000000-0000-0000-0000-000000000000}"
+        code = ZERO_GUID
         env = Path(a.state or "") / f"windows-{arch}.env"
         if a.state and env.is_file():
             for line in env.read_text().splitlines():
                 if line.startswith("PRODUCT_CODE="):
                     code = line.split("=", 1)[1].strip()
-        else:
+        if code.strip("{}0-") == "":  # absent, or an all-zero placeholder: never a real code
+            code = ZERO_GUID
             missing.append(f"ProductCode for windows-{arch}")
         subs[f"PRODUCT_CODE_{arch.upper()}"] = code
 

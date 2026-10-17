@@ -9,10 +9,12 @@ pkgdesc='Every file tool in one fast app: PDF, image, audio and video tools and 
 arch=('x86_64' 'aarch64')
 url='https://github.com/@REPO@'
 license=('MIT OR Apache-2.0')
-# Libraries the prebuilt GPUI app loads at run time (see packaging/scripts/linux-package.sh).
+# Libraries the prebuilt GPUI app needs at run time (see packaging/scripts/linux-package.sh). Several of them
+# (libxkbcommon-x11, vulkan-icd-loader, gtk3, wayland, alsa-lib) are dlopen targets, not linked, so a tool
+# that reads the binary's ELF headers will not list them.
 depends=('alsa-lib' 'fontconfig' 'freetype2' 'gcc-libs' 'glibc' 'gtk3' 'libx11' 'libxcb' 'libxkbcommon'
          'libxkbcommon-x11' 'vulkan-icd-loader' 'wayland')
-provides=('panoply')
+provides=("panoply=$pkgver")
 conflicts=('panoply')
 options=('!strip' '!debug')
 source_x86_64=("Panoply-$_pkgver-linux-x64.tar.gz::https://github.com/@REPO@/releases/download/v$_pkgver/Panoply-$_pkgver-linux-x64.tar.gz")

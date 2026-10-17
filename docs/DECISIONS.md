@@ -157,6 +157,7 @@ What was fixed instead of excepted: Image to text and OCR on pictures held a 31 
 - **GPUI for all desktops (2026-10-13).** The user could not tell the GPUI and SwiftUI command bars apart; GPUI matched native on memory (33 vs 30 MB) and startup. Headless checks pass for Hindi, Bengali, pinyin and dead-key input and for accessibility, with a 40-line grapheme-cluster patch to GPUI Kit's input that we carry and upstream. macOS, Windows and Linux share one GPUI app on the Rust core; SwiftUI only for iOS, Compose for Android. ADR 0001 amended.
 
 - **Desktops launch together; free CI only (2026-10-14).** macOS, Windows and Linux ship together as one GPUI app (ADR 0009 amended), then Android, then iOS. CI must cost nothing. Comparing our PDF compression against iLovePDF with public test PDFs is approved. Solo for now, no collaborators to invite. The human Hindi and VoiceOver checks are deferred.
+- **MSI ProductCode hashes the full version (2026-10-17).** A beta and its stable release share an MSI version (0.2.0.0), and Windows Installer ignores the fourth field, so the same ProductCode made the stable MSI fail over the beta (error 1638); the ProductCode now hashes the whole version string and `MajorUpgrade` sets `AllowSameVersionUpgrades="yes"`, with the UpgradeCode unchanged.
 
 ## Open questions only the user can answer (historical)
 

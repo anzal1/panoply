@@ -108,16 +108,17 @@ notarizes in the workflow, and the release notes, the README and the Homebrew ca
 |---|---|---|---|
 | Homebrew cask | `homebrew/panoply.rb.in` | tap repo `anzal1/homebrew-panoply`, `Casks/panoply.rb` | links the CLI as `panoply`; carries the unsigned-app caveat until notarized |
 | Scoop | `scoop/panoply.json.in` | bucket repo `anzal1/scoop-panoply`, `bucket/panoply.json` | `autoupdate` is set; the SHA256SUMS regex is read from each release |
-| winget | `winget/*.yaml.in` (schema 1.10) | PR to microsoft/winget-pkgs, `manifests/a/anzal1/Panoply/V/` (or `wingetcreate submit`) | x64 and arm64 MSI with their ProductCodes. The identifier `anzal1.Panoply` is permanent once accepted: change it in the three templates first if a project or org name should own it |
+| winget | `winget/*.yaml.in` (schema 1.10; `AppsAndFeaturesEntries` carry the MSI DisplayVersion, ProductCode and UpgradeCode so winget matches the installed MSI) | PR to microsoft/winget-pkgs, `manifests/a/anzal1/Panoply/V/` (or `wingetcreate submit`) | x64 and arm64 MSI with their ProductCodes. The identifier `anzal1.Panoply` is permanent once accepted: change it in the three templates first if a project or org name should own it |
 | AUR | `aur/PKGBUILD.in`, `aur/SRCINFO.in` | AUR git repo `ssh://aur@aur.archlinux.org/panoply-bin.git`, files `PKGBUILD` and `.SRCINFO` | `panoply-bin` for x86_64 and aarch64 from the Linux tarballs; installs to `/usr/lib/panoply` (modules sit next to the executables) with symlinks in `/usr/bin`; `pkgver` is the version with `-` turned into `_` |
-| Flatpak | `flatpak/*.in` | Flathub new-app PR (github.com/flathub/flathub, branch `new-pr`) | installs the release tarball per architecture; metainfo has screenshots; needs `--share=network` until pdfium is bundled. Not built in CI |
+| Flatpak (Flathub) | `flatpak/io.github.anzal1.Panoply.yml.in`, metainfo | Flathub new-app PR (github.com/flathub/flathub, branch `new-pr`) | builds from the tagged source, offline, on runtime 26.08 (rust-stable extension); `cargo-sources.json` comes from the tag's Cargo.lock via `tools/validate-packaging.sh` (flatpak-cargo-generator, pinned) and is committed beside the manifest; pdfium is its own module at the pinned release. The community wasm modules are not in this build yet (no wasm32-wasip2 target in the sandbox). Not built in CI |
+| Flatpak (sideload) | `flatpak/io.github.anzal1.Panoply.sideload.yml.in` | a local or release-attached bundle only, never Flathub | installs the prebuilt release tarball per architecture, runtime 26.08. Flathub requires open-source apps to build from source, so this one is for people who want a Flatpak without waiting for Flathub |
 | AppImage | built by `linux-package.sh` | the release (`Panoply-V-linux-{x64,arm64}.AppImage`) | appimagetool and the type2 runtime are pinned by SHA-256; relies on the host's windowing, graphics, GTK3 and ALSA libraries |
 
 One run renders every channel for a published tag, and `tools/validate-packaging.sh` checks them (winget schemas,
 `makepkg --printsrcinfo`, `namcap`, `appstreamcli validate`; the Arch part runs in a container under the heavy lock):
 
 ```bash
-python3 -I packaging/scripts/render_manifests.py --tag v0.2.0-beta --out /tmp/m     # needs the gh CLI
+python3 -I packaging/scripts/render_manifests.py --tag v0.2.0-beta --out /tmp/m     # needs the gh CLI; --msi-version defaults to what the plan job derives
 tools/validate-packaging.sh v0.2.0-beta
 ```
 
