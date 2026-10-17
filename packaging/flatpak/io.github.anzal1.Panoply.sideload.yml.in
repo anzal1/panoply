@@ -1,0 +1,53 @@
+# SIDELOAD / LOCAL Flatpak, not for Flathub (Flathub requires open-source apps to build from source: see
+# io.github.anzal1.Panoply.yml). This installs the prebuilt Linux release tarball (the same files the AppImage and
+# the AUR package use), one source per architecture, so a Flatpak can be built in a minute for a bundle that is
+# attached to a release or installed locally. Filled by packaging/scripts/render_manifests.py. Build:
+#   flatpak-builder --user --install --force-clean build io.github.anzal1.Panoply.sideload.yml
+app-id: io.github.anzal1.Panoply
+runtime: org.freedesktop.Platform
+runtime-version: '26.08'
+sdk: org.freedesktop.Sdk
+command: panoply-desktop
+
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=dri
+  # Files come in through the file chooser portal and drag and drop; no blanket filesystem access.
+  # Add --filesystem=home only if a Flathub reviewer or real use shows the portal is not enough.
+  # Panoply asks before it downloads anything. Its PDF engine (pdfium) and models are fetched on first
+  # use, so the network is needed for that; drop this line once pdfium is bundled
+  # (PANOPLY_PDFIUM_LIB would point at it).
+  - --share=network
+
+modules:
+  - name: panoply
+    buildsystem: simple
+    build-commands:
+      # The community modules sit next to the programs: that is where Panoply looks for them.
+      - install -Dm755 bin/panoply-desktop /app/bin/panoply-desktop
+      - install -Dm755 bin/panoply /app/bin/panoply
+      - if [ -d bin/modules ]; then cp -R bin/modules /app/bin/modules; fi
+      - install -Dm644 share/applications/panoply.desktop /app/share/applications/io.github.anzal1.Panoply.desktop
+      - sed -i 's/^Icon=panoply$/Icon=io.github.anzal1.Panoply/' /app/share/applications/io.github.anzal1.Panoply.desktop
+      - |
+        for f in share/icons/hicolor/*/apps/panoply.*; do
+          d="${f#share/icons/}"; d="${d%/panoply.*}"
+          install -Dm644 "$f" "/app/share/icons/$d/io.github.anzal1.Panoply.${f##*.}"
+        done
+      - install -Dm644 io.github.anzal1.Panoply.metainfo.xml /app/share/metainfo/io.github.anzal1.Panoply.metainfo.xml
+      - install -Dm644 LICENSE-MIT /app/share/licenses/io.github.anzal1.Panoply/LICENSE-MIT
+      - install -Dm644 LICENSE-APACHE /app/share/licenses/io.github.anzal1.Panoply/LICENSE-APACHE
+    sources:
+      - type: archive
+        url: https://github.com/@REPO@/releases/download/v@VERSION@/Panoply-@VERSION@-linux-x64.tar.gz
+        sha256: @SHA256_LINUX_X64_TGZ@
+        only-arches: [x86_64]
+      - type: archive
+        url: https://github.com/@REPO@/releases/download/v@VERSION@/Panoply-@VERSION@-linux-arm64.tar.gz
+        sha256: @SHA256_LINUX_ARM64_TGZ@
+        only-arches: [aarch64]
+      - type: file
+        path: io.github.anzal1.Panoply.metainfo.xml

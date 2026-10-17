@@ -2,7 +2,7 @@
 <!--
   Panoply Windows installer (WiX Toolset v4). Built by packaging/windows/package.ps1, which passes:
     Version      MSI product version, four numeric parts (0.1.0.1)
-    ProductCode  GUID, fixed per version and architecture
+    ProductCode  GUID, fixed per full version string (prerelease included) and architecture
     BinDir       folder with panoply.exe and panoply-desktop.exe
     AssetDir     folder with panoply.ico, LICENSE-MIT, LICENSE-APACHE and THIRD-PARTY-NOTICES.md
     LicenseRtf   the license text shown in the setup dialog
@@ -15,7 +15,9 @@
            ProductCode="$(ProductCode)" UpgradeCode="56520F04-9601-4D76-8791-E0FF3A922321"
            Scope="perMachine" Compressed="yes">
     <SummaryInformation Description="Every file tool in one fast app. Everything runs on this computer." />
-    <MajorUpgrade DowngradeErrorMessage="A newer version of Panoply is already installed." />
+    <!-- AllowSameVersionUpgrades: Windows Installer compares only the first three version fields, so the
+         stable 0.2.0 and the beta 0.2.0-beta (both 0.2.0.x) must still replace each other. -->
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of Panoply is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
     <Icon Id="panoply.ico" SourceFile="$(AssetDir)\panoply.ico" />

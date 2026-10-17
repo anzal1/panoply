@@ -1,19 +1,35 @@
-# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.6.0.schema.json
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
 PackageIdentifier: anzal1.Panoply
-PackageVersion: @VERSION@
+PackageVersion: '@VERSION@'
 InstallerLocale: en-US
 InstallerType: wix
 Scope: machine
 UpgradeBehavior: install
+Commands:
+  - panoply
 ReleaseDate: @RELEASE_DATE@
 Installers:
   - Architecture: x64
     InstallerUrl: https://github.com/@REPO@/releases/download/v@VERSION@/Panoply-@VERSION@-windows-x64.msi
     InstallerSha256: @SHA256_WIN_X64_MSI@
     ProductCode: '@PRODUCT_CODE_X64@'
+    AppsAndFeaturesEntries:
+      - DisplayName: Panoply
+        Publisher: Panoply contributors
+        DisplayVersion: '@MSI_VERSION@'
+        ProductCode: '@PRODUCT_CODE_X64@'
+        UpgradeCode: '{56520F04-9601-4D76-8791-E0FF3A922321}'
+        InstallerType: wix
   - Architecture: arm64
     InstallerUrl: https://github.com/@REPO@/releases/download/v@VERSION@/Panoply-@VERSION@-windows-arm64.msi
     InstallerSha256: @SHA256_WIN_ARM64_MSI@
     ProductCode: '@PRODUCT_CODE_ARM64@'
+    AppsAndFeaturesEntries:
+      - DisplayName: Panoply
+        Publisher: Panoply contributors
+        DisplayVersion: '@MSI_VERSION@'
+        ProductCode: '@PRODUCT_CODE_ARM64@'
+        UpgradeCode: '{56520F04-9601-4D76-8791-E0FF3A922321}'
+        InstallerType: wix
 ManifestType: installer
-ManifestVersion: 1.6.0
+ManifestVersion: 1.10.0

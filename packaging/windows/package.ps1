@@ -79,9 +79,12 @@ $body = ($text -split "`r?`n" | ForEach-Object { "$_\par" }) -join "`n"
 $rtf = "{\rtf1\ansi\deff0{\fonttbl{\f0 Segoe UI;}}\f0\fs20 Panoply is open source software, available under the MIT license or the Apache License 2.0, at your option.\par\par`n$body`n}"
 Set-Content -Path (Join-Path $work 'license.rtf') -Value $rtf -Encoding ascii
 
-# A fixed ProductCode per architecture and version, so a rebuild of the same tag matches.
+# A fixed ProductCode per architecture and full version, so a rebuild of the same tag matches. The input is
+# the whole version string (0.2.0-beta, not the MSI version 0.2.0.0): a beta and the stable release share an
+# MSI version, and equal ProductCodes make the stable MSI fail to install over the beta (error 1638).
+# packaging/scripts/test_msi_codes.py holds the same formula and checks that the two differ.
 $md5 = [Security.Cryptography.MD5]::Create()
-$bytes = $md5.ComputeHash([Text.Encoding]::UTF8.GetBytes("panoply|$Arch|$MsiVersion"))
+$bytes = $md5.ComputeHash([Text.Encoding]::UTF8.GetBytes("panoply|$Arch|$Version"))
 $productCode = ([guid]::new($bytes)).ToString().ToUpper()
 
 $msi = Join-Path $Out "$appName.msi"
