@@ -58,12 +58,22 @@ jobs:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.sha }}
 
-  # Runs on every push and takes a few seconds: every relative link in the Markdown files resolves.
+  # Runs on every push and takes a few seconds: every relative link in the Markdown files resolves, and
+  # the prose has no em dashes or stock AI phrasing (a pull request's commit messages are read too).
   docs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
       - run: python3 -I tools/ci/check_docs.py
+      - name: Prose lint
+        run: |
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            python3 -I tools/ci/prose_lint.py --commits "${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+          else
+            python3 -I tools/ci/prose_lint.py
+          fi
 
   # ------------------------------------------------------------------------------------------------
   # Rust, split so the quick answers come first and the slow one starts at once.

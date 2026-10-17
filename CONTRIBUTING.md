@@ -122,6 +122,9 @@ UI.
 
 **Writing.** Plain, short sentences. No em dashes. Errors tell the user what
 happened and what to do next.
+`tools/ci/prose_lint.py` checks it (docs, packaging text, UI strings, module titles and descriptions, and your
+commit messages) and fails on an em dash or a phrase from `tools/ci/prose-lint-phrases.txt`, where the list is
+extended. Rewrite the sentence; do not swap in a hyphen.
 
 ## Adding a module
 
