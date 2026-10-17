@@ -342,6 +342,14 @@ impl Bar {
         self.files.is_empty()
             && self.query.trim().chars().count() >= 2
             && self.results.understood.is_none()
+            && !self.selected_is_copy()
+    }
+
+    /// True when the top row is a calculator answer, which Return copies.
+    fn selected_is_copy(&self) -> bool {
+        self.results
+            .rows()
+            .any(|r| matches!(r.action, Action::CopyText { .. }))
     }
 
     /// Ask the index for files on a worker and put them under the tools when it answers. The tool
@@ -601,6 +609,11 @@ impl Bar {
         self.flash_at = Some(Instant::now());
         match row.action {
             Action::Unavailable(why) => self.say(why, cx),
+            Action::CopyText { text } => {
+                cx.write_to_clipboard(ClipboardItem::new_string(text));
+                self.say("Copied".into(), cx);
+                self.hide(window, cx);
+            }
             Action::OpenFile { .. } => self.open_selected_file(false, cx),
             Action::OpenTool { tool, preset } => {
                 let files = self.files.clone();
@@ -1450,6 +1463,11 @@ impl Render for Bar {
             let c = cmd();
             let keys = if self.results.is_empty() {
                 Vec::new()
+            } else if matches!(
+                self.results.get(self.selected).map(|r| &r.action),
+                Some(Action::CopyText { .. })
+            ) {
+                vec![("Copy", vec!["\u{21B5}"])]
             } else if self.selected_is_file() {
                 vec![("Open", vec!["\u{21B5}"]), (SHOW_FILE, vec![c, "\u{21B5}"])]
             } else if has_chips {

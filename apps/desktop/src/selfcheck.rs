@@ -1161,6 +1161,36 @@ pub(crate) fn run_review(out: PathBuf) {
                     &mut log,
                     &mut times,
                 );
+                d.change(bar, |b, window, cx| b.set_query("15% of 2400", window, cx));
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-calc",
+                    &file("bar-calc"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, window, cx| b.set_query("72 f to c", window, cx));
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-calc-convert",
+                    &file("bar-calc-convert"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, window, cx| b.set_query("merge pdf", window, cx));
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-calc-skip",
+                    &file("bar-calc-skip"),
+                    &mut log,
+                    &mut times,
+                );
                 d.change(bar, |b, window, cx| b.set_query("zzzqx", window, cx));
                 d.settle(bar).await;
                 shot(
