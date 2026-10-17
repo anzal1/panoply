@@ -3,6 +3,7 @@
 //! The logic (catalog, search, forms, jobs, history) has no UI types and is tested on its own.
 //! The GPUI views in `ui` draw it, and nothing in them is specific to any module.
 
+pub mod calc;
 pub mod catalog;
 pub mod disk_review;
 pub mod downloads;

@@ -37,6 +37,11 @@ pub enum Action {
         /// The file.
         path: std::path::PathBuf,
     },
+    /// Copy this text to the clipboard (the calculator's answer).
+    CopyText {
+        /// What goes on the clipboard.
+        text: String,
+    },
     /// The row cannot run. The text says why.
     Unavailable(String),
 }
@@ -181,7 +186,33 @@ pub fn search(cx: &Context, query: &str) -> Results {
             for_files(cx)
         };
     }
-    from_query(cx, q)
+    let mut results = from_query(cx, q);
+    if let Some(a) = crate::calc::answer(q) {
+        results.sections.insert(
+            0,
+            Section {
+                title: "Answer".into(),
+                rows: vec![calc_row(a)],
+            },
+        );
+        results.footer = Some("Return copies the answer".into());
+    }
+    results
+}
+
+/// The calculator's answer as the top row of the bar.
+fn calc_row(a: crate::calc::Answer) -> Row {
+    Row {
+        action: Action::CopyText { text: a.copy },
+        title: a.shown,
+        subtitle: a.asked,
+        trailing: "Copy".into(),
+        icon: "calculator",
+        category: Category::Calculators,
+        matched: Vec::new(),
+        chips: Vec::new(),
+        estimate: None,
+    }
 }
 
 /// The bar at rest: suggested tools, then recent jobs.
@@ -698,6 +729,48 @@ mod tests {
 
     fn titles(r: &Results) -> Vec<String> {
         r.rows().map(|r| r.title.clone()).collect()
+    }
+
+    #[test]
+    fn a_sum_is_the_top_row_and_copies_its_answer() {
+        let c = cat();
+        for (q, shown, copy) in [
+            ("15% of 48000", "7,200", "7200"),
+            ("500 kb in mb", "0.5 MB", "0.5 MB"),
+        ] {
+            let r = search(&cx(&c, &[], &[]), q);
+            let top = r.get(0).unwrap();
+            assert_eq!(r.sections[0].title, "Answer");
+            assert_eq!(top.title, shown);
+            assert_eq!(
+                top.action,
+                Action::CopyText {
+                    text: copy.to_string()
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn a_query_for_a_tool_or_a_file_never_gets_an_answer_row() {
+        let c = cat();
+        let files = [png("sig.png", 200_000)];
+        for q in [
+            "under 50 kb",
+            "merge pdf",
+            "heic to jpg",
+            "compress",
+            "2024",
+        ] {
+            for files in [&[][..], &files[..]] {
+                let r = search(&cx(&c, files, &[]), q);
+                assert!(
+                    r.rows()
+                        .all(|r| !matches!(r.action, Action::CopyText { .. })),
+                    "query: {q}"
+                );
+            }
+        }
     }
 
     #[test]
