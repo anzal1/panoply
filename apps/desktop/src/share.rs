@@ -233,6 +233,8 @@ pub struct SendView {
     pub phase: SendPhase,
     /// Files in the request.
     pub files: usize,
+    /// Four words to compare with the other screen, when it is a Panoply app that shows them too.
+    pub check_code: Option<String>,
 }
 
 impl SendView {
@@ -412,6 +414,8 @@ pub enum EngineEvent {
     SendStarted {
         /// Transfer id.
         id: String,
+        /// The four words to compare with the other screen. Only between two Panoply apps.
+        check_code: Option<String>,
     },
     /// Something in a transfer, either direction.
     Transfer {
@@ -517,6 +521,7 @@ impl ShareModel {
             peer: peer.to_string(),
             phase: SendPhase::Waiting,
             files: self.staged.len(),
+            check_code: None,
         });
     }
 
@@ -556,9 +561,10 @@ impl ShareModel {
             EngineEvent::NetFailed(p) => self.net = Net::Failed(p),
             EngineEvent::Devices(d) => self.devices = d,
             EngineEvent::ScanFinished => self.scanned = true,
-            EngineEvent::SendStarted { id } => {
+            EngineEvent::SendStarted { id, check_code } => {
                 if let Some(s) = &mut self.send {
                     s.id = Some(id);
+                    s.check_code = check_code;
                 }
             }
             EngineEvent::Transfer {
@@ -926,7 +932,12 @@ fn incoming_view(id: String, r: &IncomingRequest) -> IncomingView {
     IncomingView {
         id,
         sender: r.sender.alias.clone(),
-        check_code: r.check_code.clone(),
+        // Only Panoply shows these words, so a LocalSend sender gets no instruction to compare them.
+        check_code: if panoply_share::is_panoply(&r.sender) {
+            r.check_code.clone()
+        } else {
+            String::new()
+        },
         verified: r.verified,
         files: r
             .files
@@ -1067,10 +1078,15 @@ async fn run(
                     });
                     continue;
                 };
+                let check_code = panoply_share::is_panoply(&dev.info)
+                    .then(|| panoply_share::check_code(node.fingerprint(), dev.fingerprint()));
                 let job = node.send(dev, paths, SendOptions::default());
                 let tid = job.id().to_string();
                 send_cancel = Some(job.cancel_handle());
-                let _ = ev.unbounded_send(EngineEvent::SendStarted { id: tid.clone() });
+                let _ = ev.unbounded_send(EngineEvent::SendStarted {
+                    id: tid.clone(),
+                    check_code,
+                });
                 let ev2 = ev.clone();
                 // The sender node must stay alive until the receiver has verified it.
                 let keep = node.clone();
@@ -1207,7 +1223,10 @@ mod tests {
     fn sending(m: &mut ShareModel) {
         m.stage(&[PathBuf::from("/nonexistent/a.pdf")]);
         m.begin_send("Pixel 9");
-        m.apply(EngineEvent::SendStarted { id: "t1".into() });
+        m.apply(EngineEvent::SendStarted {
+            id: "t1".into(),
+            check_code: None,
+        });
     }
 
     fn transfer(kind: TransferKind, dir: Direction) -> EngineEvent {
@@ -1508,6 +1527,24 @@ mod tests {
         assert!(body.starts_with("Address in use"));
     }
 
+    #[test]
+    fn check_code_is_offered_only_for_panoply_peers() {
+        let mut info = panoply_share::DeviceInfo {
+            alias: "Pixel".into(),
+            version: "2.1".into(),
+            device_model: Some("Android".into()),
+            device_type: None,
+            fingerprint: "f".into(),
+            port: None,
+            protocol: None,
+            download: None,
+            announce: None,
+        };
+        assert!(!panoply_share::is_panoply(&info));
+        info.device_model = Some("Panoply macOS".into());
+        assert!(panoply_share::is_panoply(&info));
+    }
+
     // ---- the engine, over loopback -----------------------------------------------------------
 
     fn free_port() -> u16 {
@@ -1608,6 +1645,12 @@ mod tests {
         assert_eq!(i.sender, "Sender");
         assert_eq!(i.files[0].name, "photo.bin");
         assert_eq!(i.total, payload.len() as u64);
+        assert_eq!(
+            i.check_code.split(' ').count(),
+            4,
+            "Panoply to Panoply shows a code"
+        );
+        let code = i.check_code.clone();
         let prompt = rm.incoming.clone().unwrap();
         _recv.decide(&prompt.id, true);
         rm.answered(true);
@@ -1633,6 +1676,11 @@ mod tests {
         });
         assert_eq!(std::fs::read(dst.join("photo.bin")).unwrap(), payload);
         assert!(rm.receive.as_ref().unwrap().first.is_some());
+        assert_eq!(
+            sm.send.as_ref().unwrap().check_code.as_deref(),
+            Some(code.as_str()),
+            "both screens show the same words"
+        );
 
         drop(send);
         drop(_recv);

@@ -174,7 +174,11 @@ impl NodeConfig {
     pub fn new(alias: impl Into<String>) -> Self {
         NodeConfig {
             alias: alias.into(),
-            device_model: Some(std::env::consts::OS.to_string()),
+            device_model: Some(format!(
+                "{}{}",
+                crate::proto::PANOPLY_MODEL_PREFIX,
+                crate::proto::os_label()
+            )),
             device_type: DeviceType::Desktop,
             scheme: Scheme::Https,
             bind: IpAddr::V4(Ipv4Addr::UNSPECIFIED),

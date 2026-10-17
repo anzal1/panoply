@@ -289,7 +289,7 @@ impl AppView {
                     "radio",
                     t.ink3,
                     format!(
-                        "Receiving is off, so other devices cannot send to this computer. Turn on Receive to let them. You are asked before anything is saved to {}.",
+                        "Receiving is off, so other devices cannot send to this computer. Turn on Receive to let them. It turns off again whenever Panoply starts. You are asked before anything is saved to {}.",
                         folder_name(&m)
                     ),
                     t,
@@ -373,15 +373,26 @@ impl AppView {
                             .min_w_0()
                             .child(
                                 div()
+                                    .overflow_hidden()
+                                    .whitespace_nowrap()
+                                    .text_ellipsis()
                                     .ramp(ty::HEADLINE)
                                     .font_weight(FontWeight::SEMIBOLD)
                                     .text_color(t.ink)
                                     .child(title),
                             )
-                            .child(div().ramp(ty::BODY).text_color(t.ink2).child(format!(
-                                "{}. Nothing is saved unless you accept.",
-                                format_bytes(i.total)
-                            ))),
+                            .child(
+                                div()
+                                    .overflow_hidden()
+                                    .whitespace_nowrap()
+                                    .text_ellipsis()
+                                    .ramp(ty::BODY)
+                                    .text_color(t.ink2)
+                                    .child(format!(
+                                        "{}. Nothing is saved unless you accept.",
+                                        format_bytes(i.total)
+                                    )),
+                            ),
                     ),
             )
             .children(i.files.iter().take(PROMPT_ROWS).map(|f| {
@@ -426,6 +437,7 @@ impl AppView {
                     div()
                         .flex()
                         .flex_row()
+                        .flex_wrap()
                         .items_center()
                         .gap(px(sp::S))
                         .ramp(ty::SMALL)
@@ -442,7 +454,7 @@ impl AppView {
                                 .text_color(t.ink)
                                 .child(i.check_code.clone()),
                         )
-                        .child("Both screens show the same words."),
+                        .child("The sender's screen shows the same words."),
                 )
             })
             .when(!i.verified, |d| {
@@ -553,7 +565,7 @@ impl AppView {
                             .into_any_element(),
                         None => plain_tile("radio", 40., t).into_any_element(),
                     })
-                    .child(heading_lines(&head, &sub, t))
+                    .child(heading_lines(&head, &sub, false, t))
                     .when(finished, |d| {
                         d.when_some(
                             first.filter(|_| matches!(r.phase, ReceivePhase::Done { .. })),
@@ -648,6 +660,7 @@ impl AppView {
                 .child(heading_lines(
                     "Choose what to send",
                     "Drop files or folders here, or use Choose files. Pick a device below to send them.",
+                    false,
                     t,
                 ))
                 .into_any_element();
@@ -686,10 +699,15 @@ impl AppView {
                 "radio",
                 t.accent,
                 format!("Waiting for {} to accept", s.peer),
-                format!(
-                    "{} ready. The other device has to say yes first.",
-                    files_word(s.files)
-                ),
+                match &s.check_code {
+                    Some(code) => format!(
+                        "Check code {code}. The other screen shows the same words. It has to say yes first."
+                    ),
+                    None => format!(
+                        "{} ready. The other device has to say yes first.",
+                        files_word(s.files)
+                    ),
+                },
             ),
             SendPhase::Sending { file, done, total } => (
                 "upload",
@@ -738,7 +756,7 @@ impl AppView {
                             .bg(tone.opacity(0.14))
                             .child(icon(name, 20., tone)),
                     )
-                    .child(heading_lines(&head, &sub, t))
+                    .child(heading_lines(&head, &sub, false, t))
                     .child(if active {
                         button(
                             "share-cancel",
@@ -837,7 +855,7 @@ impl AppView {
                                 36.,
                                 t,
                             ))
-                            .child(heading_lines(&d.alias, &device_sub(d), t))
+                            .child(heading_lines(&d.alias, &device_sub(d), true, t))
                             .child(button_ex(
                                 format!("share-send-{i}"),
                                 label,
@@ -872,6 +890,7 @@ impl AppView {
                     } else {
                         "Show a code. Any phone camera on this Wi-Fi opens a page that downloads them. It closes after ten minutes."
                     },
+                    false,
                     t,
                 ))
                 .child(button_ex(
@@ -1058,7 +1077,7 @@ fn file_name(name: &str, t: Theme) -> Div {
 }
 
 /// A title and a line under it that take the room that is left and cut long text.
-fn heading_lines(title: &str, sub: &str, t: Theme) -> Div {
+fn heading_lines(title: &str, sub: &str, one_line: bool, t: Theme) -> Div {
     div()
         .flex()
         .flex_col()
@@ -1076,6 +1095,9 @@ fn heading_lines(title: &str, sub: &str, t: Theme) -> Div {
         )
         .child(
             div()
+                .when(one_line, |d| {
+                    d.overflow_hidden().whitespace_nowrap().text_ellipsis()
+                })
                 .ramp(ty::SMALL)
                 .text_color(t.ink2)
                 .child(sub.to_string()),

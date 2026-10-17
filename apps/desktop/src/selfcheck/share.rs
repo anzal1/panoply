@@ -244,7 +244,10 @@ pub(crate) fn run_share(out: PathBuf) {
                 // 4. Sending: waiting for the other side, then moving bytes.
                 model!(|m: &mut crate::share::ShareModel| {
                     m.begin_send("Kitchen Mac mini");
-                    m.apply(EngineEvent::SendStarted { id: "t1".into() });
+                    m.apply(EngineEvent::SendStarted {
+                        id: "t1".into(),
+                        check_code: Some("river stone lamp oak".into()),
+                    });
                 });
                 d.settle(app_win).await;
                 log.push(d.png(app_win, &png("share-06-send-waiting")));
@@ -378,6 +381,35 @@ pub(crate) fn run_share(out: PathBuf) {
                 log.push(d.png(app_win, &png("share-17-qr-expired")));
                 d.change(app_win, |a, _, cx| a.share_scroll(false, cx));
                 model!(|m: &mut crate::share::ShareModel| m.qr = None);
+
+                // 7b. The narrowest window the app allows, with the longest names.
+                d.win(app_win, |window, _| {
+                    window.resize(size(px(860.), px(560.)));
+                });
+                d.settle(app_win).await;
+                model!(|m: &mut crate::share::ShareModel| {
+                    let mut p = prompt(true, true);
+                    p.sender =
+                        "Priya's very long laptop name that keeps going past any reasonable width"
+                            .into();
+                    m.apply(EngineEvent::Incoming(p));
+                    m.stage(&[PathBuf::from(
+                        "/nonexistent/an-extremely-long-file-name-that-has-to-be-cut-with-an-ellipsis-before-it-reaches-the-remove-button-of-its-row.pdf",
+                    )]);
+                });
+                d.settle(app_win).await;
+                log.push(d.png(app_win, &png("share-20-min-width-prompt")));
+                model!(|m: &mut crate::share::ShareModel| m.incoming = None);
+                d.change(app_win, |a, _, cx| a.share_scroll(false, cx));
+                d.settle(app_win).await;
+                d.change(app_win, |a, _, cx| a.share_scroll(true, cx));
+                d.settle(app_win).await;
+                log.push(d.png(app_win, &png("share-21-min-width-devices")));
+                d.change(app_win, |a, _, cx| a.share_scroll(false, cx));
+                d.win(app_win, |window, _| {
+                    window.resize(size(px(1160.), px(720.)));
+                });
+                d.settle(app_win).await;
 
                 // 8. The network could not start.
                 model!(
