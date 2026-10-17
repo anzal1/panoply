@@ -3,6 +3,11 @@
 
     render_manifests.py --version 0.1.0 --repo anzal1/panoply --sums SHA256SUMS --out DIR
                         [--commit SHA] [--macos-notarized 0|1] [--state STATE_DIR]
+    render_manifests.py --tag v0.2.0-beta [--repo anzal1/panoply] --out DIR     (needs the gh CLI)
+
+The second form renders every channel for a published release in one run: it downloads SHA256SUMS and the
+release's own panoply-package-manifests zip with gh (the zip holds the MSI ProductCodes the Windows jobs
+recorded), and takes the release date from the release. Channels: Homebrew, Scoop, winget, Flatpak, AUR.
 
 Placeholders are @NAME@. @VERSION@, @REPO@, @COMMIT@, @RELEASE_DATE@ come from the arguments;
 @SHA256_<KEY>@ is looked up in SHA256SUMS by the release asset name (table ASSETS below);
@@ -15,7 +20,10 @@ import argparse
 import datetime
 import json
 import re
+import subprocess
 import sys
+import tempfile
+import zipfile
 from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent
@@ -28,6 +36,8 @@ ASSETS = {
     "WIN_ARM64_ZIP": "Panoply-{v}-windows-arm64.zip",
     "WIN_X64_MSI": "Panoply-{v}-windows-x64.msi",
     "WIN_ARM64_MSI": "Panoply-{v}-windows-arm64.msi",
+    "LINUX_X64_TGZ": "Panoply-{v}-linux-x64.tar.gz",
+    "LINUX_ARM64_TGZ": "Panoply-{v}-linux-arm64.tar.gz",
 }
 
 # template -> output path (relative to --out)
@@ -39,6 +49,8 @@ OUTPUTS = {
     "winget/anzal1.Panoply.locale.en-US.yaml.in": "winget/{v}/anzal1.Panoply.locale.en-US.yaml",
     "flatpak/io.github.anzal1.Panoply.yml.in": "flatpak/io.github.anzal1.Panoply.yml",
     "flatpak/io.github.anzal1.Panoply.metainfo.xml.in": "flatpak/io.github.anzal1.Panoply.metainfo.xml",
+    "aur/PKGBUILD.in": "aur/PKGBUILD",
+    "aur/SRCINFO.in": "aur/.SRCINFO",
 }
 
 CAVEATS = '''
@@ -59,23 +71,59 @@ def read_sums(path):
     return sums
 
 
+def gh(*args):
+    return subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
+
+
+def fetch_release(tag, repo, work):
+    """Download SHA256SUMS and the release's manifests zip; return (sums path, state dir, release date)."""
+    gh("release", "download", tag, "-R", repo, "-p", "SHA256SUMS", "-p", "panoply-package-manifests-*.zip",
+       "-D", str(work), "--clobber")
+    state = work / "state"
+    state.mkdir()
+    for z in work.glob("panoply-package-manifests-*.zip"):
+        with zipfile.ZipFile(z) as zf:
+            for name in zf.namelist():
+                if name.endswith("anzal1.Panoply.installer.yaml"):
+                    text = zf.read(name).decode()
+                    # Installers list x64 first, then arm64, each followed by its ProductCode.
+                    for arch, code in re.findall(r"Architecture: (\w+)\n(?:.*\n)*?\s+ProductCode: '([^']+)'", text):
+                        (state / f"windows-{arch}.env").write_text(f"PRODUCT_CODE={code}\n")
+    info = json.loads(gh("release", "view", tag, "-R", repo, "--json", "publishedAt,createdAt"))
+    date = (info.get("publishedAt") or info.get("createdAt") or "")[:10]
+    return work / "SHA256SUMS", state, date
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--version", required=True)
-    ap.add_argument("--repo", required=True)
-    ap.add_argument("--sums", required=True)
+    ap.add_argument("--version")
+    ap.add_argument("--tag", help="render a published release: the version, sums, ProductCodes and date come from gh")
+    ap.add_argument("--repo", default="anzal1/panoply")
+    ap.add_argument("--sums")
     ap.add_argument("--out", required=True)
     ap.add_argument("--commit", default="0" * 40)
     ap.add_argument("--macos-notarized", default="0")
     ap.add_argument("--state", default=None)
     a = ap.parse_args()
 
+    release_date = datetime.date.today().isoformat()
+    if a.tag:
+        a.version = a.version or a.tag.removeprefix("v")
+        work = Path(tempfile.mkdtemp(prefix="panoply-render-"))
+        sums_path, state, date = fetch_release(a.tag, a.repo, work)
+        a.sums = a.sums or str(sums_path)
+        a.state = a.state or str(state)
+        release_date = date or release_date
+    if not (a.version and a.sums):
+        ap.error("give --tag, or --version and --sums")
+
     sums = read_sums(a.sums)
     subs = {
         "VERSION": a.version,
+        "PKGVER": a.version.replace("-", "_"),  # an Arch pkgver cannot hold a hyphen
         "REPO": a.repo,
         "COMMIT": a.commit,
-        "RELEASE_DATE": datetime.date.today().isoformat(),
+        "RELEASE_DATE": release_date,
         "MACOS_CAVEATS": "" if a.macos_notarized == "1" else CAVEATS,
     }
     missing = []

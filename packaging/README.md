@@ -108,9 +108,22 @@ notarizes in the workflow, and the release notes, the README and the Homebrew ca
 |---|---|---|---|
 | Homebrew cask | `homebrew/panoply.rb.in` | tap repo `anzal1/homebrew-panoply`, `Casks/panoply.rb` | links the CLI as `panoply`; carries the unsigned-app caveat until notarized |
 | Scoop | `scoop/panoply.json.in` | bucket repo `anzal1/scoop-panoply`, `bucket/panoply.json` | `autoupdate` is set; the SHA256SUMS regex is read from each release |
-| winget | `winget/*.yaml.in` | PR to microsoft/winget-pkgs, `manifests/a/anzal1/Panoply/V/` (or `wingetcreate`) | uses the MSI and its ProductCode. The identifier `anzal1.Panoply` is permanent once accepted: change it in the three templates first if a project or org name should own it |
-| Flatpak | `flatpak/*.in` | Flathub submission | a skeleton: needs `cargo-sources.json`, a bundled pdfium, screenshots, a local build. Not built in CI yet |
-| AppImage | built by the workflow | the release | relies on the host's windowing, graphics, GTK3 (file dialogs) and ALSA libraries, which desktop distributions ship; bundling them is a later step |
+| winget | `winget/*.yaml.in` (schema 1.10) | PR to microsoft/winget-pkgs, `manifests/a/anzal1/Panoply/V/` (or `wingetcreate submit`) | x64 and arm64 MSI with their ProductCodes. The identifier `anzal1.Panoply` is permanent once accepted: change it in the three templates first if a project or org name should own it |
+| AUR | `aur/PKGBUILD.in`, `aur/SRCINFO.in` | AUR git repo `ssh://aur@aur.archlinux.org/panoply-bin.git`, files `PKGBUILD` and `.SRCINFO` | `panoply-bin` for x86_64 and aarch64 from the Linux tarballs; installs to `/usr/lib/panoply` (modules sit next to the executables) with symlinks in `/usr/bin`; `pkgver` is the version with `-` turned into `_` |
+| Flatpak | `flatpak/*.in` | Flathub new-app PR (github.com/flathub/flathub, branch `new-pr`) | installs the release tarball per architecture; metainfo has screenshots; needs `--share=network` until pdfium is bundled. Not built in CI |
+| AppImage | built by `linux-package.sh` | the release (`Panoply-V-linux-{x64,arm64}.AppImage`) | appimagetool and the type2 runtime are pinned by SHA-256; relies on the host's windowing, graphics, GTK3 and ALSA libraries |
+
+One run renders every channel for a published tag, and `tools/validate-packaging.sh` checks them (winget schemas,
+`makepkg --printsrcinfo`, `namcap`, `appstreamcli validate`; the Arch part runs in a container under the heavy lock):
+
+```bash
+python3 -I packaging/scripts/render_manifests.py --tag v0.2.0-beta --out /tmp/m     # needs the gh CLI
+tools/validate-packaging.sh v0.2.0-beta
+```
+
+The release workflow renders the same files into `panoply-package-manifests-V.zip` (with the ProductCodes the
+Windows jobs recorded) and validates the winget YAML against the schemas as a warning. Nothing here submits
+anything: the winget, AUR and Flathub steps are a person's pull request or push.
 
 ### The package repos (prepared, not created yet)
 
@@ -133,7 +146,7 @@ packaging/
   windows/       panoply.wxs (WiX v4), package.ps1 (zips, MSI, install smoke test)
   macos/         entitlements.plist for the hardened runtime
   linux/         panoply.desktop, install.sh (tarball installer)
-  homebrew/ scoop/ winget/ flatpak/   manifest templates
+  homebrew/ scoop/ winget/ flatpak/ aur/   manifest templates
   signing/       APPLE.md (checklist for when the Apple Developer account exists)
   package-repos/ the two package repos to create: homebrew-panoply (cask) and scoop-panoply (bucket)
 ```

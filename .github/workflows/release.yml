@@ -354,6 +354,10 @@ jobs:
           python3 -I packaging/scripts/render_manifests.py --version "$VERSION" --repo "$GITHUB_REPOSITORY" \
             --sums SHA256SUMS --out manifests --commit "$GITHUB_SHA" \
             --macos-notarized "${notarized:-0}" --state staging/state
+          # winget YAML against Microsoft's schemas. A warning only: the schemas come from GitHub raw.
+          if pip install --quiet pyyaml jsonschema && python3 packaging/scripts/validate_manifests.py manifests; then :; else
+            echo "::warning title=Manifest validation::winget manifests did not validate; see the log."
+          fi
           python3 -I packaging/scripts/mkarchive.py "release/panoply-package-manifests-$VERSION.zip" \
             "panoply-package-manifests-$VERSION" manifests=manifests
           (cd release && sha256sum -- * > SHA256SUMS)
