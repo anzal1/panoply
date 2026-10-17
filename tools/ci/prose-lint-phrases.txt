@@ -1,0 +1,19 @@
+# Stock phrasing that makes prose read as machine written. Used by tools/ci/prose_lint.py.
+#
+# One entry per line: the phrase, then " | ", then a plain suggestion. Matching is case insensitive and
+# whole phrase (so "elevated" does not match "elevate"). Blank lines and lines starting with # are skipped.
+# Add a line here to extend the list. Nothing else needs to change.
+
+delve | say what you looked into
+seamless | say what actually works without a step, or drop it
+seamlessly | say what actually works without a step, or drop it
+elevate | say what gets better and by how much
+unleash | say what the user can now do
+game-changer | state the change in plain words
+in today's fast-paced | cut the opener and start with the point
+it's worth noting | cut it and state the fact
+robust and scalable | give the measured limit instead
+cutting-edge | say what is new, or drop it
+supercharge | say how much faster, or what it adds
+effortlessly | name the steps, or drop it
+harness the power | say what it uses and for what

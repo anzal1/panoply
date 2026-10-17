@@ -402,7 +402,7 @@ CLI: `panoply video <verb>`, `panoply audio <verb>`. MCP: `video_<verb>`, `audio
 - **Options:** Range (editor), Width (default 480), Frame rate (default 15, lower for long clips), Quality (palette per frame and dithering Floyd-Steinberg default), Format: GIF, animated WebP, APNG (WebP and APNG are far smaller and the default offer for sites that accept them), Size target via the same loop as SIZE (reduce width and rate to fit). GIF to video: MP4 (H.264) or WebM with looping.
 - **Preview / Output / Result:** frame count, size estimate, a looping sample. Output "name.gif". Result: size, frames, palette mode.
 - **Edge cases:** VFR to CFR; GIF frame delays below browser minimum clamped; HDR tone-mapped; ROT baked; transparency kept in GIF to video via a background color choice; very large GIFs (over several hundred MB) flagged; audio dropped, said once; dithering banding on gradients.
-- **Quality bar:** at equal size the GIF scores a higher color-difference measure than ffmpeg's default palette filter and Gifski (baseline); GIF to MP4 reduces size on the corpus and loops seamlessly.
+- **Quality bar:** at equal size the GIF scores a higher color-difference measure than ffmpeg's default palette filter and Gifski (baseline); GIF to MP4 reduces size on the corpus and loops with no visible jump.
 - **Engine:** ffmpeg palettegen and paletteuse, gifski-style encoder in Rust if its license allows (verify, AGPL risk), libwebp, APNG muxer.
 - **Surfaces:** bar ("video to gif"), right-click, CLI `panoply video gif in.mp4 --width 480 --fps 15` and `panoply video ungif in.gif`, MCP `video_gif`.
 
@@ -750,7 +750,7 @@ CLI: `panoply video <verb>`, `panoply audio <verb>`. MCP: `video_<verb>`, `audio
 
 ### 5.20 Loop maker
 
-- **Pattern / Job:** B. "Make a seamless loop from this clip."
+- **Pattern / Job:** B. "Make a loop with no visible jump from this clip."
 - **Budgets:** standard.
 - **Inputs:** one audio file or video.
 - **On drop:** duration, BPM and beat grid (5.18 engine), whether the clip already loops (end meets start), reverb tail length. Default: the loop length is a whole number of bars (1, 2, 4 or 8) that fits the clip, start and end snapped to beats and zero crossings, with the best seam found by searching for minimum discontinuity near those points.

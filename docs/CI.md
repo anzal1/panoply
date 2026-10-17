@@ -7,7 +7,7 @@ Every push to `main` and every pull request runs `.github/workflows/ci.yml`. The
 | Job | Runs on | What it checks | Runs when |
 | --- | --- | --- | --- |
 | `changes` | Linux | Lists the changed files and decides which of the jobs below are needed (`tools/ci/changes.py`) | always |
-| `docs` | Linux | Every relative link in the Markdown files resolves (`tools/ci/check_docs.py`) | always, takes seconds |
+| `docs` | Linux | Every relative link in the Markdown files resolves (`tools/ci/check_docs.py`), and the prose lint passes (`tools/ci/prose_lint.py`) | always, takes seconds |
 | `fmt` | Linux | `cargo fmt --all --check` | Rust code changed |
 | `clippy` | Linux, macOS, Windows | `cargo clippy --workspace --all-targets -D warnings` with the cfg code of each OS | Rust code changed |
 | `test` | Linux, macOS, Windows | The tests, see the table below | Rust code changed |
@@ -54,7 +54,7 @@ The linker is not changed: Rust has linked with `lld` on Linux since 1.90, so `m
 * Run `tools/preflight-linux.sh` (or `tools/preflight.sh --linux`) when you touch Linux-only code: see "The local Linux check" below.
 * Run `tools/preflight-windows.sh` (or `tools/preflight.sh --windows`) when you touch Windows-only code: see "The local Windows check" below.
 * Run `python3 -I tools/ci/changes.py --files < list.txt` to see which jobs a list of changed files would need.
-* Run `python3 -I tools/ci/check_docs.py` before pushing documentation.
+* Run `python3 -I tools/ci/check_docs.py` and `python3 -I tools/ci/prose_lint.py` before pushing documentation. `tools/preflight.sh` runs both.
 * Actions are pinned to a commit SHA with the version in a comment, like `release.yml`. Dependabot proposes updates monthly.
 
 ## The local Linux check

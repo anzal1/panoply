@@ -276,7 +276,7 @@ The tasks people search for every day for government and job forms.
 | Tag editor | Title, artist, album art, batch | ⚡ |
 | BPM and key | Detect tempo and musical key | ⚡ |
 | Audio to MIDI | Melody and notes from a recording | 🧠 |
-| Loop maker | Seamless loops from any clip | ⚡ |
+| Loop maker | Loops with no visible jump, from any clip | ⚡ |
 | Recorder | Voice memos | ⚡📱 |
 
 ## 6. Documents and ebooks

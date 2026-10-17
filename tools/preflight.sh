@@ -84,6 +84,11 @@ if [ -z "$changed" ]; then
   echo "nothing has changed since origin/main"
 fi
 
+# Fast, so it runs first and needs no heavy lock. The commit messages in the range are read too.
+step "prose lint"
+python3 -I tools/ci/prose_lint.py --commits "origin/main..HEAD"
+done_step
+
 step "docs check"
 python3 -I tools/ci/check_docs.py
 done_step
