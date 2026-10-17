@@ -58,6 +58,7 @@ fn the_media_modules_are_listed() {
         "media.info",
         "media.repair",
         "media.normalize",
+        "media.denoise",
         "media.to_mono",
         "media.hdr_to_sdr",
         "media.streams",

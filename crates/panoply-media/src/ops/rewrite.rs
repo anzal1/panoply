@@ -13,12 +13,26 @@ use crate::units::ext_of;
 use super::audio::{self, AudioFormat, AudioPlan, AudioWish};
 use super::{Args, Job, per_stream};
 
+/// A sound track whose samples were already processed by Panoply's own code and sit in a file of
+/// raw 32-bit float samples. The track is taken from this file instead of from the original.
+#[derive(Debug, Clone)]
+pub struct Replacement {
+    /// The raw samples (interleaved, little endian `f32`).
+    pub path: PathBuf,
+    /// Their sample rate.
+    pub rate: u32,
+    /// Their channel count.
+    pub channels: u32,
+}
+
 /// What happens to one sound track.
 pub struct Treatment {
     /// The ffmpeg audio filter chain, or `None` to copy the track.
     pub filter: Option<String>,
     /// Mix down to this many channels (1 for mono).
     pub channels: Option<u32>,
+    /// Take the samples from this file instead (Remove noise). The filter then runs on them.
+    pub replace: Option<Replacement>,
 }
 
 /// The container and muxer for an extension, and whether it is an audio-only file.
@@ -149,6 +163,22 @@ pub fn rewrite_audio(
     let mut a = Args::new();
     a.a("-y");
     a.input(input);
+    // Tracks that were processed outside ffmpeg come in as extra inputs, numbered from 1.
+    let mut extra: Vec<(u32, usize)> = Vec::new();
+    for s in profile.of(Kind::Audio) {
+        if let Some(Replacement {
+            path,
+            rate,
+            channels,
+        }) = treat(s).and_then(|t| t.replace)
+        {
+            a.kv("-f", "f32le");
+            a.kv("-ar", rate.to_string());
+            a.kv("-ac", channels.to_string());
+            a.input(&path);
+            extra.push((s.index, extra.len() + 1));
+        }
+    }
     a.kv("-map_metadata", "0");
     a.kv("-map_chapters", "0");
     let mut plans: Vec<(u32, AudioPlan)> = Vec::new();
@@ -176,7 +206,19 @@ pub fn rewrite_audio(
                 ov += 1;
             }
             Kind::Audio => {
-                a.kv("-map", format!("0:{}", s.index));
+                match extra.iter().find(|(i, _)| *i == s.index) {
+                    Some((_, k)) => {
+                        a.kv("-map", format!("{k}:0"));
+                        // Language, title and the like stay with the track.
+                        a.kv(
+                            &format!("-map_metadata:s:a:{oa}"),
+                            format!("0:s:{}", s.index),
+                        );
+                    }
+                    None => {
+                        a.kv("-map", format!("0:{}", s.index));
+                    }
+                }
                 match treat(s) {
                     Some(t) => {
                         let plan = plan_for(job, &with_rate(s, profile), &t, &ext)?;

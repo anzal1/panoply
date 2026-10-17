@@ -2,7 +2,7 @@
 
 The video and audio engine behind ten Panoply modules, wave 1 of `docs/specs/video-and-audio.md`
 (section 6, "Ship order"): `media.convert`, `media.extract_audio`, `media.trim`, `media.compress`,
-`media.info`, `media.repair`, `media.normalize`, `media.to_mono`, `media.hdr_to_sdr` and `media.streams`.
+`media.info`, `media.repair`, `media.normalize`, `media.denoise`, `media.to_mono`, `media.hdr_to_sdr` and `media.streams`.
 The host wraps it in `crates/panoply-host/src/builtin/media.rs`; the command line is
 `panoply video <convert|trim|compress|audio|streams|info|repair|sdr>` and
 `panoply audio <convert|trim|normalize|channels|info>`; the manifests are in `modules/builtin/media-*/`;
@@ -19,6 +19,7 @@ measured results, losses included, are in `docs/research/media-results.md`.
 | `media.info` | 4.33 | everything about a file and what is wrong with it | one probe, own box walker, 200 packet times; never a decode unless `deep` asks for the loudness scan |
 | `media.repair` | 4.18 | a file that will not play | diagnoses first. Own code: cut-off file with an index, missing index rebuilt from a reference (or parameter sets found in the stream). The helper re-reads anything else. Nothing is called repaired unless it decodes start to end |
 | `media.normalize` | 5.4 | loudness to a target or a standard | own EBU R128 meter, linear gain, a true-peak limiter only when the peaks need it, the result measured again and corrected; ReplayGain tags without touching a sample |
+| `media.denoise` | 5.5 | background noise out of a recording or the sound of a video | RNNoise in pure Rust (`nnnoiseless`, BSD-3-Clause, model inside the program, no download); 48 kHz per channel, resampled in and back out; strength is the wet share (light 60%, normal 85%, strong 100%); streamed in 10 ms frames, constant memory; the picture is copied untouched and the sound encoded once |
 | `media.to_mono` | 5.15 | mono, swap, split, merge | looks at the channels first (silent side, out of phase, ordinary); swaps and splits of lossless sound are exact |
 | `media.hdr_to_sdr` | 4.28 | HDR10, HLG and Dolby Vision 8.x to standard range | one pass: a 3D lookup table built by own code (PQ or HLG decode, BT.2390, Hable or Mobius tone mapping, BT.2020 to BT.709, BT.709 transfer) applied by ffmpeg's `lut3d`. Dolby Vision profile 5 is refused in plain words |
 | `media.streams` | 4.17 | take out, drop, relabel tracks | stream copy; every kept stream is bit-identical; shows the stream table with no option |
