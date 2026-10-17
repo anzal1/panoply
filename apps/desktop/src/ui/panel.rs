@@ -44,6 +44,8 @@ pub(crate) enum PanelEvent {
     Close,
     /// Use these result files as the input of another tool ("Then...").
     Chain(Vec<PathBuf>),
+    /// Send these result files to another device (the Share button).
+    Share(Vec<PathBuf>),
     /// A job finished and was recorded in the history.
     Ran,
 }
@@ -826,6 +828,13 @@ impl ToolPanel {
         let outs = self.outputs();
         if !outs.is_empty() {
             cx.emit(PanelEvent::Chain(outs));
+        }
+    }
+
+    fn share(&mut self, cx: &mut Context<Self>) {
+        let outs = self.outputs();
+        if !outs.is_empty() {
+            cx.emit(PanelEvent::Share(outs));
         }
     }
 
@@ -1691,6 +1700,14 @@ impl ToolPanel {
                                 Some("folder-open"),
                                 t,
                                 cx.listener(|p, _, _, cx| p.reveal(cx)),
+                            ))
+                            .child(icon_button(
+                                "share-result",
+                                "Share",
+                                "share",
+                                true,
+                                t,
+                                cx.listener(|p, _, _, cx| p.share(cx)),
                             ))
                             .child(
                                 button(

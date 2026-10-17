@@ -24,7 +24,9 @@ use crate::ui::live::{app_window_options_at, bar_window_options};
 use crate::ui::{FindStatus, Hub, Recents};
 
 mod find;
+mod share;
 pub(crate) use find::run_find;
+pub(crate) use share::run_share;
 
 /// The file index parts of a hub for runs that do not look at files: switched off, so nothing
 /// ever scans and the bar and Find page show their "unavailable" state.
@@ -1500,13 +1502,13 @@ pub(crate) fn run_review(out: PathBuf) {
                     &mut log,
                     &mut times,
                 );
-                d.change(app_win, |a, _, cx| a.go(Route::Nearby, cx));
+                d.change(app_win, |a, _, cx| a.go(Route::Share, cx));
                 d.settle(app_win).await;
                 shot(
                     &mut d,
                     app_win,
-                    "app-nearby",
-                    &file("app-nearby"),
+                    "app-share",
+                    &file("app-share"),
                     &mut log,
                     &mut times,
                 );

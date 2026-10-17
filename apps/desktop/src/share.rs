@@ -160,7 +160,8 @@ impl Problem {
             Problem::CannotListen(m) => (
                 "Panoply cannot use the network".to_string(),
                 format!(
-                    "{m}. Check that you are connected to Wi-Fi or Ethernet and that no other file sharing app is running."
+                    "{}. Check that you are connected to Wi-Fi or Ethernet and that no other file sharing app is running.",
+                    sentence_case(m)
                 ),
             ),
             Problem::Unreachable => (
@@ -182,6 +183,15 @@ impl Problem {
             ),
             Problem::Other(m) => ("The transfer failed".to_string(), format!("{m}.")),
         }
+    }
+}
+
+/// The text with its first letter in capitals, for a library message used as a sentence.
+fn sentence_case(m: &str) -> String {
+    let mut c = m.chars();
+    match c.next() {
+        Some(f) => f.to_uppercase().chain(c).collect(),
+        None => String::new(),
     }
 }
 
@@ -1495,7 +1505,7 @@ mod tests {
         let Net::Failed(p) = &m.net else { panic!() };
         let (head, body) = p.words("");
         assert_eq!(head, "Panoply cannot use the network");
-        assert!(body.contains("address in use"));
+        assert!(body.starts_with("Address in use"));
     }
 
     // ---- the engine, over loopback -----------------------------------------------------------

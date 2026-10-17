@@ -41,6 +41,16 @@ pub fn run_from_args(args: Vec<String>) {
             selfcheck::run_find(out);
             return;
         }
+        if args.iter().any(|a| a == "--selfcheck-share") {
+            let out = args
+                .iter()
+                .position(|a| a == "--out")
+                .and_then(|i| args.get(i + 1))
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| std::path::PathBuf::from("screens"));
+            selfcheck::run_share(out);
+            return;
+        }
         if args.iter().any(|a| a == "--selfcheck-idle") {
             let hold = args
                 .iter()

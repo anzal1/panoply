@@ -664,6 +664,11 @@ impl Bar {
                     bar.close_panel(window, cx);
                     bar.dropped(paths.clone(), cx);
                 }
+                PanelEvent::Share(paths) => {
+                    bar.close_panel(window, cx);
+                    let paths = paths.clone();
+                    cx.defer(move |cx| super::live::share_files(cx, paths));
+                }
                 PanelEvent::Ran => {}
             },
         );
