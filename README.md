@@ -167,6 +167,17 @@ If it does not start, add `--appimage-extract-and-run`. The `.tar.gz` holds the 
 
 What differs per system, and the steps for every first-open prompt, are in [docs/KNOWN-LIMITATIONS.md](docs/KNOWN-LIMITATIONS.md).
 
+## Use it from an AI agent
+
+`panoply mcp` gives Claude Code, Claude Desktop and Cursor every Panoply tool, running on your computer:
+
+```bash
+claude mcp add panoply -- panoply mcp
+```
+
+Files go in as absolute paths and results come back as new files, never over your originals. Claude Desktop and
+Cursor setup, the rules the server keeps and how downloads are allowed: [docs/MCP.md](docs/MCP.md).
+
 ## Build from source
 
 ```bash

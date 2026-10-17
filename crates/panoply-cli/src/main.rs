@@ -1,6 +1,7 @@
 //! The `panoply` command line. Short, plain output.
 
 mod disk_cmd;
+mod mcp_cmd;
 mod models_cmd;
 mod vision_cmd;
 
@@ -109,6 +110,8 @@ enum Command {
     },
     /// What is using the space under a folder: panoply disk ~/Downloads [--top 15] [--files 10] [--depth 2] [--json]
     Disk(disk_cmd::DiskArgs),
+    /// Serve every tool to AI agents (Claude Code, Claude Desktop, Cursor) over MCP on stdio. See docs/MCP.md
+    Mcp,
     /// Print the version
     Version,
 }
@@ -368,6 +371,7 @@ fn main() -> ExitCode {
         Command::Vision(cmd) => vision_cmd::run(cmd),
         Command::Models { cmd } => models_cmd::run(cmd),
         Command::Disk(args) => disk_cmd::run(args),
+        Command::Mcp => mcp_cmd::run(),
         Command::Version => {
             println!("panoply {}", env!("CARGO_PKG_VERSION"));
             ExitCode::SUCCESS
