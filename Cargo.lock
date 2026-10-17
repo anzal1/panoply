@@ -5439,6 +5439,7 @@ dependencies = [
  "panoply-platform-macos",
  "pdfium-render",
  "png 0.18.1",
+ "regex",
  "serde_json",
  "sha2 0.11.1",
  "thiserror 2.0.21",

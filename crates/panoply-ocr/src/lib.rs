@@ -31,6 +31,7 @@ pub mod layout;
 pub mod models;
 pub mod ppocr;
 pub mod probe;
+pub mod redact;
 pub mod searchable;
 pub mod textlayer;
 pub mod types;
