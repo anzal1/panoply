@@ -8,6 +8,7 @@ Everything about the project, in the order most people need it. The front page i
 | Page | What it covers |
 |---|---|
 | [KNOWN-LIMITATIONS.md](KNOWN-LIMITATIONS.md) | First-open steps for an unsigned build, what the beta does not do yet, and what differs between macOS, Windows and Linux |
+| [MCP.md](MCP.md) | Using every tool from Claude Code, Claude Desktop or Cursor with `panoply mcp` |
 | [PRIVACY.md](PRIVACY.md) | What stays on your device, the three things that can touch the network, and every download with its size, source and license |
 | [../CHANGELOG.md](../CHANGELOG.md) | What changed in each release |
 | [../SECURITY.md](../SECURITY.md) | How to report a security problem |

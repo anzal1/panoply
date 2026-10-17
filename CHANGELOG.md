@@ -4,6 +4,14 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
+## Unreleased
+
+### Added
+
+- **MCP server.** `panoply mcp` gives AI agents (Claude Code, Claude Desktop, Cursor) every tool, built-in and
+  community, over stdio. Files go in as absolute paths, results are new files, and long jobs report progress. Setup
+  in docs/MCP.md.
+
 ## v0.2.0-beta (2026-10-16)
 
 Find any file as you type, see what is filling your disk, and three community plugins in the box.

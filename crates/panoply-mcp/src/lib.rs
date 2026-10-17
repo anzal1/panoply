@@ -1,13 +1,17 @@
 //! MCP tool definitions generated from module manifests.
 //!
 //! Every module is an MCP tool from day one, with no extra work for the module author. This
-//! crate only builds the definitions. There is no transport yet.
+//! crate builds the definitions and speaks the protocol: [`server`] is a small MCP server over
+//! line-delimited JSON-RPC (the stdio transport). What a tool does when called is up to a
+//! [`server::Backend`]; `panoply mcp` in `panoply-cli` supplies the one that runs modules.
 //!
 //! The tool name is the module id with dots turned into underscores (`pdf.compress` becomes
 //! `pdf_compress`). The description is the manifest summary. The input schema has a `files`
 //! array, an optional `output_dir` for modules that write files, and one property per option.
 
-use panoply_manifest::{Manifest, OptionSpec, OptionType};
+pub mod server;
+
+use panoply_manifest::{Manifest, NetworkUse, OptionSpec, OptionType};
 use serde_json::{Map, Value, json};
 
 /// The MCP tool name for a module id.
@@ -45,13 +49,38 @@ pub fn tool_for(manifest: &Manifest) -> Value {
         props.insert(key.clone(), option_schema(opt));
     }
 
+    let mut schema = json!({ "type": "object", "properties": props });
+    if !required.is_empty() {
+        schema["required"] = json!(required);
+    }
     json!({
         "name": tool_name(&manifest.module.id),
+        "title": manifest.module.name,
         "description": manifest.module.summary,
-        "inputSchema": {
+        "inputSchema": schema,
+        "outputSchema": {
             "type": "object",
-            "properties": props,
-            "required": required,
+            "properties": {
+                "outputs": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Absolute paths of the files that were written.",
+                },
+                "notes": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "The report lines the tool printed.",
+                },
+            },
+            "required": ["outputs", "notes"],
+        },
+        "annotations": {
+            // A tool that writes only ever adds new files: results are named around what is
+            // already there, and the originals are never touched.
+            "readOnlyHint": manifest.outputs.is_empty(),
+            "destructiveHint": false,
+            "idempotentHint": false,
+            "openWorldHint": manifest.capabilities.network_use() == NetworkUse::Network,
         },
     })
 }

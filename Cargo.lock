@@ -5248,6 +5248,7 @@ dependencies = [
  "panoply-host",
  "panoply-manifest",
  "panoply-mcp",
+ "panoply-pdf",
  "panoply-share",
  "panoply-vision",
  "panoply-wasm",
