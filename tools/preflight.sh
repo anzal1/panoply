@@ -16,6 +16,7 @@
 #                                   When cargo-xwin is not installed it is skipped with a note.
 #
 # What it runs, the same way CI does (docs/CI.md):
+#   python3 -I tools/ci/prose_lint.py --commits origin/main..HEAD, first: no em dashes, no stock AI phrasing
 #   cargo fmt --all --check
 #   cargo clippy -p <crates> --all-targets -- -D warnings
 #   cargo nextest run -p <crates>, with the `ci-core` profile (everything except the heavy tests), then
@@ -24,7 +25,8 @@
 #   python3 tools/ci/check_docs.py
 #
 # The whole workspace is used instead of the changed crates when Cargo.lock, a Cargo.toml in the root,
-# a workflow or .config/nextest.toml changed, or when --all is given. Documentation-only changes run only
+# a workflow or .config/nextest.toml changed (a ci.yml edit confined to its docs job does not count), or
+# when --all is given. Documentation-only changes run only
 # the docs check. It runs at low priority (nice -n 15, 8 cargo jobs) and only one heavy check runs on the
 # Mac at a time (tools/lib/heavy-lock.sh: a second one waits), so the machine stays usable, and builds into
 # $CARGO_TARGET_DIR, which defaults to a folder whose name ends in .noindex (Spotlight skips those):

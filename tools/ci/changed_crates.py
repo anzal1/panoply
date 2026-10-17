@@ -23,30 +23,48 @@ root = meta["workspace_root"].rstrip("/") + "/"
 pkgs = {p["name"]: os.path.dirname(p["manifest_path"]).removeprefix(root) for p in meta["packages"]}
 
 
+ANCHOR = re.compile(r"(^|\s)[&*][A-Za-z_]")
+TOP_KEY = re.compile(r"^([A-Za-z0-9_-]+)\s*:")
+JOB_KEY = re.compile(r"^  ([A-Za-z0-9_-]+)\s*:")
+
+
 def strip_docs_job(text):
-    """The workflow text without the `docs` job (and the comment lines just above it). None when it has no jobs."""
-    lines = text.split("\n")
-    out, skipping, pending = [], False, []
-    for line in lines:
-        header = re.match(r"^  ([A-Za-z0-9_-]+):\s*$", line)
-        if header or (not line.startswith("  ") and line.strip() and not line.startswith("#")):
-            # a new job (or a new top level key) ends the docs job; held comments belong to what follows
-            skipping = bool(header) and header.group(1) == "docs"
-            if not skipping:
-                out.extend(pending)
+    """The workflow text without the `docs` job (and the comment lines just above it).
+
+    None (so: not safe to compare) when the file has no `jobs:` or uses a YAML anchor or alias, because
+    an anchor defined in the docs job could change another job."""
+    if "jobs:" not in text or any(ANCHOR.search(line) for line in text.split("\n")):
+        return None
+    out, pending = [], []
+    in_jobs = skipping = False
+    for line in text.split("\n"):
+        if line and not line[0].isspace() and line[0] != "#":
+            # a top level key: leaves any job
+            skipping = False
+            in_jobs = TOP_KEY.match(line) is not None and TOP_KEY.match(line).group(1) == "jobs"
+            out.extend(pending)
             pending = []
-            if not skipping:
+            out.append(line)
+        elif in_jobs and re.match(r"^  [^\s#]", line):
+            # any line at job indent ends the previous job, whatever follows the key (comment, anchor, flow mapping)
+            key = JOB_KEY.match(line)
+            skipping = key is not None and key.group(1) == "docs"
+            if skipping:
+                pending = []
+            else:
+                out.extend(pending)
+                pending = []
                 out.append(line)
+        elif line.startswith("  #") and not line.startswith("   "):
+            pending.append(line)
         elif skipping:
             continue
-        elif line.startswith("  #") or (not line.strip() and pending):
-            pending.append(line)
         else:
             out.extend(pending)
             pending = []
             out.append(line)
     out.extend(pending)
-    return "\n".join(out) if "jobs:" in text else None
+    return "\n".join(out)
 
 
 def only_docs_job_changed(path):
