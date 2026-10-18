@@ -57,6 +57,13 @@ impl ShareState {
     }
 }
 
+impl ShareState {
+    /// An incoming request waits for an answer.
+    pub(crate) fn needs_you(&self) -> bool {
+        self.model.incoming.is_some()
+    }
+}
+
 impl AppView {
     /// The page was opened or left. Starts or stops the engine.
     pub(crate) fn share_visible(&mut self, visible: bool, cx: &mut Context<Self>) {
@@ -96,6 +103,7 @@ impl AppView {
         self.share.engine = Some(engine);
         cx.spawn(async move |this, cx| {
             while let Some(ev) = rx.next().await {
+                let asked = matches!(ev, EngineEvent::Incoming(_));
                 let alive = this
                     .update(cx, |app, cx| {
                         if app.share.generation != generation {
@@ -107,6 +115,12 @@ impl AppView {
                     .unwrap_or(false);
                 if !alive {
                     break;
+                }
+                if asked {
+                    // Someone is waiting for an answer and the sender gives up after a minute: bring
+                    // the window up on the Share page, wherever the person was. (With the window
+                    // closed nothing receives at all, so this is the only case.)
+                    cx.update(|cx| crate::ui::live::share_files(cx, Vec::new()));
                 }
             }
         })
@@ -130,12 +144,40 @@ impl AppView {
 
     /// Put files on the waiting list and open the page (the Share button on a result, a drop).
     pub(crate) fn share_paths(&mut self, paths: Vec<PathBuf>, cx: &mut Context<Self>) {
-        self.share.model.stage(&paths);
+        self.share_stage(paths, cx);
         if self.route != super::Route::Share {
             self.go(super::Route::Share, cx);
         } else {
             cx.notify();
         }
+    }
+
+    /// Put the rows on the list at once, then look at the disk on a worker and fill in the sizes. A
+    /// big folder takes a while to count, and the window must not wait for it.
+    fn share_stage(&mut self, paths: Vec<PathBuf>, cx: &mut Context<Self>) {
+        let added = self.share.model.stage(&paths);
+        cx.notify();
+        if added.is_empty() {
+            return;
+        }
+        cx.spawn(async move |this, cx| {
+            for p in added {
+                let read = cx
+                    .background_executor()
+                    .spawn(async move { Staged::read(&p) })
+                    .await;
+                if this
+                    .update(cx, |app, cx| {
+                        app.share.model.measured(read);
+                        cx.notify();
+                    })
+                    .is_err()
+                {
+                    break;
+                }
+            }
+        })
+        .detach();
     }
 
     fn share_choose(&mut self, cx: &mut Context<Self>) {
@@ -148,7 +190,7 @@ impl AppView {
         cx.spawn(async move |this, cx| {
             if let Ok(Ok(Some(paths))) = rx.await {
                 let _ = this.update(cx, |app, cx| {
-                    app.share.model.stage(&paths);
+                    app.share_stage(paths, cx);
                     cx.notify();
                 });
             }
@@ -289,7 +331,7 @@ impl AppView {
                     "radio",
                     t.ink3,
                     format!(
-                        "Receiving is off, so other devices cannot send to this computer. Turn on Receive to let them. It turns off again whenever Panoply starts. You are asked before anything is saved to {}.",
+                        "Receive is off. Other devices can still see this computer, and every send to it is declined. Turn on Receive to accept files. It turns off again whenever Panoply starts. You are asked before anything is saved to {}.",
                         folder_name(&m)
                     ),
                     t,
@@ -454,7 +496,7 @@ impl AppView {
                                 .text_color(t.ink)
                                 .child(i.check_code.clone()),
                         )
-                        .child("The sender's screen shows the same words."),
+                        .child("If the sender is Panoply, its screen shows the same words."),
                 )
             })
             .when(!i.verified, |d| {
@@ -566,32 +608,31 @@ impl AppView {
                         None => plain_tile("radio", 40., t).into_any_element(),
                     })
                     .child(heading_lines(&head, &sub, false, t))
-                    .when(finished, |d| {
-                        d.when_some(
-                            first.filter(|_| matches!(r.phase, ReceivePhase::Done { .. })),
-                            |d, p| {
-                                d.child(button(
-                                    "share-reveal",
-                                    "Show in folder",
-                                    ButtonKind::Secondary,
-                                    Some("folder-open"),
-                                    t,
-                                    move |_, _, cx| cx.reveal_path(&p),
-                                ))
-                            },
-                        )
-                        .child(icon_button(
-                            "share-receive-dismiss",
-                            "Dismiss",
-                            "x",
-                            false,
-                            t,
-                            cx.listener(|app, _, _, cx| {
-                                app.share.model.dismiss_receive();
-                                cx.notify();
-                            }),
-                        ))
-                    }),
+                    .when_some(
+                        first.filter(|_| matches!(r.phase, ReceivePhase::Done { .. })),
+                        |d, p| {
+                            d.child(button(
+                                "share-reveal",
+                                "Show in folder",
+                                ButtonKind::Secondary,
+                                Some("folder-open"),
+                                t,
+                                move |_, _, cx| cx.reveal_path(&p),
+                            ))
+                        },
+                    )
+                    // Always there: a transfer that stalls has no end event to wait for.
+                    .child(icon_button(
+                        "share-receive-dismiss",
+                        "Dismiss",
+                        "x",
+                        false,
+                        t,
+                        cx.listener(|app, _, _, cx| {
+                            app.share.model.dismiss_receive();
+                            cx.notify();
+                        }),
+                    )),
             )
             .when_some(fraction.filter(|_| !finished), |d, f| {
                 d.child(progress_bar(Some(f), "Receiving", t))
@@ -926,7 +967,7 @@ impl AppView {
                 "Scan with a phone camera".into(),
                 if q.on_lan {
                     format!(
-                        "The phone must be on the same Wi-Fi. {} to download. The page closes after ten minutes.",
+                        "The phone must be on the same Wi-Fi. The files travel unencrypted over it. {} to download. The page closes after ten minutes.",
                         files_word(q.files)
                     )
                 } else {
@@ -1119,6 +1160,10 @@ fn staged_row(i: usize, s: &Staged, t: Theme) -> Stateful<Div> {
             div()
                 .ramp(ty::SMALL)
                 .text_color(t.ink2)
-                .child(s.size.map(format_bytes).unwrap_or_default()),
+                .child(if s.measured {
+                    s.size.map(format_bytes).unwrap_or_default()
+                } else {
+                    "Counting".to_string()
+                }),
         )
 }

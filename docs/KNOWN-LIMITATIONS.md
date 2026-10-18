@@ -52,7 +52,8 @@ No signature check applies. Make the AppImage executable (`chmod +x`) and run it
 - **The MCP server.** Every tool has an MCP definition, but the transport that serves them to an AI app
   is not built. The command line works for agents today.
 - **Sharing in the desktop app.** The Share page sends to and receives from Panoply and LocalSend apps.
-  Receive is off every time Panoply starts and is not remembered, on purpose. The four word check code
+  Receive is off every time Panoply starts and is not remembered, on purpose. It works only while the
+  Panoply window is open: closing the window stops receiving. The four word check code
   appears only between two Panoply apps; a LocalSend app does not show one.
 - **Image output.** No animated GIF, WebP or AVIF output. Animated inputs use the first frame and say so.
   No SVG, no JPEG XL decode, no multi-page TIFF export.

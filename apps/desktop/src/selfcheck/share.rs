@@ -235,7 +235,7 @@ pub(crate) fn run_share(out: PathBuf) {
                 // 3. Files waiting, receive on.
                 let sp = staged_paths.clone();
                 model!(move |m: &mut crate::share::ShareModel| {
-                    m.stage(&sp);
+                    m.stage_now(&sp);
                     m.receiving = true;
                 });
                 d.settle(app_win).await;
@@ -393,7 +393,7 @@ pub(crate) fn run_share(out: PathBuf) {
                         "Priya's very long laptop name that keeps going past any reasonable width"
                             .into();
                     m.apply(EngineEvent::Incoming(p));
-                    m.stage(&[PathBuf::from(
+                    m.stage_now(&[PathBuf::from(
                         "/nonexistent/an-extremely-long-file-name-that-has-to-be-cut-with-an-ellipsis-before-it-reaches-the-remove-button-of-its-row.pdf",
                     )]);
                 });
@@ -432,6 +432,22 @@ pub(crate) fn run_share(out: PathBuf) {
                 });
                 d.settle(app_win).await;
                 log.push(d.png(app_win, &png("share-19-first-visit")));
+
+                // 10. Files dropped just now: rows at once, sizes still being counted.
+                let counting = trip.clone();
+                model!(move |m: &mut crate::share::ShareModel| {
+                    m.devices = devices();
+                    let _ = m.stage(&[counting.clone(), PathBuf::from("/nonexistent/Wedding photos")]);
+                });
+                d.settle(app_win).await;
+                log.push(d.png(app_win, &png("share-22-counting-sizes")));
+
+                // 11. A request arrives while another page is open: the sidebar item has a dot.
+                model!(|m: &mut crate::share::ShareModel| m.apply(EngineEvent::Incoming(prompt(false, true))));
+                d.change(app_win, |a, _, cx| a.go(Route::Home, cx));
+                d.settle(app_win).await;
+                log.push(d.png(app_win, &png("share-23-nav-badge")));
+                d.change(app_win, |a, _, cx| a.go(Route::Share, cx));
             }
 
             let report = json!({ "screens": log });

@@ -83,14 +83,32 @@ pub struct Staged {
     pub path: PathBuf,
     /// Name to show.
     pub name: String,
-    /// Size in bytes, folders summed. `None` when it could not be read.
+    /// Size in bytes, folders summed. `None` until it has been measured, or when it could not be read.
     pub size: Option<u64>,
     /// A folder.
     pub folder: bool,
+    /// The size has been looked up (it is `None` for a file that vanished).
+    pub measured: bool,
 }
 
 impl Staged {
-    /// Read a path for the list. Folders are summed one level deep, which is enough for a label.
+    /// A row for a path, at once: the name only. Looking at the disk happens later, off the UI
+    /// thread, through [`Staged::read`] and [`ShareModel::measured`].
+    pub fn pending(path: &Path) -> Staged {
+        Staged {
+            path: path.to_path_buf(),
+            name: path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| path.display().to_string()),
+            size: None,
+            folder: false,
+            measured: false,
+        }
+    }
+
+    /// Read a path: its size, folders summed a few levels deep. Touches the disk, so never call it
+    /// on the UI thread.
     pub fn read(path: &Path) -> Staged {
         let meta = std::fs::metadata(path).ok();
         let folder = meta.as_ref().is_some_and(|m| m.is_dir());
@@ -107,6 +125,7 @@ impl Staged {
                 .unwrap_or_else(|| path.display().to_string()),
             size,
             folder,
+            measured: true,
         }
     }
 }
@@ -492,15 +511,36 @@ impl ShareModel {
     }
 
     /// Add paths to the files waiting, skipping ones already there.
-    pub fn stage(&mut self, paths: &[PathBuf]) {
+    ///
+    /// The rows appear at once with no size; the returned paths are the new ones, to be measured on
+    /// a worker and handed to [`ShareModel::measured`]. Nothing here touches the disk.
+    pub fn stage(&mut self, paths: &[PathBuf]) -> Vec<PathBuf> {
+        let mut added = Vec::new();
         for p in paths {
             if !self.staged.iter().any(|s| &s.path == p) {
-                self.staged.push(Staged::read(p));
+                self.staged.push(Staged::pending(p));
+                added.push(p.clone());
             }
         }
         // A new set of files starts a new conversation: the last send's result is old news.
         if self.send.as_ref().is_some_and(|s| !s.active()) {
             self.send = None;
+        }
+        added
+    }
+
+    /// A worker finished looking at a path: fill in its row (if it is still waiting).
+    pub fn measured(&mut self, read: Staged) {
+        if let Some(row) = self.staged.iter_mut().find(|s| s.path == read.path) {
+            *row = read;
+        }
+    }
+
+    /// Stage and measure in one go, for tests and the snapshot renders (no UI thread to protect).
+    #[cfg(any(test, feature = "snapshot"))]
+    pub fn stage_now(&mut self, paths: &[PathBuf]) {
+        for p in self.stage(paths) {
+            self.measured(Staged::read(&p));
         }
     }
 
@@ -699,7 +739,12 @@ pub fn staged_label(staged: &[Staged]) -> String {
     } else {
         format!("{n} items")
     };
-    format!("{what}, {}", format_bytes(bytes))
+    // While a folder is still being counted a total would be a wrong number.
+    if staged.iter().any(|s| !s.measured) {
+        what
+    } else {
+        format!("{what}, {}", format_bytes(bytes))
+    }
 }
 
 /// The line under a progress bar: "4.1 MB of 12.4 MB".
@@ -788,7 +833,8 @@ impl EngineConfig {
     /// The real thing: this computer's name, Downloads, the user's identity, the LocalSend port.
     pub fn app(receiving: bool) -> EngineConfig {
         EngineConfig {
-            alias: computer_name(),
+            // Empty: the engine thread fills in the computer's name.
+            alias: String::new(),
             save_dir: downloads_dir(),
             data_dir: Some(panoply_share::node::default_data_dir()),
             receiving,
@@ -838,9 +884,16 @@ impl Engine {
     pub fn start(cfg: EngineConfig) -> (Engine, UnboundedReceiver<EngineEvent>) {
         let (ev_tx, ev_rx) = unbounded();
         let (tx, rx) = mpsc::unbounded_channel();
+        let ev_failed = ev_tx.clone();
         let thread = std::thread::Builder::new()
             .name("panoply-share".into())
             .spawn(move || {
+                // Asking the system for the computer's name runs a program, so it happens here and
+                // never on the UI thread.
+                let mut cfg = cfg;
+                if cfg.alias.is_empty() {
+                    cfg.alias = computer_name();
+                }
                 let rt = match tokio::runtime::Builder::new_multi_thread()
                     .worker_threads(2)
                     .thread_name("panoply-share-io")
@@ -858,8 +911,16 @@ impl Engine {
                 rt.block_on(run(cfg, rx, ev_tx));
                 // Do not wait for stragglers: the sockets are closed, the process goes on.
                 rt.shutdown_background();
-            })
-            .ok();
+            });
+        let thread = match thread {
+            Ok(t) => Some(t),
+            Err(e) => {
+                let _ = ev_failed.unbounded_send(EngineEvent::NetFailed(Problem::CannotListen(
+                    format!("Panoply could not start its network thread: {e}"),
+                )));
+                None
+            }
+        };
         (Engine { tx, thread }, ev_rx)
     }
 
@@ -917,6 +978,42 @@ impl Drop for Engine {
 
 type Pending = Arc<Mutex<HashMap<String, oneshot::Sender<bool>>>>;
 
+/// How many times one device may be declined, within [`DECLINE_WINDOW`], before its requests are
+/// declined without a prompt.
+pub const DECLINE_LIMIT: usize = 3;
+/// The time span the decline count covers.
+pub const DECLINE_WINDOW: Duration = Duration::from_secs(300);
+
+/// Remembers who was declined lately, so a device that keeps asking is not allowed to keep
+/// putting a prompt on the screen.
+#[derive(Default)]
+pub struct DeclineLog {
+    by_device: HashMap<String, Vec<std::time::Instant>>,
+}
+
+impl DeclineLog {
+    /// The user declined this device.
+    pub fn record(&mut self, device: &str, now: std::time::Instant) {
+        let list = self.by_device.entry(device.to_string()).or_default();
+        list.push(now);
+        // A map that only ever grows is a leak: forget devices whose declines are all old.
+        self.by_device.retain(|_, l| {
+            l.retain(|t| now.saturating_duration_since(*t) < DECLINE_WINDOW);
+            !l.is_empty()
+        });
+    }
+
+    /// True when this device has been declined too often lately and should not be asked about.
+    pub fn blocked(&self, device: &str, now: std::time::Instant) -> bool {
+        self.by_device.get(device).is_some_and(|l| {
+            l.iter()
+                .filter(|t| now.saturating_duration_since(**t) < DECLINE_WINDOW)
+                .count()
+                >= DECLINE_LIMIT
+        })
+    }
+}
+
 /// Sends `IncomingGone` when the prompt's future ends, however it ends.
 struct Gone(String, UnboundedSender<EngineEvent>);
 
@@ -932,8 +1029,9 @@ fn incoming_view(id: String, r: &IncomingRequest) -> IncomingView {
     IncomingView {
         id,
         sender: r.sender.alias.clone(),
-        // Only Panoply shows these words, so a LocalSend sender gets no instruction to compare them.
-        check_code: if panoply_share::is_panoply(&r.sender) {
+        // Only Panoply shows these words, and only a sender that proved its identity can be trusted
+        // to show the same ones, so everyone else gets no instruction to compare them.
+        check_code: if panoply_share::is_panoply(&r.sender) && r.verified {
             r.check_code.clone()
         } else {
             String::new()
@@ -961,18 +1059,29 @@ async fn run(
     let receiving = Arc::new(AtomicBool::new(cfg.receiving));
     let pending: Pending = Arc::default();
     let counter = Arc::new(AtomicU64::new(1));
+    let declines: Arc<Mutex<DeclineLog>> = Arc::default();
 
     let handler = {
         let receiving = receiving.clone();
         let pending = pending.clone();
         let ev = ev.clone();
+        let declines = declines.clone();
         handler_fn(move |req| {
             let receiving = receiving.clone();
             let pending = pending.clone();
             let ev = ev.clone();
+            let declines = declines.clone();
             let n = counter.fetch_add(1, Ordering::Relaxed);
             Box::pin(async move {
                 if !receiving.load(Ordering::Relaxed) {
+                    return Decision::Decline;
+                }
+                let device = req.sender.fingerprint.clone();
+                if declines
+                    .lock()
+                    .unwrap()
+                    .blocked(&device, std::time::Instant::now())
+                {
                     return Decision::Decline;
                 }
                 let id = format!("in-{n}");
@@ -980,9 +1089,17 @@ async fn run(
                 pending.lock().unwrap().insert(id.clone(), tx);
                 let _gone = Gone(id.clone(), ev.clone());
                 let _ = ev.unbounded_send(EngineEvent::Incoming(incoming_view(id.clone(), &req)));
-                let accepted = answer.await.unwrap_or(false);
+                let answered = answer.await;
                 pending.lock().unwrap().remove(&id);
-                if accepted {
+                // Only an answer from the person counts: a prompt that timed out or was dropped
+                // when Receive was turned off is not a decline.
+                if answered == Ok(false) {
+                    declines
+                        .lock()
+                        .unwrap()
+                        .record(&device, std::time::Instant::now());
+                }
+                if answered == Ok(true) {
                     Decision::accept_all()
                 } else {
                     Decision::Decline
@@ -1056,7 +1173,8 @@ async fn run(
     let mut scanning = Some(scan(node.clone(), ev.clone()));
 
     let mut send_cancel: Option<SendCancel> = None;
-    let mut qr: Option<Arc<QrShare>> = None;
+    let qr_slot: Arc<Mutex<Option<Arc<QrShare>>>> = Arc::default();
+    let qr_gen = Arc::new(AtomicU64::new(0));
     while let Some(cmd) = rx.recv().await {
         match cmd {
             Cmd::Rescan => {
@@ -1118,68 +1236,79 @@ async fn run(
                 }
             }
             Cmd::StartQr(paths) => {
-                if let Some(old) = qr.take() {
+                // Starting binds a socket and walks the files, so it runs as its own task and the
+                // commands behind it (cancel, decide) are not held up.
+                let started = qr_gen.fetch_add(1, Ordering::SeqCst) + 1;
+                if let Some(old) = qr_slot.lock().unwrap().take() {
                     old.revoke();
                 }
-                match QrShare::start(QrOptions {
-                    files: paths.clone(),
-                    ..QrOptions::default()
-                })
-                .await
-                {
-                    Ok(share) => {
-                        let share = Arc::new(share);
-                        let (side, modules) =
-                            panoply_share::qr::qr_modules(share.url()).unwrap_or((0, Vec::new()));
-                        let _ = ev.unbounded_send(EngineEvent::QrReady(QrView {
-                            url: share.url().to_string(),
-                            side,
-                            modules,
-                            on_lan: share.on_lan(),
-                            files: paths.len(),
-                            visitors: 0,
-                            downloads: 0,
-                            closed: None,
-                        }));
-                        let mut qe = share.subscribe();
-                        let ev2 = ev.clone();
-                        tokio::spawn(async move {
-                            while let Ok(e) = qe.recv().await {
-                                let (visit, download) = match e {
-                                    QrEvent::Connected { .. } => (true, false),
-                                    QrEvent::Downloaded { .. } => (false, true),
-                                    _ => continue,
-                                };
-                                let _ =
-                                    ev2.unbounded_send(EngineEvent::QrActivity { visit, download });
-                            }
-                        });
-                        let waiter = share.clone();
-                        let ev3 = ev.clone();
-                        tokio::spawn(async move {
-                            let c = match waiter.wait().await {
-                                QrOutcome::Completed => QrClosed::Completed,
-                                QrOutcome::Expired => QrClosed::Expired,
-                                QrOutcome::Revoked => QrClosed::Revoked,
+                let (slot, gen_now, ev) = (qr_slot.clone(), qr_gen.clone(), ev.clone());
+                tokio::spawn(async move {
+                    let share = match QrShare::start(QrOptions {
+                        files: paths.clone(),
+                        ..QrOptions::default()
+                    })
+                    .await
+                    {
+                        Ok(share) => Arc::new(share),
+                        Err(e) => {
+                            let _ =
+                                ev.unbounded_send(EngineEvent::QrFailed(Problem::from_error(&e)));
+                            return;
+                        }
+                    };
+                    {
+                        // A stop, or a newer start, that came while this one was starting wins.
+                        let mut held = slot.lock().unwrap();
+                        if gen_now.load(Ordering::SeqCst) != started {
+                            share.revoke();
+                            return;
+                        }
+                        *held = Some(share.clone());
+                    }
+                    let (side, modules) =
+                        panoply_share::qr::qr_modules(share.url()).unwrap_or((0, Vec::new()));
+                    let _ = ev.unbounded_send(EngineEvent::QrReady(QrView {
+                        url: share.url().to_string(),
+                        side,
+                        modules,
+                        on_lan: share.on_lan(),
+                        files: paths.len(),
+                        visitors: 0,
+                        downloads: 0,
+                        closed: None,
+                    }));
+                    let mut qe = share.subscribe();
+                    let ev2 = ev.clone();
+                    tokio::spawn(async move {
+                        while let Ok(e) = qe.recv().await {
+                            let (visit, download) = match e {
+                                QrEvent::Connected { .. } => (true, false),
+                                QrEvent::Downloaded { .. } => (false, true),
+                                _ => continue,
                             };
-                            let _ = ev3.unbounded_send(EngineEvent::QrClosed(c));
-                        });
-                        qr = Some(share);
-                    }
-                    Err(e) => {
-                        let _ = ev.unbounded_send(EngineEvent::QrFailed(Problem::from_error(&e)));
-                    }
-                }
+                            let _ = ev2.unbounded_send(EngineEvent::QrActivity { visit, download });
+                        }
+                    });
+                    let c = match share.wait().await {
+                        QrOutcome::Completed => QrClosed::Completed,
+                        QrOutcome::Expired => QrClosed::Expired,
+                        QrOutcome::Revoked => QrClosed::Revoked,
+                    };
+                    let _ = ev.unbounded_send(EngineEvent::QrClosed(c));
+                });
             }
             Cmd::StopQr => {
-                if let Some(q) = qr.take() {
+                qr_gen.fetch_add(1, Ordering::SeqCst);
+                if let Some(q) = qr_slot.lock().unwrap().take() {
                     q.revoke();
                 }
             }
             Cmd::Stop => break,
         }
     }
-    if let Some(q) = qr.take() {
+    qr_gen.fetch_add(1, Ordering::SeqCst);
+    if let Some(q) = qr_slot.lock().unwrap().take() {
         q.revoke();
     }
     if let Some(s) = scanning.take() {
@@ -1221,7 +1350,7 @@ mod tests {
     }
 
     fn sending(m: &mut ShareModel) {
-        m.stage(&[PathBuf::from("/nonexistent/a.pdf")]);
+        m.stage_now(&[PathBuf::from("/nonexistent/a.pdf")]);
         m.begin_send("Pixel 9");
         m.apply(EngineEvent::SendStarted {
             id: "t1".into(),
@@ -1372,7 +1501,7 @@ mod tests {
         std::fs::write(dir.join("a.txt"), vec![0u8; 100]).unwrap();
         std::fs::write(dir.join("sub/b.txt"), vec![0u8; 50]).unwrap();
         let mut m = model();
-        m.stage(&[dir.join("a.txt"), dir.join("a.txt"), dir.join("sub")]);
+        m.stage_now(&[dir.join("a.txt"), dir.join("a.txt"), dir.join("sub")]);
         assert_eq!(m.staged.len(), 2);
         assert_eq!(m.staged_bytes(), 150);
         assert!(m.staged[1].folder);
@@ -1382,11 +1511,59 @@ mod tests {
             id: String::new(),
             result: Err(Problem::Declined),
         });
-        m.stage(&[dir.join("sub/b.txt")]);
+        m.stage_now(&[dir.join("sub/b.txt")]);
         assert!(m.send.is_none(), "adding files starts over");
         m.unstage(&dir.join("sub"));
         assert_eq!(m.staged.len(), 2);
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn staging_never_touches_the_disk_and_measuring_fills_the_row() {
+        let mut m = model();
+        let p = PathBuf::from("/nonexistent/Big folder");
+        let added = m.stage(std::slice::from_ref(&p));
+        assert_eq!(added, vec![p.clone()]);
+        let row = &m.staged[0];
+        assert_eq!(
+            (row.size, row.measured, row.name.as_str()),
+            (None, false, "Big folder")
+        );
+        assert_eq!(
+            staged_label(&m.staged),
+            "1 item",
+            "no total while still counting"
+        );
+        // Adding the same path again adds nothing to measure.
+        assert!(m.stage(std::slice::from_ref(&p)).is_empty());
+        m.measured(Staged {
+            path: p,
+            name: "Big folder".into(),
+            size: Some(2_000_000),
+            folder: true,
+            measured: true,
+        });
+        assert_eq!(staged_label(&m.staged), "1 item, 2.0 MB");
+        assert!(m.staged[0].folder);
+    }
+
+    #[test]
+    fn three_declines_in_five_minutes_block_a_device() {
+        use std::time::Instant;
+        let t0 = Instant::now();
+        let mut log = DeclineLog::default();
+        assert!(!log.blocked("a", t0));
+        log.record("a", t0);
+        log.record("a", t0 + Duration::from_secs(10));
+        assert!(!log.blocked("a", t0 + Duration::from_secs(20)));
+        log.record("a", t0 + Duration::from_secs(30));
+        assert!(log.blocked("a", t0 + Duration::from_secs(40)));
+        assert!(
+            !log.blocked("b", t0 + Duration::from_secs(40)),
+            "only that device"
+        );
+        // Declines age out after five minutes.
+        assert!(!log.blocked("a", t0 + DECLINE_WINDOW + Duration::from_secs(31)));
     }
 
     #[test]
@@ -1633,7 +1810,7 @@ mod tests {
         assert!(empty_copy(&sm).is_none());
 
         let id = sm.devices[0].id.clone();
-        sm.stage(&[src.join("photo.bin")]);
+        sm.stage_now(&[src.join("photo.bin")]);
         sm.begin_send("Receiver");
         send.send(&id, vec![src.join("photo.bin")]);
 
@@ -1706,7 +1883,7 @@ mod tests {
         let mut rm = model();
         pump(&mut srx, &mut sm, |m, _| !m.devices.is_empty());
         let id = sm.devices[0].id.clone();
-        sm.stage(&[src.join("a.txt")]);
+        sm.stage_now(&[src.join("a.txt")]);
         sm.begin_send("Receiver");
         send.send(&id, vec![src.join("a.txt")]);
         pump(&mut rrx, &mut rm, |m, _| m.incoming.is_some());

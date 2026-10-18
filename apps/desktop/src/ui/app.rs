@@ -838,17 +838,32 @@ impl AppView {
                 )
             }))
             .child(section_label("Panoply", t))
-            .child(side_item(
-                "nav-share",
-                "Share",
-                "share",
-                t.ink2,
-                None,
-                route == Route::Share,
-                None,
-                t,
-                go(Route::Share),
-            ))
+            .child(
+                side_item(
+                    "nav-share",
+                    "Share",
+                    "share",
+                    t.ink2,
+                    None,
+                    route == Route::Share,
+                    None,
+                    t,
+                    go(Route::Share),
+                )
+                .relative()
+                .when(self.share.needs_you() && route != Route::Share, |d| {
+                    // Somebody is waiting for an answer on the Share page.
+                    d.aria_description("Someone wants to send you files").child(
+                        div()
+                            .absolute()
+                            .top(px(12.))
+                            .right(px(12.))
+                            .size(px(8.))
+                            .rounded_full()
+                            .bg(t.accent),
+                    )
+                }),
+            )
             .child(side_item(
                 "nav-disk",
                 "Disk map",
