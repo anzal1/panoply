@@ -120,6 +120,12 @@ pub const RULES: &[Rule] = &[
         },
     },
     Rule {
+        id: "no text layer to read aloud",
+        says: "no text layer to read",
+        why: "Text to speech reads a PDF from its own text layer. A scan or a blank page has none, and Panoply says so and to run PDF OCR first. In a batch the file is skipped and the others are read.",
+        when: |s| s.module == "text.to_speech",
+    },
+    Rule {
         id: "too much text for a QR code",
         says: "too much text for one QR code",
         why: "A QR code holds about 2,900 characters at most. A line longer than that (an SVG or a document handed over as text) cannot be one code, and the message names the line and says to shorten it.",

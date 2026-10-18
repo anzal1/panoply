@@ -39,8 +39,8 @@ enum Kind {
 }
 
 impl Pending {
-    /// Where the temporary file is, so a job that packs a folder can leave it out, or a job
-    /// can read back what it wrote (the open handle is write only).
+    /// Where the temporary file is, for a job that packs a folder and must leave it out, or an
+    /// engine that writes to a path.
     pub fn temp_path(&self) -> &Path {
         &self.part
     }
