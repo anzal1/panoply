@@ -82,6 +82,7 @@ impl Module for TtsModule {
         };
         // What to read: the pasted text as one job, or each chosen file as its own job.
         let mut jobs: Vec<(String, String, Option<PathBuf>)> = Vec::new();
+        let mut skipped: Option<String> = None;
         if inputs.is_empty() {
             if pasted.is_empty() {
                 return Err(ModuleError::Failed(
@@ -94,18 +95,30 @@ impl Module for TtsModule {
                 ctx.check_cancel()?;
                 ctx.guard.open_read(path)?;
                 ctx.progress(0.0, format!("Reading {}", file_name(path)));
-                let text =
-                    panoply_tts::text::read_file(path, &ctx.cancel).map_err(|e| match e {
-                        TtsError::Cancelled => ModuleError::Cancelled,
-                        other if inputs.len() > 1 => {
-                            ModuleError::Failed(format!("{}: {other}", file_name(path)))
-                        }
-                        other => ModuleError::Failed(other.to_string()),
-                    })?;
+                let text = match panoply_tts::text::read_file(path, &ctx.cancel) {
+                    Ok(t) => t,
+                    Err(TtsError::Cancelled) => return Err(ModuleError::Cancelled),
+                    // With several files, one that cannot be read aloud (a scan with no text
+                    // layer) is skipped and said so, and the others are still read.
+                    Err(TtsError::BadInput(why)) if inputs.len() > 1 => {
+                        ctx.note(format!("{}: skipped. {why}", file_name(path)));
+                        skipped = Some(why);
+                        continue;
+                    }
+                    Err(other) if inputs.len() > 1 => {
+                        return Err(ModuleError::Failed(format!("{}: {other}", file_name(path))));
+                    }
+                    Err(other) => return Err(map_err(other)),
+                };
                 jobs.push((stem(path), text, Some(path.clone())));
             }
         }
 
+        if jobs.is_empty() {
+            return Err(ModuleError::Failed(skipped.unwrap_or_else(|| {
+                "There is nothing to read. Choose a .txt, .md or PDF file with words in it.".into()
+            })));
+        }
         let mut out = Outputs::new(&ctx.guard);
         let n = jobs.len();
         let mut last = None;

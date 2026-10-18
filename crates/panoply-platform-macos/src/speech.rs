@@ -236,15 +236,22 @@ pub fn synthesize(
         let on_main = unsafe { pthread_main_np() } != 0;
         loop {
             let next = if on_main {
-                // SAFETY: running the current thread's loop in the default mode for a short
-                // time has no preconditions. It drains the main queue, where the callback runs.
-                unsafe {
-                    CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.02, 0);
+                // Take what has already arrived first: one pump of the loop delivers many
+                // buffers at once, and waiting a pump per buffer made a render several times
+                // slower than real time.
+                match rx.try_recv() {
+                    Ok(m) => Ok(m),
+                    Err(mpsc::TryRecvError::Disconnected) => Err(RecvTimeoutError::Disconnected),
+                    Err(mpsc::TryRecvError::Empty) => {
+                        // SAFETY: running the current thread's loop in the default mode for a
+                        // short time has no preconditions. It drains the main queue, where
+                        // the callback runs.
+                        unsafe {
+                            CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.02, 0);
+                        }
+                        Err(RecvTimeoutError::Timeout)
+                    }
                 }
-                rx.try_recv().map_err(|e| match e {
-                    mpsc::TryRecvError::Empty => RecvTimeoutError::Timeout,
-                    mpsc::TryRecvError::Disconnected => RecvTimeoutError::Disconnected,
-                })
             } else {
                 rx.recv_timeout(Duration::from_millis(250))
             };
