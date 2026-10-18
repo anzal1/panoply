@@ -162,10 +162,13 @@ fn union(a: &Rect, b: &Rect) -> Rect {
 }
 
 fn intersects(a: &Rect, b: &Rect) -> bool {
-    a.x < b.right() - 0.25
-        && b.x < a.right() - 0.25
-        && a.y < b.bottom() - 0.25
-        && b.y < a.bottom() - 0.25
+    let w = a.right().min(b.right()) - a.x.max(b.x);
+    let h = a.bottom().min(b.bottom()) - a.y.max(b.y);
+    if w <= 0.25 || h <= 0.25 {
+        return false;
+    }
+    let smaller = (a.w * a.h).min(b.w * b.h).max(1e-3);
+    w * h >= 0.25 * smaller
 }
 
 // ---------------------------------------------------------------- pdfium
@@ -570,9 +573,7 @@ fn content_text(data: &[u8]) -> String {
                 out.push(' ');
             }
             // A move to another line.
-            Ok(Tok::Word(w))
-                if matches!(w, b"Td" | b"TD" | b"T*" | b"Tm" | b"ET" | b"'" | b"\"") =>
-            {
+            Ok(Tok::Word(b"Td" | b"TD" | b"T*" | b"Tm" | b"ET" | b"'" | b"\"")) => {
                 out.push('\n');
             }
             Ok(_) => {}
