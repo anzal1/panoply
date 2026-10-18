@@ -1,0 +1,239 @@
+<!doctype html>
+<html><head><meta charset="UTF-8"></head><body>
+<template>
+  <style>
+    @font-face{font-family:"Geist";src:url("assets/fonts/Geist-Variable-latin.woff2") format("woff2");font-weight:100 900}
+    @font-face{font-family:"Geist Mono";src:url("assets/fonts/GeistMono-latin.woff2") format("woff2");font-weight:100 900}
+
+    #root{position:absolute;inset:0;overflow:hidden;font-family:"Geist",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#fff}
+    #root *{box-sizing:border-box}
+    #root .fill{position:absolute;inset:0}
+    #root .mono{font-family:"Geist Mono",ui-monospace,monospace}
+    #root .h1{font-weight:700;letter-spacing:-0.04em;line-height:1}
+
+    #sh-pwords{position:absolute;left:0;right:0;top:50%;margin-top:-390px;height:780px;text-align:center;font-size:116px}
+    #sh-pwords .row{display:block;height:130px;line-height:130px;white-space:nowrap}
+    #sh-pwords .bad{color:#ff6961}
+
+    #sh-blue{background:#2d6cdf;clip-path:inset(0 100% 0 0)}
+    .cam{position:absolute;inset:0}
+    .hd{position:absolute;left:0;right:0;top:150px;height:100px;line-height:100px;text-align:center;white-space:nowrap;font-size:88px;opacity:0}
+    .hd2{position:absolute;left:0;right:0;top:110px;height:230px;text-align:center;font-size:104px;line-height:1.04;letter-spacing:-0.04em;font-weight:700;opacity:0}
+    .hd2 span{display:block;white-space:nowrap}
+
+    .plate{position:absolute;border-radius:20px;overflow:hidden;background:#f1f2f5;box-shadow:0 0 0 1.5px rgba(255,255,255,.25),0 36px 100px rgba(8,24,70,.5);opacity:0}
+    .plate img{position:absolute;left:0;top:0;display:block}
+
+    #sh-foot{position:absolute;left:0;top:0;width:1440px;height:920px;transform:scale(.66667);transform-origin:0 0}
+    #sh-foot .b{position:absolute;top:832px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:28px;font-weight:500;letter-spacing:-0.012em;color:#1d1d1f}
+    #sh-foot .b svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+    #sh-foot .ghost{color:#4a4a52}
+    #sh-foot .sec{background:#d6d6d7}
+    #sh-foot .ico{background:#e3e3e6;color:#1d1d1f}
+    #sh-foot .pri{background:#0072ef;color:#fff;font-weight:600}
+    #sh-tip{position:absolute;left:939px;top:764px;width:100px;text-align:center;opacity:0}
+    #sh-tip i{display:inline-block;padding:0 20px;height:48px;line-height:48px;border-radius:12px;background:#1d1d1f;color:#fff;font-style:normal;font-size:26px;font-weight:500}
+    #sh-ring{position:absolute;left:951px;top:826px;width:76px;height:76px;border-radius:20px;border:3px solid #0a84ff;opacity:0}
+    .ring2{position:absolute;border-radius:20px;border:5px solid #0a84ff;opacity:0}
+
+    .stat{position:absolute;left:0;right:0;text-align:center;opacity:0}
+    .stat .n{font-size:132px;font-weight:700;letter-spacing:-0.05em;line-height:1}
+    .stat .l{margin-top:14px;font-size:48px;font-weight:600;letter-spacing:-0.025em;line-height:1.12;color:rgba(255,255,255,.96)}
+    .stat .s{margin-top:10px;font-size:40px;font-weight:500;color:rgba(255,255,255,.78);letter-spacing:-0.02em}
+    .statrule{position:absolute;left:300px;width:480px;height:2px;background:rgba(255,255,255,.28);opacity:0}
+
+    #sh-end{position:absolute;inset:0}
+    #sh-endcam{position:absolute;inset:0}
+    #sh-efan{position:absolute;left:390px;top:200px;width:300px;height:300px;opacity:0}
+    #sh-efan svg{width:100%;height:100%;display:block;overflow:visible}
+    #sh-ename{position:absolute;left:0;right:0;top:530px;text-align:center;font-size:176px;opacity:0}
+    #sh-eline{position:absolute;left:0;right:0;top:760px;text-align:center;font-size:62px;font-weight:500;letter-spacing:-0.025em;line-height:1.15;color:rgba(255,255,255,.9);opacity:0}
+    #sh-eline span{display:block}
+    #sh-eurl{position:absolute;left:0;right:0;top:960px;text-align:center;font-size:42px;color:rgba(255,255,255,.92);letter-spacing:-0.01em;opacity:0}
+    #sh-grain{position:absolute;left:0;top:0;width:1080px;height:1350px;pointer-events:none;opacity:.08;mix-blend-mode:soft-light}
+  </style>
+
+  <div id="root" data-composition-id="share45" data-width="1080" data-height="1350">
+    <div id="sh-gmid" class="fill" style="background:#0c0c0f"></div>
+
+    <div id="sh-pain" class="fill">
+      <div id="sh-pwords" class="h1">
+        <div class="row" id="sh-r1">Getting a file</div>
+        <div class="row" id="sh-r2">from your laptop</div>
+        <div class="row" id="sh-r3">to your phone</div>
+        <div class="row bad" id="sh-r4">shouldn't need</div>
+        <div class="row bad" id="sh-r5">a cable or a</div>
+        <div class="row bad" id="sh-r6">cloud account.</div>
+      </div>
+    </div>
+
+    <div id="sh-blue" class="fill"></div>
+
+    <div id="sh-camA" class="cam">
+      <div id="sh-hA" class="hd h1">Share any result.</div>
+      <div id="sh-pushA" class="fill" style="transform-origin:719px 996px">
+        <div id="sh-plA" class="plate" style="left:60px;top:420px;width:960px;height:613px">
+          <img src="assets/plates/result.png" width="960" height="613" alt="">
+          <div id="sh-foot">
+            <div class="b ghost" style="left:530px;width:105px"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</div>
+            <div class="b sec" style="left:671px;width:270px"><svg viewBox="0 0 24 24"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></svg>Show in folder</div>
+            <div class="b ico" style="left:957px;width:64px"><svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="m16 6-4-4-4 4"/><path d="M12 2v14"/></svg></div>
+            <div class="b sec" style="left:1036px;width:177px"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>Then...</div>
+            <div class="b pri" style="left:1230px;width:162px"><svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>Open</div>
+            <div id="sh-tip"><i>Share</i></div>
+            <div id="sh-ring"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="sh-camB" class="cam">
+      <div id="sh-hB1" class="hd h1">Pick a device nearby.</div>
+      <div id="sh-hB2" class="hd h1">Over your own Wi-Fi.</div>
+      <div id="sh-hB3" class="hd h1">No cable. No account.</div>
+      <div id="sh-pushB" class="fill" style="transform-origin:540px 700px">
+        <div id="sh-plB1" class="plate" style="left:60px;top:560px;width:960px;height:298px">
+          <img src="assets/plates/b_list.png" width="960" height="298" alt="">
+          <div id="sh-ringB" class="ring2" style="left:752px;top:91px;width:170px;height:83px"></div>
+        </div>
+        <div id="sh-plB2" class="plate" style="left:60px;top:612px;width:960px;height:194px">
+          <img id="sh-iB2" src="assets/plates/b_send.png" width="960" height="194" alt="">
+          <img id="sh-iB3" src="assets/plates/b_done.png" width="960" height="194" alt="" style="opacity:0">
+        </div>
+      </div>
+    </div>
+
+    <div id="sh-camC" class="cam">
+      <div id="sh-hC" class="hd2"><span>Nothing is saved</span><span>unless you accept.</span></div>
+      <div id="sh-pushC" class="fill" style="transform-origin:261px 600px">
+        <div id="sh-plC" class="plate" style="left:60px;top:560px;width:960px;height:335px">
+          <img src="assets/plates/incoming.png" width="960" height="335" alt="">
+        </div>
+      </div>
+    </div>
+
+    <div id="sh-camD" class="cam">
+      <div id="sh-hD" class="hd h1">No app? Scan the code.</div>
+      <div id="sh-pushD" class="fill" style="transform-origin:330px 720px">
+        <div id="sh-plD" class="plate" style="left:60px;top:580px;width:960px;height:293px">
+          <img src="assets/plates/qr.png" width="960" height="293" alt="">
+        </div>
+      </div>
+    </div>
+
+    <div id="sh-camE" class="cam">
+      <div id="sh-hE" class="hd h1">The numbers.</div>
+      <div id="sh-s1" class="stat" style="top:330px"><div class="n">128-bit</div><div class="l">token on every file sent</div><div class="s mono">receive.rs</div></div>
+      <div id="sh-ru1" class="statrule" style="top:640px"></div>
+      <div id="sh-s2" class="stat" style="top:690px"><div class="n">10 min</div><div class="l">then the QR page closes</div><div class="s mono">qr.rs</div></div>
+      <div id="sh-ru2" class="statrule" style="top:1000px"></div>
+      <div id="sh-s3" class="stat" style="top:1050px"><div class="n">2 MiB</div><div class="l">test file arrives byte for byte</div><div class="s mono">share.rs test</div></div>
+    </div>
+
+    <div id="sh-end">
+      <div id="sh-endcam">
+        <div id="sh-efan"></div>
+        <div id="sh-ename" class="h1">Panoply</div>
+        <div id="sh-eline"><span>Free. Open source.</span><span>Runs on your computer.</span></div>
+        <div id="sh-eurl" class="mono">github.com/anzal1/panoply</div>
+      </div>
+    </div>
+
+    <canvas id="sh-grain" width="270" height="338"></canvas>
+  </div>
+
+  <script>
+  (function () {
+    const F = 1 / 60;
+    const $ = id => document.getElementById(id);
+    const tl = gsap.timeline({ paused: true });
+    const XO = 'expo.out', P2I = 'power2.in', P1O = 'power1.out';
+
+    /* entrance starts on its time: a short expo.out glide on transform, opacity has its own power1.out */
+    const enter = (sel, t, o = {}) => {
+      const d = o.dur || 0.5;
+      tl.fromTo(sel, { x: o.x || 0, y: o.y === undefined ? 26 : o.y, scale: o.s || 1 }, { x: 0, y: 0, scale: 1, duration: d, ease: XO }, t);
+      tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: o.fade || 0.25, ease: P1O }, t);
+    };
+    /* the outgoing content fades in 0.15 s and ends one frame before time t, so old and new never share a frame */
+    const out = (sel, t) => tl.to(sel, { opacity: 0, duration: 0.15, ease: 'power1.in' }, t - 0.15 - F);
+    const fade = (sel, t, d) => tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: d || 0.3, ease: 'power1.inOut' }, t);
+    const drift = (sel, t0, t1, from, to) => tl.fromTo(sel, { scale: from }, { scale: to, duration: t1 - t0, ease: 'none' }, t0);
+
+    const xout = (sel, t, d) => tl.to(sel, { opacity: 0, duration: d || 0.25, ease: 'power1.inOut' }, t);
+    /* caption to caption: the old one fades while the new one glides in, no gap */
+    const swap = (oldSel, newSel, t) => { xout(oldSel, t, 0.22); enter(newSel, t, { y: 14, dur: 0.45, fade: 0.22 }); };
+
+    /* same beats as the 16:9 cut */
+    enter('#sh-r4', 1.0, { y: 30 });
+    enter('#sh-r5', 1.2, { y: 30 });
+    enter('#sh-r6', 1.4, { y: 30 });
+    drift('#sh-pwords', 0, 4.7, 1, 1.03);
+    tl.fromTo('#sh-blue', { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.6, ease: 'power3.inOut' }, 4.1);
+
+    /* result card, then the Share button pushed in to a third of the frame width */
+    enter('#sh-hA', 4.45, { y: 34 });
+    enter('#sh-plA', 4.45, { y: 40, s: 1.03, dur: 0.7 });
+    xout('#sh-hA', 5.15, 0.25);
+    enter('#sh-tip', 5.15, { y: 10, dur: 0.4 });
+    tl.fromTo('#sh-ring', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, 5.15);
+    tl.fromTo('#sh-pushA', { scale: 1, x: 0, y: 0 }, { scale: 7.5, x: -179, y: -321, duration: 1.25, ease: 'power2.inOut' }, 5.15);
+    xout('#sh-camA', 6.55, 0.25);
+
+    enter('#sh-hB1', 6.4, { y: 34 });
+    enter('#sh-plB1', 6.4, { y: 40, s: 1.03, dur: 0.7 });
+    drift('#sh-pushB', 6.4, 9.6, 1, 1.05);
+    tl.fromTo('#sh-ringB', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, 7.1);
+    swap('#sh-hB1', '#sh-hB2', 7.7);
+    xout('#sh-plB1', 7.7, 0.3);
+    enter('#sh-plB2', 7.7, { y: 12, dur: 0.45, fade: 0.3 });
+    swap('#sh-hB2', '#sh-hB3', 8.7);
+    fade('#sh-iB3', 8.7, 0.3);
+    xout('#sh-camB', 9.6, 0.25);
+
+    enter('#sh-hC', 9.45, { y: 34 });
+    enter('#sh-plC', 9.5, { y: 40, s: 1.03, dur: 0.7 });
+    tl.fromTo('#sh-pushC', { scale: 1, x: 0, y: 0 }, { scale: 1.7, x: 150, y: 60, duration: 1.7, ease: 'power2.inOut' }, 9.7);
+    xout('#sh-camC', 11.4, 0.25);
+
+    enter('#sh-hD', 11.25, { y: 34 });
+    enter('#sh-plD', 11.3, { y: 40, s: 1.03, dur: 0.7 });
+    tl.fromTo('#sh-pushD', { scale: 1, x: 0, y: 0 }, { scale: 1.6, x: 150, y: 0, duration: 1.4, ease: 'power2.inOut' }, 11.4);
+    xout('#sh-camD', 12.75, 0.25);
+
+    enter('#sh-hE', 12.6, { y: 30 });
+    enter('#sh-s1', 12.8, { y: 34 });
+    tl.fromTo('#sh-ru1', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, 12.9);
+    enter('#sh-s2', 12.95, { y: 34 });
+    tl.fromTo('#sh-ru2', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, 13.05);
+    enter('#sh-s3', 13.1, { y: 34 });
+    drift('#sh-camE', 12.6, 14.9, 1, 1.02);
+    xout('#sh-camE', 14.9, 0.2);
+
+    /* ---------- 7. end card, 15.1 s, same blue; the URL shows from 15.65 s, 2.35 s */
+    const CARD = 'M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z';
+    const PIVOT = '272.788 612.197';
+    $('sh-efan').innerHTML = `<svg viewBox="0 0 544 544" fill="none"><path id="sh-f-l" d="${CARD}" fill="rgba(255,255,255,.42)"/><path id="sh-f-r" d="${CARD}" fill="rgba(255,255,255,.62)"/><path id="sh-f-c" d="${CARD}" fill="#ffffff"/></svg>`;
+    gsap.set(['#sh-f-l', '#sh-f-r'], { svgOrigin: PIVOT });
+    const E0 = 15.1;
+    enter('#sh-efan', E0, { y: 24, s: 0.92, dur: 0.6 });
+    tl.fromTo('#sh-f-l', { rotation: 0 }, { rotation: -20, duration: 0.7, ease: XO }, E0);
+    tl.fromTo('#sh-f-r', { rotation: 0 }, { rotation: 20, duration: 0.7, ease: XO }, E0);
+    enter('#sh-ename', E0 + 0.1, { y: 40, dur: 0.6 });
+    enter('#sh-eline', E0 + 0.45, { y: 26 });
+    enter('#sh-eurl', E0 + 0.55, { y: 20 });
+    tl.fromTo('#sh-endcam', { scale: 1.03 }, { scale: 1, duration: 1.6, ease: 'power2.out' }, E0);
+
+    /* grain, painted once from a seeded generator */
+    (function () {
+      const c = $('sh-grain'), g = c.getContext('2d'), d = g.createImageData(270, 338);
+      let s = 12345; const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+      for (let i = 0; i < d.data.length; i += 4) { const v = 128 + (r() - 0.5) * 90; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+      g.putImageData(d, 0, 0);
+    })();
+
+    window.__timelines["share45"] = tl;
+  })();
+  </script>
+</template>
+</body></html>
