@@ -6,7 +6,7 @@ import { execSync } from 'child_process';
 
 const BASE = process.env.BASE || 'http://localhost:8080';
 const OUT = path.resolve(process.env.OUT || '../../out');
-const CONCEPTS = ['05-panoply', '06-fan', '07-never-leaves'];
+const CONCEPTS = (process.env.ONLY || '05-panoply,06-fan,07-never-leaves').split(',');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 fs.mkdirSync(OUT + '/raw', { recursive: true }); fs.mkdirSync(OUT + '/logs', { recursive: true });
 
