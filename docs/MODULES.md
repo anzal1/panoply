@@ -268,7 +268,7 @@ The tasks people search for every day for government and job forms.
 | Meeting recorder | Mic plus system audio, no bot joins, notes and key moments offline | 🧠 |
 | Dictation | Talk into any text field, system-wide | 🧠 |
 | Dictation cleanup | Removes ums, "scratch that", learns your words, edit selected text by voice | 🧠 |
-| Text to speech | Natural voices, offline | 🧠 |
+| Text to speech | Reads text or a TXT, MD or PDF aloud into an audio file with the system's own voices, offline (WAV first; macOS and Windows) | ⚡ |
 | Speed and pitch | Change one without the other | ⚡ |
 | Remove silence | Tighten recordings | ⚡ |
 | Stereo to mono | And channel swap, split, merge | ⚡ |

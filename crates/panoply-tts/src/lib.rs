@@ -56,12 +56,23 @@ pub struct Report {
     pub seconds: f64,
     /// Sample rate of the WAV.
     pub sample_rate: u32,
+    /// Root mean square level of everything written, 0.0 to 1.0 (a silent file is near 0).
+    pub rms: f64,
     /// How many chunks were spoken.
     pub chunks: usize,
     /// Characters spoken.
     pub characters: usize,
     /// The voice asked for, or `None` for the default.
     pub voice: Option<String>,
+}
+
+/// macOS only. Runs the main thread's run loop for up to `seconds`. A process that renders on a
+/// worker thread while its main thread waits (an MCP server reading stdin) calls this in a loop
+/// on the main thread until the worker is done, because the system voice answers on the main
+/// queue. See `panoply_platform_macos::speech`.
+#[cfg(target_os = "macos")]
+pub fn pump_main_run_loop(seconds: f64) {
+    panoply_platform_macos::speech::pump_main_run_loop(seconds);
 }
 
 /// True when this system has a speech engine with at least one voice.
@@ -117,6 +128,8 @@ fn speak_inner(
     };
     let mut writer: Option<wav::WavWriter> = None;
     let mut done_chars = 0usize;
+    // Level of what was written, summed as the blocks arrive instead of reading the file back.
+    let (mut sum_squares, mut sample_count) = (0f64, 0u64);
     for (i, chunk) in chunks.iter().enumerate() {
         if cancel.is_cancelled() {
             return Err(TtsError::Cancelled);
@@ -142,6 +155,11 @@ fn speak_inner(
                 ));
                 return false;
             }
+            for &x in &pcm.samples {
+                let v = f64::from(x) / 32768.0;
+                sum_squares += v * v;
+            }
+            sample_count += pcm.samples.len() as u64;
             if let Err(e) = w.write(&pcm.samples) {
                 failure = Some(e);
                 return false;
@@ -170,6 +188,11 @@ fn speak_inner(
     Ok(Report {
         seconds,
         sample_rate,
+        rms: if sample_count == 0 {
+            0.0
+        } else {
+            (sum_squares / sample_count as f64).sqrt()
+        },
         chunks: chunks.len(),
         characters: total,
         voice: settings.voice.map(str::to_string),

@@ -78,11 +78,28 @@ pub fn plain_from_markdown(md: &str) -> String {
         let mut l = line.trim_start_matches('#').trim_start();
         let is_heading = line.starts_with('#');
         l = l.trim_start_matches("> ").trim_start_matches('>');
+        let mut is_item = false;
         for mark in ["- ", "* ", "+ "] {
             if let Some(rest) = l.strip_prefix(mark) {
                 l = rest;
+                is_item = true;
                 break;
             }
+        }
+        // A table row reads as its cells with commas, and the divider row not at all.
+        let table_row;
+        if line.starts_with('|') {
+            if line.chars().all(|c| matches!(c, '|' | '-' | ':' | ' ')) {
+                continue;
+            }
+            table_row = line
+                .trim_matches('|')
+                .split('|')
+                .map(str::trim)
+                .collect::<Vec<_>>()
+                .join(", ");
+            l = &table_row;
+            is_item = true;
         }
         let l = strip_inline(l);
         if l.is_empty() {
@@ -90,8 +107,8 @@ pub fn plain_from_markdown(md: &str) -> String {
             continue;
         }
         out.push_str(&l);
-        // A heading is read as its own sentence.
-        if is_heading && !l.ends_with(['.', '!', '?', ':']) {
+        // A heading, a list item or a table row is read as its own sentence.
+        if (is_heading || is_item) && !l.ends_with(['.', '!', '?', ':']) {
             out.push('.');
         }
         out.push('\n');
@@ -121,6 +138,17 @@ fn strip_inline(s: &str) -> String {
                 }
             }
         }
+        // An HTML tag (<br>, </p>, <img src=...>) is dropped; a lone less-than sign stays.
+        if c == '<'
+            && chars
+                .get(i + 1)
+                .is_some_and(|n| n.is_ascii_alphabetic() || matches!(n, '/' | '!'))
+            && let Some(end) = chars[i..].iter().position(|&x| x == '>')
+        {
+            i += end + 1;
+            out.push(' ');
+            continue;
+        }
         if !matches!(c, '*' | '`' | '~') && !(c == '_' && is_emphasis_underscore(&chars, i)) {
             out.push(c);
         }
@@ -137,15 +165,41 @@ fn is_emphasis_underscore(chars: &[char], i: usize) -> bool {
     !(word(before) && word(after))
 }
 
-/// Split text into chunks of whole sentences, none longer than `max` characters unless one
-/// word is. Paragraph breaks always end a chunk, so a voice never runs two paragraphs together.
-pub fn chunks(text: &str, max: usize) -> Vec<String> {
+/// Paragraphs of a text: blank lines separate them, and the single line breaks inside one (a
+/// wrapped PDF, hard wrapped prose) become spaces. A lone newline stays a break only after
+/// sentence-ending punctuation, where the voice would pause anyway.
+fn paragraphs(text: &str) -> Vec<String> {
     let mut out = Vec::new();
-    for para in text.split("\n\n").flat_map(|p| p.split('\n')) {
-        let para = para.split_whitespace().collect::<Vec<_>>().join(" ");
-        if para.is_empty() {
+    let mut cur = String::new();
+    for line in text.lines() {
+        let line = line.split_whitespace().collect::<Vec<_>>().join(" ");
+        if line.is_empty() {
+            if !cur.is_empty() {
+                out.push(std::mem::take(&mut cur));
+            }
             continue;
         }
+        if !cur.is_empty() {
+            if cur.ends_with(['.', '!', '?', '।', '…', ':']) {
+                out.push(std::mem::take(&mut cur));
+            } else {
+                cur.push(' ');
+            }
+        }
+        cur.push_str(&line);
+    }
+    if !cur.is_empty() {
+        out.push(cur);
+    }
+    out
+}
+
+/// Split text into chunks of whole sentences, none longer than `max` characters unless one
+/// word is. A paragraph break always ends a chunk, so a voice never runs two paragraphs
+/// together. Wrapped lines inside a paragraph are one run of text.
+pub fn chunks(text: &str, max: usize) -> Vec<String> {
+    let mut out = Vec::new();
+    for para in paragraphs(text) {
         let mut cur = String::new();
         for sentence in sentences(&para) {
             if !cur.is_empty() && cur.chars().count() + 1 + sentence.chars().count() > max {
@@ -302,6 +356,38 @@ mod tests {
         assert!(t.contains("Some bold and code with a link and ."));
         assert!(!t.contains("let x"));
         assert!(t.contains("item one") && t.contains("item_two"));
+    }
+
+    #[test]
+    fn wrapped_lines_are_one_paragraph_and_only_blank_lines_split() {
+        let wrapped =
+            "This sentence is wrapped\nacross three short\nlines and ends here.\n\nNext paragraph.";
+        assert_eq!(
+            chunks(wrapped, 500),
+            [
+                "This sentence is wrapped across three short lines and ends here.",
+                "Next paragraph."
+            ]
+        );
+        // A lone newline after a full stop stays a break.
+        assert_eq!(chunks("One.\nTwo.", 500), ["One.", "Two."]);
+        assert_eq!(paragraphs("a\nb\n\nc"), ["a b", "c"]);
+    }
+
+    #[test]
+    fn markdown_tables_html_and_list_items_read_cleanly() {
+        let md = "<p>Intro<br/>text</p>\n\n| Name | Age |\n|------|-----|\n| Ann | 30 |\n\n- first\n- second\n";
+        let t = plain_from_markdown(md);
+        assert!(
+            !t.contains('<') && !t.contains('|') && !t.contains("---"),
+            "{t}"
+        );
+        assert!(t.contains("Name, Age.") && t.contains("Ann, 30."), "{t}");
+        let c = chunks(&t, 500);
+        assert!(
+            c.iter().any(|x| x.contains("first.")) && c.iter().any(|x| x.contains("second.")),
+            "{c:?}"
+        );
     }
 
     #[test]

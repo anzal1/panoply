@@ -14,8 +14,10 @@
 //! In the desktop app the main thread runs the application loop, so a job on a worker thread
 //! just waits for the buffers. A command line process that calls this on its main thread has
 //! nobody else to drain the queue, so on the main thread this pumps the run loop itself while
-//! it waits. Called from a worker thread of a process whose main thread is blocked, it times
-//! out after 30 seconds with a plain error instead of hanging.
+//! it waits. A process that runs its work on a worker thread while the main thread blocks
+//! (`panoply mcp`) must pump the main loop there with [`pump_main_run_loop`]. Called from a
+//! worker thread of a process whose main thread is blocked, a render times out after 30
+//! seconds with a plain error instead of hanging.
 
 use std::ffi::{c_char, c_int, c_void};
 use std::ptr::NonNull;
@@ -45,7 +47,8 @@ const RTLD_LAZY: c_int = 0x1;
 const BOUNDARY_IMMEDIATE: isize = 0;
 
 /// How long to wait for the next buffer before giving up on a render. Apple's synthesizer
-/// delivers its first buffer within a second or two even on a cold start.
+/// delivers its first buffer within a second or two even on a cold start, so 30 seconds means
+/// nothing is draining the main queue.
 const STALL: Duration = Duration::from_secs(30);
 
 /// One system voice.
@@ -163,9 +166,23 @@ fn ns(s: &str) -> Retained<AnyObject> {
     unsafe { Retained::retain(ptr) }.expect("a CFString pointer is never null")
 }
 
+/// Runs the calling thread's run loop for up to `seconds`, which delivers whatever waits on the
+/// main queue. Call it from the main thread only, in a loop, while another thread works. It
+/// returns at once when the loop has nothing to wait for, so it sleeps a few milliseconds then
+/// instead of spinning.
+pub fn pump_main_run_loop(seconds: f64) {
+    // SAFETY: running the current thread's loop in the default mode for a short time has no
+    // preconditions. `kCFRunLoopDefaultMode` is a constant CFString the system provides.
+    let status = unsafe { CFRunLoopRunInMode(kCFRunLoopDefaultMode, seconds, 0) };
+    // kCFRunLoopRunFinished: no sources or timers, so the call did not wait.
+    if status == 1 {
+        std::thread::sleep(Duration::from_millis(5));
+    }
+}
+
 /// Renders `text` and hands every block of audio to `sink`, in order, on the calling thread.
 /// `sink` returns `false` to stop (a cancel): the synthesizer is told to stop and this returns
-/// `Ok` with what was delivered so far. Returns an error when no audio arrives within a minute.
+/// `Ok` with what was delivered so far. Returns an error when no audio arrives for 30 seconds.
 pub fn synthesize(
     text: &str,
     request: &Request<'_>,
@@ -243,12 +260,7 @@ pub fn synthesize(
                     Ok(m) => Ok(m),
                     Err(mpsc::TryRecvError::Disconnected) => Err(RecvTimeoutError::Disconnected),
                     Err(mpsc::TryRecvError::Empty) => {
-                        // SAFETY: running the current thread's loop in the default mode for a
-                        // short time has no preconditions. It drains the main queue, where
-                        // the callback runs.
-                        unsafe {
-                            CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.02, 0);
-                        }
+                        pump_main_run_loop(0.02);
                         Err(RecvTimeoutError::Timeout)
                     }
                 }

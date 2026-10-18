@@ -146,8 +146,7 @@ impl Module for TtsModule {
                         other if n > 1 => ModuleError::Failed(format!("{name}: {other}")),
                         other => map_err(other),
                     })?;
-            let (_, rms) = panoply_tts::wav_stats(&part).map_err(map_err)?;
-            if rms < 0.001 {
+            if report.rms < 0.001 {
                 return Err(ModuleError::Failed(
                     "The voice produced only silence. Pick another voice and try again.".into(),
                 ));

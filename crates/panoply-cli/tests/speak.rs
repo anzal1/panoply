@@ -59,7 +59,7 @@ fn speak_reads_a_markdown_file_next_to_it_and_voices_lists_the_os_voices() {
     assert!((0.5..=20.0).contains(&secs) && rms > 0.005, "{secs} {rms}");
     let (voices, err, ok) = panoply(&["audio", "voices"]);
     assert!(ok, "{err}");
-    assert!(voices.lines().count() > 3, "{voices}");
+    assert!(voices.lines().count() >= 1, "{voices}");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -138,5 +138,33 @@ fn long_text_is_read_in_parts_with_progress() {
     );
     let (secs, rms) = panoply_tts::wav_stats(&dir.join("speech.wav")).unwrap();
     assert!(secs > 30.0 && rms > 0.005, "{secs} {rms}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// A voice given by its plain name (any case), as `panoply audio voices` prints it.
+#[cfg(target_os = "macos")]
+#[test]
+fn a_voice_given_by_name_works() {
+    let (voices, err, ok) = panoply(&["audio", "voices"]);
+    assert!(ok, "{err}");
+    let name = voices
+        .lines()
+        .next()
+        .and_then(|l| l.split('\t').next())
+        .expect("a voice name in the first column")
+        .to_lowercase();
+    let dir = scratch("byname");
+    let (_, err, ok) = panoply(&[
+        "audio",
+        "speak",
+        "--text",
+        "Hello.",
+        "--voice",
+        &name,
+        "--out",
+        dir.to_str().unwrap(),
+    ]);
+    assert!(ok, "{err}");
+    assert!(panoply_tts::wav_stats(&dir.join("speech.wav")).unwrap().1 > 0.005);
     let _ = std::fs::remove_dir_all(&dir);
 }

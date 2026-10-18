@@ -70,7 +70,7 @@ No signature check applies. Make the AppImage executable (`chmod +x`) and run it
   voice or engine with a clean licence and its own phonemes would bring it back. Pauses follow the
   punctuation the system voice already follows, and numbers, dates and abbreviations are read the way the
   system voice reads them. Speed changes through the system voice's own rate, so the result is close to the
-  number you pick, not exact. A PDF is read from its own text layer (run PDF OCR first on a scan).
+  number you pick, not exact. A PDF is read from its own text layer (run PDF OCR first on a scan). Markdown loses its markup, HTML tags are dropped and table rows are read as comma separated cells, but code blocks are skipped and nothing else is interpreted.
 - **Face-aware crop.** Resize to exact KB crops around the center, or the top for portraits
   (`anchor=top`). It does not look for the face yet.
 - **Wayland.** There is no global hotkey on Wayland. Use the app window, or bind a key in your desktop

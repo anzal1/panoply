@@ -448,3 +448,40 @@ fn community_plugins_are_listed_and_run() {
     drop(server);
     std::fs::remove_dir_all(&d).unwrap();
 }
+
+/// macOS answers the system voice on the main thread. `panoply mcp` runs the server on a worker
+/// thread and pumps the main run loop, so a speech call must finish in seconds, not hang for 30.
+/// The audio is written to a file and measured, never played.
+#[cfg(target_os = "macos")]
+#[test]
+fn text_to_speech_over_mcp_writes_a_plausible_non_silent_file() {
+    let _g = one_at_a_time();
+    let d = scratch("speak");
+    let out = d.join("out");
+    let mut server = Server::start(&d.join("data"), None);
+    server.initialize();
+    let started = std::time::Instant::now();
+    let r = server.call(
+        "text_to_speech",
+        json!({
+            "text": "Panoply reads text aloud. This sentence is only measured, never played.",
+            "output_dir": out,
+        }),
+    );
+    assert_eq!(r["result"]["isError"], false, "{r}");
+    assert!(
+        started.elapsed() < Duration::from_secs(25),
+        "{:?}",
+        started.elapsed()
+    );
+    let wav = out.join("speech.wav");
+    let (secs, rms) = panoply_tts::wav_stats(&wav).unwrap();
+    println!(
+        "mcp: {secs:.2} s, rms {rms:.4}, call took {:?}",
+        started.elapsed()
+    );
+    assert!((0.5..=20.0).contains(&secs), "duration {secs}");
+    assert!(rms > 0.005, "rms {rms} is silence");
+    drop(server);
+    std::fs::remove_dir_all(&d).unwrap();
+}
