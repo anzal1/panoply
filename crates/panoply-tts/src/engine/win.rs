@@ -90,7 +90,7 @@ pub fn render(text: &str, s: &Settings<'_>, sink: &mut dyn FnMut(Pcm) -> bool) -
         .map_err(|e| err("setting the speed", e))?;
     let stream = synth
         .SynthesizeTextToStreamAsync(&HSTRING::from(text))
-        .and_then(|op| op.get())
+        .and_then(|op| op.join())
         .map_err(|e| err("speaking", e))?;
     let size = stream.Size().map_err(|e| err("reading the audio", e))? as u32;
     let input = stream
@@ -99,7 +99,7 @@ pub fn render(text: &str, s: &Settings<'_>, sink: &mut dyn FnMut(Pcm) -> bool) -
     let reader = DataReader::CreateDataReader(&input).map_err(|e| err("reading the audio", e))?;
     reader
         .LoadAsync(size)
-        .and_then(|op| op.get())
+        .and_then(|op| op.join())
         .map_err(|e| err("reading the audio", e))?;
     let mut bytes = vec![0u8; size as usize];
     reader

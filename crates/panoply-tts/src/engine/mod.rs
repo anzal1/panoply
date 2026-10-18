@@ -18,6 +18,7 @@ pub struct Settings<'a> {
     /// A voice id, a language tag, or `None` for the system default.
     pub voice: Option<&'a str>,
     /// 1.0 is normal speed.
+    #[cfg_attr(not(any(target_os = "macos", windows)), allow(dead_code))]
     pub speed: f32,
 }
 
