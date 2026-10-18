@@ -483,11 +483,12 @@ mod tests {
             assert_eq!(r.len(), 1, "{spaced}: {r:?}");
             assert_eq!(r[0].1, "email", "{spaced}: {r:?}");
             assert_eq!(r[0].0, spaced, "{r:?}");
-            // The plain patterns, used for text with a real text layer, stay strict.
-            assert!(
-                m.find(&format!("Contact {spaced} today")).is_empty(),
-                "{spaced}"
-            );
+            // The plain patterns, used for text with a real text layer, stay strict: they
+            // never match the spaced form as a whole (they may match an unspaced part of it,
+            // such as `anzal@example.co` in `anzal@example.co .uk`).
+            let text = format!("Contact {spaced} today");
+            let strict: Vec<&str> = m.find(&text).into_iter().map(|h| &text[h.range]).collect();
+            assert!(!strict.contains(&spaced), "{spaced}: {strict:?}");
         }
         // A sentence end after an address is not swallowed.
         let r = loose("Mail anzal@example.com. Contact us");
