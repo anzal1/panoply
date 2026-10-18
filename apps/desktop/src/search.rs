@@ -37,6 +37,11 @@ pub enum Action {
         /// The file.
         path: std::path::PathBuf,
     },
+    /// Copy this text to the clipboard (the calculator's answer).
+    CopyText {
+        /// What goes on the clipboard.
+        text: String,
+    },
     /// The row cannot run. The text says why.
     Unavailable(String),
 }
@@ -181,7 +186,40 @@ pub fn search(cx: &Context, query: &str) -> Results {
             for_files(cx)
         };
     }
-    from_query(cx, q)
+    let mut results = from_query(cx, q);
+    if let Some(a) = crate::calc::answer(q) {
+        results.sections.insert(
+            0,
+            Section {
+                title: "Answer".into(),
+                rows: vec![calc_row(a)],
+            },
+        );
+        results.footer = Some("Return copies the answer".into());
+    }
+    results
+}
+
+/// The calculator's answer as the top row of the bar.
+fn calc_row(a: crate::calc::Answer) -> Row {
+    Row {
+        action: Action::CopyText { text: a.copy },
+        title: a.shown,
+        subtitle: a.asked,
+        trailing: "Copy".into(),
+        icon: "calculator",
+        category: Category::Calculators,
+        matched: Vec::new(),
+        chips: Vec::new(),
+        estimate: None,
+    }
+}
+
+/// Files are looked up for a typed query of two letters or more, when no files are dropped on the
+/// bar and the words were not read as a request ("make this under 50 kb"). A calculator answer
+/// does not stop it: "2024-10" may be a calculation or the name of a file.
+pub fn wants_file_search(no_files_on_bar: bool, query: &str, understood: bool) -> bool {
+    no_files_on_bar && query.trim().chars().count() >= 2 && !understood
 }
 
 /// The bar at rest: suggested tools, then recent jobs.
@@ -698,6 +736,61 @@ mod tests {
 
     fn titles(r: &Results) -> Vec<String> {
         r.rows().map(|r| r.title.clone()).collect()
+    }
+
+    #[test]
+    fn files_still_load_under_a_calculator_answer() {
+        // "2024-10" and "15% of 2400" are not answers the file index should be shut out of.
+        for q in ["2024-10", "2+2", "15% of 2400", "report"] {
+            assert!(wants_file_search(true, q, false), "query: {q}");
+        }
+        assert!(crate::calc::answer("15% of 2400").is_some());
+        // Unchanged: a request, a dropped file or one letter do not look up files.
+        assert!(!wants_file_search(true, "under 50 kb", true));
+        assert!(!wants_file_search(false, "report", false));
+        assert!(!wants_file_search(true, "r", false));
+    }
+
+    #[test]
+    fn a_sum_is_the_top_row_and_copies_its_answer() {
+        let c = cat();
+        for (q, shown, copy) in [
+            ("15% of 48000", "7,200", "7200"),
+            ("500 kb in mb", "0.5 MB", "0.5"),
+        ] {
+            let r = search(&cx(&c, &[], &[]), q);
+            let top = r.get(0).unwrap();
+            assert_eq!(r.sections[0].title, "Answer");
+            assert_eq!(top.title, shown);
+            assert_eq!(
+                top.action,
+                Action::CopyText {
+                    text: copy.to_string()
+                }
+            );
+        }
+    }
+
+    #[test]
+    fn a_query_for_a_tool_or_a_file_never_gets_an_answer_row() {
+        let c = cat();
+        let files = [png("sig.png", 200_000)];
+        for q in [
+            "under 50 kb",
+            "merge pdf",
+            "heic to jpg",
+            "compress",
+            "2024",
+        ] {
+            for files in [&[][..], &files[..]] {
+                let r = search(&cx(&c, files, &[]), q);
+                assert!(
+                    r.rows()
+                        .all(|r| !matches!(r.action, Action::CopyText { .. })),
+                    "query: {q}"
+                );
+            }
+        }
     }
 
     #[test]

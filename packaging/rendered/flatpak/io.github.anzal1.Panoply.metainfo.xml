@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.anzal1.Panoply</id>
+  <name>Panoply</name>
+  <summary>Every file tool in one fast app</summary>
+  <developer id="io.github.anzal1">
+    <name>Panoply contributors</name>
+  </developer>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <description>
+    <p>Panoply puts PDF, image, audio and video tools, and a universal file converter, in one open-source app. Nothing is uploaded; everything runs on your computer.</p>
+    <p>Open a file, say what you want in plain words, and Panoply picks the tool. A command line tool and an MCP server ship with it.</p>
+  </description>
+  <launchable type="desktop-id">io.github.anzal1.Panoply.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image type="source" width="2320" height="1440">https://raw.githubusercontent.com/anzal1/panoply/v0.2.0-beta/apps/desktop/screens/17-app-home-dark.png</image>
+      <caption>The home screen</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source" width="2320" height="1440">https://raw.githubusercontent.com/anzal1/panoply/v0.2.0-beta/apps/desktop/screens/15-app-tool-panel.png</image>
+      <caption>A tool with its options</caption>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">https://github.com/anzal1/panoply</url>
+  <url type="bugtracker">https://github.com/anzal1/panoply/issues</url>
+  <url type="vcs-browser">https://github.com/anzal1/panoply</url>
+  <categories>
+    <category>Utility</category>
+  </categories>
+  <keywords>
+    <keyword>pdf</keyword>
+    <keyword>convert</keyword>
+    <keyword>image</keyword>
+    <keyword>audio</keyword>
+    <keyword>video</keyword>
+  </keywords>
+  <provides>
+    <binary>panoply</binary>
+    <binary>panoply-desktop</binary>
+  </provides>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="0.2.0-beta" date="2026-10-16">
+      <url type="details">https://github.com/anzal1/panoply/releases/tag/v0.2.0-beta</url>
+    </release>
+  </releases>
+</component>

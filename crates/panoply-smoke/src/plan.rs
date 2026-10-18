@@ -228,6 +228,66 @@ pub fn candidates(root: &Path) -> Vec<Candidate> {
             traits: Vec::new(),
         });
     }
+    out.extend(archive_samples(&repo));
+    out
+}
+
+/// Small archives made from the repository's own text files, so `archive.extract` has something
+/// to open: the corpus holds no archive. They are rebuilt in a scratch folder on every run, one
+/// per format Panoply opens.
+fn archive_samples(repo: &Path) -> Vec<Candidate> {
+    use panoply_archive::{ArchiveError, CreateOptions, Format};
+    let inputs: Vec<PathBuf> = TEXT_FILES
+        .iter()
+        .map(|rel| repo.join(rel))
+        .filter(|p| p.is_file())
+        .collect();
+    if inputs.is_empty() {
+        return Vec::new();
+    }
+    let dir = std::env::temp_dir().join(format!("panoply-smoke-archives-{}", std::process::id()));
+    if std::fs::create_dir_all(&dir).is_err() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    for (format, name) in [
+        (Format::Zip, "sample.zip"),
+        (Format::TarGz, "sample.tar.gz"),
+        (Format::TarZst, "sample.tar.zst"),
+    ] {
+        let path = dir.join(name);
+        let Ok(mut file) = std::fs::File::create(&path) else {
+            continue;
+        };
+        let made = panoply_archive::create(
+            &inputs,
+            &mut file,
+            &CreateOptions { format, level: 6 },
+            Path::new(""),
+            &panoply_core::CancelToken::new(),
+            &mut |_, _| {},
+            &mut |p| {
+                std::fs::File::open(p).map_err(|source| ArchiveError::Io {
+                    path: p.to_path_buf(),
+                    source,
+                })
+            },
+        );
+        if made.is_err() {
+            continue;
+        }
+        let p = FileProfile::read(&path);
+        out.push(Candidate {
+            id: format!("generated-{name}"),
+            kind: "archive".into(),
+            path,
+            bytes: p.bytes,
+            ext: p.sniffed.ext,
+            mime: p.sniffed.mime,
+            generated: true,
+            traits: Vec::new(),
+        });
+    }
     out
 }
 

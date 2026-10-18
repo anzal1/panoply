@@ -1,9 +1,11 @@
-# Homebrew cask for Panoply. Filled by .github/workflows/release.yml from packaging/scripts/render_manifests.py.
-# Lives in the tap repository anzal1/homebrew-panoply (Casks/panoply.rb):
+# Homebrew cask for Panoply. Filled by .github/workflows/update-manifests.yml from packaging/scripts/render_manifests.py,
+# which opens a pull request that puts it at Casks/panoply.rb in this repository (the repository is the tap):
+#   brew tap anzal1/panoply https://github.com/anzal1/panoply
 #   brew install --cask anzal1/panoply/panoply
 cask "panoply" do
-  version "@VERSION@"
   arch arm: "arm64", intel: "x64"
+
+  version "@VERSION@"
   sha256 arm:   "@SHA256_MACOS_ARM64_ZIP@",
          intel: "@SHA256_MACOS_X64_ZIP@"
 
@@ -12,13 +14,15 @@ cask "panoply" do
   desc "Every file tool in one fast app, running on your own computer"
   homepage "https://github.com/@REPO@"
 
+  # Every release is a prerelease for now, and the GitHub strategies skip prereleases, so read the tags.
   livecheck do
-    url :url
-    strategy :github_latest
+    url "https://github.com/@REPO@.git"
+    regex(/^v(\d+(?:\.\d+)+(?:-beta(?:\.\d+)?)?)$/i)
+    strategy :git
   end
 
   # LSMinimumSystemVersion in the app's Info.plist.
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "Panoply.app"
   # The command line tool rides inside the app (named panoply-cli there because the app
