@@ -50,6 +50,14 @@ pub const EXCEPTIONS: &[Exception] = &[
         source: "id-and-image.md 3.14 Budgets: segmenter plus inpainter, preview under 2 s",
     },
     Exception {
+        module: "pdf.redact",
+        peak_mb: Some(450),
+        no_first_preview: false,
+        only_for: &[],
+        only_ids: &[],
+        source: "DECISIONS.md, smoke matrix exceptions: Apple Vision reads the scanned pages (as PDF 12 OCR does) and the redrawn colour page is burned and encoded, 381 MB measured on a 32 page scan",
+    },
+    Exception {
         module: "image.upscale",
         peak_mb: None,
         no_first_preview: true,
