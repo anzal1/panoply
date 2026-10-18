@@ -33,7 +33,7 @@
     #m-chat,#m-list{position:absolute;left:0;top:68px;width:1560px;height:692px}
     #m-list{opacity:0}
 
-    .ln{position:absolute;left:44px;height:52px;line-height:52px;font-family:"Geist Mono",monospace;font-size:34px;font-weight:500;color:#ececf1;white-space:nowrap;opacity:0;letter-spacing:-0.01em}
+    .ln{position:absolute;left:44px;height:52px;line-height:52px;font-family:"Geist Mono",monospace;font-size:34px;font-weight:500;color:#ececf1;white-space:pre;opacity:0;letter-spacing:-0.01em}
     .ln .d{color:#a9a9b3}
     .ln .t{color:#0a84ff}
     .ln .ok{color:#30d158}
@@ -105,8 +105,8 @@
     <div id="m-hook">
       <div id="m-hwords" class="h1">
         <span class="row" id="m-h1">Your agent can now do</span>
-        <span class="row" id="m-h2">every file job on your</span>
-        <span class="row" id="m-h3">computer, offline.</span>
+        <span class="row" id="m-h2">31 file jobs on your</span>
+        <span class="row" id="m-h3">computer, no upload.</span>
       </div>
     </div>
 
@@ -220,10 +220,11 @@
       count($('m-n1'), 1, D.tools.length, 9.95, 2.9, v => String(Math.round(v)), 'power1.inOut');
       enter('#m-st2', 11.2, { y: 28, dur: 0.6 });
       enter('#m-st3', 11.9, { y: 28, dur: 0.6 });
+      tl.to('#m-win', { y: -70, duration: 0.7, ease: 'power2.inOut' }, 9.3);
       tl.fromTo('#m-win', { scale: 1 }, { scale: 1.02, duration: 4.0, ease: 'none' }, 9.4);
 
       /* ---------- the hook, 13.5 to 15.6 s ---------- */
-      out('#m-win', 13.6, { y: -24, dur: 0.4 });
+      out('#m-win', 13.6, { y: -94, dur: 0.4 });
       enter('#m-h1', 13.75, { y: 36, dur: 0.6 });
       enter('#m-h2', 14.15, { y: 36, dur: 0.6 });
       enter('#m-h3', 14.55, { y: 36, dur: 0.6 });
