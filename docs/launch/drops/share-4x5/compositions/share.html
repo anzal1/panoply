@@ -162,7 +162,7 @@
 
     const xout = (sel, t, d) => tl.to(sel, { opacity: 0, duration: d || 0.25, ease: 'power1.inOut' }, t);
     /* caption to caption: the old one fades while the new one glides in, no gap */
-    const swap = (oldSel, newSel, t) => { xout(oldSel, t, 0.22); enter(newSel, t, { y: 14, dur: 0.45, fade: 0.22 }); };
+    const swap = (oldSel, newSel, t) => { xout(oldSel, t, 0.16); tl.to(oldSel, { y: -12, duration: 0.3, ease: P2I }, t); enter(newSel, t, { y: 14, dur: 0.45, fade: 0.16 }); };
 
     /* same beats as the 16:9 cut */
     enter('#sh-r4', 1.0, { y: 30 });
@@ -181,28 +181,28 @@
     enter('#sh-tip', 5.15, { y: 10, dur: 0.4 });
     tl.fromTo('#sh-ring', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, 5.15);
     tl.fromTo('#sh-pushA', { scale: 1, x: 0, y: 0 }, { scale: 7.5, x: -179, y: -321, duration: 1.25, ease: 'power2.inOut' }, 5.15);
-    xout('#sh-camA', 6.55, 0.25);
+    xout('#sh-camA', 6.55, 0.2);
 
     enter('#sh-hB1', 6.4, { y: 34 });
     enter('#sh-plB1', 6.4, { y: 40, s: 1.03, dur: 0.7 });
     drift('#sh-pushB', 6.4, 9.6, 1, 1.05);
     tl.fromTo('#sh-ringB', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, 7.1);
     swap('#sh-hB1', '#sh-hB2', 7.7);
-    xout('#sh-plB1', 7.7, 0.3);
+    xout('#sh-plB1', 7.7, 0.2);
     enter('#sh-plB2', 7.7, { y: 12, dur: 0.45, fade: 0.3 });
     swap('#sh-hB2', '#sh-hB3', 8.7);
-    fade('#sh-iB3', 8.7, 0.3);
-    xout('#sh-camB', 9.6, 0.25);
+    fade('#sh-iB3', 8.7, 0.2);
+    xout('#sh-camB', 9.6, 0.2);
 
     enter('#sh-hC', 9.45, { y: 34 });
     enter('#sh-plC', 9.5, { y: 40, s: 1.03, dur: 0.7 });
     tl.fromTo('#sh-pushC', { scale: 1, x: 0, y: 0 }, { scale: 1.7, x: 150, y: 60, duration: 1.7, ease: 'power2.inOut' }, 9.7);
-    xout('#sh-camC', 11.4, 0.25);
+    xout('#sh-camC', 11.4, 0.2);
 
     enter('#sh-hD', 11.25, { y: 34 });
     enter('#sh-plD', 11.3, { y: 40, s: 1.03, dur: 0.7 });
     tl.fromTo('#sh-pushD', { scale: 1, x: 0, y: 0 }, { scale: 1.6, x: 150, y: 0, duration: 1.4, ease: 'power2.inOut' }, 11.4);
-    xout('#sh-camD', 12.75, 0.25);
+    xout('#sh-camD', 12.75, 0.2);
 
     enter('#sh-hE', 12.6, { y: 30 });
     enter('#sh-s1', 12.8, { y: 34 });

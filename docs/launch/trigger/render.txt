@@ -1,2 +1,2 @@
 drops/share,drops/share-4x5 looks 60
-# run 5: hide covered pain words after the wipe (check errors)
+# run 6: shorter caption and panel crossfades
