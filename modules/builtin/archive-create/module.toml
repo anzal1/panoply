@@ -1,0 +1,37 @@
+# Create archive. Pattern A, instant transform. Spec: docs/specs/docs-find-files-share-capture.md, Archives.
+# Built into panoply-host (crates/panoply-host/src/builtin/archive.rs) on the panoply-archive engine.
+accepts = ["*/*"]
+outputs = ["application/zip", "application/gzip", "application/zstd"]
+
+[module]
+id = "archive.create"
+name = "Create archive"
+version = "0.1.0"
+pattern = "A"
+summary = "Put these files and folders in one ZIP, TAR.GZ or TAR.ZST."
+
+[options.format]
+type = "choice"
+values = ["zip", "tar.gz", "tar.zst"]
+default = "zip"
+label = "Format"
+help = "ZIP opens everywhere. TAR.ZST is smallest and fastest for developer folders."
+
+[options.level]
+type = "choice"
+values = ["fast", "balanced", "small"]
+default = "balanced"
+label = "Compression"
+help = "Fast is quick, small takes longer and makes a smaller file."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true
