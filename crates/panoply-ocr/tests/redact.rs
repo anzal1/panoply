@@ -134,11 +134,22 @@ fn run(
     let ocr = Ocr::new();
     let cancel = CancelToken::new();
     let found = with_fetch(|f| redact::find(file, opts, &ocr, f, &cancel, &mut |_, _| {}))?;
+    let found_words = found.scan_words.clone();
     let mut all = found.matches.clone();
     tweak(&mut all);
     let mut out = Vec::new();
     let report = with_fetch(|f| {
-        redact::apply(file, &mut out, opts, &all, &ocr, f, &cancel, &mut |_, _| {})
+        redact::apply(
+            file,
+            &mut out,
+            opts,
+            &all,
+            &found_words,
+            &ocr,
+            f,
+            &cancel,
+            &mut |_, _| {},
+        )
     })?;
     Some((found, report, out))
 }

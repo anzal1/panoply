@@ -39,6 +39,11 @@ enum Kind {
 }
 
 impl Pending {
+    /// The temporary file's path, for reading back what was written (the open handle is write only).
+    pub fn path(&self) -> &Path {
+        &self.part
+    }
+
     /// The open temporary file.
     pub fn file(&mut self) -> &mut File {
         self.file

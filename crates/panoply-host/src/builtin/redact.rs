@@ -137,6 +137,7 @@ impl Module for RedactModule {
                 ));
                 continue;
             }
+            let scan_words = found.scan_words;
             let mut all = found.matches;
             for m in &mut all {
                 m.selected = !skip.contains(&m.id);
@@ -161,6 +162,7 @@ impl Module for RedactModule {
                 BufWriter::new(sink),
                 &opts,
                 &all,
+                &scan_words,
                 &ocr,
                 &mut fetch,
                 &ctx.cancel,
@@ -168,7 +170,13 @@ impl Module for RedactModule {
             )
             .map_err(fail)?;
             ctx.progress(share(0.97), "Checking the new file");
-            let leaks = redact::verify(pending.file(), &report.needles).map_err(fail)?;
+            let written =
+                std::fs::File::open(pending.path()).map_err(|source| ModuleError::Io {
+                    path: path.clone(),
+                    source,
+                })?;
+            let leaks = redact::verify(&written, &report.needles).map_err(fail)?;
+            drop(written);
             if !leaks.is_empty() {
                 drop(pending);
                 let places: Vec<String> = leaks.into_iter().map(|l| l.place).collect();

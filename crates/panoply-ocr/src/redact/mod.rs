@@ -57,7 +57,7 @@ impl Default for Options {
             terms: Vec::new(),
             presets: Vec::new(),
             dpi: 200.0,
-            max_pixels: 36_000_000,
+            max_pixels: crate::input::MAX_PIXELS,
             langs: Vec::new(),
         }
     }
@@ -101,6 +101,8 @@ pub struct Found {
     pub pages: usize,
     /// Pages that had to be read with OCR.
     pub scanned: Vec<usize>,
+    /// The OCR words of those pages in displayed points, so [`apply`] does not read them twice.
+    pub scan_words: HashMap<usize, Vec<Word>>,
     /// Everything found.
     pub matches: Vec<Match>,
 }
@@ -286,9 +288,29 @@ impl Pdfium {
 
 // ---------------------------------------------------------------- page text
 
+/// An 8 bit gray copy for the engines (they use a third of the memory of RGB, as `pdf.ocr` does).
+fn gray_of(d: &Drawn) -> Result<OcrImage> {
+    let gray: Vec<u8> = d
+        .rgb
+        .chunks_exact(3)
+        .map(|p| {
+            ((u32::from(p[0]) * 299 + u32::from(p[1]) * 587 + u32::from(p[2]) * 114) / 1000) as u8
+        })
+        .collect();
+    OcrImage::gray(d.w, d.h, gray)
+        .ok_or_else(|| OcrError::Engine("The page could not be drawn for reading.".into()))
+}
+
+/// Like [`gray_of`], giving up the colour picture first so both are never held together.
+fn gray_for_reading(d: Drawn) -> Result<OcrImage> {
+    gray_of(&d)
+}
+
 struct PageText {
     chars: Vec<Ch>,
     scanned: bool,
+    /// For a scan: the OCR words in displayed points.
+    words: Vec<Word>,
 }
 
 /// Characters from OCR words: each word's box is shared out over its letters, words are
@@ -391,15 +413,33 @@ fn read_page(
         return Ok(PageText {
             chars,
             scanned: false,
+            words: Vec::new(),
         });
     }
     let drawn = pdfium.render(index, 300.0, crate::input::MAX_PIXELS)?;
-    let img = OcrImage::rgb(drawn.w, drawn.h, drawn.rgb)
-        .ok_or_else(|| OcrError::Engine("The page could not be drawn for reading.".into()))?;
+    let scale = drawn.scale;
+    let img = gray_for_reading(drawn)?;
     let page = ocr.recognize(&img, &opts.langs, fetch, cancel)?;
+    drop(img);
+    let words = page
+        .lines
+        .iter()
+        .flat_map(|l| l.words.iter())
+        .map(|w| Word {
+            text: w.text.clone(),
+            bbox: Rect {
+                x: w.bbox.x / scale,
+                y: w.bbox.y / scale,
+                w: w.bbox.w / scale,
+                h: w.bbox.h / scale,
+            },
+            confidence: w.confidence,
+        })
+        .collect();
     Ok(PageText {
-        chars: chars_from_ocr(&page, drawn.scale),
+        chars: chars_from_ocr(&page, scale),
         scanned: true,
+        words,
     })
 }
 
@@ -554,6 +594,7 @@ pub fn find(
         let page = read_page(&pdfium, i, &b, opts, ocr, fetch, cancel)?;
         if page.scanned {
             found.scanned.push(i);
+            found.scan_words.insert(i, page.words.clone());
         }
         let (text, at) = text_of(&page.chars);
         for hit in matcher.find(&text) {
@@ -655,13 +696,14 @@ fn burn(d: &mut Drawn, rects: &[Rect]) {
 }
 
 /// Write a redacted copy of `file` to `out`. `all` is the list from [`find`], with the user's
-/// choices in `selected`.
+/// choices in `selected`. `scan_words` is [`Found::scan_words`] (an empty map reads scans again).
 #[allow(clippy::too_many_arguments)]
 pub fn apply<W: Write>(
     file: &File,
     out: W,
     opts: &Options,
     all: &[Match],
+    scan_words: &HashMap<usize, Vec<Word>>,
     ocr: &Ocr,
     fetch: &mut Fetch<'_>,
     cancel: &CancelToken,
@@ -775,10 +817,24 @@ pub fn apply<W: Write>(
             // OCR of the picture as it now is (the redacted words are not in it).
             let words: Vec<Word> = if has_text {
                 words_from_chars(&chars, rects, drawn.scale)
+            } else if let Some(read) = scan_words.get(&i) {
+                // The words found while looking, minus any that touch a box.
+                read.iter()
+                    .filter(|w| !rects.iter().any(|r| intersects(r, &w.bbox)))
+                    .map(|w| Word {
+                        text: w.text.clone(),
+                        bbox: Rect {
+                            x: w.bbox.x * drawn.scale,
+                            y: w.bbox.y * drawn.scale,
+                            w: w.bbox.w * drawn.scale,
+                            h: w.bbox.h * drawn.scale,
+                        },
+                        confidence: w.confidence,
+                    })
+                    .collect()
             } else {
-                let img = OcrImage::rgb(drawn.w, drawn.h, drawn.rgb.clone()).ok_or_else(|| {
-                    OcrError::Engine("The page could not be drawn for reading.".into())
-                })?;
+                // Not looked at here: read the picture as it now is.
+                let img = gray_of(&drawn)?;
                 let read = ocr.recognize(&img, &opts.langs, fetch, cancel)?;
                 read.lines.into_iter().flat_map(|l| l.words).collect()
             };
