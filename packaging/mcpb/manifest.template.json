@@ -1,0 +1,37 @@
+{
+  "manifest_version": "0.3",
+  "name": "panoply",
+  "display_name": "Panoply",
+  "version": "@VERSION@",
+  "description": "File tools for your agent: merge and compress PDFs, resize images, trim video, OCR. Runs on your computer.",
+  "long_description": "Panoply gives Claude one tool per file job: merge, split and compress PDFs, convert, resize and compress images, remove backgrounds, trim and convert video, read text from scans and more. Everything runs locally over stdio. Nothing is uploaded, files go in as absolute paths and results come back as new files, never over your originals. A few tools need a model or engine that is not in the bundle; they fail with a message that names it until you allow the download (see the documentation).",
+  "author": {
+    "name": "Anzal Husain Abidi",
+    "url": "https://github.com/anzal1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anzal1/panoply"
+  },
+  "homepage": "https://github.com/anzal1/panoply",
+  "documentation": "https://github.com/anzal1/panoply/blob/main/docs/MCP.md",
+  "support": "https://github.com/anzal1/panoply/issues",
+  "icon": "icon.png",
+  "server": {
+    "type": "binary",
+    "entry_point": "server/@EXE@",
+    "mcp_config": {
+      "command": "${__dirname}/server/@EXE@",
+      "args": ["mcp"],
+      "env": {}
+    }
+  },
+  "tools": [],
+  "tools_generated": true,
+  "keywords": ["pdf", "image", "video", "ocr", "files", "local", "offline", "converter"],
+  "license": "MIT OR Apache-2.0",
+  "privacy_policies": ["https://github.com/anzal1/panoply/blob/main/docs/PRIVACY.md"],
+  "compatibility": {
+    "platforms": ["@PLATFORM@"]
+  }
+}

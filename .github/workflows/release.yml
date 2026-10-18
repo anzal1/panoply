@@ -318,10 +318,48 @@ jobs:
           retention-days: 7
 
   # ------------------------------------------------------------------------------------------------
+  # MCP Bundles (.mcpb) for Claude Desktop and the official MCP registry: the panoply program and its
+  # modules folder with a manifest, one bundle per platform. Built on Linux (it only zips) and validated
+  # with the official mcpb tool. packaging/mcpb/. The names hold "mcp" because the registry requires it.
+  # ------------------------------------------------------------------------------------------------
+  package-mcpb:
+    needs: [plan, build, modules]
+    if: ${{ !inputs.warm_cache_only }}
+    name: package mcpb ${{ matrix.id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { id: macos-arm64, platform: darwin }
+          - { id: macos-x64, platform: darwin }
+          - { id: windows-x64, platform: win32 }
+          - { id: windows-arm64, platform: win32 }
+          - { id: linux-x64, platform: linux }
+          - { id: linux-arm64, platform: linux }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with: { name: "bin-${{ matrix.id }}", path: stage }
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with: { name: shipped-modules, path: stage/modules }
+      - name: Build and validate the bundle
+        run: |
+          python3 -I packaging/mcpb/build_mcpb.py --version "${{ needs.plan.outputs.version }}" \
+            --platform ${{ matrix.platform }} --id ${{ matrix.id }} --stage stage --out dist
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pkg-mcpb-${{ matrix.id }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  # ------------------------------------------------------------------------------------------------
   # Tags only: checksums, filled package manager manifests, build provenance, a draft release.
   # ------------------------------------------------------------------------------------------------
   publish:
-    needs: [plan, package-macos, package-windows, package-linux]
+    needs: [plan, package-macos, package-windows, package-linux, package-mcpb]
     if: needs.plan.outputs.release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -350,6 +388,14 @@ jobs:
           find staging -maxdepth 1 -type f ! -name 'selftest-*' -exec cp {} release/ \;
           if [ "$DESKTOP" = real ]; then
             python3 -I packaging/scripts/verify_release.py --version "$VERSION" --dir release
+          fi
+          # server.json for the official MCP registry: the version, the download URLs and the SHA-256 of
+          # every .mcpb. Published by hand after the release is public (docs/MCP.md, "Registry").
+          python3 -I packaging/mcp-registry/render_server_json.py --version "$VERSION" --tag "$TAG" \
+            --repo "$GITHUB_REPOSITORY" --dir release --out release/server.json
+          if python3 -m venv .venv-mcp && .venv-mcp/bin/pip install --quiet jsonschema \
+            && .venv-mcp/bin/python -I packaging/mcp-registry/render_server_json.py --check release/server.json; then :; else
+            echo "::warning title=server.json::did not validate against the registry schema; see the log."
           fi
           (cd release && sha256sum -- * > ../SHA256SUMS)
           notarized="$(sed -n 's/^NOTARIZED=//p' staging/state/macos-arm64.env 2>/dev/null | head -1 || true)"
@@ -393,6 +439,7 @@ jobs:
             then \`scoop install panoply\` once the bucket is live
           - Linux: the \`.AppImage\` or the \`.tar.gz\` (run \`install.sh\` inside)
           - Command line only: the \`panoply-cli-*\` archives
+          - Claude Desktop: the \`panoply-mcp-*.mcpb\` for your system, opened by double click
 
           **Verify a download:** \`sha256sum -c SHA256SUMS --ignore-missing\`, or
           \`gh attestation verify <file> --repo $GITHUB_REPOSITORY\` to check it was built by this repository's workflow.
