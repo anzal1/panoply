@@ -67,6 +67,8 @@ jobs:
         with:
           fetch-depth: 0
       - run: python3 -I tools/ci/check_docs.py
+      - name: MCP install links match tools/mcp_links.py
+        run: python3 -I tools/ci/check_mcp_links.py
       - name: Prose lint
         run: |
           if [ "${{ github.event_name }}" = pull_request ]; then
@@ -220,6 +222,20 @@ jobs:
           test -n "$ort"
           echo "PANOPLY_ORT_LIB=$ort" >> "$GITHUB_ENV"
           rm fetch.log
+      # The Claude Desktop bundle, built from this build's CLI and the shipped modules, must serve exactly the tools
+      # its manifest lists. It starts the bundle's own server (node launcher included) with every file at mode 0600.
+      - name: MCP bundle matches the running server
+        if: runner.os == 'Linux' && matrix.shard == 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          stage="$RUNNER_TEMP/mcpb-stage"
+          mkdir -p "$stage"
+          cp "${CARGO_TARGET_DIR:-target}/ci/panoply" "$stage/panoply"
+          tools/build-shipped-modules.sh "$stage/modules"
+          python3 -I packaging/mcpb/build_mcpb.py --version 0.0.0-ci --platform linux --id linux-x64 \
+            --stage "$stage" --out "$RUNNER_TEMP/mcpb"
+          python3 -I packaging/mcpb/check_served.py "$RUNNER_TEMP/mcpb/panoply-mcp-0.0.0-ci-linux-x64.mcpb"
       - name: Run the tests
         run: cargo nextest run ${{ env.NEXTEST_ARGS }} ${{ matrix.shards && format('--partition count:{0}/{1}', matrix.shard, matrix.shards) || '' }}
       # The timing tests (idle CPU and memory budgets) get the machine to themselves.

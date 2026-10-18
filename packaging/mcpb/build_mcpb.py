@@ -5,8 +5,10 @@
                   --stage STAGE --out DIR [--mcpb "npx -y @anthropic-ai/mcpb@2.1.2"]
 
 STAGE holds `panoply` (or `panoply.exe`) and, optionally, `modules/`. The bundle layout is
-    manifest.json  icon.png  LICENSE-*  THIRD-PARTY-NOTICES.md  server/panoply[.exe]  server/modules/
-The program finds `modules/` next to itself, so nothing else is needed. The output is
+    manifest.json  icon.png  LICENSE-*  THIRD-PARTY-NOTICES.md  server/index.js  server/panoply[.exe]  server/modules/
+The bundle is a `node` server: Claude Desktop unpacks files without the execute permission (mcpb issues 294 and
+282), so server/index.js sets it on the program and runs `panoply mcp`. The program finds `modules/` next to
+itself, so nothing else is needed. The output is
 `panoply-mcp-VERSION-ID.mcpb` ("mcp" is in the name because the official MCP registry requires it in the
 download URL). The manifest's tool list is read from the module manifests so it cannot go stale.
 The bundle is validated with the official mcpb tool before it is written. Run with `python3 -I`.
@@ -46,6 +48,9 @@ def module_tools():
         summary = re.search(r'^summary\s*=\s*"((?:[^"\\]|\\.)*)"', sec.group(1), re.M)
         if not mid or not summary:
             sys.exit(f"build_mcpb: {f}/module.toml has no [module] id and summary")
+        surf = re.search(r"^\[surfaces\](.*?)(?=^\[|\Z)", text, re.S | re.M)
+        if surf and re.search(r"^mcp\s*=\s*false\b", surf.group(1), re.M):
+            continue  # `panoply mcp` skips a module that turns the mcp surface off
         tools[mid.group(1).replace(".", "_")] = json.loads(f'"{summary.group(1)}"')
     return [{"name": n, "description": tools[n]} for n in sorted(tools)]
 
@@ -65,7 +70,7 @@ def main():
     if not (stage / exe).is_file():
         sys.exit(f"build_mcpb: {stage / exe} is missing")
     manifest = (HERE / "manifest.template.json").read_text()
-    for k, v in {"@VERSION@": a.version, "@EXE@": exe, "@PLATFORM@": a.platform}.items():
+    for k, v in {"@VERSION@": a.version, "@PLATFORM@": a.platform}.items():
         manifest = manifest.replace(k, v)
     m = json.loads(manifest)
     m["tools"] = module_tools()
@@ -78,6 +83,7 @@ def main():
         (b / "server").mkdir(parents=True)
         shutil.copy2(stage / exe, b / "server" / exe)
         (b / "server" / exe).chmod(0o755)
+        shutil.copy2(HERE / "index.js", b / "server" / "index.js")
         if (stage / "modules").is_dir():
             shutil.copytree(stage / "modules", b / "server" / "modules")
         shutil.copy2(ROOT / "packaging" / "assets" / "panoply-512.png", b / "icon.png")

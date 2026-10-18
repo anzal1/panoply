@@ -171,7 +171,7 @@ What differs per system, and the steps for every first-open prompt, are in [docs
 
 `panoply mcp` gives Claude, Cursor, VS Code and other agents every Panoply tool, running on your computer. Nothing is uploaded.
 
-- **Claude Desktop:** open the `panoply-mcp-*.mcpb` for your system from the [latest release](https://github.com/anzal1/panoply/releases/latest).
+- **Claude Desktop (macOS and Windows):** open the `panoply-mcp-*.mcpb` for your system from the [latest release](https://github.com/anzal1/panoply/releases/latest).
 - **Cursor:** [Add to Cursor](https://cursor.com/en/install-mcp?name=panoply&config=eyJjb21tYW5kIjoicGFub3BseSIsImFyZ3MiOlsibWNwIl19)
 - **VS Code:** [Add to VS Code](https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522panoply%2522%252C%2522command%2522%253A%2522panoply%2522%252C%2522args%2522%253A%255B%2522mcp%2522%255D%257D)
 - **Claude Code:** `claude mcp add panoply -- panoply mcp`

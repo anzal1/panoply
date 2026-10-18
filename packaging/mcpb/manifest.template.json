@@ -18,12 +18,23 @@
   "support": "https://github.com/anzal1/panoply/issues",
   "icon": "icon.png",
   "server": {
-    "type": "binary",
-    "entry_point": "server/@EXE@",
+    "type": "node",
+    "entry_point": "server/index.js",
     "mcp_config": {
-      "command": "${__dirname}/server/@EXE@",
-      "args": ["mcp"],
-      "env": {}
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "PANOPLY_YES": "${user_config.allow_downloads}"
+      }
+    }
+  },
+  "user_config": {
+    "allow_downloads": {
+      "type": "boolean",
+      "title": "Allow downloads",
+      "description": "A few tools need a model or engine that is not in this bundle, such as background removal or OCR. Turn this on to let them download it the first time they run. Off by default: those tools then stop with a message that names what they need.",
+      "default": false,
+      "required": false
     }
   },
   "tools": [],

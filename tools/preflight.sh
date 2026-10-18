@@ -22,7 +22,7 @@
 #   cargo nextest run -p <crates>, with the `ci-core` profile (everything except the heavy tests), then
 #   the timing tests alone (profile `ci-idle`)
 #   tools/check-modules.sh, when a file under modules/examples-wasm changed
-#   python3 tools/ci/check_docs.py
+#   python3 tools/ci/check_docs.py, and tools/ci/check_mcp_links.py (install links in README and docs/MCP.md)
 #
 # The whole workspace is used instead of the changed crates when Cargo.lock, a Cargo.toml in the root,
 # a workflow or .config/nextest.toml changed (a ci.yml edit confined to its docs job does not count), or
@@ -93,6 +93,7 @@ done_step
 
 step "docs check"
 python3 -I tools/ci/check_docs.py
+python3 -I tools/ci/check_mcp_links.py
 done_step
 
 # ---- the test corpus -----------------------------------------------------------------------------
