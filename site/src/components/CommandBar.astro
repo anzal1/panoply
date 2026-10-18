@@ -1,0 +1,18 @@
+---
+interface Props { id: string; label?: string; hidden?: boolean }
+const { id, label, hidden } = Astro.props;
+---
+<div class="bar" id={id} {...(hidden ? { "aria-hidden": "true" } : { role: "img", "aria-label": label })}>
+        <div class="bar-top">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <div class="q"><span class="typed"></span><span class="caret"></span><span class="ph">Search tools or drop a file</span></div>
+          <div class="fchip"><span class="fi"></span><span class="fn"></span><small class="fs"></small><i>×</i></div>
+        </div>
+        <div class="bar-body">
+          <div class="view list on"></div>
+          <div class="view match"></div>
+          <div class="view run"><b class="rt">Running</b><div class="prog"><i></i></div><small><span class="rf"></span><span class="rp">0%</span></small></div>
+          <div class="view done"></div>
+        </div>
+        <div class="bar-foot"><span class="l"><img src="/product/icon.svg" alt="">Panoply <span>&nbsp;Everything runs on this computer</span></span><span class="r">Run <span class="kbd">&#8629;</span></span></div>
+</div>

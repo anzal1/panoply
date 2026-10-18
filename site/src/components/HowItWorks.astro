@@ -1,0 +1,33 @@
+---
+import CommandBar from "./CommandBar.astro";
+---
+<section class="how" id="how" aria-label="How it works">
+  <div class="stick">
+    <div class="wrap">
+      <div>
+        <div class="how-head">
+          <span class="eyebrow">How it works</span>
+          <h2 class="h2 h2s">Three steps.<br>No website.</h2>
+        </div>
+        <div class="steps">
+          <div class="step on" data-step="0">
+            <span class="n">01</span>
+            <div><h3>Press the hotkey.</h3><p>The bar opens over whatever you are doing. On Windows and Linux it is Ctrl Alt Space.</p><div class="keys" aria-hidden="true"><span class="key">&#8997;</span><span class="key">Space</span></div></div>
+          </div>
+          <div class="step" data-step="1">
+            <span class="n">02</span>
+            <div><h3>Drop a file. Say what you want.</h3><p>Plain words work: under 50 kb, make it a PDF, split every 10 pages. Panoply picks the tool and fills in the options.</p></div>
+          </div>
+          <div class="step" data-step="2">
+            <span class="n">03</span>
+            <div><h3>Done, next to the original.</h3><p>The result is saved beside your file. One keystroke undoes it, and nothing ever left your computer.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-bar">
+        <div class="dither wide" aria-hidden="true"></div>
+        <CommandBar id="bar2" hidden />
+      </div>
+    </div>
+  </div>
+</section>
