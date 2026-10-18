@@ -53,6 +53,7 @@ panoply-archive = { path = "crates/panoply-archive" }
 panoply-image = { path = "crates/panoply-image" }
 panoply-id = { path = "crates/panoply-id" }
 panoply-ocr = { path = "crates/panoply-ocr" }
+panoply-tts = { path = "crates/panoply-tts" }
 panoply-media = { path = "crates/panoply-media" }
 panoply-vision = { path = "crates/panoply-vision" }
 panoply-manifest = { path = "crates/panoply-manifest" }

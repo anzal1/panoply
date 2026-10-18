@@ -18,7 +18,27 @@ use panoply_mcp::server::{Backend, CallContext, ToolReply, UnknownTool};
 use serde_json::{Map, Value};
 
 /// Serve on stdin and stdout until the client closes the pipe.
+///
+/// On macOS the system voice answers on the main queue, so the main thread must keep running
+/// its run loop while the server works. The server runs on a spawned thread and the main thread
+/// pumps the loop until that thread is done. Without this every `text.to_speech` call would
+/// wait 30 seconds and fail, because the main thread would be blocked reading stdin.
 pub fn run() -> ExitCode {
+    #[cfg(target_os = "macos")]
+    {
+        let worker = std::thread::spawn(serve);
+        while !worker.is_finished() {
+            panoply_tts::pump_main_run_loop(0.25);
+        }
+        worker.join().unwrap_or(ExitCode::FAILURE)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        serve()
+    }
+}
+
+fn serve() -> ExitCode {
     // A prompt would read the protocol stream. Downloads need `panoply models allow` first, or
     // `panoply --yes mcp`.
     panoply_core::assets::set_asker(None);
@@ -168,7 +188,16 @@ fn prepare(
         }
         Some(_) => return Err("files must be a list of absolute path strings.".into()),
     }
-    if !manifest.accepts.is_empty() && inputs.is_empty() {
+    // A module with a "text" option (text to speech) can read words given inline instead.
+    let has_text = manifest
+        .options
+        .get("text")
+        .is_some_and(|o| o.kind == OptionType::Text)
+        && args
+            .get("text")
+            .and_then(Value::as_str)
+            .is_some_and(|t| !t.trim().is_empty());
+    if !manifest.accepts.is_empty() && inputs.is_empty() && !has_text {
         return Err(format!(
             "Give {} at least one file in \"files\", as absolute paths.",
             manifest.module.name
