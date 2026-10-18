@@ -2,7 +2,7 @@
 //   node scripts/og.mjs <url>
 import { chromium } from 'playwright-core';
 const url = process.argv[2] || 'http://localhost:4321/';
-const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
 await page.goto(url, { waitUntil: 'networkidle' });
 await page.waitForTimeout(2000);

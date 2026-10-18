@@ -189,7 +189,7 @@ main{overflow-x:hidden;overflow-x:clip}
 .tile .body{max-width:30em}
 .t7{grid-column:span 7}.t5{grid-column:span 5}.t6{grid-column:span 6}
 .r1{height:min(760px,calc(var(--screen) - 32px))}.r2{height:min(700px,calc(var(--screen) - 32px))}.r3{height:min(640px,calc(var(--screen) - 32px))}
-.res{position:absolute;left:44px;bottom:36px;z-index:2;display:flex;align-items:center;gap:10px;padding:10px 14px 10px 10px;border-radius:14px;background:rgba(22,22,28,.86);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 0 0 1px rgba(255,255,255,.1);font-size:13.5px;color:var(--ui-fg);letter-spacing:-.01em;opacity:0;transform:translateY(14px);transition:opacity 500ms ease 450ms,transform 700ms var(--out) 450ms}
+.res{position:absolute;left:44px;bottom:36px;z-index:2;display:flex;align-items:center;gap:10px;padding:10px 14px 10px 10px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03)),rgba(16,17,22,.28);-webkit-backdrop-filter:blur(14px) saturate(150%) brightness(.72);backdrop-filter:blur(14px) saturate(150%) brightness(.72);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(255,255,255,.1),0 12px 32px -12px rgba(0,0,0,.7);font-size:13.5px;color:var(--ui-fg);letter-spacing:-.01em;opacity:0;transform:translateY(14px);transition:opacity 500ms ease 450ms,transform 700ms var(--out) 450ms}
 .res em{font-style:normal;color:var(--ui-green);display:inline-block;opacity:0;transform:translateY(5px);filter:blur(5px);transition:opacity 500ms ease 1050ms,transform 600ms var(--out) 1050ms,filter 500ms ease 1050ms}
 .tile.in .res em{opacity:1;transform:none;filter:none}
 .res .fi{transform:scale(.6);opacity:0;transition:transform 500ms var(--out) 700ms,opacity 300ms ease 700ms}

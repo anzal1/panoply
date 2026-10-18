@@ -26,7 +26,7 @@ const MOMENTS = {
 const UNITS = ['.statement p', '.set header', '.tile', '.app header', '.app-stage', '.numbers header', '.stats', '.privacy header', '.privacy figure', '.agent-tile', '.get .wrap > *', '.how .steps', '.screen-bar'];
 
 fs.mkdirSync(out, { recursive: true });
-const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--hide-scrollbars', '--mute-audio'] });
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--hide-scrollbars', '--mute-audio'] });
 const problems = [];
 for (const [w, h] of SIZES) {
   const page = await browser.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });

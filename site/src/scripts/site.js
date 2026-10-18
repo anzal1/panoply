@@ -9,8 +9,13 @@
   var arm = /arm64|aarch64/i.test(ua);
   var FILES = { mac: 'Panoply-0.3.0-beta-macos-arm64.dmg', win: 'Panoply-0.3.0-beta-windows-' + (arm ? 'arm64' : 'x64') + '.msi', linux: 'Panoply-0.3.0-beta-linux-' + (arm ? 'arm64' : 'x64') + '.AppImage' };
   var NAMES = { mac: 'macOS', win: 'Windows', linux: 'Linux' };
-  document.querySelectorAll('[data-dl]').forEach(function(a){ a.textContent = 'Download for ' + NAMES[os]; a.href = REL + FILES[os]; });
-  if (os !== 'mac') document.querySelectorAll('.key')[0].textContent = 'Ctrl';
+  // Phones cannot run the app: point them at every download instead of guessing a desktop file.
+  var phone = /Android|iPhone|iPad|iPod/.test(ua);
+  document.querySelectorAll('[data-dl]').forEach(function(a){
+    if (phone) { a.textContent = 'All downloads'; return; }
+    a.textContent = 'Download for ' + NAMES[os]; a.href = REL + FILES[os];
+  });
+  if (os !== 'mac' && !phone) document.querySelector('.keys').innerHTML = '<span class="key">Ctrl</span><span class="key">Alt</span><span class="key">Space</span>';
 
   document.querySelectorAll('.copybtn').forEach(function(btn){
     btn.addEventListener('click', function(){
@@ -298,5 +303,4 @@
   addEventListener('resize', demos);
   document.addEventListener('visibilitychange', demos);
   demos();
-  window.__panoply = update;
 })();

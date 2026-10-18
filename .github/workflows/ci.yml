@@ -5,6 +5,8 @@ name: CI
 on:
   push:
     branches: [main]
+    # The website has its own workflow (site.yml); a site-only merge does not need the Rust jobs.
+    paths-ignore: ['site/**', '.github/workflows/site.yml']
   # A draft pull request runs only the quick jobs (docs, fmt, clippy, licenses and the like). The test
   # matrix and the module smoke run once the pull request is marked ready, so a work-in-progress push
   # does not spend runner time or send a failure mail for every small fix.
