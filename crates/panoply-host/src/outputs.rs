@@ -39,6 +39,11 @@ enum Kind {
 }
 
 impl Pending {
+    /// Where the temporary file is, so a job that packs a folder can leave it out.
+    pub fn temp_path(&self) -> &Path {
+        &self.part
+    }
+
     /// The open temporary file.
     pub fn file(&mut self) -> &mut File {
         self.file
@@ -126,6 +131,40 @@ impl<'g> Outputs<'g> {
                     return Ok(candidate);
                 }
                 // Someone made it between the check and the create: try the next name.
+                Err(e) if e.kind() == ErrorKind::AlreadyExists => continue,
+                Err(e) => return Err(io_err(&candidate, e)),
+            }
+        }
+    }
+
+    /// A new folder called `name` next to `beside` (or in the chosen output folder). A taken name
+    /// becomes `name (2)`, `name (3)` and so on, so nothing that exists is ever touched.
+    pub fn dir_named(&mut self, beside: &Path, name: &str) -> Result<PathBuf, ModuleError> {
+        let base = self.guard.output_dir_for(beside)?;
+        let name = sanitize_name(name);
+        let mut n = 1u32;
+        loop {
+            let candidate = if n == 1 {
+                base.join(&name)
+            } else {
+                base.join(format!("{name} ({n})"))
+            };
+            n += 1;
+            if candidate.exists() || self.reserved.contains(&candidate) {
+                if n > 10_000 {
+                    return Err(io_err(
+                        &base,
+                        std::io::Error::from(ErrorKind::AlreadyExists),
+                    ));
+                }
+                continue;
+            }
+            match std::fs::create_dir(&candidate) {
+                Ok(()) => {
+                    self.reserved.insert(candidate.clone());
+                    self.dirs.push(candidate.clone());
+                    return Ok(candidate);
+                }
                 Err(e) if e.kind() == ErrorKind::AlreadyExists => continue,
                 Err(e) => return Err(io_err(&candidate, e)),
             }
@@ -238,6 +277,13 @@ impl<'g> Outputs<'g> {
     pub fn finish(mut self) -> Vec<PathBuf> {
         self.armed = false;
         std::mem::take(&mut self.files)
+    }
+
+    /// The job succeeded and made these folders itself, filling them directly: keep everything and
+    /// return the folders as the result.
+    pub fn finish_dirs(mut self, dirs: Vec<PathBuf>) -> Vec<PathBuf> {
+        self.armed = false;
+        dirs
     }
 
     /// Remove every file and folder this job created.

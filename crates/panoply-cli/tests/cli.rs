@@ -431,3 +431,47 @@ fn a_shipped_module_folder_is_found_by_the_cli_from_anywhere() {
     );
     std::fs::remove_dir_all(&d).unwrap();
 }
+
+#[test]
+fn archive_create_and_extract_round_trip_through_the_cli() {
+    let d = std::env::temp_dir().join(format!("panoply-cli-archive-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&d);
+    let src = d.join("docs");
+    std::fs::create_dir_all(src.join("sub")).unwrap();
+    std::fs::write(src.join("a.txt"), "alpha").unwrap();
+    std::fs::write(src.join("sub").join("b.txt"), "beta").unwrap();
+    for (fmt, ext) in [("zip", "zip"), ("tar.gz", "tar.gz"), ("tar.zst", "tar.zst")] {
+        let (out, ok) = panoply(&["archive", "create", src.to_str().unwrap(), "--format", fmt]);
+        assert!(ok, "{out}");
+        assert!(out.contains("2 files"), "{out}");
+        let arc = d.join(format!("docs.{ext}"));
+        assert!(arc.exists(), "{out}");
+        // The module id works as a command too.
+        let (out, ok) = panoply(&["archive.extract", arc.to_str().unwrap()]);
+        assert!(ok, "{out}");
+        assert!(out.contains("Unpacked 2 files"), "{out}");
+        let (out, ok) = panoply(&["archive", "extract", arc.to_str().unwrap()]);
+        assert!(ok, "{out}");
+        std::fs::remove_file(&arc).unwrap();
+    }
+    let unpacked: Vec<_> = std::fs::read_dir(&d)
+        .unwrap()
+        .flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .collect();
+    // Three formats, two extracts each: six folders, no overwrite.
+    assert_eq!(
+        unpacked
+            .iter()
+            .filter(|n| n.starts_with("docs") && n.as_str() != "docs")
+            .count(),
+        6,
+        "{unpacked:?}"
+    );
+    let first = d.join("docs (2)");
+    assert_eq!(
+        std::fs::read_to_string(first.join("docs").join("sub").join("b.txt")).unwrap_or_default(),
+        "beta"
+    );
+    std::fs::remove_dir_all(&d).unwrap();
+}
