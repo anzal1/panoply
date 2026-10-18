@@ -75,7 +75,7 @@
       const tl = gsap.timeline({ paused: true });
       const XO = 'expo.out', P1O = 'power1.out';
       const set = (el, css) => Object.assign((typeof el === 'string' ? $(el) : el).style, css);
-      const px = o => { const r = {}; for (const k in o) r[k] = typeof o[k] === 'number' ? o[k] + 'px' : o[k]; return r; };
+      const px = o => { const r = {}; for (const k in o) r[k] = (typeof o[k] === 'number' && k !== 'lineHeightX' && k !== 'fontWeight') ? o[k] + 'px' : o[k]; return r; };
 
       const enter = (sel, t, o = {}) => {
         const d = o.dur || 0.5;
@@ -95,7 +95,7 @@
         p3: [{ s: 100, h: 140, html: `<span class="t">pdf_compress</span>` }, { s: 84, h: 116, html: `<span class="ok">✓</span> <span class="u">${D.compress.note}</span>` }],
         chip: { s: 60, h: 112, lines: [D.compress.outName], iconS: 56, padX: 30 },
         win2: { left: 80, top: 90, w: 1760, h: 900 },
-        list: { left: 0, top: 0, w: 800, h: 832, size: 60, rh: 104, padL: 44, hdr: 24 },
+        list: { left: 0, top: 0, w: 800, h: 832, size: 54, rh: 104, padL: 44, hdr: 24 },
         stats: { left: 840, w: 880, st1: 60, st2: 440, big1: 190, big2: 124, small: 56, lab: 64 },
         hook: { size: 124, left: 200, rh: 150, groups: [['Your agent can now do'], ['31 built-in file jobs'], ['on your computer,', 'no upload.']] },
         end: { fanLeft: 770, fanTop: 48, fan: 380, nameTop: 452, nameS: 196, lineTop: 700, lineS: 68, urlTop: 860, urlS: 44, line: ['Free. Open source. Runs on your computer.'] },
@@ -186,7 +186,7 @@
       const lv = document.createElement('div'); lv.className = 'lview';
       const bh2 = L.win2.h - 68;
       set(lv, px({ left: L.list.left, top: L.list.top, width: L.list.w, height: L.list.h }));
-      lv.style.webkitMaskImage = lv.style.maskImage = `linear-gradient(to bottom,transparent 0,#000 76px,#000 ${L.list.h - 52}px,transparent ${L.list.h}px)`;
+      lv.style.webkitMaskImage = lv.style.maskImage = `linear-gradient(to bottom,transparent 0,transparent 16px,#000 70px,#000 ${L.list.h - 52}px,transparent ${L.list.h}px)`;
       const sc = document.createElement('div'); sc.className = 'lscroll'; sc.id = 'm-lscroll'; lv.appendChild(sc);
       const RH = L.list.rh, N = names.length, viewH = L.list.h;
       names.forEach((n, i) => {
@@ -242,7 +242,7 @@
       $('m-efan').innerHTML = `<svg viewBox="0 0 544 544" fill="none"><path id="m-f-l" d="${CARD}" fill="rgba(255,255,255,.42)"/><path id="m-f-r" d="${CARD}" fill="rgba(255,255,255,.62)"/><path id="m-f-c" d="${CARD}" fill="#ffffff"/></svg>`;
       gsap.set(['#m-f-l', '#m-f-r'], { svgOrigin: PIVOT });
       set('m-ename', px({ left: 0, right: 0, top: E.nameTop, textAlign: 'center', fontSize: E.nameS }));
-      set('m-eline', px({ left: 0, right: 0, top: E.lineTop, textAlign: 'center', fontSize: E.lineS, fontWeight: 500, letterSpacing: '-0.025em', color: 'rgba(255,255,255,.92)', lineHeight: 1.15 }));
+      set('m-eline', px({ left: 0, right: 0, top: E.lineTop, textAlign: 'center', fontSize: E.lineS, fontWeight: '500', letterSpacing: '-0.025em', color: 'rgba(255,255,255,.92)', lineHeight: '1.15' }));
       $('m-eline').innerHTML = E.line.join('<br>');
       set('m-eurl', px({ left: 0, right: 0, top: E.urlTop, textAlign: 'center', fontSize: E.urlS, color: 'rgba(255,255,255,.95)', letterSpacing: '-0.01em' }));
       const T0 = 20.45;
