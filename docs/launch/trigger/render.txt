@@ -1,2 +1,2 @@
 drops/share looks 60
-# run 2: heading leaves before the push, longer numbers hold
+# run 3: scenes follow each other without a blank beat
