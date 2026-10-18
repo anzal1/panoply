@@ -152,6 +152,9 @@ Why these layouts work for a repository that is not named `homebrew-*` and also 
   the [Scoop README](https://github.com/ScoopInstaller/Scoop#readme) lists `scoop bucket add`). `scoop install panoply/panoply` is the
   `bucket/app` form.
 
+Homebrew 7 has no `--no-quarantine` option for `brew install`, so an unsigned cask keeps the quarantine flag and macOS blocks its first open. The
+cask's `caveats` block prints the Open Anyway steps and the `xattr` command (it goes away with `PANOPLY_MACOS_NOTARIZED=1`).
+
 Both manifests follow the newest published release, prereleases included, because every release is a beta for now (the choice
 is recorded in `docs/DECISIONS.md`). The cask's `livecheck` reads git tags, since Homebrew's GitHub strategies skip prereleases.
 

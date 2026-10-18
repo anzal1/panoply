@@ -3,8 +3,9 @@
 #   brew tap anzal1/panoply https://github.com/anzal1/panoply
 #   brew install --cask anzal1/panoply/panoply
 cask "panoply" do
-  version "0.2.0-beta"
   arch arm: "arm64", intel: "x64"
+
+  version "0.2.0-beta"
   sha256 arm:   "3f95b33f954fe6a8fc6fbf9fba3f1ec063cfee37130e0be2bae0a46b241eda4e",
          intel: "bc8685b96043e0eea8303d10e42c2fb4e578a1ca73a697c1096d1cce6c1e41f6"
 
