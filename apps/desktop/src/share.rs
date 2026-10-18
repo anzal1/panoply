@@ -1946,7 +1946,7 @@ mod tests {
         let src = scratch("src3");
         let dst = scratch("dst3");
         std::fs::write(src.join("a.txt"), b"hello").unwrap();
-        let (recv, mut rrx, mut rm, send, mut srx, mut sm) = pair(&src, &dst, false);
+        let (recv, mut rrx, rm, send, mut srx, mut sm) = pair(&src, &dst, false);
         sm.begin_send("Receiver");
         send.send(&sm.devices[0].id.clone(), vec![src.join("a.txt")]);
         pump(&mut srx, &mut sm, |m, _| {
