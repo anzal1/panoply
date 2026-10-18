@@ -22,6 +22,8 @@ A push to `main` is never cancelled by a later push, so every commit on `main` g
 
 ## Which tests run where
 
+A draft pull request runs only the quick jobs: docs, fmt, clippy on all three systems, and the dependency checks. The test matrix and the module smoke run once the pull request is marked ready for review, and on every push to main. Mark a pull request ready when its fixes are done, so the full run happens once instead of after every small push.
+
 The tests are built once per OS with the `ci` profile (see below) and run by [cargo-nextest](https://nexte.st), which runs every test as its own process and runs the processes side by side. Doc tests run with `cargo test --doc`. nextest profiles live in `.config/nextest.toml`.
 
 | Set | Linux | macOS | Windows | What is in it |
