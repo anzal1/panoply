@@ -1,0 +1,21 @@
+---
+import CommandBar from "./CommandBar.astro";
+---
+<section class="hero" aria-label="Panoply">
+  <div class="stick">
+    <div class="hero-copy wrap center">
+      <h1 class="h1 grad"><span class="nb">Every file tool.</span> <span class="nb">One app.</span></h1>
+      <p class="sub">Compress, convert, resize, redact, trim and share any file.<br>Free, open source, on your computer.</p>
+      <div class="ctas">
+        <a class="pill" data-dl href="https://github.com/anzal1/panoply/releases/tag/v0.3.0-beta">Download for macOS</a>
+        <a class="more down" href="#how">See how it works</a>
+      </div>
+    </div>
+    <div class="hero-bar">
+      <div class="dither wide" aria-hidden="true"></div>
+      <CommandBar id="bar" label="The Panoply command bar: a file is dropped in, a request is typed in plain words, the right tool runs, and the result shows the file before and after." />
+    </div>
+    <div class="hero-art" aria-hidden="true"><img src="/grain/hero2.webp" alt="" width="2200" height="1228" fetchpriority="high"></div>
+    <div class="hero-tag center wrap" aria-hidden="true"><p>Panoply, from <em>panoplia</em>.<br><span>The full set of arms. Now for your files.</span></p></div>
+  </div>
+</section>

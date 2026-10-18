@@ -1,0 +1,25 @@
+---
+import "../styles/global.css";
+interface Props { title?: string; description?: string }
+const {
+  title = "Panoply",
+  description = "Panoply is every file tool in one free app. Compress, convert, resize, redact, trim and share any file, right on your computer.",
+} = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/product/icon.svg" />
+    <link rel="preload" as="image" href="/grain/hero2.webp" type="image/webp" />
+  </head>
+  <body>
+    <slot />
+    <script>
+      import "../scripts/site.js";
+    </script>
+  </body>
+</html>
