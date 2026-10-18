@@ -11,7 +11,7 @@ id = "media.denoise"
 name = "Remove noise"
 version = "0.1.0"
 pattern = "A"
-summary = "Take background hiss, hum and room noise out of a recording or the sound of a video."
+summary = "Take background noise out of a speech recording or the sound of a video."
 
 [options.strength]
 type = "choice"

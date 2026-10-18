@@ -5465,6 +5465,7 @@ dependencies = [
 name = "panoply-media"
 version = "0.2.0"
 dependencies = [
+ "fs4",
  "nnnoiseless",
  "panoply-core",
  "panoply-manifest",

@@ -1,6 +1,6 @@
 # panoply-media
 
-The video and audio engine behind ten Panoply modules, wave 1 of `docs/specs/video-and-audio.md`
+The video and audio engine behind eleven Panoply modules, wave 1 of `docs/specs/video-and-audio.md`
 (section 6, "Ship order"): `media.convert`, `media.extract_audio`, `media.trim`, `media.compress`,
 `media.info`, `media.repair`, `media.normalize`, `media.denoise`, `media.to_mono`, `media.hdr_to_sdr` and `media.streams`.
 The host wraps it in `crates/panoply-host/src/builtin/media.rs`; the command line is
@@ -151,7 +151,7 @@ trim video 357 / 686, trim audio 64 / 122, normalize 389 / 6054, to mono 225 / 2
   long. Dolby Vision, spatial video and other codecs snap to a keyframe, as the spec says.
 - **The loudness meter is integrated BS.1770**, not dialogue-gated (ATSC A/85 and Netflix define dialogue loudness;
   the result card says so).
-- Not in wave 1: Compress audio's speech and music classifier, Transcribe, Remove noise, Text to speech.
+- Not in wave 1: Compress audio's speech and music classifier, Transcribe, Text to speech. Remove noise is in (`media.denoise`, spec 5.5) without hum notch filters, a spectrogram or an A/B preview.
 
 ## Licenses
 

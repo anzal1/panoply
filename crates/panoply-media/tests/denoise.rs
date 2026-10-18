@@ -193,6 +193,195 @@ fn stereo_sound_at_44100_comes_back_stereo_at_44100_with_the_voice_in_place() {
     }
 }
 
+/// RMS of one channel of the first audio stream (0.5 s on).
+fn rms_channel(path: &Path, channel: u32) -> f64 {
+    let e = the_engine();
+    let out = Command::new(&e.ffmpeg)
+        .args(["-nostdin", "-hide_banner", "-v", "error", "-i"])
+        .arg(path)
+        .args([
+            "-map",
+            "0:a:0",
+            "-af",
+            &format!("pan=mono|c0=c{channel}"),
+            "-ar",
+            "48000",
+            "-f",
+            "f32le",
+            "-acodec",
+            "pcm_f32le",
+            "-",
+        ])
+        .output()
+        .unwrap();
+    let all: Vec<f32> = out
+        .stdout
+        .chunks_exact(4)
+        .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+        .collect();
+    let s = &all[24_000.min(all.len())..];
+    (s.iter().map(|v| f64::from(*v).powi(2)).sum::<f64>() / s.len().max(1) as f64).sqrt()
+}
+
+#[test]
+fn five_point_one_keeps_every_channel_on_its_own_lane() {
+    if !engine() {
+        return;
+    }
+    let s = Scratch::new("denoise-51");
+    let src = s.join("surround.wav");
+    // The voice on channel 3 (the low-frequency one in 5.1 order), silence on the other five.
+    let voice = "0.25*(0.5+0.5*pow(sin(2*PI*4*t),2))*(sin(2*PI*140*t)+0.6*sin(2*PI*280*t)+0.4*sin(2*PI*420*t)+0.3*sin(2*PI*700*t))";
+    let (ok, err) = ffmpeg(&[
+        "-y",
+        "-v",
+        "error",
+        "-f",
+        "lavfi",
+        "-i",
+        &format!("aevalsrc='0|0|0|{voice}|0|0':c=5.1:s=48000:d=8"),
+        &src.to_string_lossy(),
+    ]);
+    assert!(ok, "{err}");
+    let (out, notes) = run_ok("media.denoise", &src, json!({}), s.path());
+    assert_eq!(probe(&out[0]).audio().unwrap().channels, 6, "{notes:?}");
+    let want = rms_channel(&src, 3);
+    let got = rms_channel(&out[0], 3);
+    eprintln!("5.1: channel 3 {want:.4} to {got:.4}");
+    assert!(
+        (20.0 * (got / want).log10()).abs() <= 6.0,
+        "the voice kept its channel"
+    );
+    for c in [0, 1, 2, 4, 5] {
+        let other = rms_channel(&out[0], c);
+        assert!(
+            other < want / 100.0,
+            "channel {c} picked up sound: {other:.5} against {want:.5}"
+        );
+    }
+}
+
+/// The time the voice starts on the container's clock: where the audio stream starts plus how far
+/// into its samples the first loud 10 ms is.
+fn voice_onset(path: &Path) -> f64 {
+    let e = the_engine();
+    let start = Command::new(&e.ffprobe)
+        .args(["-v", "error", "-select_streams", "a:0", "-show_entries"])
+        .arg("stream=start_time")
+        .args(["-of", "csv=p=0"])
+        .arg(path)
+        .output()
+        .unwrap();
+    let start: f64 = String::from_utf8_lossy(&start.stdout)
+        .trim()
+        .parse()
+        .unwrap_or(0.0);
+    let out = Command::new(&e.ffmpeg)
+        .args(["-nostdin", "-hide_banner", "-v", "error", "-i"])
+        .arg(path)
+        .args([
+            "-map",
+            "0:a:0",
+            "-ac",
+            "1",
+            "-ar",
+            "48000",
+            "-f",
+            "f32le",
+            "-acodec",
+            "pcm_f32le",
+            "-",
+        ])
+        .output()
+        .unwrap();
+    let all: Vec<f32> = out
+        .stdout
+        .chunks_exact(4)
+        .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+        .collect();
+    let win = 480;
+    let first = all
+        .chunks(win)
+        .position(|w| (w.iter().map(|v| v * v).sum::<f32>() / w.len() as f32).sqrt() > 0.1)
+        .expect("a voice in the sound");
+    start + (first * win) as f64 / 48_000.0
+}
+
+#[test]
+fn sound_that_starts_late_stays_in_sync_with_the_picture() {
+    if !engine() {
+        return;
+    }
+    let s = Scratch::new("denoise-offset");
+    let src = s.join("late.mkv");
+    // The sound starts half a second after the picture, as in a transport stream or an edit list.
+    let (ok, err) = ffmpeg(&[
+        "-y",
+        "-v",
+        "error",
+        "-f",
+        "lavfi",
+        "-i",
+        "testsrc=size=160x120:rate=25:duration=9",
+        "-itsoffset",
+        "0.5",
+        "-f",
+        "lavfi",
+        "-i",
+        &gated_voice_over_noise(9, 48_000),
+        "-c:v",
+        "mpeg4",
+        "-c:a",
+        "aac",
+        &src.to_string_lossy(),
+    ]);
+    assert!(ok, "{err}");
+    let (out, notes) = run_ok("media.denoise", &src, json!({}), s.path());
+    let (before, after) = (voice_onset(&src), voice_onset(&out[0]));
+    eprintln!("voice starts at {before:.3} s in the original and {after:.3} s after: {notes:?}");
+    assert!(
+        (before - 3.5).abs() < 0.1,
+        "the fixture starts the voice at 3.5 s, not {before:.3}"
+    );
+    assert!(
+        (before - after).abs() < 0.06,
+        "the sound moved by {:.3} s",
+        after - before
+    );
+}
+
+#[test]
+fn a_decoder_that_cannot_go_on_is_stopped_at_once() {
+    if !engine() {
+        return;
+    }
+    use panoply_media::proc::{Progress, run_ffmpeg_stream_until};
+    let s = Scratch::new("denoise-stop");
+    let src = s.join("long.wav");
+    make_audio(&src, &voice_over_noise(120, 48_000), 48_000, 2);
+    let args: Vec<std::ffi::OsString> = ["-i", &src.to_string_lossy(), "-f", "f32le", "-"]
+        .iter()
+        .map(std::ffi::OsString::from)
+        .collect();
+    let mut pieces = 0;
+    let t = Instant::now();
+    let done = run_ffmpeg_stream_until(
+        &the_engine(),
+        &OpenIo::new(),
+        &args,
+        |_| {
+            pieces += 1;
+            false
+        },
+        &Progress::whole(None, "test"),
+        None,
+    )
+    .unwrap();
+    assert!(!done.ok);
+    assert_eq!(pieces, 1, "the sink is not called again");
+    assert!(t.elapsed() < Duration::from_secs(5), "{:?}", t.elapsed());
+}
+
 #[test]
 fn cancel_leaves_nothing_behind() {
     if !engine() {

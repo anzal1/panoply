@@ -8,6 +8,11 @@ marking releases that are still finding their edges.
 
 ### Added
 
+- **Remove noise.** Takes background noise out of a speech recording or the sound of a video
+  (`panoply audio denoise in.wav --strength normal`). It runs RNNoise on your computer, with the model inside
+  the program and no download. Strength is light, normal or strong. The picture of a video is copied as it is
+  and the sound is encoded once. A 60 second clip takes about half a second. Built for speech: steady noise with
+  no voice in it may barely change, and music can be dulled.
 - **MCP server.** `panoply mcp` gives AI agents (Claude Code, Claude Desktop, Cursor) every tool, built-in and
   community, over stdio. Files go in as absolute paths, results are new files, and long jobs report progress. Setup
   in docs/MCP.md.
