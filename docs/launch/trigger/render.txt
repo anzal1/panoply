@@ -1,2 +1,2 @@
-drops/bar-answers looks 60
-# bar-answers: clear and caption swap on the same frame
+drops/bar-answers,drops/bar-answers-4x5 looks 60
+# bar-answers review P1 fixes and the 4:5 cut

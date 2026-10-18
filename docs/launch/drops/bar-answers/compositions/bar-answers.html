@@ -11,44 +11,59 @@
     #lift { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 70% at 50% 46%, rgba(255,255,255,.09), rgba(255,255,255,0) 100%); opacity: 0; }
     #grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .4; pointer-events: none; }
 
-    /* 1. the pain, in Midnight */
+    /* 1. the pain, in Midnight. The first line is on frame 0. */
     #pain { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
     .pl { font-size: 150px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; white-space: nowrap; color: #ececf1; opacity: 0; }
 
-    /* 2. keycaps (the launch film's, same sizes) */
-    .caps { position: absolute; left: 0; right: 0; top: 84px; height: 104px; display: flex; justify-content: center; gap: 24px; opacity: 0; }
-    .cap-label { position: absolute; left: 0; right: 0; top: 122px; line-height: 40px; text-align: center; font-family: "Geist Mono", ui-monospace, monospace; font-size: 36px; font-weight: 500; color: rgba(255,255,255,.9); white-space: nowrap; }
-    .key { height: 104px; border-radius: 26px; display: flex; align-items: center; justify-content: center; font-size: 52px; font-weight: 600; letter-spacing: -0.02em; color: #fff;
-      background: rgba(255,255,255,.16); border: 2px solid rgba(255,255,255,.45);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 18px 40px rgba(8,24,70,.28); }
+    /* 2. both keycap sets at once, at 1.5x the launch film's */
+    .keygroup { opacity: 0; }
+    .key { display: flex; align-items: center; justify-content: center; font-weight: 600; letter-spacing: -0.02em; color: #fff;
+      background: rgba(255,255,255,.16); border: 3px solid rgba(255,255,255,.45);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 27px 60px rgba(8,24,70,.28); }
+    .cap-label { text-align: center; font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; color: rgba(255,255,255,.92); white-space: nowrap; }
+    
+    .keygroup { position: absolute; top: 400px; height: 156px; }
+    #kg-mac { left: 173px; width: 567px; }
+    #kg-win { left: 880px; width: 867px; }
+    .keyrow { display: flex; gap: 36px; }
+    .key { height: 156px; border-radius: 39px; font-size: 78px; }
+    .cap-label { position: absolute; left: 0; right: 0; top: 190px; line-height: 60px; font-size: 54px; }
 
     /* captions above the bar */
-    .cap-line { position: absolute; left: 0; right: 0; top: 40px; text-align: center; font-size: 68px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; white-space: nowrap; color: #fff; opacity: 0; }
+    .cap-line { position: absolute; left: 0; right: 0; text-align: center; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; color: #fff; opacity: 0; }
     .cap-line .v { font-weight: 500; opacity: .82; }
+    .cap-line { top: 40px; font-size: 68px; } .cap-line .br { display: inline; } .cap-line .v { font-size: 68px; }
 
-    /* the bar: real renders as plates. 1440 x 920 source, shown at 1100 wide */
-    #push { position: absolute; left: 410px; top: 270px; width: 1100px; height: 703px; transform-origin: 50% 0%; }
-    #open { position: absolute; inset: 0; transform-origin: 50% 50%; visibility: hidden; }
+    /* the bar: real renders as plates, 1440 x 920 source. The camera shows its top third (query and answer row) at 1.8x. */
+    #push { position: absolute; left: 110px; top: 190px; width: 1100px; height: 703px; transform-origin: 0 0; }
+    #open { position: absolute; inset: 0; visibility: hidden; }
     #plate { position: absolute; inset: 0; overflow: hidden; border-radius: 28.8px; background: #f1f2f5;
       box-shadow: 0 0 0 1.5px rgba(255,255,255,.35), 0 40px 100px rgba(8,24,70,.5); }
-    #plate img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; opacity: 0; }
+    #plate img { position: absolute; left: 0; top: 0; width: 1100px; height: 703px; display: block; opacity: 0; }
+    
 
     /* 3. proof */
-    #proof { position: absolute; inset: 0; }
-    .pcol { position: absolute; top: 290px; width: 600px; text-align: center; opacity: 0; }
+    #proof { position: absolute; inset: 0; opacity: 1; }
+    .pcol { position: absolute; text-align: center; opacity: 0; }
     .pnum { font-size: 200px; font-weight: 700; letter-spacing: -0.045em; line-height: 1; white-space: nowrap; }
     .pnum small { font-size: 108px; letter-spacing: -0.03em; font-weight: 600; margin-left: 10px; }
     .plab { margin-top: 30px; font-family: "Geist Mono", ui-monospace, monospace; font-size: 38px; font-weight: 500; line-height: 1.35; color: rgba(255,255,255,.9); }
-    #pnote { position: absolute; left: 0; right: 0; top: 760px; text-align: center; font-size: 56px; font-weight: 600; letter-spacing: -0.02em; color: rgba(255,255,255,.92); opacity: 0; }
+    #pnote { position: absolute; left: 0; right: 0; text-align: center; font-size: 56px; font-weight: 600; letter-spacing: -0.02em; color: rgba(255,255,255,.92); opacity: 0; }
+    
+    .pcol { top: 290px; width: 600px; }
+    #pnote { top: 760px; }
 
     /* 4. end card (the launch film's) */
     #end { position: absolute; inset: 0; opacity: 0; }
-    #fan { position: absolute; left: 790px; top: 70px; width: 340px; height: 340px; }
     #fan svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    #fan { position: absolute; }
     .eline { position: absolute; left: 0; right: 0; text-align: center; color: #fff; white-space: nowrap; }
-    #ename { top: 420px; font-weight: 700; font-size: 170px; letter-spacing: -0.04em; line-height: 0.98; }
-    #etag { top: 660px; font-weight: 500; font-size: 60px; letter-spacing: -0.015em; line-height: 1.1; color: rgba(255,255,255,.9); }
-    #eurl { top: 800px; font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; font-size: 56px; letter-spacing: -0.01em; line-height: 1.1; color: rgba(255,255,255,.92); }
+    #ename { font-weight: 700; letter-spacing: -0.04em; line-height: 0.98; }
+    #etag { font-weight: 500; letter-spacing: -0.015em; line-height: 1.1; color: rgba(255,255,255,.9); }
+    #eurl { font-family: "Geist Mono", ui-monospace, monospace; font-weight: 500; letter-spacing: -0.01em; line-height: 1.1; color: rgba(255,255,255,.92); }
+    
+    #fan { left: 790px; top: 70px; width: 340px; height: 340px; }
+    #ename { top: 420px; font-size: 170px; } #etag { top: 660px; font-size: 60px; } #eurl { top: 800px; font-size: 56px; }
   </style>
 
   <div id="root" data-composition-id="bar-answers" data-width="1920" data-height="1080">
@@ -63,15 +78,12 @@
       <div class="pl" id="pl3">Another browser tab.</div>
     </div>
 
-    <div class="caps" id="caps-mac"><div class="key" style="width:104px">&#x2325;</div><div class="key" style="width:250px">Space</div><div class="cap-label">macOS</div></div>
-    <div class="caps" id="caps-win"><div class="key" style="width:150px">Ctrl</div><div class="key" style="width:130px">Alt</div><div class="key" style="width:250px">Space</div><div class="cap-label">Windows and Linux</div></div>
+    <div class="keygroup" id="kg-mac"><div class="keyrow"><div class="key" style="width:156px">&#x2325;</div><div class="key" style="width:375px">Space</div></div><div class="cap-label">macOS</div></div>
+    <div class="keygroup" id="kg-win"><div class="keyrow"><div class="key" style="width:225px">Ctrl</div><div class="key" style="width:195px">Alt</div><div class="key" style="width:375px">Space</div></div><div class="cap-label">Windows and Linux</div></div>
 
-    <div class="cap-line" id="capA1">Do the math.</div>
-    <div class="cap-line" id="capA2">Return copies <span class="v">360</span></div>
-    <div class="cap-line" id="capB1">Convert units.</div>
-    <div class="cap-line" id="capB2">Return copies <span class="v">22.2222</span></div>
-    <div class="cap-line" id="capC1">Ask for a tool.</div>
-    <div class="cap-line" id="capC2">A tool search stays a tool search.</div>
+    <div class="cap-line" id="capA">Type a sum.<span class="br"> Return copies <span class="v">360</span>.</span></div>
+    <div class="cap-line" id="capB">Convert units.<span class="br"> Return copies <span class="v">22.2222</span>.</span></div>
+    <div class="cap-line" id="capC">A tool search<span class="br"> stays a tool search.</span></div>
 
     <div id="push" data-layout-allow-overflow>
       <div id="open">
@@ -121,36 +133,37 @@
         tl.fromTo(sel, { x: o.x || 0, y: o.y === undefined ? 24 : o.y }, { x: 0, y: 0, duration: o.dur || 0.45, ease: XO, immediateRender: ir }, t);
         tl.fromTo(sel, { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: ir }, t);
       };
-      const show = (sel, t) => tl.set(sel, { opacity: 1 }, t);
       const hide = (sel, t) => tl.set(sel, { opacity: 0 }, t);
+      /* a caption hands over to the next on one frame: the old one is out and the new one is in, never a gap or a double */
       const swapCap = (from, to, t) => { hide(from, t - F); land(to, t - F, { y: 14, dur: 0.35 }); };
+      const fade = (sel, t, d, to) => tl.to(sel, { opacity: to, duration: d, ease: 'none', immediateRender: false }, t);
 
-      /* ---------- 1. the pain, 0 to 2.8 s, in Midnight ---------- */
-      land('#pl1', 0.15, { y: 30 });
-      land('#pl2', 0.8, { y: 30 });
-      land('#pl3', 1.45, { y: 30 });
-      tl.to('#pl1', { color: '#6f6f7a', duration: 0.3, ease: 'none' }, 0.8);
-      tl.to('#pl2', { color: '#6f6f7a', duration: 0.3, ease: 'none' }, 1.45);
-      tl.fromTo('#pain', { scale: 1 }, { scale: 1.03, duration: 2.65, ease: 'none', immediateRender: false }, 0);
+      /* ---------- the schedule, in seconds. X is the hand-over from Midnight to blue ---------- */
+      const X = 2.9;
 
-      /* ---------- 2. THE DROP at 2.8 s: hard cut to brand blue; keycaps in; the bar opens at 3.05 ---------- */
-      tl.set('#blue', { opacity: 1 }, 2.8);
-      tl.set('#lift', { opacity: 1 }, 2.8);
-      tl.set('#pain', { opacity: 0 }, 2.8);
-      land('#caps-mac', 2.8, { y: 30 });
-      tl.set('#open', { visibility: 'visible' }, 3.05);
-      tl.fromTo('#open', { scale: 0.96 }, { scale: 1, duration: 0.5, ease: XO, immediateRender: false }, 3.05);
-      tl.fromTo('#open', { opacity: 0.5 }, { opacity: 1, duration: 0.08, ease: 'power1.out', immediateRender: false }, 3.05);
-      /* the Mac row is cut and the Windows and Linux row lands on the same frame, never two rows at once */
-      hide('#caps-mac', 3.65 - F);
-      land('#caps-win', 3.65 - F, { y: 16, dur: 0.3 });
-      tl.fromTo('#caps-win', { opacity: 1 }, { opacity: 0, duration: 0.2, ease: 'none', immediateRender: false }, 4.45);
+      /* 1. the pain: line 1 is on frame 0, the next two land at 0.5 and 1.0, line 3 is built by 1.45 and holds 1.45 s */
+      gsap.set('#pl1', { opacity: 1 });
+      land('#pl2', 0.5, { y: 30 });
+      land('#pl3', 1.0, { y: 30 });
+      tl.to('#pl1', { color: '#6f6f7a', duration: 0.3, ease: 'none' }, 0.5);
+      tl.to('#pl2', { color: '#6f6f7a', duration: 0.3, ease: 'none' }, 1.0);
+      tl.fromTo('#pain', { scale: 1 }, { scale: 1.03, duration: X + 0.35, ease: 'none', immediateRender: false }, 0);
 
-      /* camera: a slow drift while the bar settles, then the push to 1.28 that lifts the plate to top 144 so the whole bar stays in frame */
-      const SC = 1.28, LIFT = -126;
-      tl.fromTo('#push', { scale: 1 }, { scale: 1.03, duration: 1.45, ease: 'none', immediateRender: false }, 3.05);
-      tl.fromTo('#push', { scale: 1.03, y: 0 }, { scale: SC, y: LIFT, duration: 0.8, ease: 'power2.inOut', immediateRender: false }, 4.5);
-      tl.fromTo('#push', { scale: SC, y: LIFT }, { scale: SC + 0.012, y: LIFT, duration: 8.3, ease: 'none', immediateRender: false }, 5.3);
+      /* 2. crossfade to brand blue; both keycap sets land together and hold 1 s */
+      fade('#blue', X, 0.35, 1);
+      fade('#lift', X, 0.35, 1);
+      fade('#pain', X, 0.2, 0);        /* the Midnight words are gone before the keycaps land: no double exposure */
+      land('#kg-mac', X + 0.22, { y: 30 });
+      land('#kg-win', X + 0.3, { y: 30 });
+      const BAR = X + 1.55;            /* keys out, bar in: a crossfade. The keys are fully built 0.67 s after landing and hold 1.0 s. */
+      fade(['#kg-mac', '#kg-win'], BAR, 0.3, 0);
+
+      /* the bar, cropped to its top third (query and answer row) at 1.8x of the render. The camera drifts 2.5 percent over the bar's time. */
+      const SC = 1.8 / (1100 / 1440);
+      gsap.set('#push', { scale: SC });
+      tl.set('#open', { visibility: 'visible' }, BAR);
+      tl.fromTo('#open', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: 'none', immediateRender: false }, BAR);
+      tl.fromTo('#push', { scale: SC }, { scale: SC * 1.025, duration: 10.0, ease: 'none', immediateRender: false }, BAR);
 
       /* ---------- the typing: real glyphs of the real renders, one character per keystroke ---------- */
       const BOUNDS = {
@@ -158,62 +171,55 @@
         B: [122, 145, 145, 168, 168, 191, 212, 212, 1440],
         C: [112, 133, 155, 190, 213, 213, 245, 267, 1440]
       };
-      const clip = (id, xb) => `inset(0% ${(100 - xb / 14.4).toFixed(3)}% 0% 0%)`;
+      const clip = (xb) => 'inset(0% ' + (100 - xb / 14.4).toFixed(3) + '% 0% 0%)';
       const type = (key, t0, step) => {
-        const head = '#' + key + 'h', body = '#' + key + 'b';
-        gsap.set(head, { clipPath: clip(head, 95) });
-        tl.set(head, { opacity: 1, clipPath: clip(head, 95) }, t0 - 0.002);
-        BOUNDS[key].forEach((xb, i) => tl.set(head, { clipPath: clip(head, xb) }, t0 + i * step));
+        const head = '#' + key + 'h';
+        gsap.set(head, { clipPath: clip(95) });
+        tl.set(head, { opacity: 1, clipPath: clip(95) }, t0 - 0.002);
+        BOUNDS[key].forEach((xb, i) => tl.set(head, { clipPath: clip(xb) }, t0 + i * step));
         return t0 + (BOUNDS[key].length - 1) * step;     /* the last keystroke, when the answer lands */
       };
-      const land_body = (key, t) => {
-        const body = '#' + key + 'b';
-        tl.fromTo(body, { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'power1.out', immediateRender: false }, t);
-      };
+      const land_body = (key, t) => tl.fromTo('#' + key + 'b', { opacity: 0 }, { opacity: 1, duration: 0.12, ease: 'power1.out', immediateRender: false }, t);
       const clear = (key, t) => { hide('#' + key + 'h', t); hide('#' + key + 'b', t); };
-
       gsap.set('#base', { opacity: 1 });
-      /* A: "15% of 2400" */
-      const A0 = 5.4, A_STEP = 0.085;
-      land('#capA1', 5.3, { y: 20, dur: 0.5 });
-      const A_END = type('A', A0, A_STEP);
-      land_body('A', A_END);
-      swapCap('#capA1', '#capA2', 7.1);
-      clear('A', 8.4 - F);
 
-      /* B: "72 f to c" */
-      const B0 = 8.5, B_STEP = 0.095;
-      swapCap('#capA2', '#capB1', 8.4);
-      const B_END = type('B', B0, B_STEP);
-      land_body('B', B_END);
-      swapCap('#capB1', '#capB2', 10.0);
-      clear('B', 11.2 - F);
+      /* A: "15% of 2400". The caption holds 2.5 s. */
+      land('#capA', BAR + 0.1, { y: 20, dur: 0.5 });
+      land_body('A', type('A', BAR + 0.3, 0.085));
+      const A_OUT = BAR + 2.6;
+      clear('A', A_OUT - F);
+      /* B: "72 f to c". The caption holds 2.7 s. */
+      swapCap('#capA', '#capB', A_OUT);
+      land_body('B', type('B', A_OUT + 0.15, 0.095));
+      const B_OUT = A_OUT + 2.7;
+      clear('B', B_OUT - F);
+      /* C: "merge pdf", a tool and not a number. The caption holds 3.5 s. */
+      swapCap('#capB', '#capC', B_OUT);
+      land_body('C', type('C', B_OUT + 0.15, 0.095));
+      const C_OUT = B_OUT + 3.45;
 
-      /* C: "merge pdf", a tool, not a number */
-      const C0 = 11.3, C_STEP = 0.095;
-      swapCap('#capB2', '#capC1', 11.2);
-      const C_END = type('C', C0, C_STEP);
-      land_body('C', C_END);
-      swapCap('#capC1', '#capC2', 12.35);
+      /* ---------- the bar leaves, the proof lands and holds 2.1 s once complete ---------- */
+      tl.to(['#open', '#capC'], { opacity: 0, duration: 0.3, ease: 'none', immediateRender: false }, C_OUT);
+      const P = C_OUT + 0.2;
+      land('#pc1', P, { y: 30 });
+      land('#pc2', P + 0.3, { y: 30 });
+      land('#pc3', P + 0.6, { y: 30 });
+      land('#pnote', P + 0.9, { y: 20 });
+      const P_OUT = P + 0.9 + 0.45 + 2.1;
+      tl.fromTo('#proof', { scale: 1 }, { scale: 1.02, duration: P_OUT - P, ease: 'none', immediateRender: false }, P);
+      fade('#proof', P_OUT, 0.25, 0);
 
-      /* ---------- the bar leaves, the proof lands (13.7 to 15.5) ---------- */
-      tl.to(['#open', '#capC2'], { opacity: 0, duration: 0.3, ease: 'power2.in', immediateRender: false }, 13.45);
-      land('#pc1', 13.8, { y: 30 });
-      land('#pc2', 14.15, { y: 30 });
-      land('#pc3', 14.5, { y: 30 });
-      land('#pnote', 14.9, { y: 20 });
-      tl.fromTo('#proof', { scale: 1 }, { scale: 1.02, duration: 1.8, ease: 'none', immediateRender: false }, 13.8);
-      tl.to('#proof', { opacity: 0, duration: 0.25, ease: 'power2.in', immediateRender: false }, 15.45);
-
-      /* ---------- 4. end card, 15.7 s to the end ---------- */
-      tl.set('#end', { opacity: 1 }, 15.7);
+      /* ---------- 4. end card: the URL is fully in 0.45 s after it lands and holds 2.1 s ---------- */
+      const E = P_OUT + 0.25;
+      tl.set('#end', { opacity: 1 }, E);
       gsap.set(['#etag', '#eurl'], { opacity: 0 });
-      land('#ename', 15.7, { y: 30 });
-      land('#fan', 15.7, { y: 30 });
-      tl.fromTo('#cardL', { rotation: -12 }, { rotation: -20, duration: 0.6, ease: XO, svgOrigin: PIVOT, immediateRender: false }, 15.7);
-      tl.fromTo('#cardR', { rotation: 12 }, { rotation: 20, duration: 0.6, ease: XO, svgOrigin: PIVOT, immediateRender: false }, 15.7);
-      land('#etag', 16.05, { y: 24 });
-      land('#eurl', 16.25, { y: 24 });
+      land('#ename', E, { y: 30 });
+      land('#fan', E, { y: 30 });
+      tl.fromTo('#cardL', { rotation: -12 }, { rotation: -20, duration: 0.6, ease: XO, svgOrigin: PIVOT, immediateRender: false }, E);
+      tl.fromTo('#cardR', { rotation: 12 }, { rotation: 20, duration: 0.6, ease: XO, svgOrigin: PIVOT, immediateRender: false }, E);
+      land('#etag', E + 0.25, { y: 24 });
+      land('#eurl', E + 0.4, { y: 24 });
+      window.__END_TIME = E + 0.4 + 0.45 + 2.1;
 
       window.__timelines["bar-answers"] = tl;
     })();
