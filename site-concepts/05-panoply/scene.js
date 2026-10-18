@@ -180,7 +180,7 @@ function frame() {
   camera.lookAt(Math.sin(T * 0.05 + 1) * 2.6 * amp + px * 1.3, 0.8 + Math.sin(T * 0.04) * 0.3 * amp - py * 0.3, -2);
   camera.updateMatrixWorld();
   cpos.copy(camera.position); fwd.set(0, 0, -1).applyQuaternion(camera.quaternion); right.set(1, 0, 0).applyQuaternion(camera.quaternion); up.set(0, 1, 0).applyQuaternion(camera.quaternion);
-  const D = phone ? 5.6 : 4.7, SP = phone ? 1.3 : 1.62, YL = phone ? 0.55 : 0.5, anyRank = ranks.size > 0;
+  const D = phone ? 5.6 : 5.0, SP = phone ? 1.3 : 1.45, YL = phone ? 0.55 : 0.5, anyRank = ranks.size > 0;
 
   for (const c of cards) {
     const r = ranks.get(c.tool.i);
@@ -195,14 +195,14 @@ function frame() {
     // home pose, pushed away from the camera if receding
     V.copy(c.home.pos); V2.copy(V).sub(cpos).normalize(); V.addScaledVector(V2, 4.5 * sstep(0, 1, c.rec));
     // pulled pose, in front of the camera
-    const n = lastN, off = (c.rank - (n - 1) / 2) * SP;
+    const slot = c.rank === 0 ? 0 : (c.rank % 2 === 1 ? (c.rank + 1) / 2 : -c.rank / 2), off = slot * SP;
     const pulled = V2.copy(cpos).addScaledVector(fwd, D + (isChosen ? -0.3 : 0)).addScaledVector(right, phone ? 0 : off).addScaledVector(up, phone ? YL - off * 0.95 : YL);
     c.grp.position.copy(V).lerp(pulled, e);
     E.set(0, 0, off * 0.02);
     Q.copy(camera.quaternion).multiply(Qz.setFromEuler(E));
     c.grp.quaternion.copy(c.home.quat).slerp(Q, e);
     c.grp.rotateZ(sway);
-    c.grp.scale.setScalar(lerp(c.home.scale, (phone ? 0.95 : 0.95) * (isChosen ? 1.22 : 1), e) * (1 - 0.05 * c.rec));
+    c.grp.scale.setScalar(lerp(c.home.scale, (phone ? 0.95 : 0.85) * (isChosen ? 1.22 : 1), e) * (1 - 0.05 * c.rec));
     const dim = 1 - 0.74 * sstep(0, 1, c.rec);
     c.face.color.setScalar(dim);
     c.face.emissiveIntensity = 0.1 * dim + c.glow;

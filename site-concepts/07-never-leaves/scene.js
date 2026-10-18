@@ -166,7 +166,7 @@ function vantageFor(s, stations, dists){
     const x = s.x + Math.cos(base + o) * d, z = s.z + Math.sin(base + o) * d;
     if(Math.hypot(x, z) > WALL_R - 20) continue;
     let ok = true;
-    for(const t of stations) if(t.i !== s.i && Math.hypot(x - t.x, z - t.z) < 2.6){ ok = false; break; }
+    for(const t of stations) if(t.i !== s.i && Math.hypot(x - t.x, z - t.z) < 4.4){ ok = false; break; }
     if(ok) return { x, z };
   }
   return { x: s.x + s.fx * dists[0], z: s.z + s.fz * dists[0] };
@@ -222,7 +222,8 @@ void main(){
   float halo = exp(-h * 0.045) * 0.22;
   float sway = 0.90 + 0.10 * sin(ang * 3.0 + uTime * 0.07) + 0.05 * sin(ang * 7.0 - uTime * 0.05);
   vec3 col = uBase;
-  col += uGlow * (band * (0.30 + 0.70 * rib) * (1.0 - 0.55 * groove) + halo * (0.6 + 0.4 * rib)) * sway;
+  float topFade = 1.0 - smoothstep(28.0, 44.0, h);
+  col += uGlow * (band * (0.30 + 0.70 * rib) * (1.0 - 0.55 * groove) + halo * (0.6 + 0.4 * rib)) * sway * topFade;
   float line = 1.0 - smoothstep(0.05, 0.17, h);
   float lineHalo = exp(-h * 9.0) * 0.55;
   col += uLine * (line * 1.6 + lineHalo);
@@ -469,7 +470,7 @@ async function main(){
     outLook.set(outPos.x + Math.cos(phi) * 30, 1.25, outPos.z + Math.sin(phi) * 30);
   }
   driftTarget(0, cam.pos, cam.look);
-  const FOLLOW_BACK = PHONE ? 9 : 7.5, FOLLOW_H = eyeH + .35;
+  const FOLLOW_BACK = PHONE ? 9 : 7.5, FOLLOW_H = eyeH + 1.7;
   let drop = null, bar = null;
 
   function pickView(){
@@ -712,7 +713,7 @@ async function main(){
   let last = performance.now(), first = true;
   function frame(now){
     requestAnimationFrame(frame);
-    const dt = clamp((now - last) / 1000, 0, .05);
+    const dt = clamp((now - last) / 1000, 0, REC ? .3 : .05);
     last = now;
     state.time += dt;
     wallMat.uniforms.uTime.value = state.time;

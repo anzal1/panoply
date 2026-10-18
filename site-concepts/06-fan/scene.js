@@ -74,7 +74,7 @@ async function main() {
   renderer.setPixelRatio(phone ? Math.min(window.devicePixelRatio || 1, 1.5) : Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 1.3;
   renderer.shadowMap.enabled = shadowsOn;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setClearColor(new THREE.Color('#E9EAEE'), 1);
@@ -326,7 +326,7 @@ async function main() {
       ci.dim = damp(ci.dim, dimT, 8, dt);
       ci.lift = Math.max(0, ci.lift - dt / 1.0);
       ci.face.color.copy(WHITE).lerp(DIMC, 0.6 * ci.dim);
-      ci.face.emissiveIntensity = 0.35 * ci.glow + 0.55 * sstep(0, 1, ci.lift);
+      ci.face.emissiveIntensity = 0.16 + 0.35 * ci.glow + 0.55 * sstep(0, 1, ci.lift);
     }
   }
 
@@ -413,7 +413,7 @@ async function main() {
   let readyFlag = false;
   function frame() {
     requestAnimationFrame(frame);
-    const dt = Math.min(clock.getDelta(), 0.05);
+    const dt = Math.min(clock.getDelta(), rec ? 0.3 : 0.05);
     const t = clock.elapsedTime;
     pt = readScroll();
     ps = damp(ps, pt, calm ? 18 : 4.4, dt);

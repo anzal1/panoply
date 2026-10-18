@@ -49,7 +49,7 @@ async function run(browser, name, phone) {
     } else {
       if (name === '06-fan') {
         for (const [i, p] of [[2, 0.18], [3, 0.36], [4, 0.58], [5, 0.9]]) { await scrollSweep(page, i === 2 ? 0 : [0, 0, .18, .36, .58][i - 1], p, 1600, 12); await sleep(900); await shot(`${i}-p${Math.round(p * 100)}`); }
-        await scrollSweep(page, 0.9, 1, 800, 6); await sleep(500); await shot('6-end');
+        await scrollSweep(page, 0.9, 1, 800, 6); await sleep(4500); await shot('6-end');
         await scrollTo(page, 0.5);
       } else {
         await scrollSweep(page, 0, 0.1, 1500, 8); await scrollTo(page, 0);
