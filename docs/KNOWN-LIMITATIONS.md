@@ -63,6 +63,14 @@ No signature check applies. Make the AppImage executable (`chmod +x`) and run it
   is under 2%.
 - **OCR.** Page rotation is not detected, so a sideways page reads as it is drawn. Arabic, Cyrillic, Thai
   and CJK read through Apple Vision on macOS only. There is no table detection and no handwriting mode.
+- **Text to speech.** macOS and Windows only, on the voices the system has installed (no download, nothing
+  played: it writes a file). The first version writes WAV; M4A and MP3 come next, through the shared media
+  engine. Linux hides the tool: no permissively licensed speech engine ships with Linux, and the open ones
+  (Piper, Kokoro) turn text into sounds with espeak-ng, which is GPL-3.0, so neither can be in Panoply. A
+  voice or engine with a clean licence and its own phonemes would bring it back. Pauses follow the
+  punctuation the system voice already follows, and numbers, dates and abbreviations are read the way the
+  system voice reads them. Speed changes through the system voice's own rate, so the result is close to the
+  number you pick, not exact. A PDF is read from its own text layer (run PDF OCR first on a scan).
 - **Face-aware crop.** Resize to exact KB crops around the center, or the top for portraits
   (`anchor=top`). It does not look for the face yet.
 - **Wayland.** There is no global hotkey on Wayland. Use the app window, or bind a key in your desktop
@@ -80,6 +88,7 @@ No signature check applies. Make the AppImage executable (`chmod +x`) and run it
 | Remove background | Apple Vision first, IS-Net as a fallback | IS-Net | IS-Net |
 | Faces for passport photos | Apple Vision | YuNet model, downloaded once | YuNet model, downloaded once |
 | OCR | Apple Vision, then PP-OCRv5 and Tesseract | PP-OCRv5 and Tesseract | PP-OCRv5 and Tesseract |
+| Text to speech | System voices (AVSpeechSynthesizer) | System voices (Windows.Media.SpeechSynthesis) | Hidden (no clean engine) |
 | Undo | New file to the Trash | New file to the Recycle Bin | New file to the Trash |
 | Global hotkey | Option+Space | Ctrl+Alt+Space | Ctrl+Alt+Space on X11 |
 

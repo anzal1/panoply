@@ -10,6 +10,7 @@ pub mod image;
 pub mod media;
 pub mod ocr;
 pub mod pdf;
+pub mod tts;
 pub mod vision;
 
 /// Every built-in module.
@@ -30,6 +31,9 @@ pub fn all() -> Vec<Arc<dyn Module>> {
         v.push(Arc::new(m));
     }
     for m in ocr::all() {
+        v.push(Arc::new(m));
+    }
+    for m in tts::all() {
         v.push(Arc::new(m));
     }
     for m in vision::all() {

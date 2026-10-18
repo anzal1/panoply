@@ -5250,6 +5250,7 @@ dependencies = [
  "panoply-mcp",
  "panoply-pdf",
  "panoply-share",
+ "panoply-tts",
  "panoply-vision",
  "panoply-wasm",
  "serde_json",
@@ -5343,6 +5344,7 @@ dependencies = [
  "panoply-media",
  "panoply-ocr",
  "panoply-pdf",
+ "panoply-tts",
  "panoply-vision",
  "png 0.18.1",
  "serde_json",
@@ -5469,6 +5471,7 @@ dependencies = [
 name = "panoply-platform-macos"
 version = "0.2.0"
 dependencies = [
+ "block2 0.6.2",
  "libc",
  "objc2 0.6.5",
  "objc2-core-foundation",
@@ -5520,6 +5523,18 @@ dependencies = [
  "panoply-manifest",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "panoply-tts"
+version = "0.2.0"
+dependencies = [
+ "panoply-core",
+ "panoply-pdf",
+ "panoply-platform-macos",
+ "pdfium-render",
+ "thiserror 2.0.21",
+ "windows 0.62.2",
 ]
 
 [[package]]

@@ -39,6 +39,11 @@ enum Kind {
 }
 
 impl Pending {
+    /// Where the temporary file is, for an engine that writes to a path.
+    pub fn part_path(&self) -> &Path {
+        &self.part
+    }
+
     /// The open temporary file.
     pub fn file(&mut self) -> &mut File {
         self.file

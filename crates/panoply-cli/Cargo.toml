@@ -24,6 +24,7 @@ panoply-host.workspace = true
 panoply-mcp.workspace = true
 panoply-wasm.workspace = true
 panoply-vision.workspace = true
+panoply-tts.workspace = true
 panoply-share.workspace = true
 panoply-disk.workspace = true
 clap.workspace = true

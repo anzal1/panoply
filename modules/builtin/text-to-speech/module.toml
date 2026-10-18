@@ -1,0 +1,47 @@
+# Text to speech. Pattern A (drop a text file, or paste text, get an audio file). Spec:
+# docs/specs/video-and-audio.md 5.12.
+# Engine ladder (ADR 0004): AVSpeechSynthesizer on macOS and Windows.Media.SpeechSynthesis on
+# Windows. No download, no model, nothing resident. Linux has no engine that is both bundled with
+# the OS and permissively licensed (Piper and Kokoro need espeak-ng, GPL-3.0), so the tool is
+# hidden there. See docs/KNOWN-LIMITATIONS.md.
+accepts = ["text/plain", "text/markdown", "application/pdf", "*.txt", "*.md"]
+outputs = ["audio/wav"]
+
+[module]
+id = "text.to_speech"
+name = "Text to speech"
+version = "0.1.0"
+pattern = "A"
+summary = "Read this text aloud into an audio file."
+
+[options.text]
+type = "text"
+default = ""
+label = "Text"
+help = "Words to read. Leave empty to read the chosen files."
+
+[options.voice]
+type = "text"
+default = ""
+label = "Voice"
+help = "A voice name or a language such as en-US. Empty is the system voice."
+
+[options.speed]
+type = "number"
+default = 1.0
+min = 0.5
+max = 3.0
+label = "Speed"
+help = "1.0 is normal speed."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = false
+cli = true
+mcp = true
