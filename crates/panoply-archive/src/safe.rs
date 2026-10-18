@@ -71,12 +71,32 @@ pub enum Cleaned {
 }
 
 /// Turn the name an archive gave an entry into safe relative components, or say why not.
-/// `backslash_is_separator` is true for zip, whose names come from Windows tools.
+///
+/// `backslash_is_separator` is true for zip, whose names come from Windows tools. On Windows it is
+/// true for every format: the system reads `\` as a separator when the file is created, so a tar
+/// name like `..\..\x`, `C:\x` or `\\server\share\x` would otherwise become a parent folder,
+/// a drive or a network path at create time. On other systems a tar name keeps `\` as an ordinary
+/// character, which is what those systems do with it too.
 pub fn clean_name(raw: &str, backslash_is_separator: bool) -> Result<Cleaned, Reject> {
+    clean_name_for(raw, backslash_is_separator, cfg!(windows))
+}
+
+/// [`clean_name`] with the system's rules chosen by the caller, so the Windows rules are tested
+/// on every platform. `windows` adds, on top of the separator rule:
+/// * a `:` anywhere in a component is refused (a drive, or an alternate data stream like
+///   `a.txt:evil`);
+/// * a component of only dots and spaces is refused, because Windows strips trailing dots and
+///   spaces, so `.. ` and `...` mean `..`;
+/// * device names and characters Windows cannot hold are rewritten.
+pub fn clean_name_for(
+    raw: &str,
+    backslash_is_separator: bool,
+    windows: bool,
+) -> Result<Cleaned, Reject> {
     if raw.contains('\0') {
         return Err(Reject::BadName);
     }
-    let s: String = if backslash_is_separator {
+    let s: String = if backslash_is_separator || windows {
         raw.replace('\\', "/")
     } else {
         raw.to_string()
@@ -93,8 +113,21 @@ pub fn clean_name(raw: &str, backslash_is_separator: bool) -> Result<Cleaned, Re
         match c {
             "" | "." => {}
             ".." => return Err(Reject::Traversal),
+            c if windows && c.chars().all(|ch| ch == '.' || ch == ' ') => {
+                return Err(Reject::Traversal);
+            }
+            c if windows && c.contains(':') => {
+                let b = c.as_bytes();
+                return Err(
+                    if b.len() >= 2 && b[0].is_ascii_alphabetic() && b[1] == b':' {
+                        Reject::Absolute
+                    } else {
+                        Reject::BadName
+                    },
+                );
+            }
             c if c.len() > MAX_COMPONENT => return Err(Reject::BadName),
-            c => parts.push(platform_component(c)),
+            c => parts.push(platform_component(c, windows)),
         }
     }
     if parts.is_empty() {
@@ -108,8 +141,8 @@ pub fn clean_name(raw: &str, backslash_is_separator: bool) -> Result<Cleaned, Re
 
 /// Windows cannot hold `:` or `?` in a name and treats `CON` and `NUL` as devices. Other systems
 /// keep the name as it is.
-fn platform_component(c: &str) -> String {
-    if !cfg!(windows) {
+fn platform_component(c: &str, windows: bool) -> String {
+    if !windows {
         return c.to_string();
     }
     let mut s: String = c
@@ -234,10 +267,50 @@ mod tests {
         assert_eq!(p("C:\\Windows\\x"), Err(Reject::Absolute));
         assert_eq!(p("c:/x"), Err(Reject::Absolute));
         assert_eq!(p("a\0b"), Err(Reject::BadName));
-        // A backslash is a plain character in a tar name.
+        // A backslash is a plain character in a tar name on a system that treats it as one.
         assert_eq!(
-            clean_name("..\\x", false).unwrap(),
+            clean_name_for("..\\x", false, false).unwrap(),
             Cleaned::Path(vec!["..\\x".into()])
+        );
+    }
+
+    /// The Windows rules, run on every platform: tar names are read with `\` as a separator and
+    /// nothing can name a drive, a network path, a stream or a parent folder.
+    #[test]
+    fn windows_rules_close_the_backslash_drive_and_stream_holes_in_tar_names() {
+        let w = |raw: &str| clean_name_for(raw, false, true);
+        assert_eq!(w("..\\..\\x"), Err(Reject::Traversal));
+        assert_eq!(w("a\\..\\..\\x"), Err(Reject::Traversal));
+        assert_eq!(w("C:\\x"), Err(Reject::Absolute));
+        assert_eq!(w("\\\\server\\share\\x"), Err(Reject::Absolute));
+        assert_eq!(w("\\\\?\\C:\\Users\\x"), Err(Reject::Absolute));
+        assert_eq!(w("a/C:/x"), Err(Reject::Absolute));
+        assert_eq!(w("a.txt:stream"), Err(Reject::BadName));
+        assert_eq!(w("dir/a.txt:evil:$DATA"), Err(Reject::BadName));
+        // Trailing dots and spaces are dropped by Windows, so these are "..".
+        assert_eq!(w(".. /x"), Err(Reject::Traversal));
+        assert_eq!(w(".../x"), Err(Reject::Traversal));
+        // A plain nested name still works, with backslashes as separators.
+        assert_eq!(
+            w("a\\b\\c.txt").unwrap(),
+            Cleaned::Path(vec!["a".into(), "b".into(), "c.txt".into()])
+        );
+        // The same names on a system where backslash and colon are ordinary characters.
+        let u = |raw: &str| clean_name_for(raw, false, false);
+        assert_eq!(
+            u("..\\..\\x").unwrap(),
+            Cleaned::Path(vec!["..\\..\\x".into()])
+        );
+        assert!(u("a.txt:stream").is_ok());
+        // Zip reads backslash as a separator everywhere.
+        assert_eq!(
+            clean_name_for("..\\..\\x", true, false),
+            Err(Reject::Traversal)
+        );
+        assert_eq!(clean_name_for("C:\\x", true, false), Err(Reject::Absolute));
+        assert_eq!(
+            clean_name_for("\\\\server\\share\\x", true, false),
+            Err(Reject::Absolute)
         );
     }
 

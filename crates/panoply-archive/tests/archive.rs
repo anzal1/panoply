@@ -305,6 +305,44 @@ fn absolute_paths_are_rejected_in_zip_and_tar() {
     fs::remove_dir_all(&d).unwrap();
 }
 
+/// Tar names written the way a Windows tool or an attacker would: with backslashes, a drive, a
+/// network path and a stream name. On Windows the system reads the backslash as a separator, so
+/// each of these must be refused. Elsewhere they are ordinary (odd) file names and stay inside.
+#[test]
+fn windows_style_tar_names_never_leave_the_destination() {
+    let d = scratch("winnames");
+    let tp = d.join("win.tar");
+    fs::write(
+        &tp,
+        tar_of(&[
+            tar_entry(b"..\\..\\evil1.txt", b'0', "", b"x"),
+            tar_entry(b"C:\\evil2.txt", b'0', "", b"x"),
+            tar_entry(b"\\\\server\\share\\evil3.txt", b'0', "", b"x"),
+            tar_entry(b"ok.txt:stream", b'0', "", b"x"),
+            tar_entry(b"ok.txt", b'0', "", b"x"),
+        ]),
+    )
+    .unwrap();
+    let (r, dest) = unpack(&d, &tp, &Limits::default());
+    let r = r.unwrap();
+    assert!(dest.join("ok.txt").exists());
+    if cfg!(windows) {
+        assert_eq!((r.files, r.skipped.len()), (1, 4), "{r:?}");
+    } else {
+        // Backslash and colon are ordinary characters here, so four names are files inside the
+        // destination. A leading drive letter ("C:\\evil2.txt") is refused on every system.
+        assert_eq!((r.files, r.skipped.len()), (4, 1), "{r:?}");
+    }
+    // Nothing was made beside or above the destination, whatever the system.
+    let mut beside: Vec<String> = fs::read_dir(&d)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    beside.sort();
+    assert_eq!(beside, ["out", "win.tar"], "{beside:?}");
+    fs::remove_dir_all(&d).unwrap();
+}
+
 #[cfg(unix)]
 #[test]
 fn symlinks_never_escape_the_destination() {
