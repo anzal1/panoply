@@ -389,6 +389,25 @@ fn function(name: &str, x: f64) -> Option<f64> {
 
 // ---- number text ----
 
+/// `v` to at most `places` decimals with trailing zeros trimmed: 22.2222222 to "22.2222", 2.5400
+/// to "2.54". A value that would round to zero keeps four significant digits instead, so a real
+/// quantity never reads "0".
+fn fmt_decimals(v: f64, places: usize) -> String {
+    if v.abs() >= 1e15 {
+        return fmt(v, 10);
+    }
+    let text = format!("{v:.places$}");
+    let trimmed = if text.contains('.') {
+        text.trim_end_matches('0').trim_end_matches('.')
+    } else {
+        text.as_str()
+    };
+    if trimmed.trim_start_matches('-').chars().all(|c| c == '0') && v != 0.0 {
+        return fmt(v, 4);
+    }
+    trimmed.to_string()
+}
+
 /// `v` to `sig` significant digits as plain text. No exponent between 1e-6 and 1e15.
 fn fmt(v: f64, sig: usize) -> String {
     let rounded: f64 = format!("{:.*e}", sig - 1, v).parse().unwrap_or(v);
@@ -714,10 +733,11 @@ fn convert(q: &str) -> Option<Answer> {
         if !v.is_finite() {
             continue;
         }
+        let value = fmt_decimals(v, 4);
         let asked = format!("{} {} to {}", fmt(n, 12), from.label, to.label);
         return Some(Answer {
-            shown: format!("{} {}", group(&fmt(v, 10)), to.label),
-            copy: fmt(v, 12),
+            shown: format!("{} {}", group(&value), to.label),
+            copy: value,
             asked,
         });
     }
@@ -775,8 +795,8 @@ mod tests {
             ("2e-3*2", "0.004"),
             ("10^20", "1e20"),
             // Conversions.
-            ("5 km in miles", "3.10685596119"),
-            ("72 f to c", "22.2222222222"),
+            ("5 km in miles", "3.1069"),
+            ("72 f to c", "22.2222"),
             ("2 GB in MB", "2000"),
             ("500 kb in mb", "0.5"),
             ("500kb to mb", "0.5"),
@@ -785,10 +805,10 @@ mod tests {
             ("100 c in k", "373.15"),
             ("1 gib to mib", "1024"),
             ("10 in to cm", "25.4"),
-            ("1 mile as km", "1.609344"),
-            ("60 mph in km/h", "96.56064"),
+            ("1 mile as km", "1.6093"),
+            ("60 mph in km/h", "96.5606"),
             ("2 hours to minutes", "120"),
-            ("1 kg in lb", "2.20462262185"),
+            ("1 kg in lb", "2.2046"),
         ];
         for (q, want) in cases {
             assert_eq!(copy(q).as_deref(), Some(*want), "query: {q}");
@@ -865,9 +885,46 @@ mod tests {
     #[test]
     fn conversions_copy_the_bare_number_and_show_the_unit() {
         let a = answer("5 km in miles").unwrap();
-        assert_eq!(a.copy, "3.10685596119");
-        assert_eq!(a.shown, "3.106855961 mi");
-        assert_eq!(copy("72 f to c").as_deref(), Some("22.2222222222"));
+        assert_eq!(a.copy, "3.1069");
+        assert_eq!(a.shown, "3.1069 mi");
+        assert_eq!(copy("72 f to c").as_deref(), Some("22.2222"));
+        assert_eq!(answer("72 f to c").unwrap().shown, "22.2222 \u{00B0}C");
+    }
+
+    #[test]
+    fn conversions_show_at_most_four_decimals_and_math_keeps_its_precision() {
+        // Trailing zeros are trimmed, and the copy is the value as shown.
+        for (q, shown, copy) in [
+            ("1 in to cm", "2.54 cm", "2.54"),
+            ("1 m to km", "0.001 km", "0.001"),
+            ("1 mile to ft", "5,280 ft", "5280"),
+            ("1 lb in kg", "0.4536 kg", "0.4536"),
+            ("1 kg in oz", "35.274 oz", "35.274"),
+            ("1 t in lb", "2,204.6226 lb", "2204.6226"),
+            ("0.00004 km in m", "0.04 m", "0.04"),
+            ("-1 mi in km", "-1.6093 km", "-1.6093"),
+            // Rounds to zero at four decimals: keep four significant digits instead of "0".
+            ("1 mm to km", "0.000001 km", "0.000001"),
+            ("1 b to pb", "1e-15 PB", "1e-15"),
+        ] {
+            let a = answer(q).unwrap();
+            assert_eq!(
+                (a.shown.as_str(), a.copy.as_str()),
+                (shown, copy),
+                "query: {q}"
+            );
+        }
+        // Plain math is unchanged: 12 digits copied, 10 shown.
+        let a = answer("1/3").unwrap();
+        assert_eq!(
+            (a.shown.as_str(), a.copy.as_str()),
+            ("0.3333333333", "0.333333333333")
+        );
+        let a = answer("sqrt(2)").unwrap();
+        assert_eq!(
+            (a.shown.as_str(), a.copy.as_str()),
+            ("1.414213562", "1.41421356237")
+        );
     }
 
     #[test]
