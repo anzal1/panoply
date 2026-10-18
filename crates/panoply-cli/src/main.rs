@@ -1140,6 +1140,24 @@ enum VideoTool {
 
 #[derive(Subcommand)]
 enum AudioTool {
+    /// Read text aloud into a WAV file: panoply audio speak "Hello" --out ~/Music, or panoply audio speak notes.md
+    Speak {
+        /// Text files such as notes.txt, notes.md or a PDF with a text layer
+        files: Vec<PathBuf>,
+        /// The words to read (instead of a file)
+        #[arg(long)]
+        text: Option<String>,
+        /// A voice name or a language such as en-US (see panoply audio voices)
+        #[arg(long)]
+        voice: Option<String>,
+        /// 1.0 is normal speed, 0.5 to 3.0
+        #[arg(long)]
+        speed: Option<f64>,
+        #[command(flatten)]
+        out: MediaOut,
+    },
+    /// List the voices installed on this computer
+    Voices,
     /// Turn audio into another format: panoply audio convert in.wav --to mp3
     Convert {
         #[arg(required = true)]
@@ -1431,6 +1449,42 @@ fn audio(tool: AudioTool) -> ExitCode {
         o.insert(k.to_string(), v);
     };
     let (id, files, out) = match tool {
+        AudioTool::Voices => {
+            let list = panoply_tts::voices();
+            if list.is_empty() {
+                eprintln!(
+                    "No voices are installed here, or reading aloud is not available on this system."
+                );
+                return ExitCode::FAILURE;
+            }
+            for v in list {
+                println!("{}\t{}\t{}\t{}", v.name, v.language, v.quality, v.id);
+            }
+            return ExitCode::SUCCESS;
+        }
+        AudioTool::Speak {
+            files,
+            text,
+            voice,
+            speed,
+            mut out,
+        } => {
+            if let Some(t) = text {
+                put("text", json!(t));
+            }
+            if let Some(v) = voice {
+                put("voice", json!(v));
+            }
+            if let Some(s) = speed {
+                put("speed", json!(s));
+            }
+            // Words with no file have nowhere to go "next to", so they go to the folder given
+            // with --out, or the current folder.
+            if files.is_empty() && out.out.is_none() {
+                out.out = Some(PathBuf::from("."));
+            }
+            ("text.to_speech", files, out)
+        }
         AudioTool::Convert {
             files,
             to,

@@ -21,6 +21,8 @@ objc2-core-graphics = { version = "0.3", default-features = false, features = ["
 # The Objective-C runtime, only for camera RAW through CoreImage (src/raw.rs). CoreImage itself is
 # opened with dlopen at the first RAW, so other jobs never load it.
 objc2 = { version = "0.6", default-features = false, features = ["std"] }
+# The completion block of AVSpeechSynthesizer.write (src/speech.rs).
+block2 = { version = "0.6", default-features = false, features = ["std"] }
 objc2-image-io = { version = "0.3", default-features = false, features = ["std", "objc2-core-graphics", "CGImageSource", "CGImageDestination", "CGImageProperties", "CGImageMetadata", "ImageIOBase"] }
 
 # Not the workspace lints: this crate is the one place `unsafe` is allowed, and every unsafe

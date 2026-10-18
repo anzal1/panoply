@@ -53,6 +53,7 @@ pub mod fsevents;
 pub mod ocr;
 mod props;
 mod raw;
+pub mod speech;
 mod sys;
 mod vision;
 

@@ -16,6 +16,10 @@ marking releases that are still finding their edges.
 - **MCP server.** `panoply mcp` gives AI agents (Claude Code, Claude Desktop, Cursor) every tool, built-in and
   community, over stdio. Files go in as absolute paths, results are new files, and long jobs report progress. Setup
   in docs/MCP.md.
+- **Text to speech.** Read pasted text, or a TXT, Markdown or PDF file, aloud into an audio file with the
+  voices already on your computer: `panoply audio speak notes.md`, `panoply audio voices`. Long text is read
+  in parts with progress and Cancel. Nothing is downloaded and nothing is played. macOS and Windows only for
+  now.
 
 ## v0.2.0-beta (2026-10-16)
 
