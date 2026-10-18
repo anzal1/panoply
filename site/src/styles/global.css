@@ -69,7 +69,7 @@ main{overflow-x:hidden;overflow-x:clip}
 .hero-copy .sub{color:var(--fg);max-width:36em;margin-left:auto;margin-right:auto;text-wrap:wrap}
 .hero-bar{position:relative;z-index:3;display:flex;justify-content:center;margin-top:min(5vh,44px);padding:0 22px;opacity:calc(1 - var(--pc,0) * 1.1);transform:translateY(calc(var(--pc,0) * -160px)) scale(calc(1 - var(--pc,0) * .06))}
 .hero-bar .dither{left:50%;top:50%;width:min(1400px,120vw);height:640px;transform:translate(-50%,-46%);z-index:-1}
-.hero-art{position:absolute;z-index:1;left:50%;top:46vh;width:min(1500px,170vh,150vw);transform:translate(-64%,calc(var(--pa,0) * -26vh)) scale(calc(1 - var(--pa,0) * .28));transform-origin:64% 0;opacity:calc(.2 + var(--pa,0) * .8)}
+.hero-art{position:absolute;z-index:1;left:50%;top:46vh;width:min(167vh,150vw);transform:translate(-64%,calc(var(--pa,0) * -26vh)) scale(calc(1 - var(--pa,0) * .28));transform-origin:64% 0;opacity:calc(var(--pa,0) * 1.6)}
 .hero-art .bust{width:100%;animation:rise 1.8s var(--out) both .2s}
 .forms{position:absolute;inset:0}
 .pc{position:absolute;will-change:transform,opacity}
@@ -277,6 +277,34 @@ footer a:hover{color:var(--fg2)}
   .step p{font-size:15px;margin-top:6px}
   .keys{margin-top:10px}
   .key{height:34px;min-width:38px}
+}
+/* short laptop screens: the whole hero, bar included, fits above the fold */
+@media (max-height:820px) and (min-width:735px){
+  .hero-copy{padding-top:calc(53px + 5vh)}
+  .ctas{margin-top:22px}
+  .hero-bar{margin-top:26px}
+  .bar{height:352px}
+  .bar .row{padding-block:7px}
+  .bar .sec{padding-block:6px 4px}
+  .bar .done{padding-block:14px}
+  .ba{margin-top:12px}
+}
+/* portrait tablets: keep the line close under the bust */
+@media (min-width:735px) and (max-aspect-ratio:1/1){.hero-tag{bottom:21vh}}
+/* big displays: scale the reading sizes up so the page fills the screen like it does on a laptop */
+@media (min-width:1800px){
+  .wrap{max-width:1400px}
+  .h1{font-size:clamp(88px,5.2vw,128px)}
+  .h2{font-size:clamp(80px,4.4vw,104px)}
+  .h2s{font-size:clamp(64px,3.6vw,84px)}
+  .sub{font-size:clamp(26px,1.45vw,34px)}
+  .bar{zoom:1.2}
+  .r1{height:900px}.r2{height:820px}.r3{height:740px}
+}
+@media (min-width:2400px){
+  .wrap{max-width:1720px}
+  .bar{zoom:1.45}
+  .r1{height:1080px}.r2{height:980px}.r3{height:880px}
 }
 @media (max-width:1068px){
   .t7,.t5,.t6{grid-column:span 6}

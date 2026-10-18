@@ -128,28 +128,38 @@
   else views.list.innerHTML = REST;
 
   /* ---------- marble forms flying off the bust ---------- */
-  // [form, size % of the art width, rest x %, rest y %, tilt, depth, start x %, start y % on the fracture line]
+  // Placed around the bust's own centre (64% across the art), seven a side so the frame stays balanced.
+  // [form, size % of the art width, offset from the bust centre %, height %, tilt, depth]
+  var BUST_X = 64;
   var PIECES = [
-    [2, 5.4, 8, 50, -18, .6, 72, 30], [0, 6.7, 20, 38, 14, .8, 74, 22], [1, 7.4, 88, 64, 8, 1.1, 77, 58],
-    [3, 6.4, 30, 58, 10, .9, 70, 40],  [4, 4.8, 13, 66, -8, .6, 66, 55], [5, 7.4, 86, 34, 16, 1.2, 76, 30],
-    [6, 5.8, 38, 46, -10, .8, 70, 35], [7, 4.8, 25, 53, 22, .7, 68, 48], [8, 8.3, 41, 27, -6, 1, 73, 20],
-    [9, 7.0, 46, 64, 18, .9, 72, 60],  [10, 5.8, 50, 41, -26, 1, 74, 38], [11, 4.8, 81, 20, 18, 1.1, 75, 18],
-    [3, 3.5, 4, 40, 28, .5, 68, 42],  [2, 4.0, 93, 50, -28, .7, 78, 45]
+    [1, 7.4, 22, 62, 8, 1.1],  [5, 7.0, 25, 30, 16, 1.2], [11, 4.8, 15, 14, 18, 1.1], [6, 5.4, 35, 48, -10, .8],
+    [2, 4.6, 41, 22, -28, .7], [8, 7.6, 31, 77, -6, 1],   [4, 4.4, 45, 63, -8, .6],
+    [0, 6.7, -22, 34, 14, .8], [3, 6.4, -26, 61, 10, .9], [10, 5.8, -16, 18, -26, 1], [7, 4.8, -35, 46, 22, .7],
+    [9, 7.0, -31, 75, 18, .9], [2, 4.0, -42, 27, -18, .6], [3, 3.6, -45, 57, 28, .5]
   ];
   function piece(d, i){
     var el = document.createElement('div'); el.className = 'pc';
-    el.style.left = d[2] + '%'; el.style.top = d[3] + '%'; el.style.width = d[1] + '%';
+    el.style.top = d[3] + '%'; el.style.width = d[1] + '%';
     el.innerHTML = '<img src="/grain/forms/f' + d[0] + '.webp" alt="" decoding="async" style="--r:' + d[4] + 'deg;--t:' + (5.5 + (i * 37 % 50) / 10) + 's;--dl:-' + (i * .7).toFixed(1) + 's">';
     return el;
   }
   var art = document.querySelector('.hero-art'), forms = art.querySelector('.forms'), pcs = [];
-  PIECES.forEach(function(d, i){ var el = piece(d, i); forms.appendChild(el); pcs.push({ el: el, d: d, lag: (i % 5) * .06 }); });
+  PIECES.forEach(function(d, i){ var el = piece(d, i); forms.appendChild(el); pcs.push({ el: el, d: d, lag: (i % 7) * .045 }); });
   var AW = 0, AH = 0, mx = 0, my = 0, pa = 0;
-  function measure(){ AW = art.offsetWidth; AH = art.offsetHeight; }
+  function measure(){
+    AW = art.offsetWidth; AH = art.offsetHeight;
+    // pull the spread in on narrow screens so every piece stays inside the frame
+    var scale = wide() ? .72 : 1, f = Math.min(1, (innerWidth / 2 - 28) / (.48 * AW * scale));
+    pcs.forEach(function(p){
+      p.x = BUST_X + p.d[2] * f;
+      p.ox = p.d[2] > 0 ? 75 : 55; p.oy = Math.max(20, Math.min(64, p.d[3]));
+      p.el.style.left = p.x + '%';
+    });
+  }
   function placePieces(){
     pcs.forEach(function(p){
       var d = p.d, k = still || !wide() ? 1 : clamp((pa - p.lag) / .7), e = 1 - Math.pow(1 - k, 3), prog = .14 + .86 * e;
-      var par = d[5] * 22, dx = (d[6] - d[2]) / 100 * AW * (1 - prog) + mx * par, dy = (d[7] - d[3]) / 100 * AH * (1 - prog) + my * par;
+      var par = d[5] * 22, dx = (p.ox - p.x) / 100 * AW * (1 - prog) + mx * par, dy = (p.oy - d[3]) / 100 * AH * (1 - prog) + my * par;
       p.el.style.transform = 'translate(-50%,-50%) translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + (.35 + .65 * prog).toFixed(3) + ')';
       p.el.style.opacity = Math.min(1, .2 + prog).toFixed(3);
     });
