@@ -4,22 +4,57 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
-## Unreleased
+## v0.3.0-beta (2026-10-18)
+
+Panoply for AI agents, PDF redaction that removes the text, zip, a calculator, sharing to nearby devices, noise removal and text to speech.
 
 ### Added
 
+- **MCP server.** `panoply mcp` gives AI agents (Claude Code, Claude Desktop, Cursor) every tool, built-in and
+  community, over stdio. Files go in as absolute paths, results are new files, and long jobs report progress.
+  Quick install: a Claude Desktop bundle (`.mcpb`) in every release, Cursor and VS Code install links, and a
+  server.json for the MCP registry. Setup is in docs/MCP.md.
+- **True PDF redaction.** Finds exact terms and presets for email, phone, Aadhaar, PAN, card numbers (Luhn
+  check) and IBAN. Scans are read through OCR. A page with a match is redrawn with the boxes burned in and a
+  hidden text layer without the redacted words, so the original text and pixels are gone. Annotations, form
+  fields, metadata, attachments and bookmarks that hold a match are dropped. Before saving, a check searches
+  the result and fails the job on any leak. Pages without a match are untouched.
+- **Zip and unzip.** Create zip, tar.gz or tar.zst. Extract zip, tar, tar.gz, tar.zst, gz and zst into a new
+  folder, never over an existing file, with progress and Cancel. Zip-slip names, links that point outside the
+  folder, zip bombs and unsafe file modes are guarded against.
+- **Calculator and unit conversions.** Type math or a conversion in the command bar and an Answer row shows at
+  the top. Return copies it. Sums, percents, brackets and functions, plus length, mass, volume, time, data,
+  temperature, speed and area. It never takes over a tool or file search.
+- **Share screen.** Send files to nearby devices, LocalSend-compatible, with progress and Cancel. Incoming
+  files ask Accept or Decline first and save to Downloads. A QR code opens a download page on a phone without
+  the app. Receive is off at every launch. There is also a Share button on every finished result.
 - **Remove noise.** Takes background noise out of a speech recording or the sound of a video
   (`panoply audio denoise in.wav --strength normal`). It runs RNNoise on your computer, with the model inside
   the program and no download. Strength is light, normal or strong. The picture of a video is copied as it is
   and the sound is encoded once. A 60 second clip takes about half a second. Built for speech: steady noise with
   no voice in it may barely change, and music can be dulled.
-- **MCP server.** `panoply mcp` gives AI agents (Claude Code, Claude Desktop, Cursor) every tool, built-in and
-  community, over stdio. Files go in as absolute paths, results are new files, and long jobs report progress. Setup
-  in docs/MCP.md.
 - **Text to speech.** Read pasted text, or a TXT, Markdown or PDF file, aloud into an audio file with the
   voices already on your computer: `panoply audio speak notes.md`, `panoply audio voices`. Long text is read
   in parts with progress and Cancel. Nothing is downloaded and nothing is played. macOS and Windows only for
   now.
+- **Homebrew and Scoop from this repository.** `brew tap anzal1/panoply https://github.com/anzal1/panoply`
+  and `scoop bucket add panoply https://github.com/anzal1/panoply`, with no separate repositories. Sources for
+  winget, AUR and Flatpak are rendered with each release; nothing is submitted yet.
+- **Prose lint.** Docs, UI strings and commit messages are checked for em dashes and stock AI phrasing.
+
+### Changed
+
+- **CI draft mode.** Draft pull requests run only the quick checks. The full test matrix runs when a pull
+  request is marked ready, and on every push to main.
+
+### Fixed
+
+- **Archives on Windows** read a backslash as a separator in tar names.
+- **MSI upgrades:** a stable release now installs over a beta, because the product code hashes the full
+  version.
+- **Choosing a listed macOS voice** now works, and a voice that is slow to appear is looked for again before
+  it is refused.
+- **A flaky share test** now waits for the port to free instead of rebinding at once.
 
 ## v0.2.0-beta (2026-10-16)
 

@@ -5294,7 +5294,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-archive"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "flate2",
  "panoply-core",
@@ -5306,7 +5306,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-bench"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "clap",
  "panoply-core",
@@ -5319,7 +5319,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-cli"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "clap",
  "panoply-convert",
@@ -5338,7 +5338,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-convert"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -5347,7 +5347,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "infer",
  "libc",
@@ -5360,7 +5360,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-desktop"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "futures",
@@ -5391,7 +5391,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-disk"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "libc",
  "objc2-foundation 0.3.2",
@@ -5401,11 +5401,11 @@ dependencies = [
 
 [[package]]
 name = "panoply-ffi"
-version = "0.2.0"
+version = "0.3.0"
 
 [[package]]
 name = "panoply-find"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ignore",
  "memchr",
@@ -5417,7 +5417,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-host"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "panoply-archive",
  "panoply-core",
@@ -5437,7 +5437,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-id"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ort",
  "panoply-core",
@@ -5455,7 +5455,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-image"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bytemuck",
  "fast_image_resize",
@@ -5484,7 +5484,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-manifest"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -5494,7 +5494,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-mcp"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "panoply-manifest",
  "serde_json",
@@ -5502,7 +5502,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-media"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "fs4",
  "nnnoiseless",
@@ -5517,7 +5517,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-ocr"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ort",
  "panoply-core",
@@ -5535,7 +5535,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-pdf"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "fax",
  "jpeg-encoder",
@@ -5555,7 +5555,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-platform-macos"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "block2 0.6.2",
  "libc",
@@ -5567,14 +5567,14 @@ dependencies = [
 
 [[package]]
 name = "panoply-platform-windows"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "windows-sys 0.61.2",
 ]
 
 [[package]]
 name = "panoply-share"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "bytes",
  "clap",
@@ -5600,7 +5600,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-smoke"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "panoply-archive",
  "panoply-bench",
@@ -5614,7 +5614,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-tts"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "panoply-core",
  "panoply-pdf",
@@ -5626,7 +5626,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-vision"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "fast_image_resize",
  "miniz_oxide 0.9.1",
@@ -5642,7 +5642,7 @@ dependencies = [
 
 [[package]]
 name = "panoply-wasm"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "panoply-core",
  "panoply-host",
