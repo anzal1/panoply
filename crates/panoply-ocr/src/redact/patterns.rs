@@ -86,7 +86,20 @@ impl Preset {
         Ok(out)
     }
 
-    fn regex(self) -> &'static str {
+    /// The pattern. `loose` is for text read by OCR, which puts stray spaces inside what it
+    /// reads: around `@` and before or after a dot in an email, and anywhere inside the digits
+    /// of an Aadhaar number (the check digit keeps that from matching random numbers).
+    fn regex(self, loose: bool) -> &'static str {
+        match (self, loose) {
+            (Preset::Email, true) => {
+                r"[A-Za-z0-9._%+\-]+ ?@ ?[A-Za-z0-9\-]+(?: ?\.[A-Za-z0-9\-]+)*(?: ?\.[A-Za-z]{2,}| ?\. [a-z]{2,})"
+            }
+            (Preset::Aadhaar, true) => r"\d(?:[ \-\n]{0,2}\d){11}",
+            _ => self.strict_regex(),
+        }
+    }
+
+    fn strict_regex(self) -> &'static str {
         match self {
             Preset::Email => {
                 r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}"
@@ -224,6 +237,8 @@ pub struct Hit {
 pub struct Matcher {
     terms: Option<Regex>,
     presets: Vec<(Preset, Regex)>,
+    /// The presets as written for OCR text, see [`Preset::regex`].
+    loose: Vec<(Preset, Regex)>,
 }
 
 impl Matcher {
@@ -264,12 +279,19 @@ impl Matcher {
         let mut ps: Vec<Preset> = presets.to_vec();
         ps.sort_by_key(|p| p.priority());
         ps.dedup();
-        let presets = ps
-            .into_iter()
-            .map(|p| Regex::new(p.regex()).map(|r| (p, r)))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| format!("A preset could not be built ({e})."))?;
-        Ok(Matcher { terms, presets })
+        let build = |loose: bool| {
+            ps.iter()
+                .map(|&p| Regex::new(p.regex(loose)).map(|r| (p, r)))
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|e| format!("A preset could not be built ({e})."))
+        };
+        let presets = build(false)?;
+        let loose = build(true)?;
+        Ok(Matcher {
+            terms,
+            presets,
+            loose,
+        })
     }
 
     /// True when there is nothing to look for.
@@ -279,6 +301,16 @@ impl Matcher {
 
     /// Every hit in `text`, sorted by position, none overlapping another.
     pub fn find(&self, text: &str) -> Vec<Hit> {
+        self.find_with(text, false)
+    }
+
+    /// Like [`Matcher::find`] for text read by OCR: the patterns tolerate the stray spaces OCR
+    /// leaves inside an email address or an Aadhaar number.
+    pub fn find_loose(&self, text: &str) -> Vec<Hit> {
+        self.find_with(text, true)
+    }
+
+    fn find_with(&self, text: &str, loose: bool) -> Vec<Hit> {
         let mut hits: Vec<Hit> = Vec::new();
         let free = |hits: &[Hit], r: &Range<usize>| {
             !hits
@@ -293,7 +325,8 @@ impl Matcher {
                 });
             }
         }
-        for (p, re) in &self.presets {
+        let list = if loose { &self.loose } else { &self.presets };
+        for (p, re) in list {
             let mut from = 0;
             while let Some(m) = re.find_at(text, from) {
                 let r = m.range();
@@ -427,6 +460,54 @@ mod tests {
         let r = found(&[], &p, "id 2345 6789\n0124 end");
         assert_eq!(r.len(), 1, "{r:?}");
         assert!(found(&[], &p, "id 2345 6789 0124\n5678").len() == 1);
+    }
+
+    #[test]
+    fn text_read_by_ocr_may_carry_stray_spaces() {
+        let m = Matcher::new(&[], &Preset::ALL).unwrap();
+        let loose = |t: &str| -> Vec<(String, &'static str)> {
+            m.find_loose(t)
+                .into_iter()
+                .map(|h| (t[h.range].to_string(), h.kind))
+                .collect()
+        };
+        for spaced in [
+            "anzal @example.com",
+            "anzal@ example.com",
+            "anzal @ example.com",
+            "anzal@example .com",
+            "anzal@example. com",
+            "anzal@example.co .uk",
+        ] {
+            let r = loose(&format!("Contact {spaced} today"));
+            assert_eq!(r.len(), 1, "{spaced}: {r:?}");
+            assert_eq!(r[0].1, "email", "{spaced}: {r:?}");
+            assert_eq!(r[0].0, spaced, "{r:?}");
+            // The plain patterns, used for text with a real text layer, stay strict.
+            assert!(
+                m.find(&format!("Contact {spaced} today")).is_empty(),
+                "{spaced}"
+            );
+        }
+        // A sentence end after an address is not swallowed.
+        let r = loose("Mail anzal@example.com. Contact us");
+        assert_eq!(r, [("anzal@example.com".to_string(), "email")]);
+        // Digits split by an OCR space: the Aadhaar check digit still decides.
+        let digits = Matcher::new(&[], &[Preset::Aadhaar, Preset::Card]).unwrap();
+        let in_text = |t: &str| -> Vec<(String, &'static str)> {
+            digits
+                .find_loose(t)
+                .into_iter()
+                .map(|h| (t[h.range].to_string(), h.kind))
+                .collect()
+        };
+        let r = in_text("id 2345 67 89 0124 end");
+        assert_eq!(r, [("2345 67 89 0124".to_string(), "aadhaar")], "{r:?}");
+        assert!(in_text("id 2345 67 89 0123 end").is_empty());
+        // A card number split in odd places is found by the card pattern as it is.
+        let r = in_text("card 4111 11 11 1111 1111 ok");
+        assert_eq!(r.len(), 1, "{r:?}");
+        assert_eq!(r[0].1, "card");
     }
 
     #[test]

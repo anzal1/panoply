@@ -332,6 +332,12 @@ fn an_image_only_pdf_is_redacted_in_its_pixels() {
         eprintln!("skipped: this machine's OCR found none of the numbers in the scan");
         return;
     }
+    // The email is among the targets, even when OCR puts a space beside the @ or a dot.
+    assert!(
+        found.matches.iter().any(|m| m.kind == "email"),
+        "a (possibly spaced) email in a scan must be found: {:?}",
+        found.matches.iter().map(|m| &m.text).collect::<Vec<_>>()
+    );
     // Whatever this machine's OCR did find must be gone. What it misread (an email read as
     // "anzal @example.com" is no email) is not a target, so nothing is asserted about it.
     let squash = |x: &str| x.chars().filter(|c| !c.is_whitespace()).collect::<String>();

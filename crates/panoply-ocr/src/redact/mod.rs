@@ -756,7 +756,13 @@ pub fn find(
             found.scan_words.insert(i, page.words.clone());
         }
         let (text, at) = text_of(&page.chars);
-        for hit in matcher.find(&text) {
+        // Text read by OCR gets the looser patterns (stray spaces around @ and dots).
+        let hits = if page.scanned {
+            matcher.find_loose(&text)
+        } else {
+            matcher.find(&text)
+        };
+        for hit in hits {
             let (lo, hi) = (at[hit.range.start], at[hit.range.end]);
             let id = found.matches.len();
             found.matches.push(Match {
