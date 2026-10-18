@@ -16,7 +16,7 @@ summary = "Black out names, numbers and emails for good, not just on top."
 type = "text"
 default = ""
 label = "Words to redact"
-help = "Exact words or phrases, one per line or separated by commas. Case does not matter."
+help = "Exact words or phrases, one per line or separated by commas. Case does not matter. Text drawn as shapes or in fonts without a character map (read as a picture when that is common on a page), pictures inside text pages, and attachments that are not plain text are not searched. Use the dry run to check."
 
 [options.presets]
 type = "text"

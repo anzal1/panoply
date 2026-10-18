@@ -17,10 +17,10 @@ use std::io::Write;
 
 use panoply_core::CancelToken;
 use panoply_pdf::Doc;
-use panoply_pdf::copy::{Copier, Plain};
+use panoply_pdf::copy::{Copier, Policy, View};
 use panoply_pdf::doc::{PageGeom, PageRef};
 use panoply_pdf::filters::deflate;
-use panoply_pdf::obj::{Dict, Obj};
+use panoply_pdf::obj::{Dict, Lexer, Obj, Tok};
 use panoply_pdf::writer::{PdfWriter, WriterOptions};
 
 use crate::Ocr;
@@ -126,6 +126,11 @@ pub struct Report {
     pub repaired: bool,
     /// Strings that must not be in the output, for [`verify`].
     pub needles: Vec<String>,
+    /// Texts the user kept somewhere, so the same text found elsewhere is not checked for.
+    pub unverified: usize,
+    /// The lowest resolution a redrawn page ended up at (it is lower than asked when the page
+    /// is large and `max_pixels` forced it down), 0 when no page was redrawn.
+    pub effective_dpi: f32,
 }
 
 // ---------------------------------------------------------------- geometry
@@ -205,17 +210,29 @@ impl Pdfium {
 
     /// The characters of a page with their boxes in displayed points.
     fn chars(&self, index: usize, b: &PageBox) -> Result<Vec<Ch>> {
+        Ok(self.chars_counted(index, b)?.0)
+    }
+
+    /// Like [`Pdfium::chars`], and how many characters pdfium could not map to Unicode.
+    fn chars_counted(&self, index: usize, b: &PageBox) -> Result<(Vec<Ch>, usize)> {
         let _g = panoply_pdf::pdfium::lock();
         let page = self.doc().pages().get(index as i32).map_err(|e| {
             OcrError::BadInput(format!("Page {} could not be opened ({e:?}).", index + 1))
         })?;
         // Not `all()`: it drops characters on rotated pages.
         let Ok(text) = page.text() else {
-            return Ok(Vec::new());
+            return Ok((Vec::new(), 0));
         };
         let mut out: Vec<Ch> = Vec::new();
+        let mut unmapped = 0usize;
         for ch in text.chars().iter() {
-            let Some(c) = ch.unicode_char() else { continue };
+            let Some(c) = ch.unicode_char() else {
+                unmapped += 1;
+                continue;
+            };
+            if c == '\0' || c == '\u{fffd}' || ('\u{e000}'..='\u{f8ff}').contains(&c) {
+                unmapped += 1;
+            }
             let rect = ch.loose_bounds().ok().map(|r| {
                 let (x0, y0) = to_display(b, f64::from(r.left().value), f64::from(r.top().value));
                 let (x1, y1) =
@@ -228,6 +245,11 @@ impl Pdfium {
                 }
             });
             if c.is_whitespace() || c.is_control() || c == '\u{fffe}' {
+                // A run of white space (a line end is two characters) is one space, so a
+                // number wrapped over two lines is still one match.
+                if out.last().is_some_and(|p| p.c == ' ') {
+                    continue;
+                }
                 let r = out.last().map_or(Rect::default(), |p| Rect {
                     x: p.r.right(),
                     y: p.r.y,
@@ -239,10 +261,10 @@ impl Pdfium {
                 out.push(Ch { c, r });
             }
         }
-        Ok(out)
+        Ok((out, unmapped))
     }
 
-    /// Draw a page at `dpi` (at most `max_pixels`), with annotations and form values.
+    /// Draw a page's own content at `dpi` (at most `max_pixels`), without annotations or form values.
     fn render(&self, index: usize, dpi: f32, max_pixels: usize) -> Result<Drawn> {
         use pdfium_render::prelude::*;
         let _g = panoply_pdf::pdfium::lock();
@@ -260,8 +282,11 @@ impl Pdfium {
             .set_format(PdfBitmapFormat::BGR)
             .clear_before_rendering(true)
             .set_clear_color(PdfColor::WHITE)
-            .render_form_data(true)
-            .render_annotations(true);
+            // Form values and annotation appearances are never drawn into the picture: the
+            // objects behind them are dropped or not carried over, and a value that matched
+            // must not show in the pixels without a box.
+            .render_form_data(false)
+            .render_annotations(false);
         let bmp = page.render_with_config(&cfg).map_err(|e| {
             OcrError::Engine(format!(
                 "The PDF engine could not draw page {} ({e:?}).",
@@ -301,7 +326,8 @@ fn gray_of(d: &Drawn) -> Result<OcrImage> {
         .ok_or_else(|| OcrError::Engine("The page could not be drawn for reading.".into()))
 }
 
-/// Like [`gray_of`], giving up the colour picture first so both are never held together.
+/// Like [`gray_of`], taking the colour picture by value so it is freed as soon as the gray
+/// copy is made.
 fn gray_for_reading(d: Drawn) -> Result<OcrImage> {
     gray_of(&d)
 }
@@ -397,6 +423,12 @@ fn rects_for(chars: &[Ch], lo: usize, hi: usize) -> Vec<Rect> {
     out
 }
 
+/// False when a meaningful share of a page's characters have no Unicode mapping, so the page
+/// has to be read as a picture.
+fn is_mostly_mapped(shown: usize, unmapped: usize) -> bool {
+    unmapped < 8 || unmapped * 4 < shown + unmapped
+}
+
 /// A page's text: pdfium's, or OCR for a scan.
 #[allow(clippy::too_many_arguments)]
 fn read_page(
@@ -408,8 +440,11 @@ fn read_page(
     fetch: &mut Fetch<'_>,
     cancel: &CancelToken,
 ) -> Result<PageText> {
-    let chars = pdfium.chars(index, b)?;
-    if chars.iter().filter(|c| !c.c.is_whitespace()).count() >= MIN_TEXT_CHARS {
+    let (chars, unmapped) = pdfium.chars_counted(index, b)?;
+    let shown = chars.iter().filter(|c| !c.c.is_whitespace()).count();
+    // Text in a font with no character map cannot be matched: when a meaningful share of the
+    // page is like that, read the page as a picture instead.
+    if shown >= MIN_TEXT_CHARS && is_mostly_mapped(shown, unmapped) {
         return Ok(PageText {
             chars,
             scanned: false,
@@ -476,6 +511,70 @@ fn collect_strings(o: &Obj, out: &mut Vec<String>, depth: usize) {
     }
 }
 
+/// The strings a content stream shows (`Tj`, `TJ`), one run per string, for annotation
+/// appearances.
+fn content_text(data: &[u8]) -> String {
+    let mut lx = Lexer::content(data);
+    let mut out = String::new();
+    loop {
+        match lx.next_tok() {
+            Ok(Tok::End) | Err(_) => break,
+            Ok(Tok::Obj(Obj::Str(s))) => {
+                out.extend(s.iter().map(|&c| c as char));
+                out.push('\n');
+            }
+            Ok(Tok::Obj(Obj::Array(a))) => {
+                for x in &a {
+                    if let Obj::Str(s) = x {
+                        out.extend(s.iter().map(|&c| c as char));
+                    }
+                }
+                out.push('\n');
+            }
+            Ok(_) => {}
+        }
+    }
+    out
+}
+
+/// The text drawn by an annotation's appearance streams (`/AP` normal, down and rollover,
+/// including the state dictionaries of check boxes and radio buttons).
+fn ap_text(doc: &Doc, d: &Dict) -> Vec<String> {
+    let mut out = Vec::new();
+    let Some(ap) = d.get("AP").and_then(|a| doc.resolve_dict(a)) else {
+        return out;
+    };
+    for key in ["N", "D", "R"] {
+        let Some(n) = ap.get(key) else { continue };
+        let mut refs: Vec<u32> = Vec::new();
+        if let Some(r) = n.as_ref_num() {
+            refs.push(r);
+        } else if let Some(states) = n.as_dict() {
+            refs.extend(states.iter().filter_map(|(_, v)| v.as_ref_num()));
+        }
+        for r in refs {
+            match doc.stream_data(r) {
+                Ok(Some((_, data))) => out.push(content_text(&data)),
+                _ => {
+                    // A reference to a dictionary of states.
+                    if let Ok(l) = doc.load(r)
+                        && let Obj::Dict(sd) = l.obj
+                    {
+                        for (_, v) in sd.iter() {
+                            if let Some(x) = v.as_ref_num()
+                                && let Ok(Some((_, data))) = doc.stream_data(x)
+                            {
+                                out.push(content_text(&data));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
 /// The text of an object outside page content, and what it is. `None` for objects that never
 /// hold a user's text (page content, pictures, fonts, ...).
 fn object_text(
@@ -527,6 +626,18 @@ fn object_text(
             && let Ok(Some((_, data))) = doc.stream_data(n)
         {
             parts.push(String::from_utf8_lossy(&data).into_owned());
+        }
+        // Appearance streams of annotations and fields, and script or rich text held in a
+        // stream, are text sources too.
+        if d.has("Subtype") || d.has("FT") {
+            parts.extend(ap_text(doc, d));
+        }
+        for key in ["JS", "RC"] {
+            if let Some(n) = d.get(key).and_then(Obj::as_ref_num)
+                && let Ok(Some((_, data))) = doc.stream_data(n)
+            {
+                parts.push(String::from_utf8_lossy(&data).into_owned());
+            }
         }
     }
     if parts.is_empty() {
@@ -641,6 +752,122 @@ pub fn find(
 
 // ---------------------------------------------------------------- apply
 
+/// References to dropped objects are removed from every copied dictionary and array, instead
+/// of being left as nulls (a null in a field list, an outline chain or a kids array).
+struct Scrub;
+
+impl Policy for Scrub {
+    fn dict(&mut self, _doc: &Doc, view: &View, _src: u32, dict: &mut Dict) {
+        drop_pruned_dict(dict, view.pruned);
+    }
+}
+
+fn drop_pruned_dict(d: &mut Dict, pruned: &HashSet<u32>) {
+    let dead: Vec<String> = d
+        .iter()
+        .filter(|(_, v)| matches!(v, Obj::Ref(n, _) if pruned.contains(n)))
+        .map(|(k, _)| String::from_utf8_lossy(k).into_owned())
+        .collect();
+    for k in dead {
+        d.remove(&k);
+    }
+    for v in d.values_mut() {
+        drop_pruned_obj(v, pruned);
+    }
+}
+
+fn drop_pruned_obj(o: &mut Obj, pruned: &HashSet<u32>) {
+    match o {
+        Obj::Array(a) => {
+            a.retain(|x| !matches!(x, Obj::Ref(n, _) if pruned.contains(n)));
+            a.iter_mut().for_each(|x| drop_pruned_obj(x, pruned));
+        }
+        Obj::Dict(d) => drop_pruned_dict(d, pruned),
+        _ => {}
+    }
+}
+
+/// The kids of dropped form fields go with them, and so does a parent field whose other
+/// kids hold no value, because a kid widget's appearance stream still draws the value.
+fn expand_form_tree(
+    doc: &Doc,
+    drop_objs: &mut HashMap<u32, &'static str>,
+    kept_objs: &HashSet<u32>,
+) {
+    loop {
+        let mut add: Vec<u32> = Vec::new();
+        for &num in drop_objs.keys() {
+            let Ok(l) = doc.load(num) else { continue };
+            let Obj::Dict(d) = l.obj else { continue };
+            // Kids go down with their field.
+            if let Some(kids) = d.get("Kids").and_then(|k| doc.resolve_array(k)) {
+                add.extend(kids.iter().filter_map(Obj::as_ref_num));
+            }
+            // A dropped widget takes its parent when no other kid has a value.
+            if let Some(parent) = d.get("Parent").and_then(Obj::as_ref_num)
+                && (d.has("FT") || d.name("Subtype") == Some(b"Widget"))
+                && !drop_objs.contains_key(&parent)
+                && let Ok(pl) = doc.load(parent)
+                && let Obj::Dict(pd) = pl.obj
+                && pd.has("FT")
+            {
+                let others_valued = pd
+                    .get("Kids")
+                    .and_then(|k| doc.resolve_array(k))
+                    .unwrap_or_default()
+                    .iter()
+                    .filter_map(Obj::as_ref_num)
+                    .filter(|k| !drop_objs.contains_key(k))
+                    .any(|k| {
+                        matches!(doc.load(k), Ok(kl) if matches!(&kl.obj, Obj::Dict(kd) if kd.has("V")))
+                    });
+                if !others_valued && !pd.has("V") {
+                    add.push(parent);
+                }
+            }
+        }
+        add.retain(|n| !drop_objs.contains_key(n) && !kept_objs.contains(n));
+        if add.is_empty() {
+            break;
+        }
+        for n in add {
+            drop_objs.insert(n, "form field");
+        }
+    }
+}
+
+/// Boxes, in displayed points, over the `/Rect` of every dropped annotation or widget on a
+/// page, so a kept appearance could never show what was dropped.
+fn dropped_annot_rects(doc: &Doc, pr: &PageRef, b: &PageBox, dropped: &HashSet<u32>) -> Vec<Rect> {
+    let mut out = Vec::new();
+    let Ok(l) = doc.load(pr.id) else { return out };
+    let Obj::Dict(d) = l.obj else { return out };
+    let Some(items) = d.get("Annots").and_then(|a| doc.resolve_array(a)) else {
+        return out;
+    };
+    for item in items {
+        let Some(n) = item.as_ref_num() else { continue };
+        if !dropped.contains(&n) {
+            continue;
+        }
+        let Some(ad) = doc.resolve_dict(&item) else {
+            continue;
+        };
+        let Some(r) = ad.get("Rect").and_then(|r| doc.rect(r)) else {
+            continue;
+        };
+        let (x0, y0) = to_display(b, r[0], r[1]);
+        let (x1, y1) = to_display(b, r[2], r[3]);
+        out.push(Rect {
+            x: x0.min(x1) as f32,
+            y: y0.min(y1) as f32,
+            w: (x0 - x1).abs() as f32,
+            h: (y0 - y1).abs() as f32,
+        });
+    }
+    out
+}
+
 fn needle_forms(text: &str) -> Vec<String> {
     let t = text.to_lowercase();
     let compact: String = t
@@ -737,6 +964,12 @@ pub fn apply<W: Write>(
         .collect();
     needles.sort();
     needles.dedup();
+    report.unverified = all
+        .iter()
+        .filter(|m| !m.selected)
+        .map(|m| m.text.to_lowercase())
+        .collect::<HashSet<_>>()
+        .len();
     report.needles = needles.clone();
 
     // Boxes per page, and the objects to drop.
@@ -770,6 +1003,8 @@ pub fn apply<W: Write>(
             drop_objs.insert(num, what);
         }
     }
+    expand_form_tree(doc, &mut drop_objs, &kept_objs);
+    let drop_set: HashSet<u32> = drop_objs.keys().copied().collect();
 
     let pdfium = Pdfium::open(file)?;
     let mut w = PdfWriter::new(out, WriterOptions::default()).map_err(map_pdf)?;
@@ -784,11 +1019,11 @@ pub fn apply<W: Write>(
     let nodes: Vec<u32> = (0..node_count).map(|_| w.alloc()).collect();
     let page_ids: Vec<u32> = pages.iter().map(|_| w.alloc()).collect();
     let font_ids = FontIds::alloc(&mut w);
-    let mut copier = Copier::new(doc, Plain, cancel.clone());
+    let mut copier = Copier::new(doc, Scrub, cancel.clone());
     for (pr, &dst) in pages.iter().zip(&page_ids) {
         copier.preassign(pr.id, dst);
     }
-    copier.prune(drop_objs.keys().copied());
+    copier.prune(drop_set.iter().copied());
     let mut fonts = FontBuilder::new();
     let todo = boxes.len().max(1);
     let mut done = 0usize;
@@ -810,8 +1045,22 @@ pub fn apply<W: Write>(
             let b = page_box(&geom);
             let (dw, dh) = geom.display_size();
             let chars = pdfium.chars(i, &b)?;
-            let has_text = chars.iter().filter(|c| !c.c.is_whitespace()).count() >= MIN_TEXT_CHARS;
+            // A page that was read as a picture while looking (a scan, or text with no
+            // character map) is read that way again.
+            let has_text = !scan_words.contains_key(&i)
+                && chars.iter().filter(|c| !c.c.is_whitespace()).count() >= MIN_TEXT_CHARS;
             let mut drawn = pdfium.render(i, opts.dpi, opts.max_pixels)?;
+            let eff = drawn.scale * 72.0;
+            if report.effective_dpi == 0.0 || eff < report.effective_dpi {
+                report.effective_dpi = eff;
+            }
+            // The matches, and the place of every dropped annotation or field on the page.
+            let rects: Vec<Rect> = {
+                let mut v = rects.clone();
+                v.extend(dropped_annot_rects(doc, pr, &b, &drop_set));
+                v
+            };
+            let rects = &rects;
             burn(&mut drawn, rects);
             // The text layer: pdfium's words minus any that touch a box, or, for a scan, the
             // OCR of the picture as it now is (the redacted words are not in it).
@@ -936,6 +1185,7 @@ pub fn apply<W: Write>(
     let info_out = info.and_then(|n| copier.map_ref(&mut w, n));
     let mut src_cat = doc.catalog().map_err(map_pdf)?;
     src_cat.remove("Pages");
+    drop_pruned_dict(&mut src_cat, &drop_set);
     let mut cat = copier.rewrite_dict(&mut w, &src_cat);
     cat.set("Pages", Obj::r(root_pages));
     // A reference to a dropped object came out as null: remove the entry, and clean arrays.
@@ -1026,9 +1276,9 @@ fn scrub_obj(o: &mut Obj) {
 
 /// Copy a page that has nothing to redact: its own attributes, with inherited ones written on
 /// it, and its annotations and everything else through the copier.
-fn write_page<W: Write>(
+fn write_page<W: Write, P: Policy>(
     w: &mut PdfWriter<W>,
-    c: &mut Copier<'_, Plain>,
+    c: &mut Copier<'_, P>,
     pr: &PageRef,
     dst: u32,
     parent: u32,
@@ -1052,6 +1302,8 @@ fn write_page<W: Write>(
     }
     d.remove("Parent");
     d.set("Type", Obj::name("Page"));
+    let pruned = c.view().pruned.clone();
+    drop_pruned_dict(&mut d, &pruned);
     let mut out = c.rewrite_dict(w, &d);
     out.set("Parent", Obj::r(parent));
     scrub_nulls(&mut out);
@@ -1097,12 +1349,21 @@ pub fn verify(file: &File, needles: &[String]) -> Result<Vec<Leak>> {
         if let Obj::Dict(d) = &l.obj
             && l.stream.is_some()
             && d.name("Subtype") != Some(b"Image")
-            && let Ok(Some((_, data))) = doc.stream_data(num)
-            && contains_any(&String::from_utf8_lossy(&data), needles)
         {
-            leaks.push(Leak {
-                place: format!("object {num} (decoded stream)"),
-            });
+            match doc.stream_data(num) {
+                Ok(Some((_, data))) => {
+                    if contains_any(&String::from_utf8_lossy(&data), needles) {
+                        leaks.push(Leak {
+                            place: format!("object {num} (decoded stream)"),
+                        });
+                    }
+                }
+                Ok(None) => {}
+                // A stream that cannot be read cannot be shown clean.
+                Err(_) => leaks.push(Leak {
+                    place: format!("could not check object {num}"),
+                }),
+            }
         }
     }
     let mut f = file.try_clone()?;
@@ -1122,4 +1383,47 @@ pub fn verify(file: &File, needles: &[String]) -> Result<Vec<Leak>> {
         }
     }
     Ok(leaks)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn text_with_no_character_map_sends_the_page_to_the_picture_reader() {
+        // A few unmapped characters (a bullet, a symbol) are fine.
+        assert!(is_mostly_mapped(500, 3));
+        assert!(is_mostly_mapped(500, 7));
+        // A quarter or more of the page, and at least 8 characters, is not.
+        assert!(!is_mostly_mapped(60, 20));
+        assert!(!is_mostly_mapped(0, 40));
+        assert!(is_mostly_mapped(1000, 100));
+    }
+
+    #[test]
+    fn references_to_dropped_objects_are_removed_not_nulled() {
+        let mut d = Dict::new();
+        d.set("Next", Obj::r(5));
+        d.set("Keep", Obj::r(6));
+        d.set(
+            "Fields",
+            Obj::Array(vec![Obj::r(5), Obj::r(6), Obj::Array(vec![Obj::r(5)])]),
+        );
+        let pruned: HashSet<u32> = [5].into_iter().collect();
+        drop_pruned_dict(&mut d, &pruned);
+        assert!(!d.has("Next") && d.has("Keep"));
+        let f = d.get("Fields").and_then(Obj::as_array).unwrap();
+        assert_eq!(f.len(), 2);
+        assert_eq!(f[0].as_ref_num(), Some(6));
+        assert_eq!(f[1].as_array().map(<[Obj]>::len), Some(0));
+    }
+
+    #[test]
+    fn a_content_stream_gives_back_its_strings() {
+        let t = content_text(
+            b"/Tx BMC q BT /Helv 12 Tf 2 2 Td (2345 6789 0124) Tj [(ab) -20 (cd)] TJ ET Q EMC",
+        );
+        assert!(t.contains("2345 6789 0124"), "{t:?}");
+        assert!(t.contains("abcd"), "{t:?}");
+    }
 }

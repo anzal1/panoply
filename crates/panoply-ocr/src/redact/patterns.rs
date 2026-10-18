@@ -92,9 +92,9 @@ impl Preset {
                 r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}"
             }
             Preset::Phone => r"\+?\d[\d ().\-]{8,18}\d",
-            Preset::Aadhaar => r"\d{4}[ \-]\d{4}[ \-]\d{4}",
+            Preset::Aadhaar => r"\d{4}[ \-]{1,2}\d{4}[ \-]{1,2}\d{4}",
             Preset::Pan => r"[A-Z]{5}[0-9]{4}[A-Z]",
-            Preset::Card => r"\d(?:[ \-]?\d){12,18}",
+            Preset::Card => r"\d(?:[ \-]{0,2}\d){12,18}",
             Preset::Iban => r"[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){2,7}(?: ?[A-Z0-9]{1,3})?",
         }
     }
@@ -115,7 +115,14 @@ impl Preset {
         let digits = text.bytes().filter(u8::is_ascii_digit).count();
         match self {
             Preset::Email | Preset::Pan => true,
-            Preset::Aadhaar => digits == 12,
+            Preset::Aadhaar => {
+                digits == 12
+                    && text
+                        .bytes()
+                        .next()
+                        .is_some_and(|b| (b'2'..=b'9').contains(&b))
+                    && verhoeff_ok(text)
+            }
             Preset::Phone => (10..=13).contains(&digits),
             Preset::Card => (13..=19).contains(&digits) && luhn(text),
             Preset::Iban => iban_ok(text),
@@ -143,6 +150,44 @@ pub fn luhn(s: &str) -> bool {
         })
         .sum();
     sum.is_multiple_of(10)
+}
+
+/// The Verhoeff check Aadhaar numbers carry in their last digit.
+pub fn verhoeff_ok(s: &str) -> bool {
+    const D: [[u8; 10]; 10] = [
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
+        [2, 3, 4, 0, 1, 7, 8, 9, 5, 6],
+        [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
+        [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
+        [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
+        [6, 5, 9, 8, 7, 1, 0, 4, 3, 2],
+        [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
+        [8, 7, 6, 5, 9, 3, 2, 1, 0, 4],
+        [9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+    ];
+    const P: [[u8; 10]; 8] = [
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [1, 5, 7, 6, 2, 8, 3, 0, 9, 4],
+        [5, 8, 0, 3, 7, 9, 6, 1, 4, 2],
+        [8, 9, 1, 6, 0, 4, 3, 5, 2, 7],
+        [9, 4, 5, 3, 1, 2, 6, 8, 7, 0],
+        [4, 2, 8, 6, 5, 7, 3, 9, 0, 1],
+        [2, 7, 9, 3, 8, 0, 6, 4, 1, 5],
+        [7, 0, 4, 6, 9, 1, 3, 2, 5, 8],
+    ];
+    let mut c = 0usize;
+    for (i, d) in s
+        .chars()
+        .filter_map(|c| c.to_digit(10))
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .enumerate()
+    {
+        c = usize::from(D[c][usize::from(P[i % 8][d as usize])]);
+    }
+    c == 0
 }
 
 /// The IBAN mod 97 check, and a plausible length.
@@ -187,9 +232,24 @@ impl Matcher {
     pub fn new(terms: &[String], presets: &[Preset]) -> Result<Matcher, String> {
         let mut parts: Vec<String> = terms
             .iter()
-            .map(|t| t.split_whitespace().map(regex::escape).collect::<Vec<_>>())
+            .map(|t| t.split_whitespace().collect::<Vec<_>>())
             .filter(|w| !w.is_empty())
-            .map(|w| w.join(r"\s+"))
+            .map(|w| {
+                let body = w
+                    .iter()
+                    .map(|x| regex::escape(x))
+                    .collect::<Vec<_>>()
+                    .join(r"\s+");
+                // A term made of letters or digits must not match inside a longer word.
+                let word = |c: Option<char>| c.is_some_and(char::is_alphanumeric);
+                let first = w.first().and_then(|x| x.chars().next());
+                let last = w.last().and_then(|x| x.chars().next_back());
+                format!(
+                    "{}{body}{}",
+                    if word(first) { r"\b" } else { "" },
+                    if word(last) { r"\b" } else { "" }
+                )
+            })
             .collect();
         parts.sort_by_key(|p| std::cmp::Reverse(p.len()));
         parts.dedup();
@@ -265,16 +325,16 @@ fn bounded(text: &str, r: &Range<usize>, p: Preset) -> bool {
     let after = text[r.end..].chars().next();
     match p {
         Preset::Aadhaar | Preset::Card | Preset::Phone => {
-            // Not the middle of a longer number written in groups.
-            let b: Vec<char> = text[..r.start].chars().rev().take(2).collect();
-            let a: Vec<char> = text[r.end..].chars().take(2).collect();
-            let sep = |c: char| c == ' ' || c == '-';
-            let digit = |c: &char| c.is_ascii_digit();
-            !b.first()
-                .is_some_and(|c| digit(c) || (p == Preset::Phone && *c == '+'))
-                && !a.first().is_some_and(digit)
-                && !(b.first().is_some_and(|c| sep(*c)) && b.get(1).is_some_and(digit))
-                && !(a.first().is_some_and(|c| sep(*c)) && a.get(1).is_some_and(digit))
+            // Not the middle of a longer number written in groups: look past up to two
+            // separators on each side for another digit.
+            let b: Vec<char> = text[..r.start].chars().rev().take(3).collect();
+            let a: Vec<char> = text[r.end..].chars().take(3).collect();
+            let continues = |v: &[char]| {
+                v.iter()
+                    .position(|c| *c != ' ' && *c != '-')
+                    .is_some_and(|k| v[k].is_ascii_digit())
+            };
+            !continues(&b) && !continues(&a) && !(p == Preset::Phone && b.first() == Some(&'+'))
         }
         Preset::Pan | Preset::Iban => {
             !before.is_some_and(|c| c.is_ascii_alphanumeric())
@@ -312,7 +372,7 @@ mod tests {
         let r = found(
             &[],
             &all,
-            "Mail anzal@example.com, call +91 98765 43210, Aadhaar 2345 6789 0123, PAN ABCDE1234F, card 4111 1111 1111 1111, IBAN GB82 WEST 1234 5698 7654 32.",
+            "Mail anzal@example.com, call +91 98765 43210, Aadhaar 2345 6789 0124, PAN ABCDE1234F, card 4111 1111 1111 1111, IBAN GB82 WEST 1234 5698 7654 32.",
         );
         let kinds: Vec<&str> = r.iter().map(|x| x.1).collect();
         assert_eq!(
@@ -321,27 +381,54 @@ mod tests {
             "{r:?}"
         );
         assert_eq!(r[1].0, "+91 98765 43210");
-        assert_eq!(r[2].0, "2345 6789 0123");
+        assert_eq!(r[2].0, "2345 6789 0124");
         // Failing the check digit, or the wrong shape, is not a match.
         assert!(found(&[], &all, "card 4111 1111 1111 1112").is_empty());
         assert!(found(&[], &all, "id ABCDE12345 and ABCD1234F").is_empty());
-        assert!(found(&[], &all, "order 123456789012345678901").is_empty());
+        assert!(found(&[], &all, "order 123456789012445678901").is_empty());
     }
 
     #[test]
     fn a_term_spans_words_and_wins_over_a_preset() {
         let r = found(
-            &["john   smith", "2345 6789 0123"],
+            &["john   smith", "2345 6789 0124"],
             &Preset::ALL,
-            "To JOHN Smith, id 2345 6789 0123.",
+            "To JOHN Smith, id 2345 6789 0124.",
         );
         assert_eq!(
             r,
             [
                 ("JOHN Smith".into(), "term"),
-                ("2345 6789 0123".into(), "term")
+                ("2345 6789 0124".into(), "term")
             ]
         );
+    }
+
+    #[test]
+    fn aadhaar_needs_its_check_digit_and_wrapped_numbers_are_found() {
+        assert!(verhoeff_ok("2363"));
+        assert!(verhoeff_ok("234567890124"));
+        assert!(!verhoeff_ok("234567890123"));
+        let p = [Preset::Aadhaar, Preset::Card];
+        // A wrong check digit, or a first digit of 0 or 1, is not an Aadhaar.
+        assert!(found(&[], &p, "id 2345 6789 0123 here").is_empty());
+        assert!(found(&[], &p, "id 0345 6789 0124 here").is_empty());
+        // Separators of one or two characters (a hyphen at a line end, then a space).
+        let r = found(
+            &[],
+            &p,
+            "id 2345 6789- 0124 here, card 4111 1111- 1111 1111.",
+        );
+        let kinds: Vec<&str> = r.iter().map(|x| x.1).collect();
+        assert_eq!(kinds, ["aadhaar", "card"], "{r:?}");
+        assert_eq!(found(&[], &p, "id 3456 7890 1238.").len(), 1);
+    }
+
+    #[test]
+    fn terms_respect_word_edges() {
+        assert!(found(&["raj"], &[], "Rajesh and Raja").is_empty());
+        assert_eq!(found(&["raj"], &[], "Hi Raj, bye").len(), 1);
+        assert_eq!(found(&["a+b"], &[], "x a+b y").len(), 1);
     }
 
     #[test]

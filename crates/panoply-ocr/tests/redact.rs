@@ -14,7 +14,7 @@ use panoply_pdf::source::Source;
 
 const EMAIL: &str = "anzal@example.com";
 const PHONE: &str = "98765 43210";
-const AADHAAR: &str = "2345 6789 0123";
+const AADHAAR: &str = "2345 6789 0124";
 
 /// A PDF with a classic xref table from numbered object bodies (streams included in the body).
 fn build(objs: &[(u32, Vec<u8>)], trailer: &str) -> Vec<u8> {
@@ -219,7 +219,7 @@ fn a_text_pdf_loses_its_text_info_annotation_attachment_and_history() {
     // 2. The raw bytes and decoded streams hold none either.
     let bad = leaks_in(
         &out,
-        &[EMAIL, PHONE, AADHAAR, "anzal@example", "98765", "6789 0123"],
+        &[EMAIL, PHONE, AADHAAR, "anzal@example", "98765", "6789 0124"],
     );
     println!("independent byte and stream check: {bad:?}");
     assert!(bad.is_empty(), "{bad:?}");
@@ -370,4 +370,203 @@ fn an_image_only_pdf_is_redacted_in_its_pixels() {
     for p in [src, scan, outp] {
         std::fs::remove_file(p).ok();
     }
+}
+
+/// A one page PDF of Helvetica text lines, from `(x, y, text)` runs, with extra objects.
+fn simple_pdf(
+    runs: &[(i32, i32, &str)],
+    extra: Vec<(u32, Vec<u8>)>,
+    catalog_extra: &str,
+    annots: &str,
+) -> Vec<u8> {
+    let mut content = String::from("BT /F1 18 Tf\n");
+    let (mut px, mut py) = (0, 0);
+    for (x, y, t) in runs {
+        content.push_str(&format!("{} {} Td ({t}) Tj\n", x - px, y - py));
+        (px, py) = (*x, *y);
+    }
+    content.push_str("ET");
+    let mut objs: Vec<(u32, Vec<u8>)> = vec![
+        (1, format!("<< /Type /Catalog /Pages 2 0 R {catalog_extra} >>").into_bytes()),
+        (2, b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>".to_vec()),
+        (
+            3,
+            format!("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R {annots} >>").into_bytes(),
+        ),
+        (4, stream("", content.as_bytes())),
+        (7, b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>".to_vec()),
+    ];
+    objs.extend(extra);
+    build(&objs, "")
+}
+
+fn ids(found: &redact::Found) -> Vec<String> {
+    found.matches.iter().map(|m| m.kind.clone()).collect()
+}
+
+/// The gray picture of a page of a PDF held in memory, 200 dpi, and its scale in pixels a point.
+fn page_picture(pdf: &[u8], tag: &str) -> (panoply_ocr::OcrImage, f32) {
+    let p = tmp(tag);
+    std::fs::write(&p, pdf).unwrap();
+    let src = panoply_ocr::input::PageSource::open(File::open(&p).unwrap()).unwrap();
+    let r = src
+        .render(0, 200.0, 36_000_000, &CancelToken::new())
+        .unwrap();
+    std::fs::remove_file(&p).ok();
+    r
+}
+
+#[test]
+fn a_form_field_value_is_not_burned_into_the_page_picture() {
+    // P0: an Aadhaar in a filled text field, and an email in the body that makes the page
+    // get redrawn. The field's appearance must not show in the new picture.
+    let widget = format!(
+        "<< /Type /Annot /Subtype /Widget /FT /Tx /T (id) /V ({AADHAAR}) /Rect [100 500 420 540] /F 4 /DA (/Helv 0 Tf 0 g) /AP << /N 9 0 R >> >>"
+    );
+    let ap = stream(
+        "/Type /XObject /Subtype /Form /BBox [0 0 320 40] /Resources << /Font << /Helv 7 0 R >> >>",
+        format!("/Tx BMC q BT /Helv 24 Tf 4 12 Td ({AADHAAR}) Tj ET Q EMC").as_bytes(),
+    );
+    let pdf = simple_pdf(
+        &[(40, 700, "Contact anzal@example.com today")],
+        vec![(8, widget.into_bytes()), (9, ap)],
+        "/AcroForm << /Fields [8 0 R] /DA (/Helv 0 Tf 0 g) /DR << /Font << /Helv 7 0 R >> >> >>",
+        "/Annots [8 0 R]",
+    );
+    let path = tmp("form");
+    std::fs::write(&path, &pdf).unwrap();
+    let file = File::open(&path).unwrap();
+    let opts = Options {
+        presets: vec![Preset::Email, Preset::Aadhaar],
+        ..Options::default()
+    };
+    let (found, _, out) = run(&file, &opts, |_| {}).unwrap();
+    assert!(
+        found
+            .matches
+            .iter()
+            .any(|m| m.at == Where::Page(0) && m.kind == "email")
+    );
+    assert!(found.matches.iter().any(|m| matches!(
+        m.at,
+        Where::Object {
+            what: "form field",
+            ..
+        }
+    ) && m.kind == "aadhaar"));
+    assert!(leaks_in(&out, &[AADHAAR, "2345 6789", "example.com"]).is_empty());
+    // The field's place on the picture holds no drawn text: only solid black or white, no
+    // mid grays from anti-aliased digits.
+    let (img, scale) = page_picture(&out, "form-out");
+    let w = img.width as usize;
+    let (x0, x1) = ((104.0 * scale) as usize, (416.0 * scale) as usize);
+    let (y0, y1) = (
+        ((792.0 - 536.0) * scale) as usize,
+        ((792.0 - 504.0) * scale) as usize,
+    );
+    let mut mid = 0usize;
+    for y in y0..y1 {
+        for x in x0..x1 {
+            let v = img.data[y * w + x];
+            if (60..=200).contains(&v) {
+                mid += 1;
+            }
+        }
+    }
+    assert!(mid < 20, "{mid} mid gray pixels where the form field was");
+    // And read back, no digits of it.
+    let Some(again) = with_fetch(|f| Ocr::new().recognize(&img, &[], f, &CancelToken::new()))
+    else {
+        return;
+    };
+    let text = again.text().replace(' ', "");
+    assert!(!text.contains("6789") && !text.contains("2345"), "{text:?}");
+    std::fs::remove_file(&path).ok();
+}
+
+#[test]
+fn numbers_wrapped_over_two_lines_are_found_and_removed() {
+    // P1: pdfium puts a line end between the groups.
+    let pdf = simple_pdf(
+        &[
+            (40, 700, "Aadhaar 2345 6789"),
+            (40, 680, "0124 on file."),
+            (40, 640, "Card 4111 1111"),
+            (40, 620, "1111 1111 ok."),
+        ],
+        vec![],
+        "",
+        "",
+    );
+    let path = tmp("wrap");
+    std::fs::write(&path, &pdf).unwrap();
+    let file = File::open(&path).unwrap();
+    let opts = Options {
+        presets: vec![Preset::Aadhaar, Preset::Card],
+        ..Options::default()
+    };
+    let (found, report, out) = run(&file, &opts, |_| {}).unwrap();
+    let kinds = ids(&found);
+    assert!(kinds.contains(&"aadhaar".to_string()), "{kinds:?}");
+    assert!(kinds.contains(&"card".to_string()), "{kinds:?}");
+    let t = pdfium_text(&out, 0);
+    for s in ["2345", "6789", "0124", "4111", "1111"] {
+        assert!(!t.contains(s), "{s} survived: {t:?}");
+    }
+    assert!(t.contains("on file."), "{t:?}");
+    std::fs::write(&path, &out).unwrap();
+    let written = File::open(&path).unwrap();
+    let leaks = redact::verify(&written, &report.needles).unwrap();
+    assert!(leaks.is_empty(), "{leaks:?}");
+    std::fs::remove_file(&path).ok();
+}
+
+#[test]
+fn the_kids_of_a_dropped_field_go_with_it() {
+    // P1: a field with two widgets whose appearances draw the value in pieces the matcher
+    // cannot read as one number. Dropping the field must take the widgets.
+    let parent = format!("<< /FT /Tx /T (id) /V ({AADHAAR}) /Kids [21 0 R 22 0 R] >>");
+    let kid = |y: i32| {
+        format!("<< /Type /Annot /Subtype /Widget /Parent 20 0 R /Rect [100 {y} 300 {}] /F 4 /AP << /N 23 0 R >> >>", y + 30)
+            .into_bytes()
+    };
+    let ap = stream(
+        "/Type /XObject /Subtype /Form /BBox [0 0 200 30] /Resources << /Font << /Helv 7 0 R >> >>",
+        b"BT /Helv 14 Tf 2 8 Td (2345) Tj 40 0 Td (6789) Tj 40 0 Td (0124) Tj ET",
+    );
+    let pdf = simple_pdf(
+        &[(40, 700, "Reach anzal@example.com")],
+        vec![
+            (20, parent.into_bytes()),
+            (21, kid(500)),
+            (22, kid(400)),
+            (23, ap),
+        ],
+        "/AcroForm << /Fields [20 0 R] >>",
+        "/Annots [21 0 R 22 0 R]",
+    );
+    let path = tmp("kids");
+    std::fs::write(&path, &pdf).unwrap();
+    let file = File::open(&path).unwrap();
+    let opts = Options {
+        presets: vec![Preset::Email, Preset::Aadhaar],
+        ..Options::default()
+    };
+    let (_, report, out) = run(&file, &opts, |_| {}).unwrap();
+    let dropped: Vec<u32> = report.dropped.iter().map(|d| d.0).collect();
+    for n in [20, 21, 22] {
+        assert!(dropped.contains(&n), "object {n} not dropped: {dropped:?}");
+    }
+    assert!(leaks_in(&out, &["6789) tj", AADHAAR]).is_empty());
+    // No field list with holes, and no widgets left anywhere.
+    let doc = panoply_pdf::Doc::open(Source::from_bytes(out)).unwrap();
+    let cat = doc.catalog().unwrap();
+    if let Some(af) = cat.get("AcroForm").and_then(|a| doc.resolve_dict(a)) {
+        let fields = af
+            .get("Fields")
+            .and_then(|f| doc.resolve_array(f))
+            .unwrap_or_default();
+        assert!(fields.is_empty(), "{fields:?}");
+    }
+    std::fs::remove_file(&path).ok();
 }

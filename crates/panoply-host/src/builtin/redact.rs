@@ -200,10 +200,28 @@ impl Module for RedactModule {
                 plural(report.dropped.len(), "object", "objects"),
                 if skipped > 0 { format!(" {skipped} kept as chosen.") } else { String::new() }
             ));
-            ctx.note(format!(
-                "{prefix}Redacted pages are redrawn as pictures at {} DPI with a hidden text layer, so links and form fields on them are flattened.",
-                opts.dpi
-            ));
+            if !report.redacted_pages.is_empty() {
+                let dpi = if report.effective_dpi > 0.0 {
+                    report.effective_dpi
+                } else {
+                    opts.dpi
+                };
+                ctx.note(format!(
+                    "{prefix}Redacted pages are redrawn as pictures at {dpi:.0} DPI with a hidden text layer. Form fields, annotations and links on those pages are not carried over."
+                ));
+                if dpi + 1.0 < opts.dpi {
+                    ctx.note(format!(
+                        "{prefix}A large page was drawn at {dpi:.0} DPI instead of {:.0} to stay inside the memory limit.",
+                        opts.dpi
+                    ));
+                }
+            }
+            if report.unverified > 0 {
+                ctx.note(format!(
+                    "{prefix}{} kept as chosen: the same text elsewhere in the file was not checked for.",
+                    plural(report.unverified, "text was", "texts were")
+                ));
+            }
         }
         Ok(out.finish())
     }
