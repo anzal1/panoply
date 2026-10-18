@@ -18,12 +18,12 @@ max = 1000000
 label = "Zip bomb limit"
 help = "Stop when the unpacked size is more than this many times the archive."
 
-[options.max_size_gb]
+[options.max_size_gib]
 type = "number"
 default = 50
 min = 1
 max = 100000
-label = "Largest unpacked size (GB)"
+label = "Largest unpacked size (GiB)"
 help = "Stop when the archive unpacks to more than this."
 
 [capabilities]

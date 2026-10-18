@@ -173,9 +173,13 @@ fn round_trip_plain_tar_gz_and_zst_single_files() {
 
 /// One tar entry with exactly the name and type given, however unsafe.
 fn tar_entry(name: &[u8], typeflag: u8, link: &str, data: &[u8]) -> Vec<u8> {
+    tar_entry_mode(name, typeflag, link, data, 0o644)
+}
+
+fn tar_entry_mode(name: &[u8], typeflag: u8, link: &str, data: &[u8], mode: u32) -> Vec<u8> {
     let mut h = [0u8; 512];
-    h[..name.len()].copy_from_slice(name);
-    h[100..108].copy_from_slice(b"0000644\0");
+    h[..name.len().min(100)].copy_from_slice(&name[..name.len().min(100)]);
+    h[100..108].copy_from_slice(format!("{mode:07o}\0").as_bytes());
     h[108..116].copy_from_slice(b"0000000\0");
     h[116..124].copy_from_slice(b"0000000\0");
     h[124..136].copy_from_slice(format!("{:011o}\0", data.len()).as_bytes());
@@ -602,5 +606,259 @@ fn unknown_files_and_encrypted_zips_get_plain_errors() {
         Err(ArchiveError::Unsupported(m)) => assert!(m.contains("7z"), "{m}"),
         other => panic!("{other:?}"),
     }
+    fs::remove_dir_all(&d).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn modes_from_an_archive_never_give_group_or_other_write() {
+    use std::os::unix::fs::PermissionsExt;
+    let d = scratch("mode");
+    let tp = d.join("modes.tar");
+    fs::write(
+        &tp,
+        tar_of(&[
+            tar_entry_mode(b"open.txt", b'0', "", b"x", 0o777),
+            tar_entry_mode(b"suid.bin", b'0', "", b"x", 0o4755),
+            tar_entry_mode(b"secret.txt", b'0', "", b"x", 0o400),
+        ]),
+    )
+    .unwrap();
+    let (r, dest) = unpack(&d, &tp, &Limits::default());
+    assert_eq!(r.unwrap().files, 3);
+    let mode = |n: &str| fs::metadata(dest.join(n)).unwrap().permissions().mode() & 0o7777;
+    assert_eq!(mode("open.txt") & 0o022, 0, "{:o}", mode("open.txt"));
+    assert_eq!(mode("open.txt"), 0o755);
+    assert_eq!(mode("suid.bin"), 0o755, "setuid must not survive");
+    assert_eq!(mode("secret.txt"), 0o600);
+    // The same through a zip.
+    let zp = d.join("modes.zip");
+    {
+        let mut z = zip::ZipWriter::new(File::create(&zp).unwrap());
+        let o = zip::write::SimpleFileOptions::default().unix_permissions(0o777);
+        z.start_file("open.txt", o).unwrap();
+        z.write_all(b"x").unwrap();
+        z.finish().unwrap();
+    }
+    let (r, dest) = unpack(&d, &zp, &Limits::default());
+    r.unwrap();
+    let m = fs::metadata(dest.join("open.txt"))
+        .unwrap()
+        .permissions()
+        .mode();
+    assert_eq!(m & 0o022, 0, "{m:o}");
+    fs::remove_dir_all(&d).unwrap();
+}
+
+#[test]
+fn a_name_the_system_cannot_hold_skips_one_entry_not_the_job() {
+    let d = scratch("longname");
+    let long = "n".repeat(300);
+    let tp = d.join("long.tar");
+    fs::write(
+        &tp,
+        tar_of(&[
+            tar_entry(b"first.txt", b'0', "", b"1"),
+            // Over 100 bytes, so it goes in a GNU long name block like a real tar would.
+            {
+                let mut b = tar::Builder::new(Vec::new());
+                let mut h = tar::Header::new_gnu();
+                h.set_size(1);
+                h.set_mode(0o644);
+                b.append_data(&mut h, format!("dir/{long}"), &b"x"[..])
+                    .unwrap();
+                let v = b.into_inner().unwrap();
+                v[..v.len() - 1024].to_vec()
+            },
+            tar_entry(b"good.txt", b'0', "", b"g"),
+        ]),
+    )
+    .unwrap();
+    let (r, dest) = unpack(&d, &tp, &Limits::default());
+    let r = r.unwrap();
+    assert!(dest.join("good.txt").exists() && dest.join("first.txt").exists());
+    assert!(
+        r.skipped
+            .iter()
+            .any(|s| s.name.ends_with(&long) && s.reason.contains("cannot use")),
+        "{:?}",
+        r.skipped
+            .iter()
+            .map(|s| (s.name.len(), s.reason))
+            .collect::<Vec<_>>()
+    );
+    assert_eq!(r.files, 2, "{r:?}");
+    assert_eq!(r.skipped.len(), 1, "{r:?}");
+    // Zip, the plainest form of the same test: 300 bytes plus good.txt.
+    let zp = d.join("long.zip");
+    {
+        let mut z = zip::ZipWriter::new(File::create(&zp).unwrap());
+        let o = zip::write::SimpleFileOptions::default();
+        z.start_file(long.as_str(), o).unwrap();
+        z.write_all(b"x").unwrap();
+        z.start_file("good.txt", o).unwrap();
+        z.write_all(b"g").unwrap();
+        z.finish().unwrap();
+    }
+    let (r, _) = unpack(&d, &zp, &Limits::default());
+    let r = r.unwrap();
+    assert_eq!((r.files, r.skipped.len()), (1, 1), "{r:?}");
+    fs::remove_dir_all(&d).unwrap();
+}
+
+#[test]
+fn a_file_in_the_way_of_a_folder_gives_the_folder_a_number() {
+    let d = scratch("blocker");
+    let tp = d.join("clash.tar");
+    fs::write(
+        &tp,
+        tar_of(&[
+            tar_entry(b"a", b'0', "", b"i am a file"),
+            tar_entry(b"a/x.txt", b'0', "", b"x"),
+            tar_entry(b"a/y.txt", b'0', "", b"y"),
+        ]),
+    )
+    .unwrap();
+    let (r, dest) = unpack(&d, &tp, &Limits::default());
+    let r = r.unwrap();
+    assert!(r.skipped.is_empty(), "{r:?}");
+    assert_eq!(r.files, 3);
+    assert_eq!(fs::read_to_string(dest.join("a")).unwrap(), "i am a file");
+    assert_eq!(fs::read_to_string(dest.join("a (2)/x.txt")).unwrap(), "x");
+    assert_eq!(fs::read_to_string(dest.join("a (2)/y.txt")).unwrap(), "y");
+    fs::remove_dir_all(&d).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn tar_hard_links_become_copies_when_the_target_was_unpacked() {
+    let d = scratch("hardlink");
+    let tp = d.join("hard.tar");
+    fs::write(
+        &tp,
+        tar_of(&[
+            tar_entry(b"dir/a.txt", b'0', "", b"shared bytes"),
+            tar_entry(b"b.txt", b'1', "dir/a.txt", b""),
+            // Targets that were never unpacked, that leave the folder, or that are links.
+            tar_entry(b"c.txt", b'1', "missing.txt", b""),
+            tar_entry(b"d.txt", b'1', "../outside.txt", b""),
+            tar_entry(b"e.txt", b'1', "/etc/passwd", b""),
+            tar_entry(b"lnk", b'2', "dir/a.txt", b""),
+            tar_entry(b"f.txt", b'1', "lnk", b""),
+        ]),
+    )
+    .unwrap();
+    let (r, dest) = unpack(&d, &tp, &Limits::default());
+    let r = r.unwrap();
+    assert_eq!(
+        fs::read_to_string(dest.join("b.txt")).unwrap(),
+        "shared bytes"
+    );
+    assert_eq!(r.files, 2, "{r:?}");
+    let names = skipped_names(&r);
+    for n in ["c.txt", "d.txt", "e.txt", "f.txt"] {
+        assert!(names.contains(&n), "{n} should be skipped: {names:?}");
+    }
+    assert!(!dest.join("e.txt").exists() && !dest.join("c.txt").exists());
+    // A copy, not a second name for the same inode.
+    use std::os::unix::fs::MetadataExt;
+    assert_ne!(
+        fs::metadata(dest.join("b.txt")).unwrap().ino(),
+        fs::metadata(dest.join("dir/a.txt")).unwrap().ino()
+    );
+    fs::remove_dir_all(&d).unwrap();
+}
+
+#[test]
+fn a_zstd_frame_that_wants_a_huge_window_is_refused() {
+    let d = scratch("window");
+    let zp = d.join("wide.tar.zst");
+    {
+        let mut enc = zstd::stream::write::Encoder::new(File::create(&zp).unwrap(), 1).unwrap();
+        enc.set_parameter(zstd::zstd_safe::CParameter::WindowLog(30))
+            .unwrap();
+        enc.write_all(&tar_of(&[tar_entry(b"a.txt", b'0', "", b"hello")]))
+            .unwrap();
+        enc.finish().unwrap();
+    }
+    match unpack(&d, &zp, &Limits::default()).0 {
+        Err(ArchiveError::Unsupported(m)) => assert!(m.contains("128 MiB"), "{m}"),
+        other => panic!("expected a refusal, got {other:?}"),
+    }
+    // A normal frame still works.
+    let ok = d.join("fine.tar.zst");
+    {
+        let mut enc = zstd::stream::write::Encoder::new(File::create(&ok).unwrap(), 3).unwrap();
+        enc.write_all(&tar_of(&[tar_entry(b"a.txt", b'0', "", b"hello")]))
+            .unwrap();
+        enc.finish().unwrap();
+    }
+    assert!(unpack(&d, &ok, &Limits::default()).0.is_ok());
+    fs::remove_dir_all(&d).unwrap();
+}
+
+#[cfg(unix)]
+#[test]
+fn a_chosen_link_is_followed_but_links_inside_a_folder_stay_links() {
+    let d = scratch("toplink");
+    fs::write(d.join("real.txt"), "the real file").unwrap();
+    std::os::unix::fs::symlink("real.txt", d.join("shortcut.txt")).unwrap();
+    let folder = d.join("folder");
+    fs::create_dir_all(&folder).unwrap();
+    std::os::unix::fs::symlink("../real.txt", folder.join("inner-link")).unwrap();
+    let arc = d.join("t.zip");
+    let rep = pack(&[d.join("shortcut.txt"), folder], &arc, Format::Zip);
+    assert_eq!((rep.files, rep.links), (1, 1), "{rep:?}");
+    let (r, dest) = unpack(&d, &arc, &Limits::default());
+    r.unwrap();
+    let m = fs::symlink_metadata(dest.join("shortcut.txt")).unwrap();
+    assert!(
+        m.is_file(),
+        "a chosen link should be stored as the file it points at"
+    );
+    assert_eq!(
+        fs::read_to_string(dest.join("shortcut.txt")).unwrap(),
+        "the real file"
+    );
+    fs::remove_dir_all(&d).unwrap();
+}
+
+#[test]
+fn the_archive_being_written_is_left_out_by_path_not_by_name() {
+    let d = scratch("selfskip");
+    let src = d.join("s");
+    fs::create_dir_all(src.join("sub")).unwrap();
+    fs::write(src.join("a.txt"), "a").unwrap();
+    // The file being written, inside the folder that is packed, and another file with the same
+    // name one level down, which must still go in.
+    let out_path = src.join("out.zip.part");
+    fs::write(src.join("sub/out.zip.part"), "keep me").unwrap();
+    let mut out = File::create(&out_path).unwrap();
+    // Spelled with a detour, so only a canonical comparison matches.
+    let skip = src.join("sub").join("..").join("out.zip.part");
+    let rep = create(
+        std::slice::from_ref(&src),
+        &mut out,
+        &CreateOptions {
+            format: Format::TarGz,
+            level: 6,
+        },
+        &skip,
+        &CancelToken::new(),
+        &mut |_, _| {},
+        &mut |p| {
+            File::open(p).map_err(|e| ArchiveError::Io {
+                path: p.into(),
+                source: e,
+            })
+        },
+    )
+    .unwrap();
+    assert_eq!(rep.files, 2, "{rep:?}");
+    drop(out);
+    let (r, dest) = unpack(&d, &out_path, &Limits::default());
+    r.unwrap();
+    assert!(dest.join("s/sub/out.zip.part").exists());
+    assert!(!dest.join("s/out.zip.part").exists());
     fs::remove_dir_all(&d).unwrap();
 }

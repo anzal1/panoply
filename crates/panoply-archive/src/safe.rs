@@ -30,13 +30,35 @@ impl Reject {
         match self {
             Reject::Absolute => "starts at the root of the disk, not inside the folder",
             Reject::Traversal => "uses \"..\" to climb out of the folder",
-            Reject::BadName => "has a name that cannot be used",
+            Reject::BadName => "has a name that this system cannot use",
             Reject::LinkOutside => "is a link that points outside the folder",
             Reject::BlockedParent => "would be written through a link or over a file",
             Reject::LinkUnsupported => "is a link, and links are not supported on this system",
-            Reject::SpecialFile => "is a device, pipe or hard link, which Panoply does not unpack",
+            Reject::SpecialFile => {
+                "is a device, a pipe, or a hard link to something that was not unpacked"
+            }
         }
     }
+}
+
+/// The longest single name most file systems hold, in bytes.
+const MAX_COMPONENT: usize = 255;
+
+/// True when the system refused a name (too long, not allowed here) rather than failing for a
+/// reason that has nothing to do with the entry, like a full disk. Such an entry is skipped; it
+/// must not throw away everything unpacked so far.
+pub fn is_bad_name(e: &std::io::Error) -> bool {
+    use std::io::ErrorKind as K;
+    if matches!(e.kind(), K::InvalidFilename | K::InvalidInput) {
+        return true;
+    }
+    #[cfg(target_os = "macos")]
+    const NAME_TOO_LONG: i32 = 63;
+    #[cfg(target_os = "windows")]
+    const NAME_TOO_LONG: i32 = 206;
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    const NAME_TOO_LONG: i32 = 36;
+    e.raw_os_error() == Some(NAME_TOO_LONG)
 }
 
 /// What a cleaned entry name is.
@@ -71,6 +93,7 @@ pub fn clean_name(raw: &str, backslash_is_separator: bool) -> Result<Cleaned, Re
         match c {
             "" | "." => {}
             ".." => return Err(Reject::Traversal),
+            c if c.len() > MAX_COMPONENT => return Err(Reject::BadName),
             c => parts.push(platform_component(c)),
         }
     }
@@ -216,6 +239,26 @@ mod tests {
             clean_name("..\\x", false).unwrap(),
             Cleaned::Path(vec!["..\\x".into()])
         );
+    }
+
+    #[test]
+    fn long_components_are_refused_and_the_system_says_so_too() {
+        let long = "x".repeat(300);
+        assert_eq!(p(&format!("a/{long}")), Err(Reject::BadName));
+        assert!(p(&format!("a/{}", "y".repeat(255))).is_ok());
+        assert!(is_bad_name(&std::io::Error::from(
+            std::io::ErrorKind::InvalidFilename
+        )));
+        assert!(!is_bad_name(&std::io::Error::from(
+            std::io::ErrorKind::StorageFull
+        )));
+        // The real thing: this system's own error for a name that is too long.
+        let d = std::env::temp_dir().join(format!("panoply-archive-long-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        let err = std::fs::File::create(d.join(&long)).unwrap_err();
+        assert!(is_bad_name(&err), "{err:?}");
+        std::fs::remove_dir_all(&d).unwrap();
     }
 
     #[test]

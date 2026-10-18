@@ -116,9 +116,11 @@ fn extract(
             .and_then(Value::as_f64)
             .map_or(defaults.max_ratio, |v| v as u64),
         max_total: opts
-            .get("max_size_gb")
+            .get("max_size_gib")
             .and_then(Value::as_f64)
-            .map_or(defaults.max_total, |v| (v * 1e9) as u64),
+            .map_or(defaults.max_total, |v| {
+                (v * 1024.0 * 1024.0 * 1024.0) as u64
+            }),
         ..defaults
     };
     let many = inputs.len() > 1;

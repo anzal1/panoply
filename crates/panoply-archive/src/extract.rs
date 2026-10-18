@@ -10,8 +10,10 @@ use std::time::{Duration, Instant, SystemTime};
 
 use panoply_core::CancelToken;
 
-use crate::safe::{Cleaned, Reject, clean_name, create_unique, link_target_ok};
-use crate::{ArchiveError, Format, Limits, archive_stem, detect, io, size_text};
+use crate::safe::{Cleaned, Reject, clean_name, create_unique, is_bad_name, link_target_ok};
+use crate::{
+    ArchiveError, Format, Limits, archive_stem, detect, io, limit_text, size_text, zstd_decoder,
+};
 
 const CHUNK: usize = 256 * 1024;
 
@@ -131,12 +133,12 @@ pub fn extract(
         Format::Zip => run.zip(reader),
         Format::Tar => run.tar(reader),
         Format::TarGz => run.tar(flate2::read::MultiGzDecoder::new(reader)),
-        Format::TarZst => match zstd::stream::read::Decoder::new(reader) {
+        Format::TarZst => match zstd_decoder(reader) {
             Ok(d) => run.tar(d),
             Err(e) => Err(read_err(e)),
         },
         Format::Gz => run.single(flate2::read::MultiGzDecoder::new(reader), archive_name),
-        Format::Zst => match zstd::stream::read::Decoder::new(reader) {
+        Format::Zst => match zstd_decoder(reader) {
             Ok(d) => run.single(d, archive_name),
             Err(e) => Err(read_err(e)),
         },
@@ -151,6 +153,16 @@ pub fn extract(
 }
 
 fn read_err(e: std::io::Error) -> ArchiveError {
+    if e.to_string()
+        .to_ascii_lowercase()
+        .contains("too much memory")
+    {
+        return ArchiveError::Unsupported(
+            "This archive asks for more memory to unpack than Panoply allows (more than 128 MiB \
+             for one window). Unpack it with the zstd tool instead."
+                .into(),
+        );
+    }
     match e.kind() {
         ErrorKind::InvalidData | ErrorKind::UnexpectedEof | ErrorKind::InvalidInput => {
             ArchiveError::Corrupt(format!(
@@ -190,7 +202,8 @@ struct Run<'a> {
     last_tick: Instant,
     /// The parent folder (as `a/b`) already checked this pass, so a folder with 10,000 files is
     /// checked once.
-    verified: Option<String>,
+    /// and the folder it resolved to (a numbered one when a file held the name).
+    verified: Option<(String, PathBuf)>,
 }
 
 impl Run<'_> {
@@ -246,7 +259,7 @@ impl Run<'_> {
                 "This archive unpacks to more than {}, which is over the limit. Panoply stopped \
                  and removed what it had unpacked. If you trust the file, raise the size limit \
                  in the options.",
-                size_text(self.limits.max_total)
+                limit_text(self.limits.max_total)
             )));
         }
         self.check_ratio(out)
@@ -273,27 +286,65 @@ impl Run<'_> {
     fn dir_chain(&mut self, comps: &[String]) -> Result<PathBuf, Fail> {
         let key = comps.join("/");
         let mut cur = self.root.clone();
-        if self.verified.as_deref() == Some(key.as_str()) {
-            cur.extend(comps);
-            return Ok(cur);
+        if let Some((k, resolved)) = &self.verified
+            && *k == key
+        {
+            return Ok(resolved.clone());
         }
         for c in comps {
             cur.push(c);
             match fs::symlink_metadata(&cur) {
                 Ok(m) if m.is_dir() => {}
+                // A plain file is in the way: on a case-insensitive disk `README` blocks
+                // `readme/x.txt`, and an archive can hold a file and a folder of one name. The
+                // folder gets a number. A link in the way is never stepped over.
+                Ok(m) if m.is_file() => cur = self.numbered_dir(&cur)?,
                 Ok(_) => return Err(Reject::BlockedParent.into()),
                 Err(e) if e.kind() == ErrorKind::NotFound => match fs::create_dir(&cur) {
                     Ok(()) => self.report.folders += 1,
                     Err(e) if e.kind() == ErrorKind::AlreadyExists => {
                         return Err(Reject::BlockedParent.into());
                     }
+                    Err(e) if is_bad_name(&e) => return Err(Reject::BadName.into()),
                     Err(e) => return Err(io(&cur, e).into()),
                 },
+                Err(e) if is_bad_name(&e) => return Err(Reject::BadName.into()),
                 Err(e) => return Err(io(&cur, e).into()),
             }
         }
-        self.verified = Some(key);
+        self.verified = Some((key, cur.clone()));
         Ok(cur)
+    }
+
+    /// The folder to use when a file holds the name `blocked`: `name (2)`, `name (3)`... The first
+    /// one that is a real folder, or does not exist yet and can be made.
+    fn numbered_dir(&mut self, blocked: &Path) -> Result<PathBuf, Fail> {
+        let parent = blocked
+            .parent()
+            .expect("a path inside the root has a parent");
+        let name = blocked
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        for k in 2..10_000u32 {
+            let cand = parent.join(format!("{name} ({k})"));
+            match fs::symlink_metadata(&cand) {
+                Ok(m) if m.is_dir() => return Ok(cand),
+                Ok(_) => continue,
+                Err(e) if e.kind() == ErrorKind::NotFound => match fs::create_dir(&cand) {
+                    Ok(()) => {
+                        self.report.folders += 1;
+                        return Ok(cand);
+                    }
+                    Err(e) if e.kind() == ErrorKind::AlreadyExists => continue,
+                    Err(e) if is_bad_name(&e) => return Err(Reject::BadName.into()),
+                    Err(e) => return Err(io(&cand, e).into()),
+                },
+                Err(e) if is_bad_name(&e) => return Err(Reject::BadName.into()),
+                Err(e) => return Err(io(&cand, e).into()),
+            }
+        }
+        Err(Reject::BlockedParent.into())
     }
 
     fn write_file(
@@ -306,8 +357,11 @@ impl Run<'_> {
     ) -> Result<(), Fail> {
         let (last, parent) = comps.split_last().expect("a file has a name");
         let dir = self.dir_chain(parent)?;
-        let (path, mut f, renamed) =
-            create_unique(&dir, OsStr::new(last)).map_err(|e| io(dir.join(last), e))?;
+        let (path, mut f, renamed) = match create_unique(&dir, OsStr::new(last)) {
+            Ok(v) => v,
+            Err(e) if is_bad_name(&e) => return Err(Reject::BadName.into()),
+            Err(e) => return Err(io(dir.join(last), e).into()),
+        };
         let mut buf = vec![0u8; CHUNK];
         loop {
             self.check_cancel()?;
@@ -326,8 +380,9 @@ impl Run<'_> {
         #[cfg(unix)]
         if let Some(m) = mode {
             use std::os::unix::fs::PermissionsExt;
-            // Owner can always read and write; setuid, setgid and sticky never come from an archive.
-            let _ = f.set_permissions(fs::Permissions::from_mode((m & 0o777) | 0o600));
+            // Owner can always read and write. Group and other never get write from an archive
+            // (set_permissions ignores the umask), and setuid, setgid and sticky never come from one.
+            let _ = f.set_permissions(fs::Permissions::from_mode(((m & 0o777) & !0o022) | 0o600));
         }
         #[cfg(not(unix))]
         let _ = mode;
@@ -358,6 +413,7 @@ impl Run<'_> {
                 match std::os::unix::fs::symlink(target, &full) {
                     Ok(()) => break,
                     Err(e) if e.kind() == ErrorKind::AlreadyExists && k < 10_000 => k += 1,
+                    Err(e) if is_bad_name(&e) => return Err(Reject::BadName.into()),
                     Err(e) => return Err(io(full, e).into()),
                 }
             }
@@ -370,6 +426,36 @@ impl Run<'_> {
             let _ = (last, target);
             Err(Reject::LinkUnsupported.into())
         }
+    }
+
+    /// A tar hard link: when its target is a regular file this job already wrote under the root,
+    /// copy that file. Anything else (a target outside, a link, a file never unpacked) is refused.
+    fn hard_link(
+        &mut self,
+        name: &str,
+        comps: &[String],
+        target: &str,
+        mode: Option<u32>,
+        mtime: Option<SystemTime>,
+    ) -> Result<(), Fail> {
+        let tc = match clean_name(target, false) {
+            Ok(Cleaned::Path(c)) => c,
+            _ => return Err(Reject::SpecialFile.into()),
+        };
+        let mut src = self.root.clone();
+        for (i, c) in tc.iter().enumerate() {
+            src.push(c);
+            let m = fs::symlink_metadata(&src).map_err(|_| Reject::SpecialFile)?;
+            if m.file_type().is_symlink() {
+                return Err(Reject::SpecialFile.into());
+            }
+            let last = i + 1 == tc.len();
+            if (last && !m.is_file()) || (!last && !m.is_dir()) {
+                return Err(Reject::SpecialFile.into());
+            }
+        }
+        let mut f = fs::File::open(&src).map_err(|e| io(&src, e))?;
+        self.write_file(name, comps, &mut f, mode, mtime)
     }
 
     /// Route one refusal into the report and let a fatal error out.
@@ -417,7 +503,7 @@ impl Run<'_> {
                 "This ZIP says it unpacks to {}, which is over the limit of {}. Panoply did not \
                  unpack it. If you trust the file, raise the size limit in the options.",
                 size_text(declared),
-                size_text(self.limits.max_total)
+                limit_text(self.limits.max_total)
             )));
         }
         if declared > self.limits.ratio_floor
@@ -518,6 +604,13 @@ impl Run<'_> {
                         self.make_link(&comps, &target)
                     }
                     None => Err(Reject::LinkOutside.into()),
+                },
+                T::Link => match e.link_name_bytes() {
+                    Some(t) => {
+                        let target = String::from_utf8_lossy(&t).into_owned();
+                        self.hard_link(&name, &comps, &target, mode, mtime)
+                    }
+                    None => Err(Reject::SpecialFile.into()),
                 },
                 _ => Err(Reject::SpecialFile.into()),
             };

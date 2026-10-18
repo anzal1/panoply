@@ -71,23 +71,36 @@ fn walk(
             top = format!("{base} ({k})");
             k += 1;
         }
-        walk_one(input, &top, skip, skipped, visit)?;
+        walk_one(input, &top, true, skip, skipped, visit)?;
     }
     Ok(())
 }
 
+/// `top` is true for what the person chose. A chosen link is followed (they meant the thing it
+/// points at); links met inside a folder are stored as links.
 fn walk_one(
     path: &Path,
     name: &str,
+    top: bool,
     skip: &Path,
     skipped: &mut Vec<(String, String)>,
     visit: &mut dyn FnMut(Item) -> Result<(), ArchiveError>,
 ) -> Result<(), ArchiveError> {
-    // The skipped file is told apart by name: the caller's path may spell the folder differently.
-    if skip.file_name().is_some() && path.file_name() == skip.file_name() {
+    // The file to leave out (the archive being written). `skip` is canonical, so the names are
+    // compared first and only a match costs a canonicalize.
+    if skip.file_name().is_some()
+        && path.file_name() == skip.file_name()
+        && path.canonicalize().ok().as_deref() == Some(skip)
+    {
         return Ok(());
     }
-    let meta = match fs::symlink_metadata(path) {
+    let looked = if top {
+        // A broken chosen link falls back to being stored as a link.
+        fs::metadata(path).or_else(|_| fs::symlink_metadata(path))
+    } else {
+        fs::symlink_metadata(path)
+    };
+    let meta = match looked {
         Ok(m) => m,
         Err(e) => return Err(io_err(path, e)),
     };
@@ -122,7 +135,7 @@ fn walk_one(
         names.sort();
         for n in names {
             let child = format!("{name}/{}", n.to_string_lossy());
-            walk_one(&path.join(&n), &child, skip, skipped, visit)?;
+            walk_one(&path.join(&n), &child, false, skip, skipped, visit)?;
         }
     } else if ft.is_file() {
         visit(Item {
@@ -240,7 +253,7 @@ pub fn create(
             "Choose ZIP, TAR.GZ or TAR.ZST to pack into.".into(),
         ));
     }
-    let skip = skip.to_path_buf();
+    let skip = skip.canonicalize().unwrap_or_else(|_| skip.to_path_buf());
     // Pass one counts the bytes so progress is a real fraction.
     let mut total = 0u64;
     let mut count_skipped = Vec::new();
@@ -328,9 +341,41 @@ pub fn create(
     Ok(report)
 }
 
+/// Marks the error [`Exact`] raises when a file turns out shorter than it was when listed.
+const CHANGED: &str = "file changed while packing";
+
+/// Hands out exactly `left` bytes: a file that grows while it is packed is cut at the size its
+/// header already promised, and one that shrinks is an error, never a short entry that would
+/// shift every entry after it.
+struct Exact<R> {
+    inner: R,
+    left: u64,
+}
+
+impl<R: Read> Read for Exact<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if self.left == 0 || buf.is_empty() {
+            return Ok(0);
+        }
+        let want = usize::try_from(self.left).map_or(buf.len(), |l| l.min(buf.len()));
+        let n = self.inner.read(&mut buf[..want])?;
+        if n == 0 {
+            return Err(io::Error::new(io::ErrorKind::UnexpectedEof, CHANGED));
+        }
+        self.left -= n as u64;
+        Ok(n)
+    }
+}
+
 fn cancel_or(cancel: &CancelToken, e: io::Error, path: &Path) -> ArchiveError {
     if cancel.is_cancelled() {
         ArchiveError::Cancelled
+    } else if e.kind() == io::ErrorKind::UnexpectedEof && e.to_string() == CHANGED {
+        ArchiveError::Failed(format!(
+            "\"{}\" changed while it was being packed. Close whatever is writing to it, then try again.",
+            path.file_name()
+                .map_or_else(String::new, |n| n.to_string_lossy().into_owned())
+        ))
     } else {
         io_err(path, e)
     }
@@ -388,8 +433,15 @@ fn tar_pack<W: Write>(
                     progress,
                     label: &it.name,
                 };
-                b.append_data(&mut h, &it.name, feed)
-                    .map_err(|e| cancel_or(cancel, e, &it.path))?;
+                b.append_data(
+                    &mut h,
+                    &it.name,
+                    Exact {
+                        inner: feed,
+                        left: it.size,
+                    },
+                )
+                .map_err(|e| cancel_or(cancel, e, &it.path))?;
                 report.files += 1;
                 report.bytes_in += it.size;
             }
@@ -461,7 +513,14 @@ fn zip_pack<W: Write + Seek>(
                     progress,
                     label: &it.name,
                 };
-                io::copy(&mut feed, &mut z).map_err(|e| cancel_or(cancel, e, &it.path))?;
+                io::copy(
+                    &mut Exact {
+                        inner: &mut feed,
+                        left: it.size,
+                    },
+                    &mut z,
+                )
+                .map_err(|e| cancel_or(cancel, e, &it.path))?;
                 report.files += 1;
                 report.bytes_in += it.size;
             }
@@ -508,4 +567,33 @@ fn zip_time(t: Option<SystemTime>) -> Option<zip::DateTime> {
         u8::try_from(rem % 60).ok()?,
     )
     .ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn exact_cuts_a_growing_file_and_fails_a_shrinking_one() {
+        let mut grown = Vec::new();
+        Exact {
+            inner: &[7u8; 20][..],
+            left: 10,
+        }
+        .read_to_end(&mut grown)
+        .unwrap();
+        assert_eq!(grown, vec![7u8; 10]);
+        let err = Exact {
+            inner: &[7u8; 5][..],
+            left: 10,
+        }
+        .read_to_end(&mut Vec::new())
+        .unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::UnexpectedEof);
+        let cancel = CancelToken::new();
+        match cancel_or(&cancel, err, Path::new("/x/report.txt")) {
+            ArchiveError::Failed(m) => assert!(m.contains("report.txt") && m.contains("changed")),
+            other => panic!("{other:?}"),
+        }
+    }
 }

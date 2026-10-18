@@ -135,9 +135,9 @@ struct ExtractArgs {
     /// Stop when the unpacked size is more than this many times the archive
     #[arg(long, value_name = "N")]
     max_ratio: Option<u64>,
-    /// Stop when the archive unpacks to more than this many gigabytes
-    #[arg(long, value_name = "GB")]
-    max_size_gb: Option<f64>,
+    /// Stop when the archive unpacks to more than this many GiB
+    #[arg(long, value_name = "GIB")]
+    max_size_gib: Option<f64>,
     /// Put the new folders in this folder instead of next to each archive
     #[arg(long, value_name = "DIR")]
     out: Option<PathBuf>,
@@ -731,8 +731,8 @@ fn archive(tool: ArchiveTool) -> ExitCode {
             if let Some(r) = a.max_ratio {
                 o.insert("max_ratio".into(), json!(r));
             }
-            if let Some(g) = a.max_size_gb {
-                o.insert("max_size_gb".into(), json!(g));
+            if let Some(g) = a.max_size_gib {
+                o.insert("max_size_gib".into(), json!(g));
             }
             ("archive.extract", a.files, a.out)
         }

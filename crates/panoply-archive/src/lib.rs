@@ -128,6 +128,35 @@ pub(crate) fn io(path: impl Into<PathBuf>, source: std::io::Error) -> ArchiveErr
     }
 }
 
+/// The largest window a zstd frame may ask the decoder to hold: 2^27 bytes, 128 MiB. A frame that
+/// wants more is refused instead of allocating what the sender chose.
+pub(crate) const ZSTD_WINDOW_LOG_MAX: u32 = 27;
+
+/// A zstd decoder with the window cap set.
+pub(crate) fn zstd_decoder<R: Read>(
+    r: R,
+) -> std::io::Result<zstd::stream::read::Decoder<'static, std::io::BufReader<R>>> {
+    let mut d = zstd::stream::read::Decoder::new(r)?;
+    d.window_log_max(ZSTD_WINDOW_LOG_MAX)?;
+    Ok(d)
+}
+
+/// A limit as a person reads it in the options: binary units, so 50 GiB is what the field says.
+pub fn limit_text(bytes: u64) -> String {
+    const GIB: u64 = 1024 * 1024 * 1024;
+    const MIB: u64 = 1024 * 1024;
+    if bytes >= GIB {
+        let v = bytes as f64 / GIB as f64;
+        if (v - v.round()).abs() < 0.05 {
+            format!("{} GiB", v.round() as u64)
+        } else {
+            format!("{v:.1} GiB")
+        }
+    } else {
+        format!("{:.0} MiB", bytes as f64 / MIB as f64)
+    }
+}
+
 /// A short size for messages: `1.5 MB`.
 pub fn size_text(bytes: u64) -> String {
     const UNITS: [&str; 5] = ["B", "KB", "MB", "GB", "TB"];
@@ -172,7 +201,7 @@ pub fn detect(file: &mut File, name: &str) -> Result<Format, ArchiveError> {
     }
     if head.starts_with(&[0x28, 0xb5, 0x2f, 0xfd]) {
         let mut inner = [0u8; 512];
-        let m = match zstd::stream::read::Decoder::new(&mut *file) {
+        let m = match zstd_decoder(&mut *file) {
             Ok(d) => read_up_to(d, &mut inner).unwrap_or(0),
             Err(_) => 0,
         };
