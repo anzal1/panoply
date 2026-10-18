@@ -118,6 +118,8 @@ More about the gaps:
   thing, name the area yourself with `panoply unmark
   --rect x,y,w,h`, or use Erase object on it. The desktop panel has no box-drawing tool yet. It only runs on your own pictures: it asks you to confirm that you own them. It
   fills the area with a model's guess, which looks right but is not the original.
+- **Remove noise is built for speech.** Steady noise with no voice in it may barely change, and music can be
+  dulled. Light keeps more of the original. A recording with a voice in it is the case it is made for.
 - **First use downloads something.** The PDF engine, ONNX Runtime, each model and the video helper are
   fetched the first time a tool needs them. In the beta the download starts without a separate approval
   screen, and the size is shown in the progress line. See [PRIVACY.md](PRIVACY.md).

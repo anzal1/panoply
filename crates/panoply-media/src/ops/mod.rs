@@ -16,6 +16,7 @@ use crate::units::{name_of, size_text};
 pub mod audio;
 pub mod compress;
 pub mod convert;
+pub mod denoise;
 pub mod extract_audio;
 pub mod faststart;
 pub mod hdr_to_sdr;

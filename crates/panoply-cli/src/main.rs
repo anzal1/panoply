@@ -1220,6 +1220,19 @@ enum AudioTool {
         #[command(flatten)]
         out: MediaOut,
     },
+    /// Take background noise out: panoply audio denoise in.wav --strength normal
+    Denoise {
+        #[arg(required = true)]
+        files: Vec<PathBuf>,
+        /// light, normal or strong
+        #[arg(long)]
+        strength: Option<String>,
+        /// first, a number, or all
+        #[arg(long)]
+        track: Option<String>,
+        #[command(flatten)]
+        out: MediaOut,
+    },
     /// Set the loudness: panoply audio normalize in.mp3 --target -16
     Normalize {
         #[arg(required = true)]
@@ -1532,6 +1545,20 @@ fn audio(tool: AudioTool) -> ExitCode {
                 put("track", json!(t));
             }
             ("media.convert", files, out)
+        }
+        AudioTool::Denoise {
+            files,
+            strength,
+            track,
+            out,
+        } => {
+            if let Some(s) = strength {
+                put("strength", json!(s));
+            }
+            if let Some(t) = track {
+                put("track", json!(t));
+            }
+            ("media.denoise", files, out)
         }
         AudioTool::Normalize {
             files,

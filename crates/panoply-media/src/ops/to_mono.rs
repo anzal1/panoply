@@ -219,6 +219,7 @@ fn treat(
         (s.index == target_index).then(|| Treatment {
             filter: filter.clone(),
             channels,
+            replace: None,
         })
     })?;
     let out = job.commit(

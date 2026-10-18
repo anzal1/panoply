@@ -20,6 +20,11 @@ serde_json.workspace = true
 toml.workspace = true
 thiserror.workspace = true
 sha2.workspace = true
+# Free space on the folder the temporary sound file goes to (already in the build for panoply-share).
+fs4 = { version = "1", default-features = false }
+# RNNoise in pure Rust (BSD-3-Clause), the model weights are inside the crate. No default features:
+# they only add the command line tool and its wav reader.
+nnnoiseless = { version = "0.5", default-features = false }
 
 [lints]
 workspace = true
