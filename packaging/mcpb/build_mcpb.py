@@ -26,8 +26,15 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def module_tools():
-    """(tool name, summary) for every built-in and shipped community module, sorted by name.
+# Built-ins the host leaves out on some systems, keyed by module id: the platforms where they ARE served.
+# Keep in step with the cfg checks in crates/panoply-host/src/builtin (check_served.py fails the release if not).
+ONLY_ON = {
+    "text.to_speech": {"darwin", "win32"},  # crates/panoply-host/src/builtin/tts.rs: no engine on Linux
+}
+
+
+def module_tools(platform):
+    """(tool name, summary) for every built-in and shipped community module served on `platform`, sorted by name.
 
     Must equal what `panoply mcp` serves from a release bundle: packaging/mcpb/check_served.py proves it."""
     folders = sorted((ROOT / "modules" / "builtin").iterdir())
@@ -51,6 +58,8 @@ def module_tools():
         surf = re.search(r"^\[surfaces\](.*?)(?=^\[|\Z)", text, re.S | re.M)
         if surf and re.search(r"^mcp\s*=\s*false\b", surf.group(1), re.M):
             continue  # `panoply mcp` skips a module that turns the mcp surface off
+        if platform not in ONLY_ON.get(mid.group(1), {platform}):
+            continue  # the host does not register this module on this system
         tools[mid.group(1).replace(".", "_")] = json.loads(f'"{summary.group(1)}"')
     return [{"name": n, "description": tools[n]} for n in sorted(tools)]
 
@@ -73,7 +82,7 @@ def main():
     for k, v in {"@VERSION@": a.version, "@PLATFORM@": a.platform}.items():
         manifest = manifest.replace(k, v)
     m = json.loads(manifest)
-    m["tools"] = module_tools()
+    m["tools"] = module_tools(args.platform)
 
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
