@@ -4,7 +4,7 @@ import sys, glob, os
 from PIL import Image
 d = sys.argv[1]
 sizes = ['375x812', '390x844', '768x1024', '1024x768', '1280x800', '1440x900', '1920x1080', '2560x1440']
-for m in ['top', 'heroEnd', 'how', 'set', 'privacy', 'end']:
+for m in ['top', 'heroEnd', 'statement', 'how', 'set', 'set2', 'set3', 'app', 'speed', 'privacy', 'agents', 'end']:
     ims = [Image.open(f'{d}/{z}-{m}.png').convert('RGB') for z in sizes if os.path.exists(f'{d}/{z}-{m}.png')]
     H = 340; rows = [ims[:5], ims[5:]]
     rows = [[i.resize((round(i.width * H / i.height), H)) for i in r] for r in rows if r]

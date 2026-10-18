@@ -159,7 +159,7 @@
   function placePieces(){
     pcs.forEach(function(p){
       var d = p.d, k = still || !wide() ? 1 : clamp((pa - p.lag) / .7), e = 1 - Math.pow(1 - k, 3), prog = .14 + .86 * e;
-      var par = d[5] * 22, dx = (p.ox - p.x) / 100 * AW * (1 - prog) + mx * par, dy = (p.oy - d[3]) / 100 * AH * (1 - prog) + my * par;
+      var par = d[5] * 10, dx = (p.ox - p.x) / 100 * AW * (1 - prog) + mx * par, dy = (p.oy - d[3]) / 100 * AH * (1 - prog) + my * par;
       p.el.style.transform = 'translate(-50%,-50%) translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + (.35 + .65 * prog).toFixed(3) + ')';
       p.el.style.opacity = Math.min(1, .2 + prog).toFixed(3);
     });
