@@ -1,0 +1,84 @@
+# Redact PDF. Pattern B. Spec: docs/specs/pdf.md 22. Decision: "Redaction redraws the page" in docs/DECISIONS.md.
+# True redaction: pages with a match are redrawn as a picture with the boxes burned in and a
+# hidden text layer that lacks the redacted words. Annotations, form fields, document info,
+# metadata and attachments that hold a match are removed, and the file is written fresh.
+accepts = ["application/pdf"]
+outputs = ["application/pdf"]
+
+[module]
+id = "pdf.redact"
+name = "Redact PDF"
+version = "0.1.0"
+pattern = "B"
+summary = "Black out names, numbers and emails for good, not just on top."
+
+[options.terms]
+type = "text"
+default = ""
+label = "Words to redact"
+help = "Exact words or phrases, one per line or separated by commas. Case does not matter. Text drawn as shapes or in fonts without a character map (read as a picture when that is common on a page), pictures inside text pages, and attachments that are not plain text are not searched. Use the dry run to check."
+
+[options.presets]
+type = "text"
+default = "email,phone,aadhaar,pan,card,iban"
+label = "Also find"
+help = "email, phone, aadhaar, pan, card (Luhn checked), iban, all or none."
+
+[options.dry_run]
+type = "bool"
+default = false
+label = "Only list the matches"
+help = "Print every match and write nothing."
+
+[options.skip]
+type = "text"
+default = ""
+label = "Keep these matches"
+help = "Match numbers from the list that stay as they are, for example 2,5."
+
+[options.dpi]
+type = "number"
+default = 200
+min = 100
+max = 400
+label = "Redrawn page resolution (DPI)"
+help = "Only pages with a match are redrawn."
+
+[options.languages]
+type = "text"
+default = "auto"
+label = "Scan languages"
+help = "auto, or a list such as hi,en. Used for pages that are pictures."
+
+[capabilities]
+files = "chosen"
+network = true
+network_reason = "Downloads the text recognition model and the ONNX Runtime once, the first time a scanned page needs them. Pages never leave the computer."
+
+[[capabilities.models]]
+id = "ppocrv5-mobile-det"
+size_mb = 5
+license = "Apache-2.0"
+
+[[capabilities.models]]
+id = "ppocrv5-mobile-rec-en"
+size_mb = 8
+license = "Apache-2.0"
+
+[[capabilities.models]]
+id = "ppocrv5-mobile-rec-latin"
+size_mb = 8
+license = "Apache-2.0"
+
+[[capabilities.models]]
+id = "ppocrv5-mobile-rec-devanagari"
+size_mb = 8
+license = "Apache-2.0"
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = false
+cli = true
+mcp = true

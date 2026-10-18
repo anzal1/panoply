@@ -19,6 +19,7 @@ panoply-image.workspace = true
 sha2.workspace = true
 thiserror.workspace = true
 png.workspace = true
+regex.workspace = true
 pdfium-render.workspace = true
 # ONNX Runtime is loaded at run time from a checksum-pinned download (like pdfium in
 # panoply-pdf), never linked: no download-binaries, no build-time network, nothing resident

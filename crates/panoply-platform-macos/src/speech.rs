@@ -135,8 +135,8 @@ fn voice_of(v: &AnyObject) -> Voice {
     }
 }
 
-/// The voices installed on this Mac.
-pub fn voices() -> Vec<Voice> {
+/// The voice objects `speechVoices` lists, in the system's order.
+fn voice_objects() -> Vec<Retained<AnyObject>> {
     let Ok(cls) = class(c"AVSpeechSynthesisVoice") else {
         return Vec::new();
     };
@@ -152,10 +152,28 @@ pub fn voices() -> Vec<Voice> {
             .filter_map(|i| {
                 // SAFETY: `objectAtIndex:` with an in range index returns a voice.
                 let v: Option<Retained<AnyObject>> = unsafe { msg_send![&*arr, objectAtIndex: i] };
-                v.map(|v| voice_of(&v))
+                v
             })
             .collect()
     })
+}
+
+/// The voices installed on this Mac.
+pub fn voices() -> Vec<Voice> {
+    voice_objects().iter().map(|v| voice_of(v)).collect()
+}
+
+/// Which listed voice a key means: an identifier, else a name (any case), else a language tag
+/// (any case, the first voice with it). `None` when nothing matches.
+fn pick_index(list: &[Voice], key: &str) -> Option<usize> {
+    let key = key.trim();
+    list.iter()
+        .position(|v| v.id == key)
+        .or_else(|| list.iter().position(|v| v.name.eq_ignore_ascii_case(key)))
+        .or_else(|| {
+            list.iter()
+                .position(|v| v.language.eq_ignore_ascii_case(key))
+        })
 }
 
 fn ns(s: &str) -> Retained<AnyObject> {
@@ -209,13 +227,23 @@ pub fn synthesize(
             let _: () = msg_send![&*utt, setRate: rate];
         }
         if let Some(v) = request.voice {
-            let key = ns(v);
-            // SAFETY: both class methods take an NSString and return a nullable voice. An
-            // identifier is tried first, then a language tag.
-            let voice: Option<Retained<AnyObject>> = unsafe {
-                let by_id: Option<Retained<AnyObject>> =
-                    msg_send![voice_class, voiceWithIdentifier: &*key];
-                by_id.or_else(|| msg_send![voice_class, voiceWithLanguage: &*key])
+            // The voice object comes from the same list `voices()` shows, so every voice the
+            // list offers can be chosen. `voiceWithIdentifier:` answers nil for some listed
+            // voices (seen with the super-compact ones on a GitHub macOS runner), so it is only
+            // the fallback for a key the list does not hold, such as a language like `hi`.
+            let objects = voice_objects();
+            let infos: Vec<Voice> = objects.iter().map(|o| voice_of(o)).collect();
+            let voice: Option<Retained<AnyObject>> = match pick_index(&infos, v) {
+                Some(i) => Some(objects[i].clone()),
+                None => {
+                    let key = ns(v);
+                    // SAFETY: both class methods take an NSString and return a nullable voice.
+                    unsafe {
+                        let by_id: Option<Retained<AnyObject>> =
+                            msg_send![voice_class, voiceWithIdentifier: &*key];
+                        by_id.or_else(|| msg_send![voice_class, voiceWithLanguage: &*key])
+                    }
+                }
             };
             let Some(voice) = voice else {
                 return Err(Error::new(format!(
@@ -360,4 +388,39 @@ fn pcm_of(buf: &AnyObject) -> Option<Pcm> {
         channels: channels as u16,
         samples,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn voice(id: &str, name: &str, language: &str) -> Voice {
+        Voice {
+            id: id.into(),
+            name: name.into(),
+            language: language.into(),
+            quality: 1,
+        }
+    }
+
+    #[test]
+    fn a_listed_voice_is_found_by_identifier_name_or_language() {
+        let list = [
+            voice(
+                "com.apple.voice.super-compact.en-US.Samantha",
+                "Samantha",
+                "en-US",
+            ),
+            voice("com.apple.voice.compact.en-IN.Rishi", "Rishi", "en-IN"),
+            voice("com.apple.voice.compact.hi-IN.Lekha", "Lekha", "hi-IN"),
+        ];
+        assert_eq!(
+            pick_index(&list, "com.apple.voice.compact.en-IN.Rishi"),
+            Some(1)
+        );
+        assert_eq!(pick_index(&list, "samantha"), Some(0));
+        assert_eq!(pick_index(&list, " Rishi "), Some(1));
+        assert_eq!(pick_index(&list, "HI-in"), Some(2));
+        assert_eq!(pick_index(&list, "nobody"), None);
+    }
 }

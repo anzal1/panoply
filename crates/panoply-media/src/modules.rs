@@ -36,6 +36,8 @@ pub enum Op {
     Compress,
     /// `media.repair`
     Repair,
+    /// `media.denoise`
+    Denoise,
 }
 
 /// A module's manifest and operation.
@@ -87,6 +89,10 @@ const MANIFESTS: &[(Op, &str)] = &[
         Op::Repair,
         include_str!("../../../modules/builtin/media-repair/module.toml"),
     ),
+    (
+        Op::Denoise,
+        include_str!("../../../modules/builtin/media-denoise/module.toml"),
+    ),
 ];
 
 /// Every media module.
@@ -120,6 +126,7 @@ impl MediaModule {
             Op::Streams => ops::streams::run(io, inputs, &opts),
             Op::Compress => ops::compress::run(io, inputs, &opts),
             Op::Repair => ops::repair::run(io, inputs, &opts),
+            Op::Denoise => ops::denoise::run(io, inputs, &opts),
         }
     }
 }

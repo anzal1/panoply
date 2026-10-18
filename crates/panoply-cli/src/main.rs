@@ -297,6 +297,31 @@ enum PdfTool {
         #[command(flatten)]
         out: PdfOut,
     },
+    /// Redact for good: panoply pdf redact in.pdf --term "Jane Roe" --preset email,aadhaar --dry-run
+    Redact {
+        #[arg(required = true)]
+        files: Vec<PathBuf>,
+        /// An exact word or phrase to redact (repeat for more)
+        #[arg(long = "term")]
+        terms: Vec<String>,
+        /// email, phone, aadhaar, pan, card, iban, all or none (default: all)
+        #[arg(long)]
+        preset: Option<String>,
+        /// Print every match and write nothing
+        #[arg(long)]
+        dry_run: bool,
+        /// Match numbers from the list to keep, for example 2,5
+        #[arg(long)]
+        skip: Option<String>,
+        /// Resolution of redrawn pages, 100 to 400
+        #[arg(long)]
+        dpi: Option<f64>,
+        /// Languages for scanned pages, for example hi,en
+        #[arg(long, alias = "languages")]
+        lang: Option<String>,
+        #[command(flatten)]
+        out: PdfOut,
+    },
     /// Turn PDF pages into pictures: panoply pdf images in.pdf --dpi 150
     Images {
         #[arg(required = true)]
@@ -891,6 +916,30 @@ fn pdf(tool: PdfTool) -> ExitCode {
             }
             ("pdf.ocr", files, out)
         }
+        PdfTool::Redact {
+            files,
+            terms,
+            preset,
+            dry_run,
+            skip,
+            dpi,
+            lang,
+            out,
+        } => {
+            put("terms", json!(terms.join("\n")));
+            put("presets", json!(preset.unwrap_or_else(|| "all".into())));
+            put("dry_run", json!(dry_run));
+            if let Some(s) = skip {
+                put("skip", json!(s));
+            }
+            if let Some(d) = dpi {
+                put("dpi", json!(d));
+            }
+            if let Some(l) = lang {
+                put("languages", json!(l));
+            }
+            ("pdf.redact", files, out)
+        }
         PdfTool::Images {
             files,
             format,
@@ -1166,6 +1215,19 @@ enum AudioTool {
         #[arg(long, default_value = "mp3")]
         to: String,
         /// For a video with several sound tracks: first, a number, or all
+        #[arg(long)]
+        track: Option<String>,
+        #[command(flatten)]
+        out: MediaOut,
+    },
+    /// Take background noise out: panoply audio denoise in.wav --strength normal
+    Denoise {
+        #[arg(required = true)]
+        files: Vec<PathBuf>,
+        /// light, normal or strong
+        #[arg(long)]
+        strength: Option<String>,
+        /// first, a number, or all
         #[arg(long)]
         track: Option<String>,
         #[command(flatten)]
@@ -1483,6 +1545,20 @@ fn audio(tool: AudioTool) -> ExitCode {
                 put("track", json!(t));
             }
             ("media.convert", files, out)
+        }
+        AudioTool::Denoise {
+            files,
+            strength,
+            track,
+            out,
+        } => {
+            if let Some(s) = strength {
+                put("strength", json!(s));
+            }
+            if let Some(t) = track {
+                put("track", json!(t));
+            }
+            ("media.denoise", files, out)
         }
         AudioTool::Normalize {
             files,

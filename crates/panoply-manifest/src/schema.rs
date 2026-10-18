@@ -358,6 +358,7 @@ summary = "Does a demo."
         for id in [
             "media.compress",
             "media.convert",
+            "media.denoise",
             "media.extract_audio",
             "media.hdr_to_sdr",
             "media.info",

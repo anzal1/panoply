@@ -211,6 +211,7 @@ fn one(
             idx.iter().position(|i| *i == s.index).map(|k| Treatment {
                 filter: Some(filters[k].clone()),
                 channels: None,
+                replace: None,
             })
         })?;
         let outp = {

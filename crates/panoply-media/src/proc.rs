@@ -276,6 +276,30 @@ pub fn run_ffmpeg_stream(
     progress: &Progress,
     total_bytes: Option<u64>,
 ) -> Result<Finished> {
+    run_ffmpeg_stream_until(
+        engine,
+        io,
+        args,
+        |c| {
+            sink(c);
+            true
+        },
+        progress,
+        total_bytes,
+    )
+}
+
+/// Like [`run_ffmpeg_stream`], but the sink says whether to go on. When it returns `false` (a
+/// write failed, the disk is full) the helper is killed at once and the run ends with
+/// `ok == false`, so a job does not decode hours of sound it can no longer keep.
+pub fn run_ffmpeg_stream_until(
+    engine: &Engine,
+    io: &dyn Io,
+    args: &[OsString],
+    mut sink: impl FnMut(&[u8]) -> bool,
+    progress: &Progress,
+    total_bytes: Option<u64>,
+) -> Result<Finished> {
     io.check_cancel()?;
     let mut cmd = command(engine, &engine.ffmpeg);
     cmd.args(["-nostdin", "-hide_banner", "-loglevel", "error"])
@@ -332,7 +356,18 @@ pub fn run_ffmpeg_stream(
         match rx.recv_timeout(POLL) {
             Ok(chunk) => {
                 seen += chunk.len() as u64;
-                sink(&chunk);
+                if !sink(&chunk) {
+                    kill(&mut child);
+                    let _ = child.wait();
+                    drop(rx);
+                    join(t_out);
+                    join(t_err);
+                    return Ok(Finished {
+                        tail: "stopped by the program that was reading the sound".into(),
+                        ok: false,
+                        stdout: Vec::new(),
+                    });
+                }
                 if let Some(total) = total_bytes.filter(|t| *t > 0) {
                     let f = (seen as f64 / total as f64).clamp(0.0, 1.0) as f32;
                     if (f - last).abs() >= 0.02 {

@@ -11,6 +11,7 @@ pub mod image;
 pub mod media;
 pub mod ocr;
 pub mod pdf;
+pub mod redact;
 pub mod tts;
 pub mod vision;
 
@@ -32,6 +33,9 @@ pub fn all() -> Vec<Arc<dyn Module>> {
         v.push(Arc::new(m));
     }
     for m in ocr::all() {
+        v.push(Arc::new(m));
+    }
+    for m in redact::all() {
         v.push(Arc::new(m));
     }
     for m in tts::all() {
