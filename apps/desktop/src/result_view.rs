@@ -164,6 +164,8 @@ mod tests {
             "media.trim",
             "pdf.to_images",
             "pdf.merge",
+            "archive.extract",
+            "archive.create",
         ] {
             assert!(!size_is_the_goal(id, false), "{id} shows no size tiles");
         }
