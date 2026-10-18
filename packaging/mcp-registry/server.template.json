@@ -1,0 +1,13 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.anzal1/panoply",
+  "title": "Panoply",
+  "description": "PDF, image, video and OCR tools for your agent. Runs on your computer, nothing is uploaded.",
+  "websiteUrl": "https://github.com/anzal1/panoply",
+  "repository": {
+    "url": "https://github.com/anzal1/panoply",
+    "source": "github"
+  },
+  "version": "@VERSION@",
+  "packages": []
+}
