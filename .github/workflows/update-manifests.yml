@@ -47,9 +47,15 @@ jobs:
           mkdir -p Casks bucket packaging/rendered
           cp manifests/homebrew/panoply.rb Casks/panoply.rb
           cp manifests/scoop/panoply.json bucket/panoply.json
-          for channel in winget aur flatpak; do
+          # winget and AUR are fully generated, so replace them whole. Flatpak is copied file by file:
+          # cargo-sources.json sits beside the manifests, is committed by hand and must survive.
+          for channel in winget aur; do
             rm -rf "packaging/rendered/$channel"
             cp -R "manifests/$channel" "packaging/rendered/$channel"
+          done
+          mkdir -p packaging/rendered/flatpak
+          for f in manifests/flatpak/*; do
+            cp "$f" "packaging/rendered/flatpak/$(basename "$f")"
           done
       - name: Open the pull request
         run: |

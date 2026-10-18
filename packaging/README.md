@@ -155,6 +155,8 @@ Why these layouts work for a repository that is not named `homebrew-*` and also 
 Homebrew 7 has no `--no-quarantine` option for `brew install`, so an unsigned cask keeps the quarantine flag and macOS blocks its first open. The
 cask's `caveats` block prints the Open Anyway steps and the `xattr` command (it goes away with `PANOPLY_MACOS_NOTARIZED=1`).
 
+A tap or bucket added from this repository clones the whole repository (about 78 MB today), so release binaries and big fixtures must stay out of git history.
+
 Both manifests follow the newest published release, prereleases included, because every release is a beta for now (the choice
 is recorded in `docs/DECISIONS.md`). The cask's `livecheck` reads git tags, since Homebrew's GitHub strategies skip prereleases.
 
