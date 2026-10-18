@@ -1,0 +1,89 @@
+name: Update manifests
+
+# When a release is published (a prerelease counts: every release is a beta for now), render the package
+# manager files from its assets and open a pull request to main with them:
+#   Casks/panoply.rb          Homebrew cask   (brew tap anzal1/panoply https://github.com/anzal1/panoply)
+#   bucket/panoply.json       Scoop manifest  (scoop bucket add panoply https://github.com/anzal1/panoply)
+#   packaging/rendered/       winget, AUR and Flatpak sources, for the people who submit those by hand
+# Uses only GITHUB_TOKEN. Never pushes to main. Details: packaging/README.md, "Package managers".
+#
+# One repository setting is needed: Settings > Actions > General > Workflow permissions, tick
+# "Allow GitHub Actions to create and approve pull requests". Without it the branch is still pushed and
+# the run ends with an error that links the compare page, so a person can open the pull request.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Published release tag to render, e.g. v0.2.0-beta"
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-manifests
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      GH_TOKEN: ${{ github.token }}
+      NOTARIZED: ${{ vars.PANOPLY_MACOS_NOTARIZED }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - name: Render the manifests from the release
+        run: |
+          set -euo pipefail
+          python3 -I packaging/scripts/render_manifests.py --tag "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --out manifests --macos-notarized "${NOTARIZED:-0}"
+          mkdir -p Casks bucket packaging/rendered
+          cp manifests/homebrew/panoply.rb Casks/panoply.rb
+          cp manifests/scoop/panoply.json bucket/panoply.json
+          # winget and AUR are fully generated, so replace them whole. Flatpak is copied file by file:
+          # cargo-sources.json sits beside the manifests, is committed by hand and must survive.
+          for channel in winget aur; do
+            rm -rf "packaging/rendered/$channel"
+            cp -R "manifests/$channel" "packaging/rendered/$channel"
+          done
+          mkdir -p packaging/rendered/flatpak
+          for f in manifests/flatpak/*; do
+            cp "$f" "packaging/rendered/flatpak/$(basename "$f")"
+          done
+      - name: Open the pull request
+        run: |
+          set -euo pipefail
+          version="${TAG#v}"
+          branch="bot/manifests-$TAG"
+          git add Casks bucket packaging/rendered
+          if git diff --cached --quiet; then
+            echo "The manifests on main already match $TAG."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -q -m "Update package manifests for $TAG"
+          git push --force origin "$branch"
+          if [ -n "$(gh pr list --head "$branch" --state open --json number --jq '.[].number')" ]; then
+            echo "A pull request for $branch is already open and now carries the new commit."
+            exit 0
+          fi
+          body="Rendered from the published release $TAG by .github/workflows/update-manifests.yml.
+
+          - \`Casks/panoply.rb\` and \`bucket/panoply.json\`: what \`brew\` and \`scoop\` read once this merges.
+          - \`packaging/rendered/\`: the winget, AUR and Flatpak files for $version, to submit by hand.
+
+          Pull requests opened with GITHUB_TOKEN do not start other workflows. Close and reopen this one to run CI."
+          if ! gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" \
+            --title "Update package manifests for $TAG" --body "$body"; then
+            echo "::error title=Pull request not opened::The branch $branch is pushed. Open the pull request from https://github.com/$GITHUB_REPOSITORY/compare/$branch, and tick Settings > Actions > General > Allow GitHub Actions to create and approve pull requests so this step works next time."
+            exit 1
+          fi

@@ -34,6 +34,7 @@ panoply-disk.workspace = true
 panoply-host.workspace = true
 panoply-wasm.workspace = true
 panoply-find.workspace = true
+panoply-share.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
@@ -44,6 +45,9 @@ gpui_platform = { package = "gpui-pre-platform", version = "=0.3.9", features = 
 gpui-base = { path = "patches/gpui-base" }
 global-hotkey = "0.8"
 futures = "0.3"
+# The share engine runs the LocalSend node on its own runtime, started only while the Share screen is open
+# or receiving is on. Same features panoply-share already pulls in.
+tokio = { version = "1", default-features = false, features = ["rt", "rt-multi-thread", "sync", "time"] }
 anyhow = "1"
 # The result card hands a decoded preview to GPUI as an `image::Frame`; the codecs come from panoply-image.
 image = { version = "0.25", default-features = false, features = ["png"] }

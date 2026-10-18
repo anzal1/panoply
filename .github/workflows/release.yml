@@ -361,7 +361,8 @@ jobs:
           retention-days: 7
 
   # ------------------------------------------------------------------------------------------------
-  # Tags only: checksums, filled package manager manifests, build provenance, a draft release.
+  # Tags only: checksums, filled package manager manifests, build provenance, a draft release. The cask and
+  # the Scoop manifest in this repository are updated after the release is published, by update-manifests.yml.
   # ------------------------------------------------------------------------------------------------
   publish:
     needs: [plan, package-macos, package-windows, package-linux, package-mcpb]
@@ -439,9 +440,10 @@ jobs:
 
           **Install**
           - macOS: the \`.dmg\` or \`.zip\` (\`arm64\` for Apple Silicon, \`x64\` for Intel), or
-            \`brew install --cask anzal1/panoply/panoply\` once the tap is live
-          - Windows: the \`.msi\` or \`.zip\`, or \`scoop bucket add panoply https://github.com/anzal1/scoop-panoply\`
-            then \`scoop install panoply\` once the bucket is live
+            \`brew tap anzal1/panoply https://github.com/anzal1/panoply\` then
+            \`brew install --cask anzal1/panoply/panoply\`
+          - Windows: the \`.msi\` or \`.zip\`, or \`scoop bucket add panoply https://github.com/anzal1/panoply\`
+            then \`scoop install panoply/panoply\`
           - Linux: the \`.AppImage\` or the \`.tar.gz\` (run \`install.sh\` inside)
           - Command line only: the \`panoply-cli-*\` archives
           - Claude Desktop: the \`panoply-mcp-*.mcpb\` for your system, opened by double click

@@ -5331,11 +5331,13 @@ dependencies = [
  "panoply-host",
  "panoply-image",
  "panoply-manifest",
+ "panoply-share",
  "panoply-wasm",
  "png 0.18.1",
  "raw-window-handle",
  "serde",
  "serde_json",
+ "tokio",
  "tray-icon",
  "x11rb",
 ]

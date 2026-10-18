@@ -375,6 +375,23 @@ pub fn terminal_qr(url: &str, invert: bool) -> Result<String> {
         .build())
 }
 
+/// The QR code for `url` as a square of modules for a GUI to draw: the side length (quiet zone
+/// not included) and the modules row by row, `true` for a dark one. The caller draws its own
+/// four module quiet zone.
+pub fn qr_modules(url: &str) -> Result<(usize, Vec<bool>)> {
+    use qrcode::Color;
+    let code = qrcode::QrCode::with_error_correction_level(url.as_bytes(), qrcode::EcLevel::L)
+        .map_err(|e| Error::Input(format!("cannot make a QR code: {e}")))?;
+    let side = code.width();
+    Ok((
+        side,
+        code.to_colors()
+            .into_iter()
+            .map(|c| c == Color::Dark)
+            .collect(),
+    ))
+}
+
 // ---------------------------------------------------------------- requests
 
 fn secure(mut r: Response<Body>) -> Response<Body> {
