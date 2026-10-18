@@ -1,0 +1,267 @@
+<!doctype html>
+<html><head><meta charset="UTF-8"></head><body>
+<template>
+  <style>
+    @font-face{font-family:"Geist";src:url("assets/fonts/Geist-Variable-latin.woff2") format("woff2");font-weight:100 900}
+    @font-face{font-family:"Geist Mono";src:url("assets/fonts/GeistMono-latin.woff2") format("woff2");font-weight:100 900}
+
+    #root{position:absolute;inset:0;overflow:hidden;font-family:"Geist",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#fff;background:#0c0c0f}
+    #root *{box-sizing:border-box}
+    #root .fill{position:absolute;inset:0}
+    #root .abs{position:absolute}
+    #root .mono{font-family:"Geist Mono",ui-monospace,monospace}
+    #root .h1{font-weight:700;letter-spacing:-0.04em;line-height:1}
+
+    /* scene 1: the pain, Midnight */
+    #m-pain{position:absolute;inset:0}
+    #m-pcam{position:absolute;inset:0}
+    #m-pwords{position:absolute;left:0;right:0;top:50%;margin-top:-210px;height:420px;padding-left:230px;font-size:140px}
+    #m-pwords .row{display:block;height:140px;line-height:140px;white-space:nowrap;opacity:0}
+    #m-pwords b{color:#ff6961;font-weight:700}
+
+    /* ground: one brand blue, wiped in on the drop */
+    #m-ground{background:#2d6cdf;clip-path:inset(0 100% 0 0)}
+
+    /* scene 2: the agent session */
+    #m-s2{position:absolute;inset:0}
+    #m-head{position:absolute;left:0;right:0;top:64px;text-align:center;white-space:nowrap;font-size:112px;opacity:0}
+    #m-cam{position:absolute;inset:0;transform-origin:960px 640px}
+    #m-win{position:absolute;left:180px;top:240px;width:1560px;height:760px;border-radius:26px;overflow:hidden;background:#1c1c1f;box-shadow:0 0 0 1.5px rgba(255,255,255,.22),0 40px 110px rgba(8,24,70,.5);opacity:0}
+    #m-chrome{position:absolute;left:0;right:0;top:0;height:68px;background:#161619;display:flex;align-items:center;padding:0 28px;gap:12px}
+    #m-chrome i{width:16px;height:16px;border-radius:50%;background:#3a3a40;display:block}
+    #m-chrome span{position:absolute;left:0;right:0;text-align:center;font-family:"Geist Mono",monospace;font-size:28px;color:#a9a9b3;font-weight:500}
+    #m-chat,#m-list{position:absolute;left:0;top:68px;width:1560px;height:692px}
+    #m-list{opacity:0}
+
+    .ln{position:absolute;left:44px;height:52px;line-height:52px;font-family:"Geist Mono",monospace;font-size:34px;font-weight:500;color:#ececf1;white-space:nowrap;opacity:0;letter-spacing:-0.01em}
+    .ln .d{color:#a9a9b3}
+    .ln .t{color:#0a84ff}
+    .ln .ok{color:#30d158}
+    .ln .u{color:#ffffff;font-weight:600}
+    .chip{position:absolute;height:84px;border-radius:22px;background:#26262b;box-shadow:0 0 0 1.5px rgba(255,255,255,.1);display:flex;align-items:center;gap:20px;padding:0 28px 0 22px;font-family:"Geist Mono",monospace;font-size:34px;font-weight:500;color:#ececf1;white-space:nowrap;opacity:0}
+    .chip svg{width:40px;height:40px;fill:none;stroke:#ff453a;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+    .chip .sz{color:#30d158;font-weight:600}
+
+    /* tool list */
+    #m-lview{position:absolute;left:0;top:0;width:820px;height:692px;overflow:hidden;
+      -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 40px,#000 650px,transparent 692px);mask-image:linear-gradient(to bottom,transparent 0,#000 40px,#000 650px,transparent 692px)}
+    #m-lscroll{position:absolute;left:0;top:0;width:820px}
+    .tr{position:absolute;left:44px;width:760px;height:84px}
+    .tr .nm{position:absolute;left:0;top:0;line-height:84px;font-family:"Geist Mono",monospace;font-size:36px;font-weight:600;color:#ececf1;letter-spacing:-0.015em;white-space:nowrap}
+    .tr .nm i{font-style:normal;color:#0a84ff}
+    #m-vrule{position:absolute;left:820px;top:30px;bottom:30px;width:1px;background:rgba(255,255,255,.10)}
+    #m-stats{position:absolute;left:880px;top:0;width:680px;height:692px}
+    .st{position:absolute;left:0;width:640px;opacity:0}
+    .st .big{display:block;font-size:150px;font-weight:700;letter-spacing:-0.05em;line-height:1;color:#fff;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .st .big small{font-size:60px;letter-spacing:-0.03em;font-weight:600;color:#a9a9b3;margin-left:14px}
+    .st .src{display:block;font-family:"Geist Mono",monospace;font-size:28px;font-weight:500;color:#8d8d98;margin-top:10px;letter-spacing:-0.01em;white-space:nowrap}
+
+    #m-st2 .big,#m-st3 .big{font-size:104px}
+    #m-st2 .big small,#m-st3 .big small{font-size:46px;margin-left:10px}
+
+    /* hook */
+    #m-hook{position:absolute;inset:0}
+    #m-hwords{position:absolute;left:0;right:0;top:50%;margin-top:-250px;height:500px;padding-left:230px;font-size:132px}
+    #m-hwords .row{display:block;height:166px;line-height:166px;white-space:nowrap;opacity:0}
+    #m-hsub{position:absolute;left:230px;top:790px;font-family:"Geist Mono",monospace;font-size:36px;font-weight:500;color:rgba(255,255,255,.85);opacity:0;letter-spacing:-0.01em}
+
+    /* end card */
+    #m-end{position:absolute;inset:0}
+    #m-endcam{position:absolute;inset:0}
+    #m-efan{position:absolute;left:770px;top:48px;width:380px;height:380px;opacity:0}
+    #m-efan svg{width:100%;height:100%;display:block;overflow:visible}
+    #m-ename{position:absolute;left:0;right:0;top:452px;text-align:center;font-size:196px;opacity:0}
+    #m-eline{position:absolute;left:0;right:0;top:700px;text-align:center;font-size:68px;font-weight:500;letter-spacing:-0.025em;color:rgba(255,255,255,.9);opacity:0}
+    #m-eurl{position:absolute;left:0;right:0;top:860px;text-align:center;font-size:44px;color:rgba(255,255,255,.92);letter-spacing:-0.01em;opacity:0}
+    #m-grain{position:absolute;left:0;top:0;width:1920px;height:1080px;pointer-events:none;opacity:.08;mix-blend-mode:soft-light}
+  </style>
+
+  <div id="root" data-composition-id="mcp" data-width="1920" data-height="1080">
+    <div id="m-ground" class="fill"></div>
+
+    <div id="m-pain"><div id="m-pcam">
+      <div id="m-pwords" class="h1">
+        <span class="row" id="m-p1">Agents still send you</span>
+        <span class="row" id="m-p2">to a <b>website</b></span>
+        <span class="row" id="m-p3">to merge a PDF.</span>
+      </div>
+    </div></div>
+
+    <div id="m-s2">
+      <div id="m-head" class="h1">Panoply is now an MCP server</div>
+      <div id="m-cam">
+        <div id="m-win">
+          <div id="m-chrome"><i></i><i></i><i></i><span>agent session</span></div>
+          <div id="m-chat"></div>
+          <div id="m-list">
+            <div id="m-lview"><div id="m-lscroll"></div></div>
+            <div id="m-vrule"></div>
+            <div id="m-stats"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="m-hook">
+      <div id="m-hwords" class="h1">
+        <span class="row" id="m-h1">Your agent can now do</span>
+        <span class="row" id="m-h2">every file job on your</span>
+        <span class="row" id="m-h3">computer, offline.</span>
+      </div>
+    </div>
+
+    <div id="m-end"><div id="m-endcam">
+      <div id="m-efan"></div>
+      <div id="m-ename" class="h1">Panoply</div>
+      <div id="m-eline">Free. Open source. Runs on your computer.</div>
+      <div id="m-eurl" class="mono">github.com/anzal1/panoply</div>
+    </div></div>
+
+    <canvas id="m-grain" width="480" height="270"></canvas>
+  </div>
+
+  <script>
+  (function () {
+    const F = 1 / 60;
+
+    function build(D) {
+      const $ = id => document.getElementById(id);
+      const tl = gsap.timeline({ paused: true });
+      const XO = 'expo.out', P1O = 'power1.out', P2I = 'power2.in';
+
+      const enter = (sel, t, o = {}) => {
+        const d = o.dur || 0.5;
+        tl.fromTo(sel, { x: o.x || 0, y: o.y === undefined ? 26 : o.y, scale: o.s || 1 }, { x: 0, y: 0, scale: 1, duration: d, ease: XO }, t);
+        tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, t);
+      };
+      const out = (sel, tEnd, o = {}) => {
+        const v = { opacity: 0, duration: o.dur || 0.25, ease: 'power1.in' };
+        if (o.y !== undefined) v.y = o.y;
+        tl.to(sel, v, tEnd - (o.dur || 0.25));
+      };
+      const count = (el, from, to, t, secs, fmt, ease) => {
+        const o = { v: from };
+        tl.to(o, { v: to, duration: secs, ease: ease || 'power2.out', onUpdate: () => { el.textContent = fmt(o.v); } }, t);
+      };
+
+      /* ---------- data, all of it from the recorded session (assets/data/session.json) ---------- */
+            const names = D.tools.map(t => t.name);
+
+      /* ---------- scene 1: the pain, 0.0 to 2.9 s ---------- */
+      enter('#m-p1', 0.25, { y: 34, dur: 0.6 });
+      enter('#m-p2', 0.85, { y: 34, dur: 0.6 });
+      enter('#m-p3', 1.45, { y: 34, dur: 0.6 });
+      tl.fromTo('#m-pcam', { scale: 1, x: 0 }, { scale: 1.03, x: -14, duration: 2.7, ease: 'none' }, 0);
+      out('#m-pwords', 2.85, { y: 0, dur: 0.3 });
+
+      /* ---------- the drop: ground turns brand blue by a straight wipe, 2.7 to 3.4 s ---------- */
+      tl.fromTo('#m-ground', { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 -3% 0 0)', duration: 0.7, ease: XO }, 2.7);
+
+      /* ---------- scene 2a: the session, 3.2 to 9.4 s ---------- */
+      enter('#m-head', 3.2, { y: 30, dur: 0.6 });
+      enter('#m-win', 3.45, { y: 40, s: 0.97, dur: 0.7 });
+      tl.fromTo('#m-cam', { scale: 1.035 }, { scale: 1, duration: 6.2, ease: 'power2.out' }, 3.3);
+
+      const chat = $('m-chat');
+      const LH = 56, TOP = 30;
+      const rows = [];
+      const add = (i, html, at) => {
+        const el = document.createElement('div');
+        el.className = 'ln'; el.id = 'm-ln' + i; el.style.top = (TOP + i * LH) + 'px'; el.innerHTML = html;
+        chat.appendChild(el); rows.push({ el, at });
+      };
+      add(0, `<span class="d">$</span> claude mcp add panoply -- panoply mcp`, 3.9);
+      add(1, `<span class="d">&gt;</span> <span class="u">merge these two PDFs and compress them under 1 MB</span>`, 4.6);
+      add(2, `<span class="d">tools/call</span>  <span class="t">pdf_merge</span>`, 5.5);
+      add(3, `<span class="d">  files</span>  ${D.merge.inNames.join('<span class="d">, </span>')}`, 5.9);
+      add(4, `<span class="ok">  ✓</span> <span class="u">${D.merge.note}</span>`, 6.5);
+      add(5, `<span class="d">tools/call</span>  <span class="t">pdf_compress</span>`, 7.2);
+      add(6, `<span class="d">  under_mb</span>  1`, 7.6);
+      add(7, `<span class="ok">  ✓</span> <span class="u">${D.compress.note}</span>`, 8.2);
+      rows.forEach(r => enter(r.el, r.at, { y: 18, dur: 0.45 }));
+
+      const chip = (id, left, top, name, size) => {
+        const el = document.createElement('div');
+        el.className = 'chip'; el.id = id; el.style.left = left + 'px'; el.style.top = top + 'px';
+        el.innerHTML = `<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg><span>${name}</span><span class="sz">${size}</span>`;
+        chat.appendChild(el); return el;
+      };
+      chip('m-chip1', 44, TOP + 8 * LH + 16, D.compress.outName, D.compress.sizeOut);
+      enter('#m-chip1', 8.75, { y: 24, dur: 0.6 });
+
+      /* ---------- scene 2b: the tool list, 9.4 to 13.0 s ---------- */
+      out('#m-chat', 9.55, { y: -20, dur: 0.3 });
+      tl.fromTo('#m-list', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, 9.45);
+      tl.to('#m-head', { opacity: 0, y: -20, duration: 0.3, ease: P2I }, 9.3);
+
+      const sc = $('m-lscroll'), RH = 84;
+      names.forEach((n, i) => {
+        const el = document.createElement('div');
+        el.className = 'tr'; el.style.top = (24 + i * RH) + 'px';
+        const k = n.indexOf('_');
+        el.innerHTML = `<div class="nm"><i>${n.slice(0, k)}</i>${n.slice(k)}</div>`;
+        sc.appendChild(el);
+      });
+      sc.style.height = (48 + names.length * RH) + 'px';
+      const viewH = 692, total = 48 + names.length * RH;
+      tl.fromTo('#m-lscroll', { y: 0 }, { y: -(total - viewH + 24), duration: 3.0, ease: 'power1.inOut' }, 9.8);
+
+      const stats = $('m-stats');
+      const mkStat = (id, top, big, src) => {
+        const el = document.createElement('div');
+        el.className = 'st'; el.id = id; el.style.top = top + 'px';
+        el.innerHTML = `<span class="big">${big}</span><span class="src">${src}</span>`;
+        stats.appendChild(el); return el;
+      };
+      mkStat('m-st1', 36, `<span id="m-n1">1</span><small>tools</small>`, 'tools/list, 31 built in');
+      mkStat('m-st2', 258, `${D.merge.pagesIn.join(' + ')} <small>→</small> ${D.merge.pagesOut}<small>pages</small>`, 'pdf_merge, real run');
+      mkStat('m-st3', 480, `${D.compress.sizeIn.replace(' MB','')} <small>MB</small><small>→</small> ${D.compress.sizeOut.replace(' KB','')}<small>KB</small>`, `pdf_compress under 1 MB, ${(D.compress.ms / 1000).toFixed(1)} s`);
+      enter('#m-st1', 9.9, { y: 28, dur: 0.6 });
+      count($('m-n1'), 1, D.tools.length, 9.95, 2.9, v => String(Math.round(v)), 'power1.inOut');
+      enter('#m-st2', 11.2, { y: 28, dur: 0.6 });
+      enter('#m-st3', 11.9, { y: 28, dur: 0.6 });
+      tl.fromTo('#m-win', { scale: 1 }, { scale: 1.02, duration: 4.0, ease: 'none' }, 9.4);
+
+      /* ---------- the hook, 13.5 to 15.6 s ---------- */
+      out('#m-win', 13.6, { y: -24, dur: 0.4 });
+      enter('#m-h1', 13.75, { y: 36, dur: 0.6 });
+      enter('#m-h2', 14.15, { y: 36, dur: 0.6 });
+      enter('#m-h3', 14.55, { y: 36, dur: 0.6 });
+      tl.fromTo('#m-hwords', { scale: 1.02 }, { scale: 1, duration: 2.0, ease: 'power2.out' }, 13.75);
+      out('#m-hwords', 15.85, { y: 0, dur: 0.3 });
+
+      /* ---------- end card, 15.9 to 17.0 s, same blue ---------- */
+      const CARD = 'M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z';
+      const PIVOT = '272.788 612.197';
+      $('m-efan').innerHTML = `<svg viewBox="0 0 544 544" fill="none"><path id="m-f-l" d="${CARD}" fill="rgba(255,255,255,.42)"/><path id="m-f-r" d="${CARD}" fill="rgba(255,255,255,.62)"/><path id="m-f-c" d="${CARD}" fill="#ffffff"/></svg>`;
+      gsap.set(['#m-f-l', '#m-f-r'], { svgOrigin: PIVOT });
+      const T0 = 15.9;
+      enter('#m-efan', T0, { y: 24, s: 0.92, dur: 0.5 });
+      tl.fromTo('#m-f-l', { rotation: 0 }, { rotation: -20, duration: 0.6, ease: XO }, T0);
+      tl.fromTo('#m-f-r', { rotation: 0 }, { rotation: 20, duration: 0.6, ease: XO }, T0);
+      enter('#m-ename', T0, { y: 40, dur: 0.5 });
+      enter('#m-eline', T0 + 0.15, { y: 26 });
+      enter('#m-eurl', T0 + 0.35, { y: 20 });
+      tl.fromTo('#m-endcam', { scale: 1.03 }, { scale: 1, duration: 1.1, ease: 'power2.out' }, T0);
+
+      /* grain, painted once from a seeded LCG */
+      (function () {
+        const c = $('m-grain'), g = c.getContext('2d'), d = g.createImageData(480, 270);
+        let s = 12345; const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+        for (let i = 0; i < d.data.length; i += 4) { const v = 128 + (r() - 0.5) * 90; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+        g.putImageData(d, 0, 0);
+      })();
+
+      window.__timelines["mcp"] = tl;
+    }
+
+    /* read the recorded session synchronously so the timeline registers in the same tick */
+    const x = new XMLHttpRequest();
+    x.open('GET', 'assets/data/session.json', false);
+    x.send(null);
+    if (!(x.status === 200 || x.status === 0)) throw new Error('assets/data/session.json is missing');
+    build(JSON.parse(x.responseText));
+  })();
+  </script>
+</template>
+</body></html>
