@@ -17,3 +17,7 @@ teaser/renders/
 teaser-vertical/.hyperframes/
 teaser-vertical/snapshots/
 teaser-vertical/renders/
+drops/*/assets/vendor/
+drops/*/.hyperframes/
+drops/*/snapshots/
+drops/*/renders/

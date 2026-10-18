@@ -1,0 +1,65 @@
+name: Drop mcp transcript
+
+# One-off, for the "mcp" feature drop (docs/launch/drops/mcp). Builds the CLI from main, records a real
+# `panoply mcp` session (initialize, tools/list, pdf_merge, pdf_compress) and the MCP test output, and uploads them.
+# Starts from a push to docs/launch/drops/mcp/trigger/transcript.txt on drop/mcp. Public repo runner, free.
+on:
+  push:
+    branches: ["drop/mcp"]
+    paths: [docs/launch/drops/mcp/trigger/transcript.txt]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: drop-mcp-transcript
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: never
+  CARGO_INCREMENTAL: "0"
+  CARGO_NET_RETRY: "10"
+
+jobs:
+  transcript:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          path: src
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+      - name: Linux libs
+        uses: ./src/.github/actions/linux-libs
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: src
+      - name: Build the CLI (release)
+        working-directory: src
+        run: |
+          git log -1 --format='main at %H %s' | tee ../main-commit.txt
+          cargo build --release -p panoply-cli --bin panoply -j4
+      - name: Real MCP session
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet pillow
+          for v in a b c; do
+            python3 docs/launch/drops/mcp/tools/transcript.py src/target/release/panoply "$RUNNER_TEMP/work-$v" "out/session-$v" "$v" | tee "out-$v.log" || true
+          done
+          mkdir -p out && cp main-commit.txt out/
+          src/target/release/panoply version | tee out/version.txt
+      - name: MCP tests with their printed output
+        working-directory: src
+        run: |
+          cargo test --release -p panoply-mcp 2>&1 | tee ../out/panoply-mcp-unit-tests.txt
+          cargo test --release -p panoply-cli --test mcp -- --nocapture --test-threads=1 --skip community 2>&1 | tee ../out/panoply-cli-mcp-tests.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: drop-mcp-transcript
+          path: |
+            out/
+            out-*.log
+          retention-days: 14
