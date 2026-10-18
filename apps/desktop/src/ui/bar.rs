@@ -65,13 +65,6 @@ struct VisAnim {
     start: Option<Instant>,
 }
 
-/// Files are looked up for a typed query of two letters or more, when no files are dropped on the
-/// bar and the words were not read as a request ("make this under 50 kb"). A calculator answer
-/// does not stop it: "2024-10" may be a calculation or the name of a file.
-fn wants_file_search(no_files_on_bar: bool, query: &str, understood: bool) -> bool {
-    no_files_on_bar && query.trim().chars().count() >= 2 && !understood
-}
-
 /// CSS-style cubic bezier easing.
 fn bezier(c: (f64, f64, f64, f64), u: f64) -> f64 {
     if u <= 0.0 {
@@ -346,7 +339,7 @@ impl Bar {
     /// Files are looked up for a typed query of two letters or more, when no files are dropped on
     /// the bar and the words were not read as a request ("make this under 50 kb").
     fn wants_files(&self) -> bool {
-        wants_file_search(
+        search::wants_file_search(
             self.files.is_empty(),
             &self.query,
             self.results.understood.is_some(),
@@ -1675,28 +1668,5 @@ impl Render for Bar {
                 )
             })
             .into_any_element()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::search::Action;
-
-    #[test]
-    fn files_still_load_under_a_calculator_answer() {
-        // "2024-10" and "15% of 2400" are not answers the file index should be shut out of.
-        for q in ["2024-10", "2+2", "15% of 2400", "report"] {
-            assert!(wants_file_search(true, q, false), "query: {q}");
-        }
-        assert!(crate::calc::answer("15% of 2400").is_some());
-        assert!(matches!(
-            crate::calc::answer("2+2").map(|a| Action::CopyText { text: a.copy }),
-            Some(Action::CopyText { .. })
-        ));
-        // Unchanged: a request, a dropped file or one letter do not look up files.
-        assert!(!wants_file_search(true, "under 50 kb", true));
-        assert!(!wants_file_search(false, "report", false));
-        assert!(!wants_file_search(true, "r", false));
     }
 }
