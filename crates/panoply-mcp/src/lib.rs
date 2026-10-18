@@ -34,7 +34,10 @@ pub fn tool_for(manifest: &Manifest) -> Value {
                 "description": format!("Paths of the files to process. Accepts: {}.", manifest.accepts.join(", ")),
             }),
         );
-        required.push("files");
+        // A module with a "text" option can be given words instead of files.
+        if !manifest.options.contains_key("text") {
+            required.push("files");
+        }
     }
     if !manifest.outputs.is_empty() {
         props.insert(
