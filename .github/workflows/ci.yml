@@ -5,7 +5,11 @@ name: CI
 on:
   push:
     branches: [main]
+  # A draft pull request runs only the quick jobs (docs, fmt, clippy, licenses and the like). The test
+  # matrix and the module smoke run once the pull request is marked ready, so a work-in-progress push
+  # does not spend runner time or send a failure mail for every small fix.
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   # Weekly, so a new advisory against dependencies nobody touched still shows up, and so the
   # slow caches never go cold. A scheduled run always runs every job.
   schedule:
@@ -117,7 +121,7 @@ jobs:
   # side instead of one after the other.
   test:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && !github.event.pull_request.draft
     name: test (${{ matrix.os }}${{ matrix.shards && format(', part {0} of {1}', matrix.shard, matrix.shards) || '' }})
     strategy:
       fail-fast: false
@@ -292,7 +296,7 @@ jobs:
   # host and built as WebAssembly here; the tests in `test` then run the built modules for real.
   modules:
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: needs.changes.outputs.code == 'true' && !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
