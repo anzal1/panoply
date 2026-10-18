@@ -171,6 +171,9 @@
     drift('#sh-pwords', 0, 4.7, 1, 1.03);
     tl.fromTo('#sh-blue', { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.6, ease: 'power3.inOut' }, 4.1);
 
+    /* the wipe is opaque from 4.7 s: drop the covered words so nothing hides under the blue */
+    tl.set('#sh-pain', { opacity: 0 }, 4.71);
+
     /* result card, then the Share button pushed in to a third of the frame width */
     enter('#sh-hA', 4.45, { y: 34 });
     enter('#sh-plA', 4.45, { y: 40, s: 1.03, dur: 0.7 });
