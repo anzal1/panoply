@@ -1,4 +1,3 @@
-// Ported unchanged from the approved single-file page.
 (function(){
   var root = document.documentElement;
   var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -17,7 +16,7 @@
     btn.addEventListener('click', function(){
       var el = document.getElementById(btn.dataset.copy);
       var text = el.dataset.full || el.textContent;
-      function done(){ btn.textContent = 'Copied'; setTimeout(function(){ btn.textContent = 'Copy'; }, 1600); }
+      function done(){ btn.textContent = 'Copied'; btn.classList.add('ok'); setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1600); }
       function select(){ var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); }
       try { navigator.clipboard.writeText(text).then(done, select); } catch (e) { select(); }
     });
@@ -128,6 +127,53 @@
   if (still) { var s0 = SCENES[1]; chip.classList.add('on'); chip.querySelector('.fi').className = 'fi img'; chip.querySelector('.fi').innerHTML = ICONS.img; chip.querySelector('.fn').textContent = s0.file; chip.querySelector('.fs').textContent = s0.size; ph.hidden = true; typed.textContent = s0.ask; views.match.innerHTML = matchView(s0); show('match'); }
   else views.list.innerHTML = REST;
 
+  /* ---------- marble forms flying off the bust ---------- */
+  // [form, size % of the art width, rest x %, rest y %, tilt, depth, start x %, start y % on the fracture line]
+  var PIECES = [
+    [2, 5.4, 8, 50, -18, .6, 72, 30], [0, 6.7, 20, 38, 14, .8, 74, 22], [1, 7.4, 88, 64, 8, 1.1, 77, 58],
+    [3, 6.4, 30, 58, 10, .9, 70, 40],  [4, 4.8, 13, 66, -8, .6, 66, 55], [5, 7.4, 86, 34, 16, 1.2, 76, 30],
+    [6, 5.8, 38, 46, -10, .8, 70, 35], [7, 4.8, 25, 53, 22, .7, 68, 48], [8, 8.3, 41, 27, -6, 1, 73, 20],
+    [9, 7.0, 46, 64, 18, .9, 72, 60],  [10, 5.8, 50, 41, -26, 1, 74, 38], [11, 4.8, 81, 20, 18, 1.1, 75, 18],
+    [3, 3.5, 4, 40, 28, .5, 68, 42],  [2, 4.0, 93, 50, -28, .7, 78, 45]
+  ];
+  function piece(d, i){
+    var el = document.createElement('div'); el.className = 'pc';
+    el.style.left = d[2] + '%'; el.style.top = d[3] + '%'; el.style.width = d[1] + '%';
+    el.innerHTML = '<img src="/grain/forms/f' + d[0] + '.webp" alt="" decoding="async" style="--r:' + d[4] + 'deg;--t:' + (5.5 + (i * 37 % 50) / 10) + 's;--dl:-' + (i * .7).toFixed(1) + 's">';
+    return el;
+  }
+  var art = document.querySelector('.hero-art'), forms = art.querySelector('.forms'), pcs = [];
+  PIECES.forEach(function(d, i){ var el = piece(d, i); forms.appendChild(el); pcs.push({ el: el, d: d, lag: (i % 5) * .06 }); });
+  var AW = 0, AH = 0, mx = 0, my = 0, pa = 0;
+  function measure(){ AW = art.offsetWidth; AH = art.offsetHeight; }
+  function placePieces(){
+    pcs.forEach(function(p){
+      var d = p.d, k = still || !wide() ? 1 : clamp((pa - p.lag) / .7), e = 1 - Math.pow(1 - k, 3), prog = .14 + .86 * e;
+      var par = d[5] * 22, dx = (d[6] - d[2]) / 100 * AW * (1 - prog) + mx * par, dy = (d[7] - d[3]) / 100 * AH * (1 - prog) + my * par;
+      p.el.style.transform = 'translate(-50%,-50%) translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(' + (.35 + .65 * prog).toFixed(3) + ')';
+      p.el.style.opacity = Math.min(1, .2 + prog).toFixed(3);
+    });
+  }
+  var raf = 0;
+  if (matchMedia('(pointer:fine)').matches && !still) addEventListener('pointermove', function(e){
+    mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5;
+    if (!raf) raf = requestAnimationFrame(function(){ raf = 0; placePieces(); });
+  }, { passive: true });
+
+  // five forms settle around the app icon at the end
+  var orbit = document.querySelector('.get .orbit');
+  [[4, 30, -70, -20, -10], [0, 34, 150, -30, 12], [6, 26, -95, 60, 8], [10, 28, 170, 70, -20], [2, 22, 40, -85, 24]].forEach(function(d, i){
+    var el = piece([d[0], 0, 0, 0, d[4]], i + 3);
+    el.style.width = d[1] + 'px'; el.style.left = (48 + d[2]) + 'px'; el.style.top = (48 + d[3]) + 'px';
+    el.style.transform = 'translate(-50%,-50%) scale(.4)'; el.style.transitionDelay = (300 + i * 90) + 'ms';
+    orbit.appendChild(el);
+  });
+
+  // a soft light follows the pointer across each tile
+  document.querySelectorAll('.tile').forEach(function(t){
+    t.addEventListener('pointermove', function(e){ var r = t.getBoundingClientRect(); t.style.setProperty('--mx', (e.clientX - r.left) + 'px'); t.style.setProperty('--my', (e.clientY - r.top) + 'px'); });
+  });
+
   /* ---------- statement words ---------- */
   var para = document.querySelector('[data-words]'), words = [], lit = -1;
   if (para) {
@@ -166,13 +212,17 @@
     if (wide()) {
       var r = hero.getBoundingClientRect();
       var hp0 = clamp(-r.top / (r.height - vh));
-      hero.style.setProperty('--pc', Math.pow(hp0, 1.5).toFixed(4));
-      hero.style.setProperty('--pa', (1 - Math.pow(1 - hp0, 2)).toFixed(4));
+      // three beats: the copy and bar leave, then the bust rises, then the forms fly
+      hero.style.setProperty('--pc', clamp(hp0 / .32).toFixed(4));
+      var hb = clamp((hp0 - .22) / .78);
+      pa = 1 - Math.pow(1 - hb, 2);
+      hero.style.setProperty('--pa', pa.toFixed(4));
       var h = how.getBoundingClientRect(), hp = clamp(-h.top / (h.height - vh));
       setStep(hp < .36 ? 0 : hp < .7 ? 1 : 2);
       var a = appShot.getBoundingClientRect();
       appShot.style.setProperty('--q', clamp((vh - a.top) / (vh * .75)).toFixed(4));
-    } else { hero.style.removeProperty('--pc'); hero.style.removeProperty('--pa'); appShot.style.setProperty('--q', 1); }
+    } else { hero.style.removeProperty('--pc'); hero.style.removeProperty('--pa'); appShot.style.setProperty('--q', 1); pa = 1; }
+    placePieces();
     if (words.length) {
       var line = vh * .55, n = 0;
       if (still) n = words.length; else while (n < words.length && words[n].getBoundingClientRect().top < line) n++;
@@ -180,7 +230,8 @@
     }
   }
   addEventListener('scroll', update, { passive: true });
-  addEventListener('resize', update);
+  addEventListener('resize', function(){ measure(); update(); });
+  measure();
   update();
 
   /* ---------- entrances and small demos ---------- */
@@ -209,6 +260,7 @@
     el.classList.add('in');
     var c = el.querySelector('[data-count]'); if (c && !still) count(c);
     if (el.classList.contains('agent-tile') && !still) typeTerm();
+    if (el.classList.contains('orbit')) el.querySelectorAll('.pc').forEach(function(p){ p.style.transform = 'translate(-50%,-50%) scale(1)'; });
     if (el.classList.contains('offline')) setTimeout(function(){ var ok = el.querySelector('.ok'); ok.classList.add('fin'); ok.querySelector('.okt').innerHTML = 'passport.jpg resized, <em>now under 50 KB</em>'; }, still ? 0 : 2800);
   }
   function reveal(){

@@ -14,12 +14,16 @@ const {
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/product/icon.svg" />
-    <link rel="preload" as="image" href="/grain/hero2.webp" type="image/webp" />
+    <link rel="preload" as="image" href="/grain/bust.webp" type="image/webp" />
   </head>
   <body>
     <slot />
     <script>
+      import Lenis from "lenis";
+      import "lenis/dist/lenis.css";
       import "../scripts/site.js";
+      // Weighted, smooth scrolling; the page's scroll handlers keep working because Lenis drives the native scroll.
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) new Lenis({ autoRaf: true, anchors: { offset: -52 }, lerp: 0.1 });
     </script>
   </body>
 </html>
