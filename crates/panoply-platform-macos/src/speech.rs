@@ -198,6 +198,50 @@ pub fn pump_main_run_loop(seconds: f64) {
     }
 }
 
+/// The voice a key means, as an object to give the utterance, and how many voices the system
+/// listed on the last look.
+///
+/// The object comes from the same `speechVoices` list `voices()` shows, so every voice the list
+/// offers can be chosen. `voiceWithIdentifier:` answers nil for some listed voices (seen with
+/// the super-compact ones on a GitHub macOS runner), so it is only the fallback for a key the
+/// list does not hold, such as a language like `hi`. On that runner a voice that one process
+/// listed and spoke with was not found by the next process a second later, so the list is not
+/// stable early on (voice data still loading is the likely cause, not proven). A key that is not
+/// found is looked for again a few times, half a second apart, before it is refused. A real
+/// typo costs about two seconds.
+fn find_voice(key: &str, voice_class: &AnyClass) -> (Option<Retained<AnyObject>>, usize) {
+    // SAFETY: `pthread_main_np` takes no arguments and only reads thread state.
+    let on_main = unsafe { pthread_main_np() } != 0;
+    let mut seen = 0;
+    for attempt in 0..5 {
+        if attempt > 0 {
+            if on_main {
+                // Also lets the main queue run, which the system may need to finish loading.
+                pump_main_run_loop(0.5);
+            } else {
+                std::thread::sleep(Duration::from_millis(500));
+            }
+        }
+        let objects = voice_objects();
+        seen = objects.len();
+        let infos: Vec<Voice> = objects.iter().map(|o| voice_of(o)).collect();
+        if let Some(i) = pick_index(&infos, key) {
+            return (Some(objects[i].clone()), seen);
+        }
+        let ns_key = ns(key);
+        // SAFETY: both class methods take an NSString and return a nullable voice.
+        let found: Option<Retained<AnyObject>> = unsafe {
+            let by_id: Option<Retained<AnyObject>> =
+                msg_send![voice_class, voiceWithIdentifier: &*ns_key];
+            by_id.or_else(|| msg_send![voice_class, voiceWithLanguage: &*ns_key])
+        };
+        if found.is_some() {
+            return (found, seen);
+        }
+    }
+    (None, seen)
+}
+
 /// Renders `text` and hands every block of audio to `sink`, in order, on the calling thread.
 /// `sink` returns `false` to stop (a cancel): the synthesizer is told to stop and this returns
 /// `Ok` with what was delivered so far. Returns an error when no audio arrives for 30 seconds.
@@ -227,27 +271,10 @@ pub fn synthesize(
             let _: () = msg_send![&*utt, setRate: rate];
         }
         if let Some(v) = request.voice {
-            // The voice object comes from the same list `voices()` shows, so every voice the
-            // list offers can be chosen. `voiceWithIdentifier:` answers nil for some listed
-            // voices (seen with the super-compact ones on a GitHub macOS runner), so it is only
-            // the fallback for a key the list does not hold, such as a language like `hi`.
-            let objects = voice_objects();
-            let infos: Vec<Voice> = objects.iter().map(|o| voice_of(o)).collect();
-            let voice: Option<Retained<AnyObject>> = match pick_index(&infos, v) {
-                Some(i) => Some(objects[i].clone()),
-                None => {
-                    let key = ns(v);
-                    // SAFETY: both class methods take an NSString and return a nullable voice.
-                    unsafe {
-                        let by_id: Option<Retained<AnyObject>> =
-                            msg_send![voice_class, voiceWithIdentifier: &*key];
-                        by_id.or_else(|| msg_send![voice_class, voiceWithLanguage: &*key])
-                    }
-                }
-            };
+            let (voice, seen) = find_voice(v, voice_class);
             let Some(voice) = voice else {
                 return Err(Error::new(format!(
-                    "There is no voice called \"{v}\" on this Mac. Run the voice list to see the installed ones."
+                    "There is no voice called \"{v}\" on this Mac (the system lists {seen} voices). Run the voice list to see the installed ones."
                 )));
             };
             // SAFETY: `setVoice:` takes a voice.
