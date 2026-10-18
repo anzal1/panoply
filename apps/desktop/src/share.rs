@@ -422,6 +422,8 @@ pub enum EngineEvent {
     Listening {
         /// This computer's name on the network.
         alias: String,
+        /// The port the node listens on (the OS picks one when the config says 0).
+        port: u16,
     },
     /// The node could not start.
     NetFailed(Problem),
@@ -597,7 +599,7 @@ impl ShareModel {
     /// Change the model for one thing the engine said.
     pub fn apply(&mut self, ev: EngineEvent) {
         match ev {
-            EngineEvent::Listening { alias } => self.net = Net::On { alias },
+            EngineEvent::Listening { alias, .. } => self.net = Net::On { alias },
             EngineEvent::NetFailed(p) => self.net = Net::Failed(p),
             EngineEvent::Devices(d) => self.devices = d,
             EngineEvent::ScanFinished => self.scanned = true,
@@ -1125,7 +1127,10 @@ async fn run(
             return;
         }
     };
-    let _ = ev.unbounded_send(EngineEvent::Listening { alias: cfg.alias });
+    let _ = ev.unbounded_send(EngineEvent::Listening {
+        alias: cfg.alias,
+        port: node.local_addr().port(),
+    });
 
     // Device and transfer events, from the node to the screen.
     let mut events = node.subscribe();
@@ -1383,7 +1388,10 @@ mod tests {
     #[test]
     fn closing_the_screen_forgets_devices_and_prompts() {
         let mut m = model();
-        m.apply(EngineEvent::Listening { alias: "Me".into() });
+        m.apply(EngineEvent::Listening {
+            alias: "Me".into(),
+            port: 53317,
+        });
         m.apply(EngineEvent::Devices(vec![dev("a", "Mac mini")]));
         m.apply(EngineEvent::ScanFinished);
         m.apply(EngineEvent::Incoming(IncomingView {
@@ -1724,12 +1732,63 @@ mod tests {
 
     // ---- the engine, over loopback -----------------------------------------------------------
 
-    fn free_port() -> u16 {
-        std::net::TcpListener::bind("127.0.0.1:0")
-            .unwrap()
-            .local_addr()
-            .unwrap()
-            .port()
+    /// Wait for the engine to say it is listening and return the port the OS gave it. Tests ask for
+    /// port 0 and learn the real one here, so two tests (or two CI jobs) never fight over a port.
+    fn listening_port(rx: &mut UnboundedReceiver<EngineEvent>, m: &mut ShareModel) -> u16 {
+        let ev = pump(rx, m, |_, ev| matches!(ev, EngineEvent::Listening { .. }));
+        let EngineEvent::Listening { port, .. } = ev else {
+            unreachable!("pump returned the event it was waiting for")
+        };
+        port
+    }
+
+    /// Wait until the sender has found a device. The sweep runs once at start and again on every
+    /// rescan, so a slow runner that answered late is simply asked again every half second.
+    fn find_device(send: &Engine, rx: &mut UnboundedReceiver<EngineEvent>, m: &mut ShareModel) {
+        let end = Instant::now() + Duration::from_secs(10);
+        let mut asked = Instant::now();
+        while m.devices.is_empty() {
+            match rx.try_recv() {
+                Ok(ev) => m.apply(ev),
+                Err(futures::channel::mpsc::TryRecvError::Closed) => panic!("the engine stopped"),
+                Err(_) => {
+                    assert!(Instant::now() < end, "timed out waiting for a device");
+                    if asked.elapsed() > Duration::from_millis(500) {
+                        send.rescan();
+                        asked = Instant::now();
+                    }
+                    std::thread::sleep(Duration::from_millis(10));
+                }
+            }
+        }
+    }
+
+    type Pair = (
+        Engine,
+        UnboundedReceiver<EngineEvent>,
+        ShareModel,
+        Engine,
+        UnboundedReceiver<EngineEvent>,
+        ShareModel,
+    );
+
+    /// A receiver on a port the OS picks, then a sender that probes exactly that port and has
+    /// already found it. The receiver listens before the sender starts, so the sender's first sweep
+    /// cannot run too early.
+    fn pair(src: &Path, dst: &Path, receiving: bool) -> Pair {
+        let (recv, mut rrx) = Engine::start(loopback("Receiver", dst, 0, receiving, vec![]));
+        let mut rm = model();
+        let rport = listening_port(&mut rrx, &mut rm);
+        let (send, mut srx) = Engine::start(loopback(
+            "Sender",
+            src,
+            0,
+            false,
+            vec![std::net::SocketAddr::from(([127, 0, 0, 1], rport))],
+        ));
+        let mut sm = model();
+        find_device(&send, &mut srx, &mut sm);
+        (recv, rrx, rm, send, srx, sm)
     }
 
     /// Wait for an event the check likes, up to ten seconds, and keep the model in step.
@@ -1793,19 +1852,7 @@ mod tests {
         let payload = bytes(2 * 1024 * 1024 + 123);
         std::fs::write(src.join("photo.bin"), &payload).unwrap();
 
-        let rport = free_port();
-        let (_recv, mut rrx) = Engine::start(loopback("Receiver", &dst, rport, true, vec![]));
-        let (send, mut srx) = Engine::start(loopback(
-            "Sender",
-            &src,
-            0,
-            false,
-            vec![std::net::SocketAddr::from(([127, 0, 0, 1], rport))],
-        ));
-        let mut sm = model();
-        let mut rm = model();
-        pump(&mut rrx, &mut rm, |m, _| matches!(m.net, Net::On { .. }));
-        pump(&mut srx, &mut sm, |m, _| !m.devices.is_empty() && m.scanned);
+        let (_recv, mut rrx, mut rm, send, mut srx, mut sm) = pair(&src, &dst, true);
         assert_eq!(sm.devices[0].alias, "Receiver");
         assert!(empty_copy(&sm).is_none());
 
@@ -1870,18 +1917,7 @@ mod tests {
         let src = scratch("src2");
         let dst = scratch("dst2");
         std::fs::write(src.join("a.txt"), b"hello").unwrap();
-        let rport = free_port();
-        let (recv, mut rrx) = Engine::start(loopback("Receiver", &dst, rport, true, vec![]));
-        let (send, mut srx) = Engine::start(loopback(
-            "Sender",
-            &src,
-            0,
-            false,
-            vec![std::net::SocketAddr::from(([127, 0, 0, 1], rport))],
-        ));
-        let mut sm = model();
-        let mut rm = model();
-        pump(&mut srx, &mut sm, |m, _| !m.devices.is_empty());
+        let (recv, mut rrx, mut rm, send, mut srx, mut sm) = pair(&src, &dst, true);
         let id = sm.devices[0].id.clone();
         sm.stage_now(&[src.join("a.txt")]);
         sm.begin_send("Receiver");
@@ -1910,18 +1946,7 @@ mod tests {
         let src = scratch("src3");
         let dst = scratch("dst3");
         std::fs::write(src.join("a.txt"), b"hello").unwrap();
-        let rport = free_port();
-        let (recv, mut rrx) = Engine::start(loopback("Receiver", &dst, rport, false, vec![]));
-        let (send, mut srx) = Engine::start(loopback(
-            "Sender",
-            &src,
-            0,
-            false,
-            vec![std::net::SocketAddr::from(([127, 0, 0, 1], rport))],
-        ));
-        let (mut sm, mut rm) = (model(), model());
-        pump(&mut rrx, &mut rm, |m, _| matches!(m.net, Net::On { .. }));
-        pump(&mut srx, &mut sm, |m, _| !m.devices.is_empty());
+        let (recv, mut rrx, mut rm, send, mut srx, mut sm) = pair(&src, &dst, false);
         sm.begin_send("Receiver");
         send.send(&sm.devices[0].id.clone(), vec![src.join("a.txt")]);
         pump(&mut srx, &mut sm, |m, _| {
@@ -1943,10 +1968,9 @@ mod tests {
     #[test]
     fn a_dropped_engine_leaves_the_port_free() {
         let dst = scratch("dst4");
-        let port = free_port();
-        let (e, mut rx) = Engine::start(loopback("A", &dst, port, true, vec![]));
+        let (e, mut rx) = Engine::start(loopback("A", &dst, 0, true, vec![]));
         let mut m = model();
-        pump(&mut rx, &mut m, |m, _| matches!(m.net, Net::On { .. }));
+        let port = listening_port(&mut rx, &mut m);
         drop(e);
         // Nothing listens any more. The sockets close a moment after the drop (the server task
         // ends on its own schedule, and slower machines show it), so retry for up to two seconds.
