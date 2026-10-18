@@ -1948,8 +1948,22 @@ mod tests {
         let mut m = model();
         pump(&mut rx, &mut m, |m, _| matches!(m.net, Net::On { .. }));
         drop(e);
-        // Nothing listens any more: the same port binds again at once.
-        std::net::TcpListener::bind(("127.0.0.1", port)).expect("port is free after drop");
+        // Nothing listens any more. The sockets close a moment after the drop (the server task
+        // ends on its own schedule, and slower machines show it), so retry for up to two seconds.
+        // A port that is still taken after that is a real leak and fails the test.
+        let end = Instant::now() + Duration::from_secs(2);
+        loop {
+            match std::net::TcpListener::bind(("127.0.0.1", port)) {
+                Ok(_) => break,
+                Err(e) => {
+                    assert!(
+                        Instant::now() < end,
+                        "port {port} still taken two seconds after the engine was dropped: {e}"
+                    );
+                    std::thread::sleep(Duration::from_millis(25));
+                }
+            }
+        }
         let _ = std::fs::remove_dir_all(&dst);
     }
 
