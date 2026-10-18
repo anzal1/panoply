@@ -3,6 +3,7 @@
 //! The logic (catalog, search, forms, jobs, history) has no UI types and is tested on its own.
 //! The GPUI views in `ui` draw it, and nothing in them is specific to any module.
 
+pub mod calc;
 pub mod catalog;
 pub mod disk_review;
 pub mod downloads;
@@ -17,6 +18,7 @@ pub mod paths;
 pub mod profile;
 pub mod result_view;
 pub mod search;
+pub mod share;
 pub mod units;
 pub mod window_state;
 
@@ -38,6 +40,16 @@ pub fn run_from_args(args: Vec<String>) {
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|| std::path::PathBuf::from("screens"));
             selfcheck::run_find(out);
+            return;
+        }
+        if args.iter().any(|a| a == "--selfcheck-share") {
+            let out = args
+                .iter()
+                .position(|a| a == "--out")
+                .and_then(|i| args.get(i + 1))
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| std::path::PathBuf::from("screens"));
+            selfcheck::run_share(out);
             return;
         }
         if args.iter().any(|a| a == "--selfcheck-idle") {

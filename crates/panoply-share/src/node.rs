@@ -174,7 +174,11 @@ impl NodeConfig {
     pub fn new(alias: impl Into<String>) -> Self {
         NodeConfig {
             alias: alias.into(),
-            device_model: Some(std::env::consts::OS.to_string()),
+            device_model: Some(format!(
+                "{}{}",
+                crate::proto::PANOPLY_MODEL_PREFIX,
+                crate::proto::os_label()
+            )),
             device_type: DeviceType::Desktop,
             scheme: Scheme::Https,
             bind: IpAddr::V4(Ipv4Addr::UNSPECIFIED),
@@ -266,6 +270,24 @@ pub(crate) struct Shared {
     pub local_addr: SocketAddr,
 }
 
+/// Most devices remembered at once. A network where thousands of fake announcements arrive must not
+/// grow this map, and so the device list, without bound.
+pub(crate) const MAX_DEVICES: usize = 256;
+
+/// Drop the devices heard from longest ago until at most `max` are left.
+pub(crate) fn evict_oldest(map: &mut HashMap<String, Device>, max: usize) {
+    while map.len() > max {
+        let Some(oldest) = map
+            .iter()
+            .min_by_key(|(_, d)| d.last_seen)
+            .map(|(k, _)| k.clone())
+        else {
+            return;
+        };
+        map.remove(&oldest);
+    }
+}
+
 impl Shared {
     /// Our own description. `announce` is set only for multicast messages.
     pub fn info(&self, announce: Option<bool>) -> DeviceInfo {
@@ -322,6 +344,7 @@ impl Shared {
                 None => true,
             };
             map.insert(dev.info.fingerprint.clone(), dev.clone());
+            evict_oldest(&mut map, MAX_DEVICES);
             changed
         };
         if changed {
@@ -575,5 +598,40 @@ impl Node {
         if let Some(r) = &self.shared.receive {
             r.cancel_all();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn dev(n: u64) -> Device {
+        Device {
+            info: DeviceInfo {
+                alias: format!("d{n}"),
+                version: "2.1".into(),
+                device_model: None,
+                device_type: None,
+                fingerprint: format!("fp{n}"),
+                port: None,
+                protocol: None,
+                download: None,
+                announce: None,
+            },
+            addr: IpAddr::V4(Ipv4Addr::LOCALHOST),
+            last_seen: SystemTime::UNIX_EPOCH + Duration::from_secs(n),
+        }
+    }
+
+    #[test]
+    fn the_device_map_drops_the_longest_unheard_first() {
+        let mut map = HashMap::new();
+        for n in 0..(MAX_DEVICES as u64 + 40) {
+            map.insert(format!("fp{n}"), dev(n));
+            evict_oldest(&mut map, MAX_DEVICES);
+        }
+        assert_eq!(map.len(), MAX_DEVICES);
+        assert!(!map.contains_key("fp0") && !map.contains_key("fp39"));
+        assert!(map.contains_key("fp40") && map.contains_key(&format!("fp{}", MAX_DEVICES + 39)));
     }
 }

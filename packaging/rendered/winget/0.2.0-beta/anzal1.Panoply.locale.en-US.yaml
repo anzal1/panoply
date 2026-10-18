@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
+PackageIdentifier: anzal1.Panoply
+PackageVersion: '0.2.0-beta'
+PackageLocale: en-US
+Publisher: Panoply contributors
+PublisherUrl: https://github.com/anzal1/panoply
+PublisherSupportUrl: https://github.com/anzal1/panoply/issues
+PackageName: Panoply
+PackageUrl: https://github.com/anzal1/panoply
+License: MIT OR Apache-2.0
+LicenseUrl: https://github.com/anzal1/panoply/blob/main/LICENSE-MIT
+ShortDescription: Every file tool in one fast app, running on your own computer.
+Description: Panoply puts PDF, image, audio and video tools, and a universal file converter, in one open-source app and a command line tool. Nothing is uploaded; everything runs on your computer.
+Moniker: panoply
+Tags:
+  - converter
+  - file-tools
+  - image
+  - pdf
+  - utility
+ReleaseNotesUrl: https://github.com/anzal1/panoply/releases/tag/v0.2.0-beta
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

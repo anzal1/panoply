@@ -136,7 +136,7 @@ impl Module for TtsModule {
                     out.file_in(dir, &format!("{name}.wav"))?
                 }
             };
-            let part = pending.part_path().to_path_buf();
+            let part = pending.temp_path().to_path_buf();
             let share = |f: f32| (k as f32 + f) / n as f32;
             let mut progress = |f: f32, l: &str| ctx.progress(share(f), l.to_string());
             let report =

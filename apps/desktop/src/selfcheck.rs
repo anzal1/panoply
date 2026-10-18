@@ -24,7 +24,9 @@ use crate::ui::live::{app_window_options_at, bar_window_options};
 use crate::ui::{FindStatus, Hub, Recents};
 
 mod find;
+mod share;
 pub(crate) use find::run_find;
+pub(crate) use share::run_share;
 
 /// The file index parts of a hub for runs that do not look at files: switched off, so nothing
 /// ever scans and the bar and Find page show their "unavailable" state.
@@ -1161,6 +1163,52 @@ pub(crate) fn run_review(out: PathBuf) {
                     &mut log,
                     &mut times,
                 );
+                d.change(bar, |b, window, cx| b.set_query("15% of 2400", window, cx));
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-calc",
+                    &file("bar-calc"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, window, cx| b.set_query("72 f to c", window, cx));
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-calc-convert",
+                    &file("bar-calc-convert"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, window, cx| {
+                    b.set_query(
+                        "(1234567 + 7654321) * 3.14159 / 2 - 15% of 9876543 + sqrt(2) * 1000 + 2^10 + 100 + 200 + 300 + 400 + 500 + 600 + 700 + 800 + 900 + 1000 + 1100 + 1200 + 1300 + 1400",
+                        window,
+                        cx,
+                    )
+                });
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-calc-long",
+                    &file("bar-calc-long"),
+                    &mut log,
+                    &mut times,
+                );
+                d.change(bar, |b, window, cx| b.set_query("merge pdf", window, cx));
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-calc-skip",
+                    &file("bar-calc-skip"),
+                    &mut log,
+                    &mut times,
+                );
                 d.change(bar, |b, window, cx| b.set_query("zzzqx", window, cx));
                 d.settle(bar).await;
                 shot(
@@ -1500,13 +1548,13 @@ pub(crate) fn run_review(out: PathBuf) {
                     &mut log,
                     &mut times,
                 );
-                d.change(app_win, |a, _, cx| a.go(Route::Nearby, cx));
+                d.change(app_win, |a, _, cx| a.go(Route::Share, cx));
                 d.settle(app_win).await;
                 shot(
                     &mut d,
                     app_win,
-                    "app-nearby",
-                    &file("app-nearby"),
+                    "app-share",
+                    &file("app-share"),
                     &mut log,
                     &mut times,
                 );

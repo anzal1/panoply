@@ -37,7 +37,7 @@ pub mod zip;
 pub use error::{Error, Result};
 pub use identity::Identity;
 pub use node::{Device, Direction, Event, Node, NodeConfig, TransferEvent, TransferKind};
-pub use proto::{DeviceInfo, DeviceType, Scheme};
+pub use proto::{DeviceInfo, DeviceType, Scheme, is_panoply};
 pub use receive::{
     Decision, IncomingFile, IncomingRequest, ReceiveConfig, ReceiveHandler, ReceiveMode,
     accept_all_handler, decline_all_handler, handler_fn,
