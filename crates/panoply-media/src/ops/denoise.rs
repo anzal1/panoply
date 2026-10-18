@@ -34,10 +34,13 @@ use super::{Job, with_name};
 pub const MODEL_RATE: u32 = 48_000;
 /// Samples the model takes per call, per channel (10 ms).
 pub const FRAME: usize = DenoiseState::FRAME_SIZE;
-/// Frames the model is primed on before it starts for real: the first two seconds are run
-/// through it once and the output thrown away, so a noise-only lead-in is cleaned as well as the
-/// noise after a voice. The cost is a fixed two seconds of samples held per channel.
-pub const WARM_UP: usize = 2 * MODEL_RATE as usize;
+/// Frames the model is primed on before it starts for real: the first ten seconds (the whole
+/// stream when it is shorter) are run through it once and the output thrown away, so a
+/// noise-only lead-in is cleaned as well as the noise after a voice. The first ten seconds are
+/// held back per channel before any output is written, about 1.9 MB a channel, however long the
+/// file is. Priming always uses exactly these frames, so the result does not depend on how the
+/// stream was cut into pieces.
+pub const WARM_UP: usize = 10 * MODEL_RATE as usize;
 /// The model wants samples on the scale of 16-bit integers.
 const SCALE: f32 = 32768.0;
 
@@ -697,7 +700,7 @@ mod tests {
         let lead_min = rows.iter().map(|r| r.1).fold(f64::MAX, f64::min);
         let lead_mean = rows.iter().map(|r| r.1).sum::<f64>() / rows.len() as f64;
         eprintln!("lead-in: min {lead_min:.1} dB, mean {lead_mean:.1} dB");
-        // The model starts from the first two seconds of this very noise, and what it makes of
+        // The model starts from the first ten seconds of this very noise, and what it makes of
         // steady synthetic noise varies a little with the noise itself.
         assert!(lead_min >= 9.0, "lead-in minimum {lead_min:.1} dB");
         assert!(lead_mean >= 12.0, "lead-in mean {lead_mean:.1} dB");
