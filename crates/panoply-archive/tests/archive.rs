@@ -207,7 +207,8 @@ fn skipped_names(r: &ExtractReport) -> Vec<&str> {
     r.skipped.iter().map(|s| s.name.as_str()).collect()
 }
 
-/// Every link under `root` must resolve inside `root`.
+/// Every link under `root` must resolve inside `root`. Only the unix link tests use it.
+#[cfg(unix)]
 fn assert_no_escape(root: &Path) {
     for (name, _) in tree(root) {
         if let Some((link, _)) = name.split_once(" -> ") {
