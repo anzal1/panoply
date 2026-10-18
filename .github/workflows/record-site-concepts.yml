@@ -27,7 +27,7 @@ jobs:
           sleep 2 && curl -sf http://localhost:8080/05-panoply/index.html >/dev/null
       - name: Record
         working-directory: site-concepts/_record
-        env: { OUT: ../../out, BASE: 'http://localhost:8080', ONLY: '05-panoply' }
+        env: { OUT: ../../out, BASE: 'http://localhost:8080' }
         run: node record.mjs
       - uses: actions/upload-artifact@v4
         if: always()

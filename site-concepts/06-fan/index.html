@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Panoply: every file tool, in one fan</title>
+<meta name="description" content="Panoply is a free, open-source app with 37 file tools for PDFs, photos, video and audio. Everything runs on your computer and nothing is uploaded.">
+<meta name="theme-color" content="#E9EAEE">
+<link rel="preload" href="fonts/Geist-Variable-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="bar.css">
+<style>
+@font-face{font-family:Geist;src:url(fonts/Geist-Variable-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url(fonts/GeistMono-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}
+:root{
+  --ink:#17181B;--mute:#6B6F7A;--blue:#2D6CDF;--bg:#E9EAEE;
+  --bar-bg:rgba(255,255,255,.8);--bar-ink:#17181B;--bar-mute:#6B6F7A;--bar-line:rgba(23,24,27,.1);--bar-accent:#2D6CDF;
+  --bar-shadow:0 30px 70px -28px rgba(22,30,60,.35);
+}
+*{box-sizing:border-box;margin:0}
+html{background:var(--bg);scroll-behavior:auto}
+body{font-family:Geist,system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0;touch-action:none;pointer-events:none}
+#track{height:700vh;width:1px;position:relative;z-index:0}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:20px 32px}
+.brand{display:flex;gap:10px;align-items:center;font-weight:600;font-size:18px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.brand svg{width:26px;height:26px;display:block}
+.links{display:flex;gap:26px;align-items:center;font-size:14px;font-weight:500}
+.links a{color:var(--mute);text-decoration:none;transition:color .2s}
+.links a:hover{color:var(--ink)}
+.links a.dl,.btn{background:var(--ink);color:#fff;padding:9px 16px;border-radius:999px;font-weight:500;text-decoration:none;display:inline-block;transition:background .2s}
+.links a.dl:hover,.btn:hover{background:#2B2D33;color:#fff}
+
+.hero{position:fixed;left:0;right:0;top:clamp(76px,12.5vh,148px);z-index:4;pointer-events:none;text-align:center;padding:0 20px}
+.hero .blk{position:absolute;left:0;right:0;top:0;padding:0 20px;will-change:opacity,transform}
+.hero h1,.hero h2{font-weight:600;font-size:clamp(30px,5.2vw,76px);line-height:1.03;letter-spacing:-.045em;color:var(--ink);text-wrap:balance;max-width:16em;margin:0 auto}
+.hero .btn{margin-top:20px;font-size:16px;padding:12px 22px;pointer-events:auto}
+#h2{visibility:hidden;opacity:0}
+
+#bar{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:8}
+
+.hint{position:fixed;left:32px;bottom:34px;z-index:5;font:500 12px "Geist Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);pointer-events:none}
+
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+
+@media(max-width:720px){
+  nav{padding:14px 16px}
+  .links{gap:14px;font-size:13px}
+  .links a:not(.dl){display:none}
+  .hint{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="fan" viewBox="0 0 544 544"><rect x="167.668" y="65.569" width="210.241" height="378.435" rx="45.552" transform="rotate(-20 272.788 612.197)" fill="#727884"/><rect x="167.668" y="65.569" width="210.241" height="378.435" rx="45.552" transform="rotate(20 272.788 612.197)" fill="#808692"/><rect x="167.668" y="65.569" width="210.241" height="378.435" rx="45.552" fill="#2D6CDF"/></symbol></defs></svg>
+
+<canvas id="c" aria-hidden="true"></canvas>
+
+<nav aria-label="Main">
+  <a class="brand" href="#top"><svg aria-hidden="true"><use href="#fan"/></svg>Panoply</a>
+  <div class="links"><a href="#tools">Tools</a><a href="#mcp">MCP</a><a href="#plugins">Plugins</a><a href="#github">GitHub</a><a class="dl" href="#download">Download</a></div>
+</nav>
+
+<div class="hero">
+  <div class="blk" id="h1"><h1>Every file tool, in one fan.</h1></div>
+  <div class="blk" id="h2"><h2>Free. Open source. On your computer.</h2><a class="btn" href="#download">Download</a></div>
+</div>
+
+<div class="hint" id="hint">Scroll</div>
+<div id="bar"></div>
+
+<main id="track" aria-hidden="true"></main>
+
+<section class="sr" aria-label="All tools">
+<h2>37 file tools</h2>
+<ul>
+<li>Compress PDF</li>
+<li>Merge PDF</li>
+<li>Split PDF</li>
+<li>Redact PDF</li>
+<li>Organize PDF pages</li>
+<li>PDF to images</li>
+<li>Images to PDF</li>
+<li>OCR</li>
+<li>Hash files</li>
+<li>Zip</li>
+<li>Unzip</li>
+<li>Instant file search</li>
+<li>Disk map</li>
+<li>Share to phones</li>
+<li>Passport photo</li>
+<li>Print sheet</li>
+<li>Signature cleaner</li>
+<li>Resize to exact KB</li>
+<li>Compress image</li>
+<li>Resize image</li>
+<li>Convert image</li>
+<li>Remove background</li>
+<li>Remove watermark</li>
+<li>Erase object</li>
+<li>Upscale</li>
+<li>Strip metadata</li>
+<li>Image to text</li>
+<li>Compress video</li>
+<li>Convert video or audio</li>
+<li>Trim video or audio</li>
+<li>Extract audio</li>
+<li>Noise removal</li>
+<li>Text to speech</li>
+<li>Normalize loudness</li>
+<li>HDR to SDR</li>
+<li>Repair video</li>
+<li>Stereo to mono</li>
+</ul>
+</section>
+
+<script type="module" src="scene.js"></script>
+</body>
+</html>

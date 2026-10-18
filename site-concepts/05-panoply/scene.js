@@ -8,7 +8,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: !REC && !phone, po
 renderer.setPixelRatio(Math.min(devicePixelRatio || 1, phone ? 1.5 : 2));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+renderer.toneMappingExposure = 1.05;
 if (!phone) { renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; }
 
 const BG = 0x0a0806;
@@ -20,15 +20,15 @@ const CX = 0, CZ = 8;               // centre of the hanging arcs
 const ZBASE = phone ? 11.5 : 8;     // camera rest distance
 
 // ---------- light: a museum, one warm key, a cool fill, a dim room ----------
-scene.add(new THREE.HemisphereLight(0x4a4236, 0x0a0806, 0.9));
-const key = new THREE.SpotLight(0xffe2b8, 5200, 0, 0.62, 0.85, 2);
+scene.add(new THREE.HemisphereLight(0x3a342a, 0x0a0806, 0.55));
+const key = new THREE.SpotLight(0xffe2b8, 2100, 0, 0.62, 0.9, 2);
 key.position.set(-6, 15, 19); key.target.position.set(0, 0, -2);
 scene.add(key, key.target);
 if (!phone) {
   key.castShadow = true; key.shadow.mapSize.set(REC ? 1024 : 2048, REC ? 1024 : 2048);
   key.shadow.bias = -0.0005; key.shadow.normalBias = 0.03; key.shadow.camera.near = 6; key.shadow.camera.far = 70; key.shadow.radius = 5;
 }
-const fill = new THREE.SpotLight(0xb9ccff, 1100, 0, 0.7, 1, 2);
+const fill = new THREE.SpotLight(0xb9ccff, 520, 0, 0.7, 1, 2);
 fill.position.set(10, 8, 18); fill.target.position.set(0, 1, -4);
 scene.add(fill, fill.target);
 
@@ -84,7 +84,7 @@ function faceTexture(canvasEl) {
   t.repeat.set(1 / CW, 1 / CH); t.offset.set(0.5, 0.5); return t;
 }
 function faceMaterial(tex) {
-  return new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.55, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.4, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.1 });
+  return new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.6, metalness: 0, clearcoat: 0.3, clearcoatRoughness: 0.4, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.1 });
 }
 const wireGeo = new THREE.BufferGeometry().setFromPoints([
   new THREE.Vector3(-CW * 0.38, CH / 2, 0), new THREE.Vector3(-CW * 0.38, CH / 2 + 14, 0),
@@ -95,7 +95,7 @@ const cards = [];
 const Qz = new THREE.Quaternion(), V = new THREE.Vector3(), V2 = new THREE.Vector3(), Q = new THREE.Quaternion(), E = new THREE.Euler();
 function buildCards() {
   // three tiers, like an amphitheatre of hanging plates: near and low, far and high
-  const tiers = [{ r: 7, n: 9, y: -0.9, sc: 1.0 }, { r: 11, n: 12, y: 0.9, sc: 1.25 }, { r: 15, n: 16, y: 2.4, sc: 1.5 }];
+  const tiers = [{ r: 9.5, n: 9, y: -0.7, sc: 1.0 }, { r: 14.5, n: 12, y: 1.0, sc: 1.4 }, { r: 20, n: 16, y: 2.5, sc: 1.85 }];
   let idx = 0;
   tiers.forEach((tr, ti) => {
     const span = 2.5, off = ti % 2 ? 0.5 : 0;
@@ -173,7 +173,7 @@ const ease3 = u => (u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
 const kp = RM ? 14 : 3.0;
 
 function frame() {
-  const dt = Math.min(clock.getDelta(), 0.05); T += dt;
+  const dt = Math.min(clock.getDelta(), REC ? 0.3 : 0.05); T += dt;
   const amp = RM ? 0 : 1;
   px = damp(px, tpx, 2, dt); py = damp(py, tpy, 2, dt);
   camera.position.set(Math.sin(T * 0.06) * 1.7 * amp + px * 0.5, 0.35 + Math.sin(T * 0.045) * 0.22 * amp - py * 0.25, ZBASE + Math.sin(T * 0.035) * 0.7 * amp);
@@ -196,13 +196,13 @@ function frame() {
     V.copy(c.home.pos); V2.copy(V).sub(cpos).normalize(); V.addScaledVector(V2, 4.5 * sstep(0, 1, c.rec));
     // pulled pose, in front of the camera
     const n = lastN, off = (c.rank - (n - 1) / 2) * SP;
-    const pulled = V2.copy(cpos).addScaledVector(fwd, D + (isChosen ? -0.3 : 0)).addScaledVector(right, off).addScaledVector(up, YL);
+    const pulled = V2.copy(cpos).addScaledVector(fwd, D + (isChosen ? -0.3 : 0)).addScaledVector(right, phone ? 0 : off).addScaledVector(up, phone ? YL - off * 0.95 : YL);
     c.grp.position.copy(V).lerp(pulled, e);
     E.set(0, 0, off * 0.02);
     Q.copy(camera.quaternion).multiply(Qz.setFromEuler(E));
     c.grp.quaternion.copy(c.home.quat).slerp(Q, e);
     c.grp.rotateZ(sway);
-    c.grp.scale.setScalar(lerp(c.home.scale, (phone ? 0.78 : 0.95) * (isChosen ? 1.22 : 1), e) * (1 - 0.05 * c.rec));
+    c.grp.scale.setScalar(lerp(c.home.scale, (phone ? 0.95 : 0.95) * (isChosen ? 1.22 : 1), e) * (1 - 0.05 * c.rec));
     const dim = 1 - 0.74 * sstep(0, 1, c.rec);
     c.face.color.setScalar(dim);
     c.face.emissiveIntensity = 0.1 * dim + c.glow;

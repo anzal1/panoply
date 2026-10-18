@@ -1,0 +1,14 @@
+/* Bar theme: set --bar-bg --bar-ink --bar-mute --bar-line --bar-accent --bar-shadow on the page. */
+.pbar{width:min(680px,calc(100vw - 32px));font-family:Geist,system-ui,sans-serif;color:var(--bar-ink,#17181B);-webkit-font-smoothing:antialiased}
+.pbar-in{display:flex;align-items:center;gap:14px;padding:0 14px 0 20px;height:64px;border-radius:20px;background:var(--bar-bg,#fff);border:1px solid var(--bar-line,#E1E2E7);box-shadow:var(--bar-shadow,0 30px 70px -28px rgba(22,30,60,.35));backdrop-filter:blur(18px) saturate(1.2);-webkit-backdrop-filter:blur(18px) saturate(1.2);transition:box-shadow .4s,border-color .4s}
+.pbar-in:focus-within,body.dragging .pbar-in{border-color:var(--bar-accent,#2D6CDF);box-shadow:var(--bar-shadow),0 0 0 4px color-mix(in srgb,var(--bar-accent,#2D6CDF) 22%,transparent)}
+.pbar-in svg{width:22px;height:22px;stroke:var(--bar-mute,#6B6F7A);fill:none;stroke-width:2;flex:none}
+.pbar-in input[type=text]{flex:1;min-width:0;border:0;outline:0;background:none;color:inherit;font:500 24px Geist,system-ui,sans-serif;letter-spacing:-.02em}
+.pbar-in input::placeholder{color:var(--bar-mute,#6B6F7A);opacity:.75}
+.pbar-file{font:500 13px "Geist Mono",monospace;background:color-mix(in srgb,var(--bar-ink,#17181B) 9%,transparent);padding:6px 10px;border-radius:9px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pbar-add{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--bar-mute);font:500 22px Geist;background:color-mix(in srgb,var(--bar-ink,#17181B) 7%,transparent);flex:none}
+.pbar-res{display:flex;gap:8px;justify-content:center;margin-top:12px;min-height:34px;flex-wrap:wrap}
+.pbar-res button{font:500 14px Geist,sans-serif;color:var(--bar-ink);background:var(--bar-bg);border:1px solid var(--bar-line);border-radius:999px;padding:7px 14px;cursor:pointer;opacity:.8;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.pbar-res button.on{opacity:1;border-color:var(--bar-accent);color:var(--bar-ink)}
+.pbar-note{text-align:center;font:500 12px "Geist Mono",monospace;letter-spacing:.06em;color:var(--bar-mute);margin-top:6px;min-height:16px}
+@media(max-width:720px){.pbar-in{height:56px;padding-left:16px}.pbar-in input[type=text]{font-size:18px}.pbar-res button:nth-child(n+3){display:none}}
