@@ -348,6 +348,11 @@ jobs:
         run: |
           python3 -I packaging/mcpb/build_mcpb.py --version "${{ needs.plan.outputs.version }}" \
             --platform ${{ matrix.platform }} --id ${{ matrix.id }} --stage stage --out dist
+      # Run the bundle's own server (the one leg this runner can execute) and compare what it serves with the
+      # manifest, so the tool list and count in the bundle are what `panoply mcp` really offers.
+      - name: Check the manifest against the running server
+        if: matrix.id == 'linux-x64'
+        run: python3 -I packaging/mcpb/check_served.py "dist/panoply-mcp-${{ needs.plan.outputs.version }}-linux-x64.mcpb"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pkg-mcpb-${{ matrix.id }}

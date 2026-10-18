@@ -25,8 +25,13 @@ ROOT = HERE.parents[1]
 
 
 def module_tools():
-    """(tool name, summary) for every built-in and shipped community module, sorted by name."""
+    """(tool name, summary) for every built-in and shipped community module, sorted by name.
+
+    Must equal what `panoply mcp` serves from a release bundle: packaging/mcpb/check_served.py proves it."""
     folders = sorted((ROOT / "modules" / "builtin").iterdir())
+    # files.hash is a built-in too, but its manifest lives with the examples (crates/panoply-host/src/builtin/hash.rs
+    # includes it from there), not in modules/builtin.
+    folders.append(ROOT / "modules" / "examples" / "hash")
     shipped = [
         l.split()[0]
         for l in (ROOT / "modules" / "shipped.txt").read_text().splitlines()
