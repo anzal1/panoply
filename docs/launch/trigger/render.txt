@@ -1,2 +1,2 @@
 drops/bar-answers looks 60
-# bar-answers: caption swaps on the clear frame
+# bar-answers: clear and caption swap on the same frame

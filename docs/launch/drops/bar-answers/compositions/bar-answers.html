@@ -179,7 +179,7 @@
       const A_END = type('A', A0, A_STEP);
       land_body('A', A_END);
       swapCap('#capA1', '#capA2', 7.1);
-      clear('A', 8.4);
+      clear('A', 8.4 - F);
 
       /* B: "72 f to c" */
       const B0 = 8.5, B_STEP = 0.095;
@@ -187,7 +187,7 @@
       const B_END = type('B', B0, B_STEP);
       land_body('B', B_END);
       swapCap('#capB1', '#capB2', 10.0);
-      clear('B', 11.2);
+      clear('B', 11.2 - F);
 
       /* C: "merge pdf", a tool, not a number */
       const C0 = 11.3, C_STEP = 0.095;
