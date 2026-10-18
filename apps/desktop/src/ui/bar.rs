@@ -65,6 +65,13 @@ struct VisAnim {
     start: Option<Instant>,
 }
 
+/// Files are looked up for a typed query of two letters or more, when no files are dropped on the
+/// bar and the words were not read as a request ("make this under 50 kb"). A calculator answer
+/// does not stop it: "2024-10" may be a calculation or the name of a file.
+fn wants_file_search(no_files_on_bar: bool, query: &str, understood: bool) -> bool {
+    no_files_on_bar && query.trim().chars().count() >= 2 && !understood
+}
+
 /// CSS-style cubic bezier easing.
 fn bezier(c: (f64, f64, f64, f64), u: f64) -> f64 {
     if u <= 0.0 {
@@ -339,17 +346,11 @@ impl Bar {
     /// Files are looked up for a typed query of two letters or more, when no files are dropped on
     /// the bar and the words were not read as a request ("make this under 50 kb").
     fn wants_files(&self) -> bool {
-        self.files.is_empty()
-            && self.query.trim().chars().count() >= 2
-            && self.results.understood.is_none()
-            && !self.selected_is_copy()
-    }
-
-    /// True when the top row is a calculator answer, which Return copies.
-    fn selected_is_copy(&self) -> bool {
-        self.results
-            .rows()
-            .any(|r| matches!(r.action, Action::CopyText { .. }))
+        wants_file_search(
+            self.files.is_empty(),
+            &self.query,
+            self.results.understood.is_some(),
+        )
     }
 
     /// Ask the index for files on a worker and put them under the tools when it answers. The tool
@@ -1025,7 +1026,12 @@ impl Bar {
                     .flex_none()
                     .whitespace_nowrap()
                     .ramp(ty::BODY)
-                    .font_weight(FontWeight::MEDIUM)
+                    .font_weight(if matches!(r.action, Action::CopyText { .. }) {
+                        // The answer reads at the weight of a matched tool name.
+                        FontWeight::SEMIBOLD
+                    } else {
+                        FontWeight::MEDIUM
+                    })
                     .text_color(t.ink)
                     .child(Self::highlighted(&r.title, &r.matched)),
             )
@@ -1669,5 +1675,28 @@ impl Render for Bar {
                 )
             })
             .into_any_element()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::search::Action;
+
+    #[test]
+    fn files_still_load_under_a_calculator_answer() {
+        // "2024-10" and "15% of 2400" are not answers the file index should be shut out of.
+        for q in ["2024-10", "2+2", "15% of 2400", "report"] {
+            assert!(wants_file_search(true, q, false), "query: {q}");
+        }
+        assert!(crate::calc::answer("15% of 2400").is_some());
+        assert!(matches!(
+            crate::calc::answer("2+2").map(|a| Action::CopyText { text: a.copy }),
+            Some(Action::CopyText { .. })
+        ));
+        // Unchanged: a request, a dropped file or one letter do not look up files.
+        assert!(!wants_file_search(true, "under 50 kb", true));
+        assert!(!wants_file_search(false, "report", false));
+        assert!(!wants_file_search(true, "r", false));
     }
 }

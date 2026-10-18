@@ -1181,6 +1181,22 @@ pub(crate) fn run_review(out: PathBuf) {
                     &mut log,
                     &mut times,
                 );
+                d.change(bar, |b, window, cx| {
+                    b.set_query(
+                        "(1234567 + 7654321) * 3.14159 / 2 - 15% of 9876543 + sqrt(2) * 1000 + 2^10 + 100 + 200 + 300 + 400 + 500 + 600 + 700 + 800 + 900 + 1000 + 1100 + 1200 + 1300 + 1400",
+                        window,
+                        cx,
+                    )
+                });
+                d.settle(bar).await;
+                shot(
+                    &mut d,
+                    bar,
+                    "bar-calc-long",
+                    &file("bar-calc-long"),
+                    &mut log,
+                    &mut times,
+                );
                 d.change(bar, |b, window, cx| b.set_query("merge pdf", window, cx));
                 d.settle(bar).await;
                 shot(

@@ -736,7 +736,7 @@ mod tests {
         let c = cat();
         for (q, shown, copy) in [
             ("15% of 48000", "7,200", "7200"),
-            ("500 kb in mb", "0.5 MB", "0.5 MB"),
+            ("500 kb in mb", "0.5 MB", "0.5"),
         ] {
             let r = search(&cx(&c, &[], &[]), q);
             let top = r.get(0).unwrap();

@@ -26,21 +26,27 @@ pub fn answer(query: &str) -> Option<Answer> {
     if q.is_empty() || q.len() > 200 || looks_like_a_date_or_number_id(q) {
         return None;
     }
+    let asked = q.to_string();
+    let stripped = strip_thousands(q);
+    let q = stripped.as_str();
     if let Some(v) = evaluate(q) {
         return Some(Answer {
             shown: group(&fmt(v, 10)),
             copy: fmt(v, 12),
-            asked: q.to_string(),
+            asked,
         });
     }
     convert(q)
 }
 
-/// "2024-10-17", "3/4/2024" and "555-1234" are dates and phone numbers, not subtractions.
+/// Dates, year-months, month-days and phone numbers are not subtractions or fractions:
+/// "2024-10-17", "3/4/2024", "2024-10", "10-17", "+1-555-1234", "555-1234". With spaces around the
+/// operator it is plainly a sum ("2024 - 10"), and `10/4` and `5-3` stay math.
 fn looks_like_a_date_or_number_id(q: &str) -> bool {
     if q.chars().any(char::is_whitespace) {
         return false;
     }
+    let q = q.trim_start_matches('+');
     let groups: Vec<&str> = q.split(['-', '/']).collect();
     if groups.len() < 2
         || groups
@@ -49,7 +55,45 @@ fn looks_like_a_date_or_number_id(q: &str) -> bool {
     {
         return false;
     }
-    groups.len() >= 3 || (q.contains('-') && groups[0].len() == 3 && groups[1].len() == 4)
+    let month_day = groups.len() == 2
+        && groups.iter().all(|g| g.len() == 2)
+        && groups[0]
+            .parse::<u32>()
+            .is_ok_and(|m| (1..=12).contains(&m))
+        && groups[1]
+            .parse::<u32>()
+            .is_ok_and(|d| (1..=31).contains(&d));
+    groups.len() >= 3
+        || groups[0].len() == 4
+        || month_day
+        || (q.contains('-') && groups[0].len() == 3 && groups[1].len() == 4)
+}
+
+/// "1,234,567" to "1234567": a comma between digits is a thousands separator when exactly three
+/// digits follow it and one to three digits come before it. "1,5" and "1.5,000" are left alone, so
+/// they fail to read and the bar says nothing.
+fn strip_thousands(q: &str) -> String {
+    let c: Vec<char> = q.chars().collect();
+    let mut out = String::with_capacity(q.len());
+    for (i, &ch) in c.iter().enumerate() {
+        if ch == ',' && i > 0 && c[i - 1].is_ascii_digit() {
+            let run = c[..i]
+                .iter()
+                .rev()
+                .take_while(|d| d.is_ascii_digit())
+                .count();
+            let before = i.checked_sub(run + 1).map(|k| c[k]);
+            let three = c
+                .get(i + 1..i + 4)
+                .is_some_and(|g| g.iter().all(char::is_ascii_digit))
+                && !c.get(i + 4).is_some_and(char::is_ascii_digit);
+            if (1..=3).contains(&run) && three && before != Some('.') {
+                continue;
+            }
+        }
+        out.push(ch);
+    }
+    out
 }
 
 // ---- math ----
@@ -70,7 +114,7 @@ fn lex(q: &str) -> Option<Vec<Tok>> {
     while i < c.len() {
         let ch = c[i];
         match ch {
-            ' ' | '\t' => i += 1,
+            w if w.is_whitespace() => i += 1,
             '0'..='9' | '.' => {
                 let start = i;
                 let mut dots = 0;
@@ -221,7 +265,9 @@ impl Parser {
                     self.work += 1;
                     v *= r;
                 }
-                Some(Tok::Ident(w)) if w != "of" => {
+                // No implicit multiplication into a bare `e`: "2e" is a number being typed
+                // ("2e3"), not 2 times Euler's number. "2*e" still works.
+                Some(Tok::Ident(w)) if w != "of" && w != "e" => {
                     let (r, _) = self.unary()?;
                     self.work += 1;
                     v *= r;
@@ -409,7 +455,8 @@ const fn u(names: &'static [&'static str], label: &'static str, dim: Dim, per: f
     }
 }
 
-/// Bytes, case blind and decimal, as the rest of the app reads sizes (`units::parse_size`).
+/// Bytes, case blind and decimal, as the rest of the app reads sizes (`units::parse_size`), so `Mb`
+/// is megabytes. Megabits are spelled `mbit`. Rates (`kbps`, `mb/s`) are not units here.
 /// Lengths in metres, masses in kilograms, volumes in litres, times in seconds, speeds in metres
 /// per second, areas in square metres.
 const UNITS: &[Unit] = &[
@@ -550,6 +597,9 @@ const UNITS: &[Unit] = &[
     u(&["gb", "gigabyte", "gigabytes"], "GB", Dim::Data, 1e9),
     u(&["tb", "terabyte", "terabytes"], "TB", Dim::Data, 1e12),
     u(&["pb", "petabyte", "petabytes"], "PB", Dim::Data, 1e15),
+    u(&["kbit", "kbits"], "kbit", Dim::Data, 125.0),
+    u(&["mbit", "mbits"], "Mbit", Dim::Data, 125_000.0),
+    u(&["gbit", "gbits"], "Gbit", Dim::Data, 125_000_000.0),
     u(&["kib"], "KiB", Dim::Data, 1024.0),
     u(&["mib"], "MiB", Dim::Data, 1_048_576.0),
     u(&["gib"], "GiB", Dim::Data, 1_073_741_824.0),
@@ -628,6 +678,13 @@ fn temp_from_c(c: f64, to: &Unit) -> f64 {
 fn convert(q: &str) -> Option<Answer> {
     let lower = q.to_lowercase();
     let words: Vec<&str> = lower.split_whitespace().collect();
+    // A rate is not a size: "5 mbps in kbps" must not be read as megabytes.
+    const RATES: &[&str] = &[
+        "kbps", "mbps", "gbps", "kb/s", "mb/s", "gb/s", "kbit/s", "mbit/s",
+    ];
+    if words.iter().any(|w| RATES.iter().any(|r| w.ends_with(r))) {
+        return None;
+    }
     for i in 1..words.len().saturating_sub(1) {
         if !matches!(words[i], "in" | "to" | "as" | "into") || words.len() - i != 2 {
             continue;
@@ -660,7 +717,7 @@ fn convert(q: &str) -> Option<Answer> {
         let asked = format!("{} {} to {}", fmt(n, 12), from.label, to.label);
         return Some(Answer {
             shown: format!("{} {}", group(&fmt(v, 10)), to.label),
-            copy: format!("{} {}", fmt(v, 12), to.label),
+            copy: fmt(v, 12),
             asked,
         });
     }
@@ -718,20 +775,20 @@ mod tests {
             ("2e-3*2", "0.004"),
             ("10^20", "1e20"),
             // Conversions.
-            ("5 km in miles", "3.10685596119 mi"),
-            ("72 f to c", "22.2222222222 \u{00B0}C"),
-            ("2 GB in MB", "2000 MB"),
-            ("500 kb in mb", "0.5 MB"),
-            ("500kb to mb", "0.5 MB"),
-            ("0 c to f", "32 \u{00B0}F"),
-            ("-40 f to c", "-40 \u{00B0}C"),
-            ("100 c in k", "373.15 K"),
-            ("1 gib to mib", "1024 MiB"),
-            ("10 in to cm", "25.4 cm"),
-            ("1 mile as km", "1.609344 km"),
-            ("60 mph in km/h", "96.56064 km/h"),
-            ("2 hours to minutes", "120 min"),
-            ("1 kg in lb", "2.20462262185 lb"),
+            ("5 km in miles", "3.10685596119"),
+            ("72 f to c", "22.2222222222"),
+            ("2 GB in MB", "2000"),
+            ("500 kb in mb", "0.5"),
+            ("500kb to mb", "0.5"),
+            ("0 c to f", "32"),
+            ("-40 f to c", "-40"),
+            ("100 c in k", "373.15"),
+            ("1 gib to mib", "1024"),
+            ("10 in to cm", "25.4"),
+            ("1 mile as km", "1.609344"),
+            ("60 mph in km/h", "96.56064"),
+            ("2 hours to minutes", "120"),
+            ("1 kg in lb", "2.20462262185"),
         ];
         for (q, want) in cases {
             assert_eq!(copy(q).as_deref(), Some(*want), "query: {q}");
@@ -800,9 +857,82 @@ mod tests {
         assert_eq!(a.asked, "15% of 48000");
         let a = answer("2 GB in kb").unwrap();
         assert_eq!(a.shown, "2,000,000 KB");
-        assert_eq!(a.copy, "2000000 KB");
+        assert_eq!(a.copy, "2000000");
         assert_eq!(a.asked, "2 GB to KB");
         assert_eq!(answer("1-5000").unwrap().shown, "-4,999");
+    }
+
+    #[test]
+    fn conversions_copy_the_bare_number_and_show_the_unit() {
+        let a = answer("5 km in miles").unwrap();
+        assert_eq!(a.copy, "3.10685596119");
+        assert_eq!(a.shown, "3.106855961 mi");
+        assert_eq!(copy("72 f to c").as_deref(), Some("22.2222222222"));
+    }
+
+    #[test]
+    fn year_months_month_days_and_phone_numbers_are_not_sums() {
+        for q in [
+            "2024-10",
+            "2024/10",
+            "10-17",
+            "10/17",
+            "12-31",
+            "+1-555-1234",
+            "+91-98765-43210",
+            "1999-12",
+        ] {
+            assert_eq!(answer(q), None, "query: {q}");
+        }
+        // Still math: short ones that are not a month and a day, and anything with spaces.
+        assert_eq!(copy("10-5").as_deref(), Some("5"));
+        assert_eq!(copy("20-15").as_deref(), Some("5"));
+        assert_eq!(copy("10/4").as_deref(), Some("2.5"));
+        assert_eq!(copy("2024 - 10").as_deref(), Some("2014"));
+        assert_eq!(copy("+5-3").as_deref(), Some("2"));
+    }
+
+    #[test]
+    fn a_number_being_typed_is_not_times_e() {
+        assert_eq!(answer("2e"), None);
+        assert_eq!(answer("2 e"), None);
+        assert_eq!(copy("2e3+1").as_deref(), Some("2001"));
+        assert_eq!(copy("2*e").as_deref(), Some("5.43656365692"));
+        assert_eq!(copy("2pi").as_deref(), Some("6.28318530718"));
+    }
+
+    #[test]
+    fn megabits_are_spelled_out_and_rates_are_not_sizes() {
+        assert_eq!(copy("1 mbit in kb").as_deref(), Some("125"));
+        assert_eq!(copy("8 kbit to bytes").as_deref(), Some("1000"));
+        assert_eq!(copy("1 gb in gbit").as_deref(), Some("8"));
+        // Mb is megabytes, as everywhere in the app.
+        assert_eq!(copy("1 Mb in kb").as_deref(), Some("1000"));
+        for q in [
+            "5 mbps in kbps",
+            "100 kbps to mbps",
+            "10 mb/s in kb/s",
+            "5 gbps to mb",
+        ] {
+            assert_eq!(answer(q), None, "query: {q}");
+        }
+    }
+
+    #[test]
+    fn thousands_separators_and_non_breaking_spaces_read() {
+        assert_eq!(copy("1,000+5").as_deref(), Some("1005"));
+        assert_eq!(copy("1,234,567 / 1000").as_deref(), Some("1234.567"));
+        assert_eq!(copy("12,345.5 * 2").as_deref(), Some("24691"));
+        assert_eq!(copy("1,000 kb in mb").as_deref(), Some("1"));
+        assert_eq!(copy("2\u{00A0}+\u{00A0}2").as_deref(), Some("4"));
+        assert_eq!(copy("500\u{00A0}kb in mb").as_deref(), Some("0.5"));
+        assert_eq!(copy("500 kb\u{202F}in\u{202F}mb").as_deref(), Some("0.5"));
+        // Not thousands: the bar says nothing.
+        for q in ["1,5+1", "1,2345+1", "1234,567+1", "1.5,000+1", "1,0+2"] {
+            assert_eq!(answer(q), None, "query: {q}");
+        }
+        // The question is shown as typed.
+        assert_eq!(answer("1,000+5").unwrap().asked, "1,000+5");
     }
 
     #[test]
