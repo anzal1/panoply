@@ -161,6 +161,7 @@ What was fixed instead of excepted: Image to text and OCR on pictures held a 31 
 
 - **Desktops launch together; free CI only (2026-10-14).** macOS, Windows and Linux ship together as one GPUI app (ADR 0009 amended), then Android, then iOS. CI must cost nothing. Comparing our PDF compression against iLovePDF with public test PDFs is approved. Solo for now, no collaborators to invite. The human Hindi and VoiceOver checks are deferred.
 - **MSI ProductCode hashes the full version (2026-10-17).** A beta and its stable release share an MSI version (0.2.0.0), and Windows Installer ignores the fourth field, so the same ProductCode made the stable MSI fail over the beta (error 1638); the ProductCode now hashes the whole version string and `MajorUpgrade` sets `AllowSameVersionUpgrades="yes"`, with the UpgradeCode unchanged.
+- **Homebrew and Scoop live in this repo; the cask tracks prereleases (2026-10-18).** `Casks/panoply.rb` and `bucket/panoply.json` are updated by a pull request that `update-manifests.yml` opens when a release is published, with no separate tap repos and no token; every release is a beta for now, so the cask installs the newest beta and livecheck reads git tags because GitHub's latest-release strategies skip prereleases.
 
 ## Open questions only the user can answer (historical)
 
@@ -172,6 +173,13 @@ What was fixed instead of excepted: Image to text and OCR on pictures held a 31 
 6. **Size of the on-device language model.** Summarize, Ask your PDF and Meeting notes need about 1 to 4 GB. Is that acceptable as an opt-in download, or do we cap everything at a smaller model?
 7. **Shred.** Keep it with the honest best-effort SSD wording, or cut it?
 8. **v1 scope.** Ship waves 1 and 2 only, or also dictation and the meeting recorder at launch?
+
+## Bar calculator (2026-10-17)
+
+- **Numbers are `f64`, rounded to 12 significant digits for the copy and 10 for display.** The spec asks for decimal arithmetic. For a bar that answers on every keystroke, `f64` with this rounding reads `0.1 + 0.2` as `0.3` and keeps a typed query under 1 ms, with no new dependency. Exact decimals are the follow-up if a case needs more than 12 digits.
+- **Data units are case blind and decimal, as everywhere else in the app (`units::parse_size`).** `Mb` and `MB` are both megabytes. Megabits are spelled `mbit`, `kbit` and `gbit`. Rates such as `kbps` and `mb/s` are not units, and a query that holds one gets no answer.
+- **Return copies the bare number**, without the unit, so it pastes into a sheet or a shell. The unit shows in the bar. A thousands separator shows in the bar and is never copied.
+- **A query is math only when every word is math.** Dates, year-months and phone-like strings (`2024-10`, `10-17`, `+1-555-1234`) are left to search; add spaces around the operator to calculate.
 
 ## Overlaps found during the budget pass
 

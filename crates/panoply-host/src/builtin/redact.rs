@@ -185,7 +185,7 @@ impl Module for RedactModule {
             .map_err(fail)?;
             ctx.progress(share(0.97), "Checking the new file");
             let written =
-                std::fs::File::open(pending.path()).map_err(|source| ModuleError::Io {
+                std::fs::File::open(pending.temp_path()).map_err(|source| ModuleError::Io {
                     path: path.clone(),
                     source,
                 })?;

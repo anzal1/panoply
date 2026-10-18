@@ -240,6 +240,29 @@ pub fn hex(bytes: &[u8]) -> String {
     s
 }
 
+/// Panoply announces itself as "Panoply macOS", "Panoply Windows" and so on in `deviceModel`. Other
+/// LocalSend apps never do, and only Panoply shows the four word check code, so a screen that tells
+/// someone to compare it asks first whether the other device is Panoply. A device can claim the name
+/// without being one; then the two codes simply do not match, which is the safe outcome.
+pub const PANOPLY_MODEL_PREFIX: &str = "Panoply ";
+
+/// The label of this operating system as people spell it.
+pub fn os_label() -> &'static str {
+    match std::env::consts::OS {
+        "macos" => "macOS",
+        "windows" => "Windows",
+        "linux" => "Linux",
+        other => other,
+    }
+}
+
+/// True when the device says it is a Panoply app.
+pub fn is_panoply(info: &DeviceInfo) -> bool {
+    info.device_model
+        .as_deref()
+        .is_some_and(|m| m.starts_with(PANOPLY_MODEL_PREFIX))
+}
+
 /// True for a 64 character hex string, the shape of a certificate fingerprint.
 pub fn is_fingerprint(s: &str) -> bool {
     s.len() == 64 && s.bytes().all(|b| b.is_ascii_hexdigit())

@@ -67,6 +67,14 @@ ignore = [
     # past 0.3.9, and every beta.
     { id = "RUSTSEC-2026-0206", reason = "rustybuzz is unmaintained, no vulnerability; pinned by gpui-pre 0.3.9 through usvg 0.46, no newer GPUI exists yet" },
     { id = "RUSTSEC-2026-0192", reason = "ttf-parser is unmaintained, no vulnerability; pinned by gpui-pre 0.3.9 through usvg 0.46 and cosmic-text, no newer GPUI exists yet" },
+
+    # zvariant, zvariant_derive and zbus_names (D-Bus, Linux only) come in through zbus 5.19, which gpui-pre-linux 0.3.9
+    # pulls in (directly and through accesskit_unix, ashpd, oo7 and notify-rust), and gpui-base through
+    # ashpd. Published 2026-10-18, unmaintained only: both crates were merged into zbus 6. No
+    # vulnerability is reported. Revisit when gpui-pre-linux moves to zbus 6, and every beta.
+    { id = "RUSTSEC-2026-0370", reason = "zvariant is unmaintained only, merged into zbus 6; pulled in by gpui-pre-linux 0.3.9 through zbus 5.19; drop when gpui-pre-linux moves to zbus 6" },
+    { id = "RUSTSEC-2026-0372", reason = "zvariant_derive is unmaintained only, merged into zbus 6; pulled in by gpui-pre-linux 0.3.9 through zbus 5.19; drop when gpui-pre-linux moves to zbus 6" },
+    { id = "RUSTSEC-2026-0371", reason = "zbus_names is unmaintained only, merged into zbus 6; pulled in by gpui-pre-linux 0.3.9 through zbus 5.19; drop when gpui-pre-linux moves to zbus 6" },
 ]
 
 # Fixed instead of ignored, kept here so nobody re-adds them by accident:

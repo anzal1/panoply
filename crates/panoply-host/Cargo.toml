@@ -16,6 +16,7 @@ categories = ["development-tools", "command-line-utilities"]
 panoply-core.workspace = true
 panoply-manifest.workspace = true
 panoply-pdf.workspace = true
+panoply-archive.workspace = true
 panoply-image.workspace = true
 panoply-id.workspace = true
 panoply-media.workspace = true

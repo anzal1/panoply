@@ -114,6 +114,20 @@ Every download, every network path and how each was checked: [docs/PRIVACY.md](d
 
 Download the file for your system from the [releases page](https://github.com/anzal1/panoply/releases/tag/v0.2.0-beta) and check it against `SHA256SUMS`. The beta is not code signed, so macOS and Windows ask you to confirm the first start, once.
 
+Or use a package manager. This repository is the tap and the bucket, so there is nothing else to add:
+
+```bash
+# macOS, Homebrew
+brew tap anzal1/panoply https://github.com/anzal1/panoply
+brew install --cask anzal1/panoply/panoply
+
+# Windows, Scoop
+scoop bucket add panoply https://github.com/anzal1/panoply
+scoop install panoply/panoply
+```
+
+Homebrew installs the app and puts `panoply` on your PATH. The beta is not signed or notarized, so macOS still blocks the first start (steps below).
+
 <details>
 <summary><b>macOS</b> (Apple silicon and Intel)</summary>
 
@@ -123,7 +137,7 @@ Download the file for your system from the [releases page](https://github.com/an
 2. Double-click Panoply. macOS says it cannot check the app. Click Done.
 3. Open System Settings, then Privacy and Security. Next to "Panoply was blocked to protect your Mac", click Open Anyway and confirm.
 
-On macOS 14 and earlier, right-click Panoply and choose Open instead. Video tools use an `ffmpeg` on your Mac: `brew install ffmpeg`.
+Or run `xattr -dr com.apple.quarantine /Applications/Panoply.app` once. On macOS 14 and earlier, right-click Panoply and choose Open instead. Video tools use an `ffmpeg` on your Mac: `brew install ffmpeg`.
 
 </details>
 

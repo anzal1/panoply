@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use crate::Module;
 
+pub mod archive;
 pub mod hash;
 pub mod id;
 pub mod image;
@@ -37,6 +38,9 @@ pub fn all() -> Vec<Arc<dyn Module>> {
         v.push(Arc::new(m));
     }
     for m in vision::all() {
+        v.push(Arc::new(m));
+    }
+    for m in archive::all() {
         v.push(Arc::new(m));
     }
     v

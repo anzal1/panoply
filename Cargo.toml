@@ -41,8 +41,16 @@ png = "0.18"
 regex = "1"
 weezl = "0.2"
 
+# Archive engine (panoply-archive). zip: only deflate through flate2, no AES, no bzip2, no xz, no
+# time crate. tar: no xattr. zstd: the C library through zstd-sys (BSD-3-Clause, MIT or Apache).
+zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
+tar = { version = "0.4", default-features = false }
+flate2 = "1"
+zstd = { version = "0.14", default-features = false }
+
 panoply-core = { path = "crates/panoply-core" }
 panoply-pdf = { path = "crates/panoply-pdf" }
+panoply-archive = { path = "crates/panoply-archive" }
 panoply-image = { path = "crates/panoply-image" }
 panoply-id = { path = "crates/panoply-id" }
 panoply-ocr = { path = "crates/panoply-ocr" }
