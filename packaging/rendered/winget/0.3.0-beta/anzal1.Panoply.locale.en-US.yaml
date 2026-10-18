@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.10.0.schema.json
 PackageIdentifier: anzal1.Panoply
-PackageVersion: '0.2.0-beta'
+PackageVersion: '0.3.0-beta'
 PackageLocale: en-US
 Publisher: Panoply contributors
 PublisherUrl: https://github.com/anzal1/panoply
@@ -18,6 +18,6 @@ Tags:
   - image
   - pdf
   - utility
-ReleaseNotesUrl: https://github.com/anzal1/panoply/releases/tag/v0.2.0-beta
+ReleaseNotesUrl: https://github.com/anzal1/panoply/releases/tag/v0.3.0-beta
 ManifestType: defaultLocale
 ManifestVersion: 1.10.0
