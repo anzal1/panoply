@@ -21,7 +21,7 @@ cask "panoply" do
   end
 
   # LSMinimumSystemVersion in the app's Info.plist.
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "Panoply.app"
   # The command line tool rides inside the app (named panoply-cli there because the app

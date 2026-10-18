@@ -12,8 +12,8 @@ platform caveats) are in `apps/desktop/packaging/README.md`.
    Cargo version; tags containing `-test` are exempt, used for dry runs).
 3. `.github/workflows/release.yml` builds, packages, and creates a **draft** release. Review it, edit
    the notes, click Publish. Tags with a `-` are marked pre-release.
-4. Copy the rendered manifests from the `panoply-package-manifests-*.zip` asset to the tap, Scoop
-   bucket and winget-pkgs (below).
+4. When you publish the draft, `.github/workflows/update-manifests.yml` opens a pull request to `main` with
+   the new cask, Scoop manifest and the winget, AUR and Flatpak sources. Merge it (below).
 
 A manual run (Actions > Release > Run workflow) builds everything and keeps the files as workflow
 artifacts without creating a release.
@@ -102,12 +102,13 @@ notarizes in the workflow, and the release notes, the README and the Homebrew ca
 
 ## Package managers
 
-`render_manifests.py` fills the `*.in` templates from `SHA256SUMS` at the end of the workflow.
+`render_manifests.py` fills the `*.in` templates from `SHA256SUMS`: at the end of the release workflow (the zip asset) and again
+when the release is published (the pull request below).
 
 | Channel | Template | Goes to | Notes |
 |---|---|---|---|
-| Homebrew cask | `homebrew/panoply.rb.in` | tap repo `anzal1/homebrew-panoply`, `Casks/panoply.rb` | links the CLI as `panoply`; carries the unsigned-app caveat until notarized |
-| Scoop | `scoop/panoply.json.in` | bucket repo `anzal1/scoop-panoply`, `bucket/panoply.json` | `autoupdate` is set; the SHA256SUMS regex is read from each release |
+| Homebrew cask | `homebrew/panoply.rb.in` | `Casks/panoply.rb` in this repository | links the CLI as `panoply`; carries the unsigned-app caveat until notarized |
+| Scoop | `scoop/panoply.json.in` | `bucket/panoply.json` in this repository | `autoupdate` is set; the SHA256SUMS regex is read from each release |
 | winget | `winget/*.yaml.in` (schema 1.10; `AppsAndFeaturesEntries` carry the MSI DisplayVersion, ProductCode and UpgradeCode so winget matches the installed MSI) | PR to microsoft/winget-pkgs, `manifests/a/anzal1/Panoply/V/` (or `wingetcreate submit`) | x64 and arm64 MSI with their ProductCodes. The identifier `anzal1.Panoply` is permanent once accepted: change it in the three templates first if a project or org name should own it |
 | AUR | `aur/PKGBUILD.in`, `aur/SRCINFO.in` | AUR git repo `ssh://aur@aur.archlinux.org/panoply-bin.git`, files `PKGBUILD` and `.SRCINFO` | `panoply-bin` for x86_64 and aarch64 from the Linux tarballs; installs to `/usr/lib/panoply` (modules sit next to the executables) with symlinks in `/usr/bin`; `pkgver` is the version with `-` turned into `_` |
 | Flatpak (Flathub) | `flatpak/io.github.anzal1.Panoply.yml.in`, metainfo | Flathub new-app PR (github.com/flathub/flathub, branch `new-pr`) | builds from the tagged source, offline, on runtime 26.08 (rust-stable extension); `cargo-sources.json` comes from the tag's Cargo.lock via `tools/validate-packaging.sh` (flatpak-cargo-generator, pinned) and is committed beside the manifest; pdfium is its own module at the pinned release. The community wasm modules are not in this build yet (no wasm32-wasip2 target in the sandbox). Not built in CI |
@@ -126,14 +127,44 @@ The release workflow renders the same files into `panoply-package-manifests-V.zi
 Windows jobs recorded) and validates the winget YAML against the schemas as a warning. Nothing here submits
 anything: the winget, AUR and Flathub steps are a person's pull request or push.
 
-### The package repos (prepared, not created yet)
+### This repository is the tap and the bucket
 
-`package-repos/homebrew-panoply/` and `package-repos/scoop-panoply/` are the starting contents of the two
-repositories. To go live: create `anzal1/homebrew-panoply` and `anzal1/scoop-panoply` (public), push those folders
-as their first commit, create a fine-grained token with Contents read and write on those two repos, and store it
-as the secret `PACKAGE_REPOS_TOKEN` here. After that `.github/workflows/update-package-repos.yml` updates both
-repos from the release assets whenever a release is published (and skips with a notice while the secret is absent).
-Set the repository variable `PANOPLY_MACOS_NOTARIZED=1` once macOS builds are notarized, to drop the caveat.
+There are no separate `homebrew-panoply` or `scoop-panoply` repositories and no token. The files live at the repository root:
+
+| File | Install |
+|---|---|
+| `Casks/panoply.rb` | `brew tap anzal1/panoply https://github.com/anzal1/panoply`, then `brew install --cask anzal1/panoply/panoply` |
+| `bucket/panoply.json` | `scoop bucket add panoply https://github.com/anzal1/panoply`, then `scoop install panoply/panoply` |
+| `packaging/rendered/{winget,aur,flatpak}/` | sources for the pull requests and pushes a person makes by hand (table above); the Flatpak `cargo-sources.json` is still made by `tools/validate-packaging.sh` |
+
+Why these layouts work for a repository that is not named `homebrew-*` and also holds the source code:
+
+- Homebrew: the two-argument `brew tap <user>/<repo> <URL>` form clones any Git URL and does not require the `homebrew-`
+  prefix ([Taps](https://docs.brew.sh/Taps): "The two-argument form does not impose this naming convention because the full
+  URL is explicit"). The clone lands in `Library/Taps/anzal1/homebrew-panoply`. Casks are read only from the tap's `Casks/`
+  folder (`Tap#cask_dir` in Homebrew's `tap.rb`; see [How to Create and Maintain a Tap](https://docs.brew.sh/How-to-Create-and-Maintain-a-Tap)),
+  so the rest of the repository is ignored. The repository has no `Formula/`, `HomebrewFormula/` or top-level `.rb` file, which
+  Homebrew would otherwise scan for formulae. Keep it that way.
+- Homebrew trust ([Tap Trust](https://docs.brew.sh/Tap-Trust)): non-official taps need explicit trust since Homebrew 6.0.0, and
+  a fully qualified `brew install --cask anzal1/panoply/panoply` trusts only that cask, so the one-liner needs no `brew trust`.
+- Scoop: `scoop bucket add <name> <repo>` clones the repository, and Scoop reads manifests from its `bucket/` subfolder when
+  that folder exists, otherwise from the root (`Find-BucketDirectory` in Scoop's [`lib/buckets.ps1`](https://github.com/ScoopInstaller/Scoop/blob/master/lib/buckets.ps1);
+  the [Scoop README](https://github.com/ScoopInstaller/Scoop#readme) lists `scoop bucket add`). `scoop install panoply/panoply` is the
+  `bucket/app` form.
+
+Both manifests follow the newest published release, prereleases included, because every release is a beta for now (the choice
+is recorded in `docs/DECISIONS.md`). The cask's `livecheck` reads git tags, since Homebrew's GitHub strategies skip prereleases.
+
+`.github/workflows/update-manifests.yml` runs when a release is published (or by hand with a tag). It runs
+`render_manifests.py --tag`, copies the results into the paths above on a branch `bot/manifests-<tag>` and opens a
+pull request to `main` with `GITHUB_TOKEN` (contents and pull-requests write). It never pushes to `main`. One setting is
+needed: Settings > Actions > General > Workflow permissions > "Allow GitHub Actions to create and approve pull requests".
+Without it the branch is pushed, the run fails with a link to open the pull request by hand. Pull requests opened with
+`GITHUB_TOKEN` do not start other workflows, so close and reopen the pull request to run CI on it. Set the repository variable
+`PANOPLY_MACOS_NOTARIZED=1` once macOS builds are notarized, to drop the cask caveat.
+
+To refresh by hand: `python3 -I packaging/scripts/render_manifests.py --tag v0.2.0-beta --out /tmp/m`, then copy `homebrew/panoply.rb`
+to `Casks/panoply.rb` and `scoop/panoply.json` to `bucket/panoply.json`.
 
 Template placeholders are `@NAME@` (see the docstring in `scripts/render_manifests.py`). An asset
 missing from a release leaves a zero hash and a visible workflow warning.
@@ -149,7 +180,7 @@ packaging/
   linux/         panoply.desktop, install.sh (tarball installer)
   homebrew/ scoop/ winget/ flatpak/ aur/   manifest templates
   signing/       APPLE.md (checklist for when the Apple Developer account exists)
-  package-repos/ the two package repos to create: homebrew-panoply (cask) and scoop-panoply (bucket)
+  rendered/      the winget, AUR and Flatpak files for the latest release (written by update-manifests.yml)
 ```
 
 Icons: the scripts use `apps/desktop/packaging/icons/panoply-512.png` and `panoply.ico` when the
