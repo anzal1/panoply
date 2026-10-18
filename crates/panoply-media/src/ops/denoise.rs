@@ -34,6 +34,10 @@ use super::{Job, with_name};
 pub const MODEL_RATE: u32 = 48_000;
 /// Samples the model takes per call, per channel (10 ms).
 pub const FRAME: usize = DenoiseState::FRAME_SIZE;
+/// Frames the model is primed on before it starts for real: the first two seconds are run
+/// through it once and the output thrown away, so a noise-only lead-in is cleaned as well as the
+/// noise after a voice. The cost is a fixed two seconds of samples held per channel.
+pub const WARM_UP: usize = 2 * MODEL_RATE as usize;
 /// The model wants samples on the scale of 16-bit integers.
 const SCALE: f32 = 32768.0;
 
@@ -96,8 +100,10 @@ pub struct Denoiser {
     wet: f32,
     frames_in: u64,
     frames_out: u64,
-    /// Model calls so far. The first call only warms the model up and gives no output.
+    /// Model calls so far. The first call after priming gives no output (see `step`).
     steps: u64,
+    /// True once the model has been primed on the first seconds.
+    primed: bool,
     ended: bool,
 }
 
@@ -116,6 +122,7 @@ impl Denoiser {
             frames_in: 0,
             frames_out: 0,
             steps: 0,
+            primed: false,
             ended: false,
         }
     }
@@ -136,9 +143,28 @@ impl Denoiser {
             }
         }
         self.frames_in += (whole / ch) as u64;
-        while self.lanes.iter().all(|l| l.pending.len() >= FRAME) {
+        if !self.primed && self.lanes[0].pending.len() >= WARM_UP {
+            self.prime();
+        }
+        while self.primed && self.lanes.iter().all(|l| l.pending.len() >= FRAME) {
             self.step(out);
         }
+    }
+
+    /// Run what has been received so far (the first seconds) through the model and drop the
+    /// answers, then start over from the first sample. The model's memory of the noise stays, so
+    /// the real pass begins settled. The frame the model last saw is the one just before the
+    /// replay, which is also what its overlap needs, so there is no seam at the start.
+    fn prime(&mut self) {
+        for lane in &mut self.lanes {
+            let mut sink = [0.0f32; FRAME];
+            for frame in lane.pending.chunks_exact(FRAME) {
+                lane.state.process_frame(&mut sink, frame);
+            }
+            lane.prev = [0.0; FRAME];
+        }
+        self.steps = 0;
+        self.primed = true;
     }
 
     /// One model call per channel on the next frame (padded with silence when short). From the
@@ -178,7 +204,14 @@ impl Denoiser {
         self.ended = true;
         let ch = self.lanes.len();
         let start = out.len();
+        if !self.primed {
+            // A short stream: prime on all of it, then the loop below clears it out.
+            self.prime();
+        }
         let before = self.frames_out;
+        while self.lanes.iter().all(|l| l.pending.len() >= FRAME) {
+            self.step(out);
+        }
         if self.lanes.iter().any(|l| !l.pending.is_empty()) {
             self.step(out);
         }
@@ -562,9 +595,13 @@ mod tests {
 
     /// Eight seconds: noise alone, then voice with the noise, then noise alone again.
     fn scene() -> (Vec<f32>, Vec<f32>) {
+        scene_with(7)
+    }
+
+    fn scene_with(seed: u64) -> (Vec<f32>, Vec<f32>) {
         let r = MODEL_RATE as usize;
         let n = 8 * r;
-        let mut noise = Noise(7);
+        let mut noise = Noise(seed);
         let clean: Vec<f32> = voice(n)
             .into_iter()
             .enumerate()
@@ -577,26 +614,33 @@ mod tests {
     #[test]
     fn noise_alone_drops_by_ten_db_and_the_voice_stays_within_three() {
         let r = MODEL_RATE as usize;
-        let (clean, mixed) = scene();
-        let mut den = Denoiser::new(1, Strength::Normal.wet());
-        let out = run_all(&mut den, &mixed, 4096);
-        assert_eq!(out.len(), mixed.len(), "the length is kept exactly");
-        // The noise after the voice, once the model has settled. The lead-in before any voice has
-        // come is reported and not asserted: from a cold start the model's answer to steady white
-        // noise swings between 2 and 16 dB with the noise itself.
-        let lead = db(
-            rms(&mixed[r / 2..2 * r - r / 4]),
-            rms(&out[r / 2..2 * r - r / 4]),
-        );
-        eprintln!("noise only, lead-in: down {lead:.1} dB (not asserted)");
-        let tail = 6 * r + r / 2..8 * r;
-        let drop = db(rms(&mixed[tail.clone()]), rms(&out[tail]));
-        eprintln!("noise only, after the voice: down {drop:.1} dB");
-        assert!(drop >= 10.0, "noise only: down {drop:.1} dB");
-        let voice_range = 2 * r + r / 2..6 * r - r / 2;
-        let diff = db(rms(&out[voice_range.clone()]), rms(&clean[voice_range]));
-        eprintln!("voice segment: {diff:+.2} dB against the clean voice");
-        assert!(diff.abs() <= 3.0, "voice level moved by {diff:+.2} dB");
+        // Twelve different noises: the result must not depend on which one it is.
+        for seed in 1..=12u64 {
+            let (clean, mixed) = scene_with(seed);
+            let mut den = Denoiser::new(1, Strength::Normal.wet());
+            let out = run_all(&mut den, &mixed, 4096);
+            assert_eq!(out.len(), mixed.len(), "the length is kept exactly");
+            // The lead-in: noise alone before any voice has come, from a quarter second on.
+            let lead = r / 4..2 * r - r / 4;
+            let lead_drop = db(rms(&mixed[lead.clone()]), rms(&out[lead]));
+            // The tail: noise alone after the voice.
+            let tail = 6 * r + r / 2..8 * r;
+            let tail_drop = db(rms(&mixed[tail.clone()]), rms(&out[tail]));
+            let voice_range = 2 * r + r / 2..6 * r - r / 2;
+            let diff = db(rms(&out[voice_range.clone()]), rms(&clean[voice_range]));
+            eprintln!(
+                "seed {seed}: lead-in down {lead_drop:.1} dB, tail down {tail_drop:.1} dB, voice {diff:+.2} dB"
+            );
+            assert!(
+                lead_drop >= 10.0,
+                "seed {seed}: lead-in down {lead_drop:.1} dB"
+            );
+            assert!(
+                tail_drop >= 10.0,
+                "seed {seed}: tail down {tail_drop:.1} dB"
+            );
+            assert!(diff.abs() <= 3.0, "seed {seed}: voice moved {diff:+.2} dB");
+        }
     }
 
     #[test]
