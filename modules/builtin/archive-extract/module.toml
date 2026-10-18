@@ -1,0 +1,39 @@
+# Extract archive. Pattern A, instant transform. Spec: docs/specs/docs-find-files-share-capture.md, Archives.
+# Built into panoply-host (crates/panoply-host/src/builtin/archive.rs) on the panoply-archive engine.
+accepts = ["application/zip", "application/gzip", "application/x-tar", "application/zstd", "*.zip", "*.tar", "*.gz", "*.tgz", "*.zst", "*.tzst"]
+outputs = ["*/*"]
+
+[module]
+id = "archive.extract"
+name = "Extract archive"
+version = "0.1.0"
+pattern = "A"
+summary = "Unpack a ZIP, TAR, TAR.GZ, TAR.ZST or GZ into a new folder next to it."
+
+[options.max_ratio]
+type = "number"
+default = 1000
+min = 10
+max = 1000000
+label = "Zip bomb limit"
+help = "Stop when the unpacked size is more than this many times the archive."
+
+[options.max_size_gb]
+type = "number"
+default = 50
+min = 1
+max = 100000
+label = "Largest unpacked size (GB)"
+help = "Stop when the archive unpacks to more than this."
+
+[capabilities]
+files = "chosen"
+network = false
+
+[surfaces]
+bar = true
+panel = true
+right_click = true
+share_sheet = true
+cli = true
+mcp = true

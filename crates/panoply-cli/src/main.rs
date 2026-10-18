@@ -70,6 +70,17 @@ enum Command {
         #[arg(long, value_name = "DIR")]
         out: Option<PathBuf>,
     },
+    /// Archives: extract (ZIP, TAR, TAR.GZ, TAR.ZST, GZ) and create (ZIP, TAR.GZ, TAR.ZST)
+    Archive {
+        #[command(subcommand)]
+        tool: ArchiveTool,
+    },
+    /// The same as `panoply archive extract`, under the module id
+    #[command(name = "archive.extract", hide = true)]
+    ArchiveExtractId(ExtractArgs),
+    /// The same as `panoply archive create`, under the module id
+    #[command(name = "archive.create", hide = true)]
+    ArchiveCreateId(CreateArgs),
     /// PDF tools: merge, split, pages, compress, from, images, ocr
     Pdf {
         #[command(subcommand)]
@@ -114,6 +125,46 @@ enum Command {
     Mcp,
     /// Print the version
     Version,
+}
+
+#[derive(clap::Args)]
+struct ExtractArgs {
+    /// Archives to unpack, each into a new folder next to it
+    #[arg(required = true)]
+    files: Vec<PathBuf>,
+    /// Stop when the unpacked size is more than this many times the archive
+    #[arg(long, value_name = "N")]
+    max_ratio: Option<u64>,
+    /// Stop when the archive unpacks to more than this many gigabytes
+    #[arg(long, value_name = "GB")]
+    max_size_gb: Option<f64>,
+    /// Put the new folders in this folder instead of next to each archive
+    #[arg(long, value_name = "DIR")]
+    out: Option<PathBuf>,
+}
+
+#[derive(clap::Args)]
+struct CreateArgs {
+    /// Files and folders to pack
+    #[arg(required = true)]
+    files: Vec<PathBuf>,
+    /// zip, tar.gz or tar.zst
+    #[arg(long, default_value = "zip")]
+    format: String,
+    /// fast, balanced or small
+    #[arg(long)]
+    level: Option<String>,
+    /// Put the archive in this folder instead of next to the first file
+    #[arg(long, value_name = "DIR")]
+    out: Option<PathBuf>,
+}
+
+#[derive(Subcommand)]
+enum ArchiveTool {
+    /// Unpack into a new folder: panoply archive extract photos.zip
+    Extract(ExtractArgs),
+    /// Pack files and folders: panoply archive create project --format tar.zst
+    Create(CreateArgs),
 }
 
 /// Where results go, shared by the PDF tools.
@@ -362,6 +413,9 @@ fn main() -> ExitCode {
             opts,
             out,
         } => run_module(&module, files, &opts, out.as_deref()),
+        Command::Archive { tool } => archive(tool),
+        Command::ArchiveExtractId(a) => archive(ArchiveTool::Extract(a)),
+        Command::ArchiveCreateId(a) => archive(ArchiveTool::Create(a)),
         Command::Pdf { tool } => pdf(tool),
         Command::Image { tool } => image(tool),
         Command::Video { tool } => video(tool),
@@ -665,6 +719,47 @@ fn size_to_mb(text: &str) -> Option<f64> {
         "gb" | "g" => Some(n * 1000.0),
         _ => None,
     }
+}
+
+/// `panoply archive extract|create`: runs `archive.extract` or `archive.create` with progress on
+/// standard error and the report lines on standard output.
+fn archive(tool: ArchiveTool) -> ExitCode {
+    use serde_json::{Map, json};
+    let mut o = Map::new();
+    let (id, files, out) = match tool {
+        ArchiveTool::Extract(a) => {
+            if let Some(r) = a.max_ratio {
+                o.insert("max_ratio".into(), json!(r));
+            }
+            if let Some(g) = a.max_size_gb {
+                o.insert("max_size_gb".into(), json!(g));
+            }
+            ("archive.extract", a.files, a.out)
+        }
+        ArchiveTool::Create(a) => {
+            o.insert("format".into(), json!(a.format));
+            if let Some(l) = a.level {
+                o.insert("level".into(), json!(l));
+            }
+            ("archive.create", a.files, a.out)
+        }
+    };
+    let spec = JobSpec {
+        module_id: id.into(),
+        inputs: files,
+        options: serde_json::Value::Object(o),
+    };
+    let progress = Progress::new();
+    report(run_builtin(
+        &spec,
+        out.as_deref(),
+        CancelToken::new(),
+        move |event| {
+            if let JobEvent::Progress { fraction, label } = event {
+                progress.show(fraction, &label);
+            }
+        },
+    ))
 }
 
 fn pdf(tool: PdfTool) -> ExitCode {

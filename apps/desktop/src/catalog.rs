@@ -114,6 +114,7 @@ impl Category {
             "calc" | "unit" => Category::Calculators,
             "dev" | "data" | "code" => Category::Developer,
             "privacy" | "metadata" => Category::Privacy,
+            "archive" | "files" => Category::Files,
             _ => Category::Files,
         }
     }
@@ -287,6 +288,7 @@ mod tests {
         assert_eq!(Category::from_module_id("image.resize"), Category::Images);
         assert_eq!(Category::from_module_id("text.word_count"), Category::Text);
         assert_eq!(Category::from_module_id("files.hash"), Category::Files);
+        assert_eq!(Category::from_module_id("archive.extract"), Category::Files);
         assert_eq!(Category::from_module_id("weird.thing"), Category::Files);
     }
 
