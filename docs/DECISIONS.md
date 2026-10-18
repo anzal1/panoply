@@ -170,6 +170,13 @@ What was fixed instead of excepted: Image to text and OCR on pictures held a 31 
 7. **Shred.** Keep it with the honest best-effort SSD wording, or cut it?
 8. **v1 scope.** Ship waves 1 and 2 only, or also dictation and the meeting recorder at launch?
 
+## Bar calculator (2026-10-17)
+
+- **Numbers are `f64`, rounded to 12 significant digits for the copy and 10 for display.** The spec asks for decimal arithmetic. For a bar that answers on every keystroke, `f64` with this rounding reads `0.1 + 0.2` as `0.3` and keeps a typed query under 1 ms, with no new dependency. Exact decimals are the follow-up if a case needs more than 12 digits.
+- **Data units are case blind and decimal, as everywhere else in the app (`units::parse_size`).** `Mb` and `MB` are both megabytes. Megabits are spelled `mbit`, `kbit` and `gbit`. Rates such as `kbps` and `mb/s` are not units, and a query that holds one gets no answer.
+- **Return copies the bare number**, without the unit, so it pastes into a sheet or a shell. The unit shows in the bar. A thousands separator shows in the bar and is never copied.
+- **A query is math only when every word is math.** Dates, year-months and phone-like strings (`2024-10`, `10-17`, `+1-555-1234`) are left to search; add spaces around the operator to calculate.
+
 ## Overlaps found during the budget pass
 
 No review mentions these. They are not in the table above and have no default. Say the word and they become decisions.

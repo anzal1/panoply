@@ -339,9 +339,11 @@ impl Bar {
     /// Files are looked up for a typed query of two letters or more, when no files are dropped on
     /// the bar and the words were not read as a request ("make this under 50 kb").
     fn wants_files(&self) -> bool {
-        self.files.is_empty()
-            && self.query.trim().chars().count() >= 2
-            && self.results.understood.is_none()
+        search::wants_file_search(
+            self.files.is_empty(),
+            &self.query,
+            self.results.understood.is_some(),
+        )
     }
 
     /// Ask the index for files on a worker and put them under the tools when it answers. The tool
@@ -601,6 +603,11 @@ impl Bar {
         self.flash_at = Some(Instant::now());
         match row.action {
             Action::Unavailable(why) => self.say(why, cx),
+            Action::CopyText { text } => {
+                cx.write_to_clipboard(ClipboardItem::new_string(text));
+                self.say("Copied".into(), cx);
+                self.hide(window, cx);
+            }
             Action::OpenFile { .. } => self.open_selected_file(false, cx),
             Action::OpenTool { tool, preset } => {
                 let files = self.files.clone();
@@ -1012,7 +1019,12 @@ impl Bar {
                     .flex_none()
                     .whitespace_nowrap()
                     .ramp(ty::BODY)
-                    .font_weight(FontWeight::MEDIUM)
+                    .font_weight(if matches!(r.action, Action::CopyText { .. }) {
+                        // The answer reads at the weight of a matched tool name.
+                        FontWeight::SEMIBOLD
+                    } else {
+                        FontWeight::MEDIUM
+                    })
                     .text_color(t.ink)
                     .child(Self::highlighted(&r.title, &r.matched)),
             )
@@ -1450,6 +1462,11 @@ impl Render for Bar {
             let c = cmd();
             let keys = if self.results.is_empty() {
                 Vec::new()
+            } else if matches!(
+                self.results.get(self.selected).map(|r| &r.action),
+                Some(Action::CopyText { .. })
+            ) {
+                vec![("Copy", vec!["\u{21B5}"])]
             } else if self.selected_is_file() {
                 vec![("Open", vec!["\u{21B5}"]), (SHOW_FILE, vec![c, "\u{21B5}"])]
             } else if has_chips {

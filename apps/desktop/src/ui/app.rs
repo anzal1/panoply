@@ -389,6 +389,7 @@ impl AppView {
                 self.rerun(&e, window, cx);
             }
             Action::OpenFile { path } => self.find_open_path(path, false, cx),
+            Action::CopyText { text } => cx.write_to_clipboard(ClipboardItem::new_string(text)),
             Action::Unavailable(_) => {}
         }
     }
