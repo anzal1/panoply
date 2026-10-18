@@ -69,7 +69,10 @@ fn speak_reads_a_markdown_file_next_to_it_and_voices_lists_the_os_voices() {
 fn usable_voice() -> (String, String) {
     let (voices, err, ok) = panoply(&["audio", "voices"]);
     assert!(ok, "{err}");
-    let probe = scratch("probe");
+    // One folder per call: two tests of a process may probe at once.
+    static CALLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+    let n = CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let probe = scratch(&format!("probe{n}"));
     let mut tried = Vec::new();
     for line in voices.lines().take(8) {
         let cols: Vec<&str> = line.split('\t').collect();
