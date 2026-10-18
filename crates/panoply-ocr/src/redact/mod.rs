@@ -101,6 +101,9 @@ pub struct Found {
     pub pages: usize,
     /// Pages that had to be read with OCR.
     pub scanned: Vec<usize>,
+    /// Pages where pdfium found characters it could not map to text, with how many. Pages with
+    /// 8 or more are read as pictures (and are in `scanned`); fewer cannot be searched there.
+    pub unmapped: HashMap<usize, usize>,
     /// The OCR words of those pages in displayed points, so [`apply`] does not read them twice.
     pub scan_words: HashMap<usize, Vec<Word>>,
     /// Everything found.
@@ -230,7 +233,7 @@ impl Pdfium {
                 unmapped += 1;
                 continue;
             };
-            if c == '\0' || c == '\u{fffd}' || ('\u{e000}'..='\u{f8ff}').contains(&c) {
+            if is_unmapped(c) {
                 unmapped += 1;
             }
             let rect = ch.loose_bounds().ok().map(|r| {
@@ -247,7 +250,13 @@ impl Pdfium {
             if c.is_whitespace() || c.is_control() || c == '\u{fffe}' {
                 // A run of white space (a line end is two characters) is one space, so a
                 // number wrapped over two lines is still one match.
-                if out.last().is_some_and(|p| p.c == ' ') {
+                let line_end = c == '\r' || c == '\n';
+                if let Some(last) = out.last_mut()
+                    && (last.c == ' ' || last.c == '\n')
+                {
+                    if line_end {
+                        last.c = '\n';
+                    }
                     continue;
                 }
                 let r = out.last().map_or(Rect::default(), |p| Rect {
@@ -256,7 +265,10 @@ impl Pdfium {
                     w: 0.0,
                     h: p.r.h,
                 });
-                out.push(Ch { c: ' ', r });
+                out.push(Ch {
+                    c: if line_end { '\n' } else { ' ' },
+                    r,
+                });
             } else if let Some(r) = rect {
                 out.push(Ch { c, r });
             }
@@ -264,7 +276,7 @@ impl Pdfium {
         Ok((out, unmapped))
     }
 
-    /// Draw a page's own content at `dpi` (at most `max_pixels`), without annotations or form values.
+    /// Draw a page at `dpi` (at most `max_pixels`) with its annotations, so the picture matches the page.
     fn render(&self, index: usize, dpi: f32, max_pixels: usize) -> Result<Drawn> {
         use pdfium_render::prelude::*;
         let _g = panoply_pdf::pdfium::lock();
@@ -282,11 +294,12 @@ impl Pdfium {
             .set_format(PdfBitmapFormat::BGR)
             .clear_before_rendering(true)
             .set_clear_color(PdfColor::WHITE)
-            // Form values and annotation appearances are never drawn into the picture: the
-            // objects behind them are dropped or not carried over, and a value that matched
-            // must not show in the pixels without a box.
+            // Annotation appearances are drawn into the picture (stamps, highlights, ink,
+            // visual signatures stay visible). pdfium clips an appearance to its /Rect, and
+            // every dropped annotation and widget has a box burned over its /Rect (see
+            // `dropped_annot_rects`), so what was dropped does not show.
             .render_form_data(false)
-            .render_annotations(false);
+            .render_annotations(true);
         let bmp = page.render_with_config(&cfg).map_err(|e| {
             OcrError::Engine(format!(
                 "The PDF engine could not draw page {} ({e:?}).",
@@ -335,6 +348,8 @@ fn gray_for_reading(d: Drawn) -> Result<OcrImage> {
 struct PageText {
     chars: Vec<Ch>,
     scanned: bool,
+    /// Characters pdfium could not map to Unicode.
+    unmapped: usize,
     /// For a scan: the OCR words in displayed points.
     words: Vec<Word>,
 }
@@ -394,7 +409,7 @@ fn rects_for(chars: &[Ch], lo: usize, hi: usize) -> Vec<Rect> {
     let mut out: Vec<Rect> = Vec::new();
     let mut cur: Option<Rect> = None;
     for ch in &chars[lo..hi] {
-        if ch.c == ' ' && ch.r.w == 0.0 {
+        if ch.c.is_whitespace() && ch.r.w == 0.0 {
             continue;
         }
         cur = Some(match cur {
@@ -425,8 +440,22 @@ fn rects_for(chars: &[Ch], lo: usize, hi: usize) -> Vec<Rect> {
 
 /// False when a meaningful share of a page's characters have no Unicode mapping, so the page
 /// has to be read as a picture.
-fn is_mostly_mapped(shown: usize, unmapped: usize) -> bool {
-    unmapped < 8 || unmapped * 4 < shown + unmapped
+fn is_mostly_mapped(_shown: usize, unmapped: usize) -> bool {
+    unmapped < UNMAPPED_LIMIT
+}
+
+/// This many characters without a Unicode mapping, however small a share of the page, send
+/// the page to the picture reader: a short number in such a font is exactly what would be
+/// missed.
+const UNMAPPED_LIMIT: usize = 8;
+
+/// True for a character pdfium could not map to text: the replacement character, private use
+/// code points (icon fonts), and control codes other than line and tab marks (what pdfium
+/// returns for glyph numbers of an Identity font with no `ToUnicode` map).
+fn is_unmapped(c: char) -> bool {
+    c == '\u{fffd}'
+        || ('\u{e000}'..='\u{f8ff}').contains(&c)
+        || (c.is_control() && !matches!(c, '\r' | '\n' | '\t' | '\u{b}' | '\u{c}'))
 }
 
 /// A page's text: pdfium's, or OCR for a scan.
@@ -448,6 +477,7 @@ fn read_page(
         return Ok(PageText {
             chars,
             scanned: false,
+            unmapped,
             words: Vec::new(),
         });
     }
@@ -474,6 +504,7 @@ fn read_page(
     Ok(PageText {
         chars: chars_from_ocr(&page, scale),
         scanned: true,
+        unmapped,
         words,
     })
 }
@@ -521,14 +552,27 @@ fn content_text(data: &[u8]) -> String {
             Ok(Tok::End) | Err(_) => break,
             Ok(Tok::Obj(Obj::Str(s))) => {
                 out.extend(s.iter().map(|&c| c as char));
-                out.push('\n');
+                // Runs on one line are joined with a space.
+                out.push(' ');
             }
             Ok(Tok::Obj(Obj::Array(a))) => {
                 for x in &a {
-                    if let Obj::Str(s) = x {
-                        out.extend(s.iter().map(|&c| c as char));
+                    match x {
+                        Obj::Str(s) => out.extend(s.iter().map(|&c| c as char)),
+                        // A big negative kern is a gap between words.
+                        other => {
+                            if other.as_f64().is_some_and(|k| k < -200.0) {
+                                out.push(' ');
+                            }
+                        }
                     }
                 }
+                out.push(' ');
+            }
+            // A move to another line.
+            Ok(Tok::Word(w))
+                if matches!(w, b"Td" | b"TD" | b"T*" | b"Tm" | b"ET" | b"'" | b"\"") =>
+            {
                 out.push('\n');
             }
             Ok(_) => {}
@@ -703,6 +747,9 @@ pub fn find(
         let geom = doc.page_geom(pr);
         let b = page_box(&geom);
         let page = read_page(&pdfium, i, &b, opts, ocr, fetch, cancel)?;
+        if page.unmapped > 0 {
+            found.unmapped.insert(i, page.unmapped);
+        }
         if page.scanned {
             found.scanned.push(i);
             found.scan_words.insert(i, page.words.clone());
@@ -714,7 +761,11 @@ pub fn find(
             found.matches.push(Match {
                 id,
                 kind: hit.kind.to_string(),
-                text: text[hit.range].to_string(),
+                // A number wrapped over lines is shown with single spaces.
+                text: text[hit.range]
+                    .split_whitespace()
+                    .collect::<Vec<_>>()
+                    .join(" "),
                 at: Where::Page(i),
                 rects: rects_for(&page.chars, lo, hi),
                 selected: true,
@@ -757,12 +808,144 @@ pub fn find(
 struct Scrub;
 
 impl Policy for Scrub {
-    fn dict(&mut self, _doc: &Doc, view: &View, _src: u32, dict: &mut Dict) {
+    fn dict(&mut self, doc: &Doc, view: &View, _src: u32, dict: &mut Dict) {
+        inherit_field_keys(doc, view.pruned, dict);
+        relink_outline(doc, view.pruned, dict);
         drop_pruned_dict(dict, view.pruned);
     }
 }
 
+/// A kept widget whose parent field was dropped becomes a field of its own: it takes the
+/// parent's field keys (never the value, which is what was dropped).
+fn inherit_field_keys(doc: &Doc, pruned: &HashSet<u32>, dict: &mut Dict) {
+    if dict.name("Subtype") != Some(b"Widget") {
+        return;
+    }
+    let Some(mut cur) = dict.get("Parent").and_then(Obj::as_ref_num) else {
+        return;
+    };
+    if !pruned.contains(&cur) {
+        return;
+    }
+    for _ in 0..8 {
+        let Ok(l) = doc.load(cur) else { return };
+        let Obj::Dict(p) = l.obj else { return };
+        for key in ["FT", "Ff", "T", "DA", "Q"] {
+            if !dict.has(key)
+                && let Some(v) = p.get(key)
+            {
+                dict.set(key, v.clone());
+            }
+        }
+        match p.get("Parent").and_then(Obj::as_ref_num) {
+            Some(n) => cur = n,
+            None => return,
+        }
+    }
+}
+
+/// Outline items around dropped ones are joined up again (`/Prev`, `/Next`, `/First`,
+/// `/Last`), and `/Count` is worked out again from what is left.
+fn relink_outline(doc: &Doc, pruned: &HashSet<u32>, dict: &mut Dict) {
+    let is_outline = dict.name("Type") == Some(b"Outlines") || dict.has("Title");
+    if !is_outline || !(dict.has("First") || dict.has("Next") || dict.has("Prev")) {
+        return;
+    }
+    for (key, step) in [
+        ("Next", "Next"),
+        ("Prev", "Prev"),
+        ("First", "Next"),
+        ("Last", "Prev"),
+    ] {
+        let Some(start) = dict.get(key).and_then(Obj::as_ref_num) else {
+            continue;
+        };
+        if !pruned.contains(&start) {
+            continue;
+        }
+        let mut cur = Some(start);
+        let mut guard = 0;
+        while let Some(c) = cur {
+            guard += 1;
+            if !pruned.contains(&c) || guard > 100_000 {
+                break;
+            }
+            cur = doc.load(c).ok().and_then(|l| match l.obj {
+                Obj::Dict(d) => d.get(step).and_then(Obj::as_ref_num),
+                _ => None,
+            });
+        }
+        match cur {
+            Some(c) if !pruned.contains(&c) => dict.set(key, Obj::r(c)),
+            _ => {
+                dict.remove(key);
+            }
+        }
+    }
+    if let Some(count) = dict.get("Count").and_then(|o| doc.resolve(o).as_i64()) {
+        let n = outline_visible(doc, pruned, dict.get("First").and_then(Obj::as_ref_num), 0);
+        dict.set("Count", Obj::Int(if count < 0 { -n } else { n }));
+    }
+}
+
+/// How many outline items under a parent are left and showing, given its first child.
+fn outline_visible(doc: &Doc, pruned: &HashSet<u32>, first: Option<u32>, depth: usize) -> i64 {
+    let mut n = 0i64;
+    let mut cur = first;
+    let mut guard = 0;
+    while let Some(c) = cur {
+        guard += 1;
+        if guard > 100_000 || depth > 32 {
+            break;
+        }
+        let d = match doc.load(c) {
+            Ok(l) => match l.obj {
+                Obj::Dict(d) => d,
+                _ => break,
+            },
+            Err(_) => break,
+        };
+        if !pruned.contains(&c) {
+            n += 1;
+            let open = d
+                .get("Count")
+                .and_then(|o| doc.resolve(o).as_i64())
+                .is_some_and(|k| k > 0);
+            if open {
+                n += outline_visible(
+                    doc,
+                    pruned,
+                    d.get("First").and_then(Obj::as_ref_num),
+                    depth + 1,
+                );
+            }
+        }
+        cur = d.get("Next").and_then(Obj::as_ref_num);
+    }
+    n
+}
+
 fn drop_pruned_dict(d: &mut Dict, pruned: &HashSet<u32>) {
+    // Name and number trees are lists of pairs: a dropped value takes its key with it, so the
+    // pairs after it do not shift.
+    for key in ["Names", "Nums"] {
+        match d.remove(key) {
+            Some(Obj::Array(a)) => {
+                let mut kept: Vec<Obj> = Vec::with_capacity(a.len());
+                for pair in a.chunks(2) {
+                    let dead = pair
+                        .iter()
+                        .any(|x| matches!(x, Obj::Ref(n, _) if pruned.contains(n)));
+                    if !dead {
+                        kept.extend(pair.iter().cloned());
+                    }
+                }
+                d.set(key, Obj::Array(kept));
+            }
+            Some(other) => d.set(key, other),
+            None => {}
+        }
+    }
     let dead: Vec<String> = d
         .iter()
         .filter(|(_, v)| matches!(v, Obj::Ref(n, _) if pruned.contains(n)))
@@ -795,13 +978,21 @@ fn expand_form_tree(
     kept_objs: &HashSet<u32>,
 ) {
     loop {
-        let mut add: Vec<u32> = Vec::new();
+        let mut add: Vec<(u32, &'static str)> = Vec::new();
         for &num in drop_objs.keys() {
             let Ok(l) = doc.load(num) else { continue };
             let Obj::Dict(d) = l.obj else { continue };
             // Kids go down with their field.
             if let Some(kids) = d.get("Kids").and_then(|k| doc.resolve_array(k)) {
-                add.extend(kids.iter().filter_map(Obj::as_ref_num));
+                add.extend(
+                    kids.iter()
+                        .filter_map(Obj::as_ref_num)
+                        .map(|k| (k, "form field")),
+                );
+            }
+            // The pop-up note of a dropped annotation goes with it.
+            if let Some(pop) = d.get("Popup").and_then(Obj::as_ref_num) {
+                add.push((pop, "annotation"));
             }
             // A dropped widget takes its parent when no other kid has a value.
             if let Some(parent) = d.get("Parent").and_then(Obj::as_ref_num)
@@ -822,16 +1013,16 @@ fn expand_form_tree(
                         matches!(doc.load(k), Ok(kl) if matches!(&kl.obj, Obj::Dict(kd) if kd.has("V")))
                     });
                 if !others_valued && !pd.has("V") {
-                    add.push(parent);
+                    add.push((parent, "form field"));
                 }
             }
         }
-        add.retain(|n| !drop_objs.contains_key(n) && !kept_objs.contains(n));
+        add.retain(|(n, _)| !drop_objs.contains_key(n) && !kept_objs.contains(n));
         if add.is_empty() {
             break;
         }
-        for n in add {
-            drop_objs.insert(n, "form field");
+        for (n, what) in add {
+            drop_objs.insert(n, what);
         }
     }
 }
@@ -1238,10 +1429,10 @@ fn words_from_chars(chars: &[Ch], boxes: &[Rect], scale: f32) -> Vec<Word> {
                 || (c.r.y + c.r.h / 2.0) > p.r.bottom() + 1.0
                 || (c.r.y + c.r.h / 2.0) < p.r.y - 1.0
         });
-        if c.c == ' ' || gap {
+        if c.c.is_whitespace() || gap {
             flush(&mut cur);
         }
-        if c.c != ' ' {
+        if !c.c.is_whitespace() {
             cur.push(c);
         }
     }
@@ -1394,10 +1585,49 @@ mod tests {
         // A few unmapped characters (a bullet, a symbol) are fine.
         assert!(is_mostly_mapped(500, 3));
         assert!(is_mostly_mapped(500, 7));
-        // A quarter or more of the page, and at least 8 characters, is not.
+        // Eight or more, even among a thousand mapped characters, is not: a short number in
+        // such a font is what would be missed.
+        assert!(!is_mostly_mapped(1000, 8));
         assert!(!is_mostly_mapped(60, 20));
         assert!(!is_mostly_mapped(0, 40));
-        assert!(is_mostly_mapped(1000, 100));
+        assert!(!is_mostly_mapped(1000, 100));
+    }
+
+    #[test]
+    fn control_codes_of_an_unmapped_font_count_but_line_ends_do_not() {
+        assert!(is_unmapped('\u{3}'));
+        assert!(is_unmapped('\u{0}'));
+        assert!(is_unmapped('\u{fffd}'));
+        assert!(is_unmapped('\u{e001}'));
+        assert!(!is_unmapped('\n'));
+        assert!(!is_unmapped('\r'));
+        assert!(!is_unmapped('\t'));
+        assert!(!is_unmapped('a'));
+        assert!(!is_unmapped('7'));
+        assert!(!is_unmapped(' '));
+    }
+
+    #[test]
+    fn name_tree_pairs_stay_together() {
+        let mut ef = Dict::new();
+        ef.set(
+            "Names",
+            Obj::Array(vec![
+                Obj::Str(b"a.txt".to_vec()),
+                Obj::r(5),
+                Obj::Str(b"b.txt".to_vec()),
+                Obj::r(9),
+            ]),
+        );
+        let mut d = Dict::new();
+        d.set("EmbeddedFiles", Obj::Dict(ef));
+        let pruned: HashSet<u32> = [5].into_iter().collect();
+        drop_pruned_dict(&mut d, &pruned);
+        let ef = d.get("EmbeddedFiles").and_then(Obj::as_dict).unwrap();
+        let names = ef.get("Names").and_then(Obj::as_array).unwrap();
+        assert_eq!(names.len(), 2);
+        assert_eq!(names[0].as_str_bytes(), Some(&b"b.txt"[..]));
+        assert_eq!(names[1].as_ref_num(), Some(9));
     }
 
     #[test]
@@ -1425,5 +1655,9 @@ mod tests {
         );
         assert!(t.contains("2345 6789 0124"), "{t:?}");
         assert!(t.contains("abcd"), "{t:?}");
+        // A wide gap in a kerned array is a space, and runs on a line are joined by one.
+        let t = content_text(b"BT [(ab) -300 (cd)] TJ (ef) Tj 0 -14 Td (gh) Tj ET");
+        assert!(t.contains("ab cd"), "{t:?}");
+        assert!(t.contains("ef \ngh"), "{t:?}");
     }
 }

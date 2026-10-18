@@ -10,6 +10,7 @@ use common::with_fetch;
 use panoply_core::CancelToken;
 use panoply_ocr::Ocr;
 use panoply_ocr::redact::{self, Match, Options, Preset, Where};
+use panoply_pdf::obj::Obj;
 use panoply_pdf::source::Source;
 
 const EMAIL: &str = "anzal@example.com";
@@ -532,7 +533,7 @@ fn the_kids_of_a_dropped_field_go_with_it() {
     };
     let ap = stream(
         "/Type /XObject /Subtype /Form /BBox [0 0 200 30] /Resources << /Font << /Helv 7 0 R >> >>",
-        b"BT /Helv 14 Tf 2 8 Td (2345) Tj 40 0 Td (6789) Tj 40 0 Td (0124) Tj ET",
+        b"BT /Helv 14 Tf 2 8 Td (2345) Tj (x) Tj (6789) Tj (y) Tj (0124) Tj ET",
     );
     let pdf = simple_pdf(
         &[(40, 700, "Reach anzal@example.com")],
@@ -568,5 +569,176 @@ fn the_kids_of_a_dropped_field_go_with_it() {
             .unwrap_or_default();
         assert!(fields.is_empty(), "{fields:?}");
     }
+    std::fs::remove_file(&path).ok();
+}
+
+#[test]
+fn a_name_tree_keeps_its_pairs_when_one_attachment_is_dropped() {
+    // P1: two attached files, one holds an email. The other must survive with its name.
+    let spec = |name: &str, f: u32| {
+        format!("<< /Type /Filespec /F ({name}) /EF << /F {f} 0 R >> >>").into_bytes()
+    };
+    let pdf = simple_pdf(
+        &[(40, 700, "Hello there")],
+        vec![
+            (9, spec("a.txt", 10)),
+            (
+                10,
+                stream("/Type /EmbeddedFile", b"mail anzal@example.com please"),
+            ),
+            (11, spec("b.txt", 12)),
+            (12, stream("/Type /EmbeddedFile", b"nothing to see")),
+        ],
+        "/Names << /EmbeddedFiles << /Names [(a.txt) 9 0 R (b.txt) 11 0 R] >> >>",
+        "",
+    );
+    let path = tmp("names");
+    std::fs::write(&path, &pdf).unwrap();
+    let file = File::open(&path).unwrap();
+    let opts = Options {
+        presets: vec![Preset::Email],
+        ..Options::default()
+    };
+    let (_, report, out) = run(&file, &opts, |_| {}).unwrap();
+    let dropped: Vec<u32> = report.dropped.iter().map(|d| d.0).collect();
+    assert!(dropped.contains(&9) && dropped.contains(&10), "{dropped:?}");
+    assert!(
+        !dropped.contains(&11) && !dropped.contains(&12),
+        "{dropped:?}"
+    );
+    assert!(leaks_in(&out, &["anzal@example.com"]).is_empty());
+    let doc = panoply_pdf::Doc::open(Source::from_bytes(out)).unwrap();
+    let cat = doc.catalog().unwrap();
+    let names = cat.get("Names").and_then(|n| doc.resolve_dict(n)).unwrap();
+    let ef = names
+        .get("EmbeddedFiles")
+        .and_then(|n| doc.resolve_dict(n))
+        .unwrap();
+    let arr = ef.get("Names").and_then(|n| doc.resolve_array(n)).unwrap();
+    assert_eq!(arr.len(), 2, "pairs stay pairs: {arr:?}");
+    assert_eq!(arr[0].as_str_bytes(), Some(&b"b.txt"[..]));
+    let fnum = doc
+        .resolve_dict(&arr[1])
+        .and_then(|s| s.get("EF").and_then(|e| doc.resolve_dict(e)))
+        .and_then(|e| e.get("F").and_then(Obj::as_ref_num))
+        .expect("the surviving file spec points at its file");
+    let (_, data) = doc.stream_data(fnum).unwrap().unwrap();
+    assert!(String::from_utf8_lossy(&data).contains("nothing to see"));
+    std::fs::remove_file(&path).ok();
+}
+
+#[test]
+fn bookmarks_are_joined_up_around_a_dropped_one() {
+    let pdf = simple_pdf(
+        &[(40, 700, "Hello there")],
+        vec![
+            (
+                30,
+                b"<< /Type /Outlines /First 31 0 R /Last 33 0 R /Count 3 >>".to_vec(),
+            ),
+            (
+                31,
+                b"<< /Title (Intro) /Parent 30 0 R /Next 32 0 R >>".to_vec(),
+            ),
+            (
+                32,
+                b"<< /Title (Mail anzal@example.com) /Parent 30 0 R /Prev 31 0 R /Next 33 0 R >>"
+                    .to_vec(),
+            ),
+            (
+                33,
+                b"<< /Title (End) /Parent 30 0 R /Prev 32 0 R >>".to_vec(),
+            ),
+        ],
+        "/Outlines 30 0 R",
+        "",
+    );
+    let path = tmp("outline");
+    std::fs::write(&path, &pdf).unwrap();
+    let file = File::open(&path).unwrap();
+    let opts = Options {
+        presets: vec![Preset::Email],
+        ..Options::default()
+    };
+    let (_, report, out) = run(&file, &opts, |_| {}).unwrap();
+    assert!(
+        report
+            .dropped
+            .iter()
+            .any(|d| d.0 == 32 && d.1 == "bookmark"),
+        "{:?}",
+        report.dropped
+    );
+    let doc = panoply_pdf::Doc::open(Source::from_bytes(out)).unwrap();
+    let cat = doc.catalog().unwrap();
+    let root = cat
+        .get("Outlines")
+        .and_then(|o| doc.resolve_dict(o))
+        .expect("outline kept");
+    let first = root.get("First").unwrap().clone();
+    let a = doc.resolve_dict(&first).unwrap();
+    assert_eq!(
+        a.get("Title").and_then(Obj::as_str_bytes),
+        Some(&b"Intro"[..])
+    );
+    let next = a
+        .get("Next")
+        .expect("Intro points to the next kept item")
+        .clone();
+    let c = doc.resolve_dict(&next).unwrap();
+    assert_eq!(
+        c.get("Title").and_then(Obj::as_str_bytes),
+        Some(&b"End"[..])
+    );
+    assert!(c.get("Next").is_none());
+    assert_eq!(c.get("Prev").and_then(Obj::as_ref_num), first.as_ref_num());
+    assert_eq!(
+        root.get("Last").and_then(Obj::as_ref_num),
+        next.as_ref_num()
+    );
+    assert_eq!(root.get("Count").and_then(Obj::as_i64), Some(2));
+    std::fs::remove_file(&path).ok();
+}
+
+#[test]
+fn a_kept_annotation_stays_visible_on_a_redacted_page() {
+    // P1: a stamp or highlight that holds no match must not vanish when its page is redrawn.
+    let annot =
+        b"<< /Type /Annot /Subtype /Square /Rect [100 300 200 350] /F 4 /AP << /N 9 0 R >> >>"
+            .to_vec();
+    let ap = stream(
+        "/Type /XObject /Subtype /Form /BBox [0 0 100 50]",
+        b"0.5 g 0 0 100 50 re f",
+    );
+    let pdf = simple_pdf(
+        &[(40, 700, "Contact anzal@example.com today")],
+        vec![(8, annot), (9, ap)],
+        "",
+        "/Annots [8 0 R]",
+    );
+    let path = tmp("annot");
+    std::fs::write(&path, &pdf).unwrap();
+    let file = File::open(&path).unwrap();
+    let opts = Options {
+        presets: vec![Preset::Email],
+        ..Options::default()
+    };
+    let (_, report, out) = run(&file, &opts, |_| {}).unwrap();
+    assert_eq!(report.redacted_pages, vec![0]);
+    let (img, scale) = page_picture(&out, "annot-out");
+    let w = img.width as usize;
+    let (cx, cy) = ((150.0 * scale) as usize, ((792.0 - 325.0) * scale) as usize);
+    let (mut sum, mut n) = (0u32, 0u32);
+    for y in cy - 10..cy + 10 {
+        for x in cx - 10..cx + 10 {
+            sum += u32::from(img.data[y * w + x]);
+            n += 1;
+        }
+    }
+    let mean = sum / n;
+    assert!(
+        (90..=170).contains(&mean),
+        "the annotation's gray is drawn, mean {mean}"
+    );
     std::fs::remove_file(&path).ok();
 }

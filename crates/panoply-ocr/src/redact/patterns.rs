@@ -92,9 +92,9 @@ impl Preset {
                 r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}"
             }
             Preset::Phone => r"\+?\d[\d ().\-]{8,18}\d",
-            Preset::Aadhaar => r"\d{4}[ \-]{1,2}\d{4}[ \-]{1,2}\d{4}",
+            Preset::Aadhaar => r"\d{4}[ \-\n]{1,2}\d{4}[ \-\n]{1,2}\d{4}",
             Preset::Pan => r"[A-Z]{5}[0-9]{4}[A-Z]",
-            Preset::Card => r"\d(?:[ \-]{0,2}\d){12,18}",
+            Preset::Card => r"\d(?:[ \-\n]{0,2}\d){12,18}",
             Preset::Iban => r"[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){2,7}(?: ?[A-Z0-9]{1,3})?",
         }
     }
@@ -422,6 +422,11 @@ mod tests {
         let kinds: Vec<&str> = r.iter().map(|x| x.1).collect();
         assert_eq!(kinds, ["aadhaar", "card"], "{r:?}");
         assert_eq!(found(&[], &p, "id 3456 7890 1238.").len(), 1);
+        // A line break between groups (kept as a line feed in the page text) joins them, and
+        // digits on the next line after a line break do not extend a number.
+        let r = found(&[], &p, "id 2345 6789\n0124 end");
+        assert_eq!(r.len(), 1, "{r:?}");
+        assert!(found(&[], &p, "id 2345 6789 0124\n5678").len() == 1);
     }
 
     #[test]

@@ -122,6 +122,20 @@ impl Module for RedactModule {
             let mut progress = |f: f32, l: &str| ctx.progress(share(f * 0.5), l.to_string());
             let found = redact::find(&file, &opts, &ocr, &mut fetch, &ctx.cancel, &mut progress)
                 .map_err(fail)?;
+            let mut unmapped: Vec<(&usize, &usize)> = found.unmapped.iter().collect();
+            unmapped.sort();
+            for (page, n) in unmapped {
+                ctx.note(format!(
+                    "{prefix}page {}: {} could not be mapped to text. {}",
+                    page + 1,
+                    plural(*n, "character", "characters"),
+                    if found.scanned.contains(page) {
+                        "The page was read as a picture instead."
+                    } else {
+                        "Too few to read the page as a picture, so they could not be searched."
+                    }
+                ));
+            }
             if found.matches.is_empty() {
                 ctx.note(format!("{prefix}Nothing matched, so no file was written."));
                 continue;
@@ -207,7 +221,7 @@ impl Module for RedactModule {
                     opts.dpi
                 };
                 ctx.note(format!(
-                    "{prefix}Redacted pages are redrawn as pictures at {dpi:.0} DPI with a hidden text layer. Form fields, annotations and links on those pages are not carried over."
+                    "{prefix}Redacted pages are redrawn as pictures at {dpi:.0} DPI with a hidden text layer. Annotations, stamps and form fields on those pages are drawn into the picture, except any that held a match, which are removed. Links and fillable fields on those pages stop working."
                 ));
                 if dpi + 1.0 < opts.dpi {
                     ctx.note(format!(
