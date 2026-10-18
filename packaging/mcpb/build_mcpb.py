@@ -82,7 +82,7 @@ def main():
     for k, v in {"@VERSION@": a.version, "@PLATFORM@": a.platform}.items():
         manifest = manifest.replace(k, v)
     m = json.loads(manifest)
-    m["tools"] = module_tools(args.platform)
+    m["tools"] = module_tools(a.platform)
 
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
