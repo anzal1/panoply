@@ -324,6 +324,16 @@ fn show_page(cx: &mut App, route: Route) {
     }
 }
 
+/// Open the app window on the Share page with these files waiting to be sent.
+pub(crate) fn share_files(cx: &mut App, files: Vec<PathBuf>) {
+    open_app_window(cx, Vec::new());
+    let slot = cx.global::<AppWindow>().clone();
+    let handle = *slot.0.borrow();
+    if let Some(h) = handle {
+        let _ = h.update(cx, |app, _, cx| app.share_paths(files, cx));
+    }
+}
+
 /// Tab and Shift+Tab in a one-line text field move between controls. The kit's field binds Tab to
 /// "indent", which would put a tab character in the search box. Bound after the kit's own, so
 /// these win. Also used by the headless runs.

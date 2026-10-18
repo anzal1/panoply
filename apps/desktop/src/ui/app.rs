@@ -1,4 +1,4 @@
-//! The app window: a sidebar (Home, Find, History, the categories, Nearby, Modules, Settings), a 52 pt
+//! The app window: a sidebar (Home, Find, History, the categories, Share, Modules, Settings), a 52 pt
 //! toolbar zone with the page title, and the page. The pages are Home (search, drop area, quick
 //! actions, recent jobs), search results, a category, History, Modules, Settings, two "later"
 //! pages, and the same tool panel the bar uses.
@@ -14,6 +14,7 @@ use gpui::*;
 use gpui_base::input::{Input as KitInput, InputEvent, InputState};
 
 mod find_page;
+mod share_page;
 
 use super::Hub;
 use super::chrome;
@@ -46,7 +47,8 @@ pub(crate) enum Route {
     Home,
     Find,
     History,
-    Nearby,
+    /// Send and receive files with other devices.
+    Share,
     Modules,
     /// The disk map: what is using the space.
     Disk,
@@ -85,6 +87,8 @@ pub(crate) struct AppView {
     page_scroll: ScrollHandle,
     /// The Find page: its own search field, the latest answer and what is chosen.
     find: find_page::FindState,
+    /// The Share page: the model, and the engine while the page is open or receiving is on.
+    share: share_page::ShareState,
     _subs: Vec<Subscription>,
 }
 
@@ -119,6 +123,7 @@ impl AppView {
         let focus = cx.focus_handle();
         window.focus(&focus, cx);
         let disk = cx.new(DiskView::new);
+        let share = share_page::ShareState::new(cx);
         Self {
             hub,
             route: Route::Home,
@@ -139,6 +144,7 @@ impl AppView {
             bounds_token: 0,
             page_scroll: ScrollHandle::new(),
             find,
+            share,
             _subs: {
                 let mut subs = vec![search_sub, recents_sub, appearance, bounds_sub];
                 subs.extend(find_subs);
@@ -243,6 +249,7 @@ impl AppView {
         if route == Route::Find {
             self.find.arrive();
         }
+        self.share_visible(route == Route::Share, cx);
         if route == Route::Modules {
             // Reading the disk once on arrival keeps drawing free.
             self.downloads = crate::downloads::rows();
@@ -366,6 +373,12 @@ impl AppView {
                     app._panel_sub = None;
                     app.route = Route::Home;
                     app.dropped(paths.clone(), cx);
+                }
+                PanelEvent::Share(paths) => {
+                    app.query.clear();
+                    app.panel = None;
+                    app._panel_sub = None;
+                    app.share_paths(paths.clone(), cx);
                 }
                 PanelEvent::Ran => {}
             },
@@ -826,17 +839,32 @@ impl AppView {
                 )
             }))
             .child(section_label("Panoply", t))
-            .child(side_item(
-                "nav-nearby",
-                "Nearby",
-                "radio",
-                t.ink2,
-                None,
-                route == Route::Nearby,
-                None,
-                t,
-                go(Route::Nearby),
-            ))
+            .child(
+                side_item(
+                    "nav-share",
+                    "Share",
+                    "share",
+                    t.ink2,
+                    None,
+                    route == Route::Share,
+                    None,
+                    t,
+                    go(Route::Share),
+                )
+                .relative()
+                .when(self.share.needs_you() && route != Route::Share, |d| {
+                    // Somebody is waiting for an answer on the Share page.
+                    d.aria_description("Someone wants to send you files").child(
+                        div()
+                            .absolute()
+                            .top(px(12.))
+                            .right(px(12.))
+                            .size(px(8.))
+                            .rounded_full()
+                            .bg(t.accent),
+                    )
+                }),
+            )
             .child(side_item(
                 "nav-disk",
                 "Disk map",
@@ -1616,28 +1644,6 @@ impl AppView {
         self.page("history", "History", None, body, t)
     }
 
-    fn later_page(
-        &mut self,
-        id: &'static str,
-        title: &str,
-        copy: (&str, &str, &str),
-        t: Theme,
-        cx: &mut Context<Self>,
-    ) -> AnyElement {
-        let (icon_name, headline, text) = copy;
-        let action = button(
-            "go-home",
-            "Back to Home",
-            ButtonKind::Secondary,
-            Some("arrow-left"),
-            t,
-            cx.listener(|app, _, _, cx| app.go(Route::Home, cx)),
-        )
-        .into_any_element();
-        let body = empty_state(icon_name, headline, text, Some(action), t);
-        self.page(id, title, None, body, t)
-    }
-
     // ---- settings ----
 
     fn settings_page(&mut self, t: Theme, cx: &mut Context<Self>) -> AnyElement {
@@ -1846,17 +1852,7 @@ impl Render for AppView {
             (Route::History, _) => self.history_page(t, cx),
             (Route::Settings, _) => self.settings_page(t, cx),
             (Route::Find, _) => self.find_page(t, window, cx),
-            (Route::Nearby, _) => self.later_page(
-                "nearby",
-                "Nearby",
-                (
-                    "radio",
-                    "Nearby arrives with sharing",
-                    "Sending to your phone and other computers is not in the app yet. From the command line, panoply share already does it over your own network.",
-                ),
-                t,
-                cx,
-            ),
+            (Route::Share, _) => self.share_page(t, cx),
             (Route::Tool, None) => self.home(t, cx),
         };
         let title_bar = chrome::title_bar(window, t, "Panoply");
@@ -1899,7 +1895,9 @@ impl Render for AppView {
             ))
             .on_drop::<ExternalPaths>(cx.listener(|app, paths: &ExternalPaths, _, cx| {
                 app.drag_active = false;
-                if app.panel.is_none() {
+                if app.route == Route::Share {
+                    app.share_paths(paths.paths().to_vec(), cx);
+                } else if app.panel.is_none() {
                     app.dropped(paths.paths().to_vec(), cx);
                 }
             }))
