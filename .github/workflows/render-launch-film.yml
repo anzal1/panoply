@@ -3,12 +3,15 @@ name: Render launch film
 # Renders a launch film picture (silent) from docs/launch on a public-repo runner. HTML frames, headless Chrome.
 # The licensed track is never fetched here; it is muxed in locally (docs/launch/PRODUCTION.md, "Audio").
 #
+# Feature drops live in docs/launch/drops/<slug> on their own drop/<slug> branch: write "drops/<slug> looks 60"
+# into docs/launch/trigger/render.txt on that branch and push. Each branch has its own concurrency group.
+#
 # Start it with workflow_dispatch (once this file is on the default branch) or, until then, by pushing a change
 # to docs/launch/trigger/render.txt on the launch/video branch. That file holds three words:
 #     <projects> <quality> <fps>     e.g.   video,teaser,teaser-vertical draft 30     (comma list; video, teaser, teaser-vertical)
 on:
   push:
-    branches: [launch/video]
+    branches: [launch/video, "drop/**"]
     paths: [docs/launch/trigger/render.txt]
   workflow_dispatch:
     inputs:
@@ -55,11 +58,15 @@ jobs:
             read -r p q f < docs/launch/trigger/render.txt
             echo "project=$p" >> "$GITHUB_OUTPUT"; echo "quality=$q" >> "$GITHUB_OUTPUT"; echo "fps=$f" >> "$GITHUB_OUTPUT"
           fi
-      - name: GSAP (not committed, installed from npm)
+      - name: GSAP (not committed, installed from npm, copied into every project in the list)
+        shell: bash
         run: |
+          set -euo pipefail
           npm install --no-save --prefix "$RUNNER_TEMP/gsap" gsap@3.15.0
-          mkdir -p docs/launch/video/assets/vendor
-          cp "$RUNNER_TEMP/gsap/node_modules/gsap/dist/gsap.min.js" docs/launch/video/assets/vendor/gsap.min.js
+          for p in video $(echo "${{ steps.s.outputs.project }}" | tr ',' ' '); do
+            mkdir -p "docs/launch/$p/assets/vendor"
+            cp "$RUNNER_TEMP/gsap/node_modules/gsap/dist/gsap.min.js" "docs/launch/$p/assets/vendor/gsap.min.js"
+          done
       - name: FFmpeg
         run: |
           command -v ffmpeg >/dev/null || { sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg; }
@@ -85,7 +92,7 @@ jobs:
         with:
           name: launch-${{ steps.s.outputs.quality }}-${{ steps.s.outputs.fps }}fps
           path: |
-            docs/launch/*/renders/picture.mp4
-            docs/launch/*/renders/render.log
-            docs/launch/*/renders/probe.txt
+            docs/launch/**/renders/picture.mp4
+            docs/launch/**/renders/render.log
+            docs/launch/**/renders/probe.txt
           retention-days: 14
