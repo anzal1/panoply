@@ -33,10 +33,10 @@
     .sec{color:#7D7F88;padding:12px 14px 8px}
     .row{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;column-gap:20px;padding:var(--rp) 14px;border-radius:16px}
     .row b{font-weight:500;white-space:nowrap}
-    .row .d{color:#8B8D96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row .d{color:var(--dcol,#8B8D96);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .row .k{color:#7D7F88}
     .row.sel{background:rgba(25,40,61,0);box-shadow:inset 0 0 0 1.5px rgba(76,141,255,.16)}
-    .row.sel .d{color:#AEB1BB}
+    .row.sel .d{color:var(--dsel,#AEB1BB)}
     .row.sel.plain{box-shadow:none}
     .kbd{display:inline-grid;justify-self:end;place-items:center;min-width:calc(var(--fs) * 1.4);height:calc(var(--fs) * 1.2);padding:0 8px;border-radius:9px;background:rgba(255,255,255,.08);color:#8B8D96}
     .kbd svg{width:.8em;height:.8em}
@@ -64,12 +64,12 @@
     .ba div{border-radius:18px;background:#202128;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08);padding:16px 24px}
     .ba small{display:block;font-size:var(--fs);color:#8B8D96}
     .ba strong{display:block;font-size:var(--big);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
-    .ba .after strong{color:#3DD56D}
+    .ba .after strong{color:#EDEDF0}
     .ba>span{color:#6F717A;display:grid}
     .ba>span svg{width:calc(var(--fs) * 1.4);height:calc(var(--fs) * 1.4)}
     .done .out{margin-top:24px;color:#8B8D96}
     .done .out span{display:inline-block;margin-top:10px;padding:10px 20px;border-radius:14px;background:#202128;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08);color:#EDEDF0}
-    .bar-foot{position:absolute;left:0;right:0;bottom:0;height:var(--ft);border-top:1.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;padding:0 var(--padl);color:#7D7F88}
+    .bar-foot{position:absolute;left:0;right:0;bottom:0;height:var(--ft);border-top:1.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;padding:0 var(--padl);color:var(--fcol,#7D7F88);font-size:var(--fine,var(--fs))}
     .bar-foot .l{display:flex;align-items:center;gap:14px;white-space:nowrap}
     .bar-foot .l img{width:calc(var(--fs) * 1.1);height:calc(var(--fs) * 1.1)}
     .bar-foot .r{display:flex;align-items:center;gap:12px}
@@ -145,7 +145,7 @@
       bust: { FH: 1040, top: 20, cx: 0.66 * W },
       head: { size: 124, left: 110, rh: 136 },
       fb: 210, orb: { rx: 430, ry: 330, cy: 540, s: 0.9 },
-      bar: { w: 1700, h: 950, fs: 46, fs2: 54, big: 104, rad: 26, bt: 128, ft: 100, padl: 34, gap: 22, ic: 52, fiw: 64, rp: 14 },
+      bar: { w: 1700, h: 950, fs: 46, fs2: 54, big: 104, rad: 26, bt: 128, ft: 100, padl: 34, gap: 22, ic: 52, fiw: 64, rp: 14, dcol: '#8B8D96', dsel: '#AEB1BB', fcol: '#7D7F88', fine: 46 },
       mural: { h: 880, top: 10, cx: W / 2, lab: 64, labTop: 915, dx: 70 },
       priv: { h: 900, top: 90, cx: 0.68 * W, t: { size: 112, left: 140, top: 410, rh: 120 } },
       owl: { h: 900, top: 90, cx: 0.74 * W, t: { size: 112, left: 140, top: 330, rh: 120 }, term: { size: 40, top: 640, left: 140, padx: 28, pady: 16 } },
@@ -159,15 +159,15 @@
       bust: { FH: 960, top: 372, cx: 0.5 * W },
       head: { size: 112, left: 70, top: 136, rh: 122 },
       fb: 170, orb: { rx: 430, ry: 290, cy: 800, s: 0.8 },
-      bar: { w: 1000, h: 940, fs: 36, fs2: 44, big: 84, rad: 22, bt: 112, ft: 92, padl: 24, gap: 14, ic: 40, fiw: 52, rp: 12 },
+      bar: { w: 1000, h: 940, fs: 36, fs2: 44, big: 84, rad: 22, bt: 112, ft: 92, padl: 24, gap: 14, ic: 40, fiw: 52, rp: 12, dcol: '#B3B6BF', dsel: '#CDD0D8', fcol: '#A8ABB4', fine: 34 },
       mural: { h: 1000, top: 40, cx: W / 2, lab: 76, labTop: 1120, dx: 30 },
       priv: { h: 880, top: 20, cx: 0.5 * W, t: { size: 104, left: 70, top: 930, rh: 112 } },
       owl: { h: 860, top: 20, cx: 0.5 * W, t: { size: 100, left: 70, top: 930, rh: 106 }, term: { size: 33, top: 1170, left: 70, padx: 22, pady: 14 } },
       num: { big: 200, bigTop: 520, lab: 46, labTop: 760 },
-      tp: { left: 40, top: 400, w: 1000, h: 600, rad: 22, fs: 34, cx: 40, cy: 80, oy: 400 },
+      tp: { left: 40, top: 595, w: 1000, h: 160, rad: 22, fs: 27, cx: 36, cy: 34, oy: 88 },   /* two lines, 58 chars on one line, no wrap */
       burst: { rx: 440, ry: 430, fb: 190 },
       ring: 300,
-      end: { icon: 200, cy: 400, rx: 400, ry: 190, fb: 150, name: { size: 150, top: 630 }, tag: { size: 66, top: 822 }, url: { size: 54, top: 930 }, small: { size: 34, top: 1090 }, smallLines: ['Free and open source.', 'macOS, Windows and Linux.'] },
+      end: { icon: 200, cy: 400, rx: 400, ry: 190, fb: 150, name: { size: 150, top: 630 }, tag: { size: 66, top: 822 }, url: { size: 54, top: 930 }, small: { size: 36, top: 1090, col: '#B8B6B2' }, smallLines: ['Free and open source.', 'macOS, Windows and Linux.'] },
       rest: [[.12,.40],[.88,.40],[.09,.55],[.91,.58],[.12,.74],[.9,.75],[.15,.92],[.5,.94],[.86,.93],[.5,.58],[.3,.43],[.7,.41],[.5,.68],[.3,.83]],
     };
     const BH = L.bust.FH, BW = BH * 2200 / 1228, BTOP = L.bust.top, BCX = L.bust.cx;
@@ -191,7 +191,10 @@
     css('bust', { left: BCX - 0.64 * BW, top: BTOP, width: BW, height: BH });
     gsap.set('#bustwrap', { transformOrigin: BCX + 'px ' + bustCY + 'px', opacity: 1 });
     tl.to('#bustwrap', { scale: 1.05, duration: CUES.proof - CUES.hold, ease: 'sine.inOut' }, CUES.hold);
-    tl.to('#bustwrap', { scale: 0.9, x: bustShift, opacity: 0.3, duration: 0.6, ease: P2IO }, CUES.proof);
+    /* clean handover: the bust drops to its backdrop level in 0.2 s (invisible in 4:5), the bar only then comes in */
+    const BUST_DIM = wide ? 0.3 : 0;
+    tl.to('#bustwrap', { scale: 0.9, x: bustShift, duration: 0.6, ease: P2IO }, CUES.proof);
+    tl.to('#bustwrap', { opacity: BUST_DIM, duration: 0.2, ease: 'power1.inOut' }, CUES.proof);
     /* the climax: the bust returns full size and full brightness */
     tl.to('#bustwrap', { scale: 1.0, x: bustShift, opacity: 1, duration: 0.5, ease: P3 }, CUES.climax);
     tl.to('#bustwrap', { opacity: 0, duration: 0.2, ease: 'none' }, CUES.n1 - 0.2);
@@ -315,7 +318,7 @@
     updOrbit();
     tl.to(ob, { e: 1, duration: 1.1, ease: 'power2.out', onUpdate: updOrbit }, CUES.hold);
     tl.to(ob, { spin: 2.6, duration: CUES.climax - CUES.hold, ease: 'none', onUpdate: updOrbit }, CUES.hold);
-    tl.to(ob, { m: 0.4, duration: 0.6, ease: 'power1.inOut', onUpdate: updOrbit }, CUES.proof);
+    tl.to(ob, { m: 0.4, duration: 0.2, ease: 'power1.inOut', onUpdate: updOrbit }, CUES.proof);
     if (wide) tl.to(ob, { cx: CX, duration: 0.6, ease: P2IO, onUpdate: updOrbit }, CUES.proof);
     tl.to(ob, { m: 0, duration: 0.3, ease: 'power1.in', onUpdate: updOrbit }, CUES.climax - 0.3);
 
@@ -323,7 +326,8 @@
     const B = L.bar;
     const barEl = $('bar');
     barEl.classList.add('stack'); if (!wide) barEl.classList.add('tall');
-    ['fs', 'fs2', 'big', 'rad', 'bt', 'ft', 'padl', 'gap', 'ic', 'fiw', 'rp'].forEach(k => barEl.style.setProperty('--' + k, B[k] + 'px'));
+    ['fs', 'fs2', 'big', 'rad', 'bt', 'ft', 'padl', 'gap', 'ic', 'fiw', 'rp', 'fine'].forEach(k => barEl.style.setProperty('--' + k, B[k] + 'px'));
+    ['dcol', 'dsel', 'fcol'].forEach(k => barEl.style.setProperty('--' + k, B[k]));
     css(barEl, { left: (W - B.w) / 2, top: (H - B.h) / 2, width: B.w, height: B.h });
     const ICONS = {
       pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
@@ -341,13 +345,17 @@
       { s: '1', k: 'pdf', file: 'Lease.pdf', size: '4.2 MB', ask: 'under 2 mb', tool: 'Compress PDF', desc: 'Make this PDF small enough to email or upload.', forK: 'For this PDF document, best first',
         opts: [['Target', 'under size'], ['Stay under', '2 MB']], est: '4.2 MB to at most 2 MB',
         also: [['Split PDF', 'Cut this PDF into parts by page ranges or every N pages.', 'PDF'], ['Merge PDF', 'Put these PDFs in one file.', 'PDF']],
-        head: '4.2 MB to 880 KB, 79% smaller', before: '4.2 MB', v0: 4200, v1: 880, out: 'Lease (compressed).pdf', run: 'Running Compress PDF', T: J1 },
+        tgt: 2000, before: '4.2 MB', v0: 4200, v1: 880, out: 'Lease (compressed).pdf', run: 'Running Compress PDF', T: J1 },
       { s: '2', k: 'img', file: 'signature.png', size: '67 KB', ask: 'under 50 kb', tool: 'Compress image', desc: 'Make this image smaller without it looking worse, or fit it under a size.', forK: 'For this picture, best first',
         opts: [['Target', 'under size'], ['Stay under', '50 KB'], ['Format', 'keep']], est: '67 KB to at most 50 KB',
         also: [['Resize to exact KB', 'Fit a photo to the exact pixels and KB a form or exam portal asks for.', 'Image']],
-        head: '67 KB to 43 KB, 35% smaller', before: '67 KB', v0: 67, v1: 43, out: 'signature (compressed).png', run: 'Running Compress image', T: J2 },
+        tgt: 50, before: '67 KB', v0: 67, v1: 43, out: 'signature (compressed).png', run: 'Running Compress image', T: J2 },
     ];
     const fmtV = v => v >= 1000 ? (v / 1000).toFixed(1) + ' MB' : Math.round(v) + ' KB';
+    /* the headline is computed from the numbers, percent rounded to the nearest whole number */
+    JOBS.forEach(J => { J.head = `${J.before} to ${fmtV(J.v1)}, ${Math.round((1 - J.v1 / J.v0) * 100)}% smaller`; });
+    /* the after value stays neutral until it is under the target, then eases to green */
+    const afterColor = (v, tgt) => { const g = clamp01((tgt - v) / (tgt * 0.06)), a = [237, 237, 240], b = [61, 213, 109]; return 'rgb(' + a.map((c, i) => Math.round(lerp(c, b[i], g))).join(',') + ')'; };
     const viewsHtml = JOBS.map(J => {
       const s = J.s;
       const alsoRows = J.also.map(a => row(J.k, a[0], a[1], a[2])).join('');
@@ -370,7 +378,7 @@
     css('fchip2', { position: 'absolute', right: 20 });
     gsap.set(barEl, { y: 220, opacity: 0 });
     tl.to(barEl, { y: 0, duration: 0.6, ease: P3 }, CUES.proof);
-    tl.to(barEl, { opacity: 1, duration: 0.25, ease: 'power1.out' }, CUES.proof + 0.2);
+    tl.to(barEl, { opacity: 1, duration: 0.25, ease: 'power1.out' }, CUES.proof + 0.2);   /* starts when the old view is already down */
     gsap.set(['#fchip1', '#fchip2'], { y: -30, scale: 0.9, opacity: 0 });
     gsap.set('#typed2', { opacity: 1 });
 
@@ -402,7 +410,7 @@
       swap('#v-u' + s, '#v-d' + s, T.result);
       gsap.set('#chk' + s, { scale: 0.5, transformOrigin: '50% 50%' });
       const cnt = { v: J.v0 };
-      tl.to(cnt, { v: J.v1, duration: 0.45, ease: 'power2.out', onUpdate: () => { $('after' + s).textContent = fmtV(cnt.v); } }, T.count);
+      tl.to(cnt, { v: J.v1, duration: 0.45, ease: 'power2.out', onUpdate: () => { const el = $('after' + s); el.textContent = fmtV(cnt.v); el.style.color = afterColor(cnt.v, J.tgt); } }, T.count);
       tl.to('#h4' + s, { opacity: 1, duration: 0.12, ease: 'power1.out' }, T.head);
       tl.to('#chk' + s, { scale: 1, duration: 0.4, ease: 'back.out(1.6)' }, T.head);
       if (first) {
@@ -417,7 +425,9 @@
       }
     });
     /* the bar drops away on the climax */
-    tl.to(barEl, { y: 240, opacity: 0, duration: 0.3, ease: 'power2.in' }, CUES.climax - 0.02);
+    /* the bar (and its result card) is fully gone by 30.0; the bust returns only after that */
+    tl.to(barEl, { y: 40, duration: 0.2, ease: 'power1.in' }, CUES.climax - 0.2);
+    tl.to(barEl, { opacity: 0, duration: 0.2, ease: 'power1.in' }, CUES.climax - 0.2);
 
     /* ------------------------------ climax: all fourteen forms burst outward ------------------------------ */
     const BU = L.burst, bEl = $('bursts'), bfs = [];
@@ -427,11 +437,13 @@
       css(el, { width: BU.fb * SZ[i] }); bEl.appendChild(el); gsap.set(el, { xPercent: -50, yPercent: -50, opacity: 0 }); bfs.push(el);
     }
     const bo = { p: 0, spin: 0, m: 1 };
+    /* ring 10 used to pass through the helmet crest at 30.5 to 31.5: shift its phase and widen its orbit so it clears the plume in both cuts */
+    const BPH = { 10: -1.15 }, BRM = { 10: 1.3 };
     const bcx = CX, bcy = bustCY;
     const updBurst = () => {
       bfs.forEach((el, i) => {
-        const a = i * (Math.PI * 2 / NF) + 0.35 + bo.spin * (i % 2 ? 1 : 0.8);
-        const d = Math.sin(a), rr = 0.82 + 0.18 * ((i * 5) % 7) / 6;
+        const a = i * (Math.PI * 2 / NF) + 0.35 + bo.spin * (i % 2 ? 1 : 0.8) + (BPH[i] || 0);
+        const d = Math.sin(a), rr = (0.82 + 0.18 * ((i * 5) % 7) / 6) * (BRM[i] || 1);
         const ox = bcx + BU.rx * rr * Math.cos(a), oy = bcy + BU.ry * rr * d * 0.9;
         const p = bo.p;
         gsap.set(el, { x: lerp(bcx, ox, p), y: lerp(bcy, oy, p), scale: lerp(0.25, 0.85 * (1 + 0.28 * d), p), rotation: lerp(R0[i], R1[i] * 3, p) + bo.spin * 30,
@@ -445,7 +457,7 @@
 
     /* ------------------------------ speed: three numbers on three pulses ------------------------------ */
     const NM = L.num, nEl = $('nums');
-    const NUMS = [['5 sec', 'to shrink a 300 MB PDF to 137 MB', CUES.n1, CUES.n2], ['0.96 sec', 'to trim a 4.6 GB video', CUES.n2, CUES.n3], ['0.2%', 'character error reading a scan', CUES.n3, CUES.mural[0]]];
+    const NUMS = [['5 sec', 'to shrink a 300 MB PDF to 137 MB', CUES.n1, CUES.n2], ['0.96 sec', 'to trim a 4.6 GB video', CUES.n2, CUES.n3], ['0.2%', 'character error rate on scans', CUES.n3, CUES.mural[0]]];
     NUMS.forEach((n, i) => {
       const a = document.createElement('div'); a.className = 'num abs'; a.id = 'nn' + i; a.textContent = n[0];
       css(a, { left: 0, width: W, top: NM.bigTop, fontSize: NM.big, opacity: 0 });
@@ -488,6 +500,9 @@
     const PV = L.priv, pw = PV.h * 900 / 1117;
     css('pm', { left: PV.cx - pw / 2, top: PV.top, width: pw, height: PV.h });
     css($('pm').querySelector('img'), { left: 0, top: 0, width: pw, height: PV.h });
+    /* the plate is cropped at its bottom edge: fade the last 22 percent into the background so no straight cut-out edge (or the forearm's side) shows */
+    const PM_MASK = 'linear-gradient(180deg,#000 0%,#000 76%,rgba(0,0,0,.82) 82%,rgba(0,0,0,.55) 88%,rgba(0,0,0,.24) 94%,rgba(0,0,0,.06) 98%,rgba(0,0,0,0) 100%)';
+    $('pm').querySelector('img').style.webkitMaskImage = $('pm').querySelector('img').style.maskImage = PM_MASK;
     css('gr', { width: PV.h * 1.5, height: PV.h * 1.5, left: PV.cx - PV.h * 0.75, top: PV.top + PV.h / 2 - PV.h * 0.75 });
     const PT = PV.t;
     css('pt1', { left: PT.left, top: PT.top, fontSize: PT.size });
@@ -529,7 +544,7 @@
     $('tp').style.setProperty('--rad', TP.rad + 'px');
     css('tpc', { left: TP.cx, top: TP.cy, fontSize: TP.fs, whiteSpace: 'pre', lineHeight: '1.4' });
     css('tpo', { left: TP.cx, top: TP.oy, fontSize: TP.fs });
-    const CMD = wide ? '$ curl -fsSL https://panoply.anzalabidi.dev/install.sh | sh' : '$ curl -fsSL https://panoply.anzalabidi.dev/\n  install.sh | sh';
+    const CMD = '$ curl -fsSL https://panoply.anzalabidi.dev/install.sh | sh';
     $('tpo').textContent = 'Installed Panoply 0.3.0 in 3.4 s';
     const tt = { n: 0 };
     tl.to('#tp', { opacity: 1, duration: 0.2, ease: 'power1.out' }, CUES.install);
@@ -557,13 +572,14 @@
     lineCss('eurl', { top: E.url.top, fontSize: E.url.size });
     lineCss('esmall', { top: E.small.top, fontSize: E.small.size });
     $('esmall').innerHTML = E.smallLines.join('<br>');
+    if (E.small.col) $('esmall').style.color = E.small.col;
     tl.fromTo('#ge', { opacity: 0 }, { opacity: 0.75, duration: 0.8, ease: 'power2.out' }, CUES.end);
     tl.fromTo('#eicon', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.7, ease: P3 }, CUES.end);
     rise('#ename', CUES.end + 0.15, 24, 0.8);
     rise('#etag', CUES.end + 0.45, 24, 0.8);
     rise('#eurl', CUES.end + 0.75, 20, 0.8);
     rise('#esmall', CUES.end + 1.1, 18, 0.7);
-    const eo = { e: 0, spin: 0 }, eoEl = $('eorbit'), eors = [];
+    const eo = { e: 0, spin: 0, dr: 0 }, eoEl = $('eorbit'), eors = [];
     OIDX.forEach((fi2, k) => {
       const el = document.createElement('div'); el.className = 'fm'; el.id = 'e' + k;
       el.innerHTML = `<img src="assets/forms/f${fi2}.webp" alt="">`;
@@ -572,19 +588,21 @@
     /* the ring bursts into the five orbiting forms */
     const updEnd = () => {
       eors.forEach((el, k) => {
-        const a = -2.2 + k * (Math.PI * 2 / 5) + eo.spin;
+        const a = -2.2 + k * (Math.PI * 2 / 5) + eo.spin + 0.014 * eo.dr;   /* eo.dr: slow drift, about 6 px of travel */
         const d = Math.sin(a);
         const ox = ICX + E.rx * Math.cos(a), oy = ICY + E.ry * d;
         const e = eo.e;
-        gsap.set(el, { x: lerp(CX, ox, e), y: lerp(CY, oy, e), scale: lerp(0.5, 0.95 * (1 + 0.12 * d), e), rotation: lerp(-20 + k * 40, 18 * k - 30, e), opacity: Math.min(1, e * 6), filter: 'blur(' + lerp(2, Math.max(0, d - 0.5) * 6, e).toFixed(2) + 'px)' });
+        gsap.set(el, { x: lerp(CX, ox, e), y: lerp(CY, oy, e), scale: lerp(0.5, 0.95 * (1 + 0.12 * d), e), rotation: lerp(-20 + k * 40, 18 * k - 30, e) + (k % 2 ? -3.5 : 3.5) * eo.dr, opacity: Math.min(1, e * 6), filter: 'blur(' + lerp(2, Math.max(0, d - 0.5) * 6, e).toFixed(2) + 'px)' });
       });
     };
     updEnd();
     tl.to(eo, { e: 1, duration: 1.4, ease: P3, onUpdate: updEnd }, CUES.end);
     tl.to(eo, { spin: 0.7, duration: CUES.bloom - 0.4 - CUES.end, ease: 'power2.out', onUpdate: updEnd }, CUES.end);
+    /* from 50.5 to the end the orbit never freezes: a very slow linear drift, a few px and a few degrees in all */
+    tl.to(eo, { dr: 1, duration: CUES.total - 50.5, ease: 'none', onUpdate: updEnd }, 50.5);
     /* a soft ivory bloom on the icon, then still */
-    tl.to('#ebloom', { opacity: 0.7, scale: 1.0, duration: 0.1, ease: 'none' }, CUES.bloom);
-    tl.to('#ebloom', { opacity: 0, scale: 1.25, duration: 0.1, ease: 'none' }, CUES.bloom + 0.1);
+    tl.to('#ebloom', { opacity: 0.7, scale: 1.0, duration: 0.4, ease: 'power2.out' }, CUES.bloom);
+    tl.to('#ebloom', { opacity: 0, scale: 1.25, duration: CUES.total - (CUES.bloom + 0.4), ease: 'power2.inOut' }, CUES.bloom + 0.4);   /* falls over 1.1 s, done at 56.9 */
     gsap.set('#ebloom', { xPercent: 0, scale: 0.7 });
 
     /* alive grain at 12 fps, still from the hold */
