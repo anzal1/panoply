@@ -1,2 +1,2 @@
-drops/mcp,drops/mcp-4x5 looks 60
-# run 5
+drops/teaser,drops/teaser-4x5 looks 30
+# run 6

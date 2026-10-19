@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1350" />
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      @font-face { font-family: "Inter"; src: url("assets/fonts/Inter-Variable-latin.woff2") format("woff2"); font-weight: 100 900; }
+      html, body { margin: 0; width: 1080px; height: 1350px; overflow: hidden; background: #0D0E12; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="teaser-4x5" data-start="0" data-duration="22" data-width="1080" data-height="1350">
+    <div id="host-teaser-4x5" class="clip" data-composition-id="teaser-4x5" data-composition-src="compositions/teaser-4x5.html"
+         data-start="0.0" data-duration="22" data-track-index="1" data-width="1080" data-height="1350"></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["teaser-4x5"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
