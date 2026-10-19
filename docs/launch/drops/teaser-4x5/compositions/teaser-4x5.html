@@ -16,7 +16,7 @@
     #grain{position:absolute;inset:0;pointer-events:none;background:url("assets/grain.png") 0 0/160px 160px;opacity:.3;z-index:100}
 
     /* the command bar, rebuilt from the website's own .bar styles and scaled for video */
-    #bar{position:absolute;border-radius:var(--rad);background:rgba(22,22,28,.95);box-shadow:0 0 0 1.5px rgba(255,255,255,.1),0 50px 120px -30px rgba(0,0,0,.95),0 0 120px rgba(255,255,255,.05);overflow:hidden;text-align:left;letter-spacing:-.01em;color:#EDEDF0;font-size:var(--fs);line-height:1.25;opacity:0;z-index:20}
+    #bar{position:absolute;border-radius:var(--rad);background:rgba(22,22,28,.97);box-shadow:0 0 0 1.5px rgba(255,255,255,.12),0 50px 120px -30px rgba(0,0,0,.95),0 0 120px rgba(255,255,255,.05);overflow:hidden;text-align:left;letter-spacing:-.01em;color:#EDEDF0;font-size:var(--fs);line-height:1.25;opacity:0;z-index:20}
     .bar-top{position:absolute;left:0;right:0;top:0;height:var(--bt);display:flex;align-items:center;gap:var(--gap);padding:0 20px 0 var(--padl);border-bottom:1.5px solid rgba(255,255,255,.08)}
     .bar-top>svg{flex:none;width:var(--ic);height:var(--ic);color:#8B8D96}
     .q{flex:1;min-width:0;white-space:nowrap;overflow:hidden;display:flex;align-items:center}
@@ -40,17 +40,18 @@
     .row.sel.plain{box-shadow:none}
     .kbd{display:inline-grid;justify-self:end;place-items:center;min-width:calc(var(--fs) * 1.4);height:calc(var(--fs) * 1.2);padding:0 8px;border-radius:9px;background:rgba(255,255,255,.08);color:#8B8D96}
     .kbd svg{width:.8em;height:.8em}
-    .opts{grid-column:2/4;display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
-    .opts span{color:#A9ABB3;padding:7px 20px;border-radius:999px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.16);opacity:0}
-    .opts span b{color:#EDEDF0;font-weight:500;margin-left:10px}
-    .est{grid-column:4;align-self:end;color:#3DD56D;white-space:nowrap;opacity:0}
-    .tall .row{grid-template-columns:auto minmax(0,1fr) auto;column-gap:18px}
-    .tall .row .fi{grid-column:1;grid-row:1/span 2}
-    .tall .row b{grid-column:2;grid-row:1}
-    .tall .row .d{grid-column:2;grid-row:2;white-space:normal;line-height:1.2}
-    .tall .row .k,.tall .row .kbd{grid-column:3;grid-row:1/span 2}
-    .tall .opts{grid-column:2;grid-row:3}
-    .tall .est{grid-column:2;grid-row:4;margin-top:10px}
+    .opts{grid-column:2/4;display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+    .opts span:not(.est){color:#A9ABB3;padding:7px 22px;border-radius:999px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.16);opacity:0}
+    .opts span:not(.est) b{color:#EDEDF0;font-weight:500;margin-left:10px}
+    .est{color:#3DD56D;white-space:nowrap;opacity:0}
+    .stack .row{grid-template-columns:auto minmax(0,1fr) auto;column-gap:18px}
+    .stack .row .fi{grid-column:1;grid-row:1/span 2}
+    .stack .row b{grid-column:2;grid-row:1}
+    .stack .row .d{grid-column:2;grid-row:2;white-space:normal;line-height:1.2}
+    .stack .row .k,.stack .row .kbd{grid-column:3;grid-row:1/span 2}
+    .stack .opts{grid-column:2;grid-row:3;align-items:center}
+    .stack .est{margin-left:auto}
+    .tall .est{flex-basis:100%;margin-left:0;margin-top:6px}
     .run{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
     .run b{font-size:var(--fs2);font-weight:600}
     .prog{width:62%;height:14px;border-radius:7px;background:rgba(255,255,255,.1);overflow:hidden}
@@ -75,7 +76,7 @@
   </style>
 
   <div id="root" data-composition-id="teaser-4x5" data-width="1080" data-height="1350">
-    <div id="gl" class="dither" style="background-image:url('assets/glow-wide.png');opacity:0"></div>
+    <div id="gl" class="dither" style="background-image:url('assets/glow-wide.png');opacity:0;filter:brightness(1.9)"></div>
     <div id="gr" data-layout-allow-overflow class="dither" style="background-image:url('assets/glow-round.png');opacity:0"></div>
     <div id="ge" data-layout-allow-overflow class="dither" style="background-image:url('assets/glow-wide.png');opacity:0"></div>
     <div id="bustwrap" data-layout-allow-overflow class="abs blend" style="left:0;top:0;width:1080px;height:1350px"><img id="bust" src="assets/bust.webp" alt=""></div>
@@ -115,22 +116,22 @@
 
     /* ------------------------------ layout ------------------------------ */
     const L = wide ? {
-      bust: { FH: 1040, top: 20, cx: 0.64 * W },
-      head: { size: 96, left: 140, top: 250, rh: 108 },
-      fb: 210, orb: { rx: 560, ry: 330, cy: 540, s: 0.9 },
-      bar: { w: 1560, h: 740, fs: 34, fs2: 42, big: 84, rad: 24, bt: 108, ft: 80, padl: 30, gap: 18, ic: 40, fiw: 52, rp: 14 },
-      mural: { h: 880, top: 10, cx: W / 2, lab: 64, labTop: 915 },
+      bust: { FH: 1040, top: 20, cx: 0.66 * W },
+      head: { size: 124, left: 110, rh: 136 },
+      fb: 210, orb: { rx: 430, ry: 330, cy: 540, s: 0.9 },
+      bar: { w: 1700, h: 950, fs: 46, fs2: 54, big: 104, rad: 26, bt: 128, ft: 100, padl: 34, gap: 22, ic: 52, fiw: 64, rp: 14 },
+      mural: { h: 880, top: 10, cx: W / 2, lab: 64, labTop: 915, dx: 70 },
       priv: { h: 900, top: 90, cx: 0.68 * W, t: { size: 112, left: 140, top: 410, rh: 120 } },
       end: { icon: 220, cy: 305, rx: 450, ry: 185, fb: 150, name: { size: 120, top: 585 }, tag: { size: 64, top: 730 }, url: { size: 54, top: 828 }, small: { size: 36, top: 940 }, smallLines: ['Free and open source. macOS, Windows and Linux.'] },
-      rest: [[.08,.12],[.30,.10],[.52,.08],[.74,.07],[.92,.14],[.95,.42],[.93,.72],[.78,.9],[.55,.92],[.32,.88],[.10,.85],[.06,.60],[.22,.66],[.46,.70]],
+      rest: [[.08,.12],[.30,.10],[.52,.08],[.74,.07],[.92,.14],[.95,.42],[.93,.72],[.78,.9],[.55,.92],[.32,.9],[.10,.88],[.05,.20],[.24,.82],[.44,.82]],
     } : {
       bust: { FH: 1040, top: 322, cx: 0.5 * W },
-      head: { size: 104, left: 70, top: 80, rh: 114 },
+      head: { size: 112, left: 70, top: 66, rh: 122 },
       fb: 170, orb: { rx: 430, ry: 290, cy: 800, s: 0.8 },
-      bar: { w: 1000, h: 810, fs: 30, fs2: 38, big: 76, rad: 22, bt: 100, ft: 76, padl: 24, gap: 14, ic: 36, fiw: 46, rp: 12 },
-      mural: { h: 1000, top: 40, cx: W / 2, lab: 76, labTop: 1120 },
+      bar: { w: 1000, h: 940, fs: 36, fs2: 44, big: 84, rad: 22, bt: 112, ft: 92, padl: 24, gap: 14, ic: 40, fiw: 52, rp: 12 },
+      mural: { h: 1000, top: 40, cx: W / 2, lab: 76, labTop: 1120, dx: 30 },
       priv: { h: 880, top: 20, cx: 0.5 * W, t: { size: 104, left: 70, top: 930, rh: 112 } },
-      end: { icon: 260, cy: 400, rx: 400, ry: 190, fb: 150, name: { size: 150, top: 630 }, tag: { size: 66, top: 822 }, url: { size: 54, top: 930 }, small: { size: 34, top: 1090 }, smallLines: ['Free and open source.', 'macOS, Windows and Linux.'] },
+      end: { icon: 200, cy: 400, rx: 400, ry: 190, fb: 150, name: { size: 150, top: 630 }, tag: { size: 66, top: 822 }, url: { size: 54, top: 930 }, small: { size: 34, top: 1090 }, smallLines: ['Free and open source.', 'macOS, Windows and Linux.'] },
       rest: [[.12,.31],[.88,.31],[.09,.52],[.91,.55],[.12,.74],[.9,.75],[.15,.92],[.5,.94],[.86,.93],[.5,.33],[.3,.3],[.7,.29],[.5,.62],[.3,.83]],
     };
     const BH = L.bust.FH, BW = BH * 2200 / 1228, BTOP = L.bust.top, BCX = L.bust.cx;
@@ -139,18 +140,15 @@
 
     /* grain-toned glow pools */
     css('gl', { width: wide ? 2000 : 1500, height: wide ? 833 : 625, left: W / 2 - (wide ? 1000 : 750), top: (wide ? H / 2 - 416 : H * 0.47 - 312) });
-    gsap.set('#gl', { opacity: 0.8, scale: 0.85 });
+    gsap.set('#gl', { opacity: 0.95, scale: 0.9 });
     tl.to('#gl', { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out' }, 0);
     tl.to('#gl', { opacity: 0.5, duration: 0.4, ease: 'power1.inOut' }, 11.4);
 
     /* ------------------------------ the bust ------------------------------ */
     css('bust', { left: BCX - 0.64 * BW, top: BTOP, width: BW, height: BH });
-    css('bustwrap', {});
     gsap.set('#bustwrap', { transformOrigin: BCX + 'px ' + (BTOP + 0.5 * BH) + 'px' });
-    gsap.set('#bust', { opacity: 0, filter: 'blur(10px)' });
-    tl.to('#bust', { opacity: 1, filter: 'blur(0px)', duration: 2.4, ease: P2IO }, 2.5);
-    tl.to('#bustwrap', { scale: 1.04, duration: 1.2, ease: 'sine.inOut' }, 5.2);
-    tl.to('#bustwrap', { scale: 0.9, x: wide ? CX - BCX : 0, opacity: 0.3, duration: 1.0, ease: P2IO }, 6.4);
+    tl.to('#bustwrap', { scale: 1.04, duration: 0.7, ease: 'sine.inOut' }, 5.2);
+    tl.to('#bustwrap', { scale: 0.9, x: wide ? CX - BCX : 0, opacity: 0.3, duration: 0.6, ease: P2IO }, 5.9);
     tl.to('#bustwrap', { opacity: 0, duration: 0.3, ease: 'power1.in' }, 11.35);
 
     /* ------------------------------ 14 forms ------------------------------ */
@@ -158,11 +156,17 @@
     const SZ = [1.0, 1.15, .9, 1.05, 1.0, .95, 1.15, 1.0, .9, 1.1, 1.0, .95, 1.05, .9];
     const R0 = [150, -170, 190, -130, 160, -200, 140, -160, 180, -150, 170, -190, 130, -140];
     const R1 = [-14, 18, -8, 12, -18, 10, -6, 16, -12, 8, -16, 14, -10, 20];
+    /* how far along its arrival each form already is at frame 0 (-1 = still beyond the edge) */
+    const QS = [0.62, 0.38, -1, 0.5, -1, 0.7, 0.42, -1, 0.56, -1, 0.66, 0.46, -1, -1];
     const NF = 14;
     const rightPts = [[.74,.20],[.76,.28],[.73,.36],[.77,.44],[.74,.50],[.76,.58],[.72,.42]];
     const leftPts = [[.55,.27],[.57,.36],[.54,.45],[.58,.54],[.55,.62],[.56,.31],[.57,.64]];
     const edgeDist = (dx, dy) => Math.min(dx ? (W / 2) / Math.abs(dx) : 1e9, dy ? (H / 2) / Math.abs(dy) : 1e9);
+    const p3o = gsap.parseEase('power3.out');
+    const preEase = q => q <= 0 ? p3o : (t => (p3o(q + (1 - q) * t) - p3o(q)) / (1 - p3o(q)));
     const formsEl = $('forms'), blEl = $('blooms');
+    const LAND = [];   /* where each form vanishes into the stone, in bust-image pixels */
+    let lateRank = 0;
     for (let i = 0; i < NF; i++) {
       const w = L.fb * SZ[i];
       const el = document.createElement('div'); el.className = 'fm'; el.id = 'f' + i;
@@ -171,34 +175,64 @@
       const rx = L.rest[i][0] * W, ry = L.rest[i][1] * H;
       let dx = rx - CX, dy = ry - CY; const n = Math.hypot(dx, dy) || 1; dx /= n; dy /= n;
       const k = edgeDist(dx, dy);
-      const early = i < 6;
-      const near = i < 3, dr = n;
-      const dd = near ? dr + 0.3 * (k - dr) : k + (early ? 0 : 420);
-      const sx = CX + dx * dd, sy = CY + dy * dd;
-      const delay = early ? 0 : 0.1 * (i - 5);
-      const dur = Math.min(1.7, 2.4 - delay);
+      const q = Math.max(0, QS[i]);
+      const farX = CX + dx * (k + 420), farY = CY + dy * (k + 420);
+      const sx = lerp(farX, rx, q), sy = lerp(farY, ry, q);
+      const delay = QS[i] >= 0 ? 0 : 0.2 + 0.11 * (lateRank++);
+      const dur = QS[i] >= 0 ? 1.5 : Math.min(1.6, 2.4 - delay);
       gsap.set(el, { xPercent: -50, yPercent: -50, transformOrigin: '50% 50%' });
-      tl.fromTo(el, { x: sx, y: sy, scale: near ? 1.9 : early ? 2.8 : 2.5, rotation: R0[i], filter: near ? 'blur(3px)' : 'blur(8px)' }, { x: rx, y: ry, scale: 1, rotation: R1[i], filter: 'blur(0px)', duration: dur, ease: P3 }, delay);
-      /* assembly: converge on the fracture line */
+      tl.fromTo(el, { x: sx, y: sy, scale: lerp(2.7, 1, q), rotation: lerp(R0[i], R1[i], q), filter: 'blur(' + (8 * (1 - q) * (1 - q)).toFixed(2) + 'px)' },
+        { x: rx, y: ry, scale: 1, rotation: R1[i], filter: 'blur(0px)', duration: dur, ease: preEase(q) }, delay);
+      /* assembly: a curved path to a named point on the fracture line, shrinking as it arrives */
       const pt = (i % 2 === 0 ? rightPts : leftPts)[Math.floor(i / 2)];
-      const px = fx(pt[0]), py = fy(pt[1]);
-      const t0 = 2.4 + i * 0.12, arr = t0 + 0.7;
-      tl.to(el, { x: px, y: py, scale: 0.3, rotation: R1[i] * 3, duration: 0.7, ease: P2IO }, t0);
-      tl.to(el, { opacity: 0, duration: 0.2, ease: 'power1.in' }, t0 + 0.5);
+      const lx = fx(pt[0]), ly = fy(pt[1]);
+      const t0 = 2.4 + i * 0.12, ad = 0.85 + 0.01 * i, arr = t0 + ad;
+      const mx = (rx + lx) / 2, my = (ry + ly) / 2, ddx = lx - rx, ddy = ly - ry, dl = Math.hypot(ddx, ddy) || 1;
+      const off = dl * 0.28 * (i % 2 ? 1 : -1);
+      const cxp = mx + (-ddy / dl) * off, cyp = my + (ddx / dl) * off;
+      const ap = { p: 0 };
+      tl.to(ap, { p: 1, duration: ad, ease: P2IO, onUpdate: () => {
+        const p = ap.p, u = 1 - p;
+        gsap.set(el, { x: u * u * rx + 2 * u * p * cxp + p * p * lx, y: u * u * ry + 2 * u * p * cyp + p * p * ly,
+          scale: lerp(1, 0.28, p), rotation: R1[i] + (i % 2 ? -1 : 1) * 80 * p, opacity: p < 0.86 ? 1 : Math.max(0, 1 - (p - 0.86) / 0.14), filter: 'blur(0px)' });
+      } }, t0);
+      LAND.push({ x: (pt[0]) * BW, y: pt[1] * BH, arr });
       const bl = document.createElement('div'); bl.className = 'bloom'; bl.id = 'bl' + i;
-      css(bl, { width: wide ? 300 : 240, height: wide ? 300 : 240 }); blEl.appendChild(bl);
-      gsap.set(bl, { xPercent: -50, yPercent: -50, x: px, y: py, scale: 0.2, opacity: 0 });
-      tl.to(bl, { scale: 1.4, opacity: 0.55, duration: 0.22, ease: 'power2.out' }, arr - 0.06);
-      tl.to(bl, { opacity: 0, scale: 1.8, duration: 0.5, ease: 'power1.out' }, arr + 0.16);
+      css(bl, { width: wide ? 260 : 210, height: wide ? 260 : 210 }); blEl.appendChild(bl);
+      gsap.set(bl, { xPercent: -50, yPercent: -50, x: lx, y: ly, scale: 0.3, opacity: 0 });
+      tl.to(bl, { scale: 1.3, opacity: 0.8, duration: 0.04, ease: 'none' }, arr - 0.03);
+      tl.to(bl, { scale: 1.6, opacity: 0, duration: 0.07, ease: 'none' }, arr + 0.01);
     }
+    /* the bust resolves from the landing points outward (radial masks), then the whole stone settles */
+    const bs = { t: 2.4 }, bustEl = $('bust');
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    const updBust = () => {
+      const t = bs.t;
+      if (t >= 5.0) { bustEl.style.webkitMaskImage = bustEl.style.maskImage = 'none'; bustEl.style.opacity = 1; bustEl.style.filter = 'none'; return; }
+      const RM = 0.3 * BH, g = [];
+      LAND.forEach(l => {
+        const e = clamp01((t - l.arr) / 1.0), r = RM * (1 - Math.pow(1 - e, 3));
+        if (r > 1) g.push(`radial-gradient(circle at ${l.x.toFixed(1)}px ${l.y.toFixed(1)}px,#000 ${(r * 0.5).toFixed(1)}px,rgba(0,0,0,0) ${r.toFixed(1)}px)`);
+      });
+      const f = clamp01((t - 3.9) / 1.0), rf = BH * 0.95 * f * f * (3 - 2 * f);
+      if (rf > 1) g.push(`radial-gradient(circle at ${(0.64 * BW).toFixed(1)}px ${(0.5 * BH).toFixed(1)}px,#000 ${(rf * 0.6).toFixed(1)}px,rgba(0,0,0,0) ${rf.toFixed(1)}px)`);
+      const m = g.length ? g.join(',') : 'radial-gradient(circle at 0 0,rgba(0,0,0,0) 0,rgba(0,0,0,0) 1px)';
+      bustEl.style.webkitMaskImage = bustEl.style.maskImage = m;
+      const bp = clamp01((t - 3.2) / 1.8);
+      bustEl.style.opacity = 1;
+      bustEl.style.filter = 'blur(' + (4 * (1 - bp) * (1 - bp)).toFixed(2) + 'px)';
+    };
+    updBust();
+    tl.to(bs, { t: 5.0, duration: 2.6, ease: 'none', onUpdate: updBust }, 2.4);
 
     /* ------------------------------ headline ------------------------------ */
     const HD = L.head;
-    ['h1', 'h2'].forEach((id, j) => { css(id, { left: HD.left, top: HD.top + j * HD.rh, fontSize: HD.size, opacity: 0 }); });
+    const headTop = HD.top !== undefined ? HD.top : (BTOP + 0.5 * BH - HD.rh);
+    ['h1', 'h2'].forEach((id, j) => { css(id, { left: HD.left, top: headTop + j * HD.rh, fontSize: HD.size }); });
     $('h1').textContent = 'Every file tool.'; $('h2').textContent = 'One app.';
-    rise('#h1', 0.9, 24, 0.9);
+    gsap.set('#h2', { opacity: 0 });
     rise('#h2', 3.6, 24, 0.9);
-    tl.to(['#h1', '#h2'], { y: -80, opacity: 0, duration: 0.6, ease: 'power2.in' }, 6.4);
+    tl.to(['#h1', '#h2'], { y: -80, opacity: 0, duration: 0.5, ease: 'power2.in' }, 5.9);
 
     /* ------------------------------ five forms peel off and orbit ------------------------------ */
     const OIDX = [0, 3, 6, 8, 10];
@@ -224,14 +258,14 @@
     updOrbit();
     tl.to(ob, { e: 1, duration: 1.1, ease: 'power2.out', onUpdate: updOrbit }, 5.3);
     tl.to(ob, { spin: 1.0, duration: 6.3, ease: 'none', onUpdate: updOrbit }, 5.3);
-    tl.to(ob, { m: 0.4, duration: 0.8, ease: 'power1.inOut', onUpdate: updOrbit }, 6.4);
-    if (wide) tl.to(ob, { cx: CX, duration: 1.0, ease: P2IO, onUpdate: updOrbit }, 6.4);
+    tl.to(ob, { m: 0.4, duration: 0.6, ease: 'power1.inOut', onUpdate: updOrbit }, 5.9);
+    if (wide) tl.to(ob, { cx: CX, duration: 0.6, ease: P2IO, onUpdate: updOrbit }, 5.9);
     tl.to(ob, { m: 0, duration: 0.3, ease: 'power1.in', onUpdate: updOrbit }, 11.3);
 
     /* ------------------------------ the command bar ------------------------------ */
     const B = L.bar;
     const barEl = $('bar');
-    if (!wide) barEl.classList.add('tall');
+    barEl.classList.add('stack'); if (!wide) barEl.classList.add('tall');
     ['fs', 'fs2', 'big', 'rad', 'bt', 'ft', 'padl', 'gap', 'ic', 'fiw', 'rp'].forEach(k => barEl.style.setProperty('--' + k, B[k] + 'px'));
     css(barEl, { left: (W - B.w) / 2, top: (H - B.h) / 2, width: B.w, height: B.h });
     const ICONS = {
@@ -245,15 +279,15 @@
     const fi = k => `<span class="fi ${k}">${ICONS[k]}</span>`;
     const row = (k, name, desc, right) => `<div class="row">${fi(k)}<b>${name}</b><span class="d">${desc}</span><span class="k">${right}</span></div>`;
     const sel = (k, name, desc) => `<div class="row sel" id="selrow">${fi(k)}<b>${name}</b><span class="d">${desc}</span><span class="kbd">${RET}</span>`;
-    const REST = `<div class="sec">Suggested</div>${row('img', 'Resize to exact KB', 'Fit a photo to the exact pixels and KB a form or exam portal asks for.', 'Image')}${row('pdf', 'Compress PDF', 'Make this PDF small enough to email or upload.', 'PDF')}${row('id', 'Print sheet', 'Put several copies of this photo on one sheet for the print shop.', 'ID and forms')}<div class="sec">Recent</div>${row('img', 'Resize to exact KB', 'signature.jpg', '2 min ago')}`;
-    const FILEL = `<div class="sec">For this PDF document, best first</div>${sel('pdf', 'Compress PDF', 'Make this PDF small enough to email or upload.').replace('id="selrow"', '').replace('row sel', 'row sel plain')}</div>${row('pdf', 'Split PDF', 'Cut this PDF into parts by page ranges or every N pages.', 'PDF')}${row('pdf', 'Merge PDF', 'Put these PDFs in one file.', 'PDF')}${row('pdf', 'OCR', 'Make this scan searchable and selectable.', 'PDF')}${row('pdf', 'PDF to images', 'Turn each page of this PDF into a PNG or JPG picture.', 'PDF')}`;
-    const MATCH = `<div class="sec">Best match</div>${sel('pdf', 'Compress PDF', 'Make this PDF small enough to email or upload.')}<div class="opts"><span id="o1">Target<b>under size</b></span><span id="o2">Stay under<b>2 MB</b></span></div><span class="est" id="est">4.2 MB to at most 2 MB</span></div><div class="sec">Also matches</div>${row('pdf', 'Split PDF', 'Cut this PDF into parts by page ranges or every N pages.', 'PDF')}${row('pdf', 'Merge PDF', 'Put these PDFs in one file.', 'PDF')}`;
+    const REST = `<div class="sec">Suggested</div>${row('img', 'Resize to exact KB', 'Fit a photo to the exact pixels and KB a form or exam portal asks for.', 'Image')}${row('pdf', 'Compress PDF', 'Make this PDF small enough to email or upload.', 'PDF')}${row('id', 'Print sheet', 'Put several copies of this photo on one sheet for the print shop.', 'ID and forms')}`;
+    const FILEL = `<div class="sec">For this PDF document, best first</div>${sel('pdf', 'Compress PDF', 'Make this PDF small enough to email or upload.').replace('id="selrow"', '').replace('row sel', 'row sel plain')}</div>${row('pdf', 'Split PDF', 'Cut this PDF into parts by page ranges or every N pages.', 'PDF')}${row('pdf', 'Merge PDF', 'Put these PDFs in one file.', 'PDF')}`;
+    const MATCH = `<div class="sec">Best match</div>${sel('pdf', 'Compress PDF', 'Make this PDF small enough to email or upload.')}<div class="opts"><span id="o1">Target<b>under size</b></span><span id="o2">Stay under<b>2 MB</b></span><span class="est" id="est">4.2 MB to at most 2 MB</span></div></div><div class="sec">Also matches</div>${row('pdf', 'Split PDF', 'Cut this PDF into parts by page ranges or every N pages.', 'PDF')}${row('pdf', 'Merge PDF', 'Put these PDFs in one file.', 'PDF')}`;
     const RUN = `<div class="run" style="position:absolute;inset:0"><b>Running Compress PDF</b><div class="prog"><i id="progi"></i></div><small><span>Lease.pdf</span><span id="pct">0%</span></small></div>`;
-    const DONE = `<h4><span id="chk" style="display:grid">${CHECK}</span><span>4.2 MB to 880 KB, 79% smaller</span></h4><div class="ba"><div><small>Before</small><strong>4.2 MB</strong></div><span>${ARROW}</span><div class="after"><small>After</small><strong id="after">4.2 MB</strong></div></div><div class="out">Written next to the original<br><span>Lease (compressed).pdf</span></div>`;
+    const DONE = `<h4 id="h4" style="opacity:0"><span id="chk" style="display:grid">${CHECK}</span><span>4.2 MB to 880 KB, 79% smaller</span></h4><div class="ba"><div><small>Before</small><strong>4.2 MB</strong></div><span>${ARROW}</span><div class="after"><small>After</small><strong id="after">4.2 MB</strong></div></div><div class="out">Written next to the original<br><span>Lease (compressed).pdf</span></div>`;
     barEl.innerHTML = `
       <div class="bar-top">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <div class="q"><span id="typed"></span><span class="caret" id="caret"></span><span class="ph" id="ph">${wide ? 'Search 31 tools and your files, or drop anything' : 'Search tools or drop a file'}</span></div>
+        <div class="q"><span id="typed"></span><span class="caret" id="caret"></span><span class="ph" id="ph">Search tools or drop a file</span></div>
         <div class="fchip" id="fchip"><span class="fi pdf">${ICONS.pdf}</span><span>Lease.pdf</span><small>4.2 MB</small><i>&times;</i></div>
       </div>
       <div class="bar-body" data-layout-allow-overlap>
@@ -263,56 +297,68 @@
         <div class="view" id="v-run">${RUN}</div>
         <div class="view done" id="v-done">${DONE}</div>
       </div>
-      <div class="bar-foot"><span class="l"><img src="assets/icon.svg" alt="">Panoply <span>${wide ? '&nbsp;Everything runs on this computer' : '&nbsp;Runs on this computer'}</span></span><span class="r">Run <span class="kbd">${RET}</span></span></div>`;
+      <div class="bar-foot"><span class="l"><img src="assets/icon.svg" alt="">Panoply <span>&nbsp;Everything runs on this computer</span></span><span class="r">Run <span class="kbd">${RET}</span></span></div>`;
     gsap.set(barEl, { y: 220, opacity: 0 });
-    tl.to(barEl, { y: 0, opacity: 1, duration: 0.8, ease: P3 }, 6.4);
-    const xfade = (a, b, t, d = 0.22) => { tl.to(a, { opacity: 0, duration: d, ease: 'power1.in' }, t); tl.to(b, { opacity: 1, duration: d, ease: 'power1.out' }, t); };
+    tl.to(barEl, { y: 0, duration: 0.6, ease: P3 }, 6.6);
+    tl.to(barEl, { opacity: 1, duration: 0.25, ease: 'power1.out' }, 6.6);
+    /* two text layers are never visible at once: the old view is out in 4 frames, then the new one comes in */
+    const swap = (a, b, t) => { tl.to(a, { opacity: 0, duration: 0.133, ease: 'none' }, t); tl.to(b, { opacity: 1, duration: 0.133, ease: 'none' }, t + 0.133); };
     gsap.set('#fchip', { y: -30, scale: 0.9, opacity: 0 });
-    tl.to('#fchip', { y: 0, scale: 1, opacity: 1, duration: 0.45, ease: P3 }, 6.8);
-    tl.set('#ph', { textContent: 'What should happen?' }, 6.8);
-    xfade('#v-list', '#v-list2', 6.95);
+    tl.to('#fchip', { y: 0, scale: 1, opacity: 1, duration: 0.45, ease: P3 }, 6.95);
+    tl.set('#ph', { textContent: 'What should happen?' }, 6.95);
+    swap('#v-list', '#v-list2', 7.0);
     const ty = { n: 0 }, ask = 'under 2 mb';
-    tl.set('#ph', { opacity: 0 }, 7.2);
-    tl.to(ty, { n: ask.length, duration: 0.8, ease: 'none', onUpdate: () => { $('typed').textContent = ask.slice(0, Math.round(ty.n)); } }, 7.2);
-    xfade('#v-list2', '#v-match', 8.2, 0.2);
+    tl.set('#ph', { opacity: 0 }, 7.3);
+    tl.to(ty, { n: ask.length, duration: 0.6, ease: 'none', onUpdate: () => { $('typed').textContent = ask.slice(0, Math.round(ty.n)); } }, 7.3);
+    swap('#v-list2', '#v-match', 8.05);
     gsap.set('#selrow', { backgroundColor: 'rgba(25,40,61,0)' });
-    tl.to('#selrow', { backgroundColor: 'rgba(25,40,61,1)', duration: 0.2, ease: 'power1.out' }, 8.2);
+    tl.to('#selrow', { backgroundColor: 'rgba(25,40,61,1)', duration: 0.2, ease: 'power1.out' }, 8.18);
     gsap.set(['#o1', '#o2'], { y: 8, opacity: 0, scale: 0.94 });
     tl.to('#o1', { y: 0, opacity: 1, scale: 1, duration: 0.3, ease: P3 }, 8.3);
-    tl.to('#o2', { y: 0, opacity: 1, scale: 1, duration: 0.3, ease: P3 }, 8.4);
+    tl.to('#o2', { y: 0, opacity: 1, scale: 1, duration: 0.3, ease: P3 }, 8.38);
     gsap.set('#est', { y: 6 });
     tl.to('#est', { y: 0, opacity: 1, duration: 0.35, ease: 'power2.out' }, 8.5);
     tl.to('#selrow', { backgroundColor: 'rgba(34,64,106,1)', duration: 0.08, ease: 'power1.out' }, 9.0);
     tl.to('#selrow', { backgroundColor: 'rgba(25,40,61,1)', duration: 0.12, ease: 'power1.in' }, 9.08);
     tl.set('#caret', { opacity: 0 }, 9.2);
-    xfade('#v-match', '#v-run', 9.2, 0.15);
+    swap('#v-match', '#v-run', 9.2);
     const pr = { p: 0 };
-    tl.to(pr, { p: 1, duration: 0.7, ease: 'power1.inOut', onUpdate: () => { $('progi').style.transform = 'scaleX(' + pr.p.toFixed(4) + ')'; $('pct').textContent = Math.round(pr.p * 100) + '%'; } }, 9.2);
-    xfade('#v-run', '#v-done', 9.95, 0.2);
-    gsap.set('#chk', { scale: 0.5, opacity: 0, transformOrigin: '50% 50%' });
-    tl.to('#chk', { scale: 1, opacity: 1, duration: 0.45, ease: 'back.out(1.6)' }, 10.0);
+    tl.to(pr, { p: 1, duration: 0.55, ease: 'power1.inOut', onUpdate: () => { $('progi').style.transform = 'scaleX(' + pr.p.toFixed(4) + ')'; $('pct').textContent = Math.round(pr.p * 100) + '%'; } }, 9.4);
+    swap('#v-run', '#v-done', 9.98);
+    gsap.set('#chk', { scale: 0.5, transformOrigin: '50% 50%' });
     const cnt = { v: 4200 };
-    tl.to(cnt, { v: 880, duration: 0.9, ease: 'power2.out', onUpdate: () => { const v = cnt.v; $('after').textContent = v >= 1000 ? (v / 1000).toFixed(1) + ' MB' : Math.round(v) + ' KB'; } }, 10.2);
-    tl.to(barEl, { y: 24, opacity: 0, duration: 0.2, ease: 'power1.in' }, 11.45);
+    tl.to(cnt, { v: 880, duration: 0.4, ease: 'power2.out', onUpdate: () => { const v = cnt.v; $('after').textContent = v >= 1000 ? (v / 1000).toFixed(1) + ' MB' : Math.round(v) + ' KB'; } }, 10.15);
+    /* the header shows only when the count lands */
+    tl.to('#h4', { opacity: 1, duration: 0.12, ease: 'power1.out' }, 10.55);
+    tl.to('#chk', { scale: 1, duration: 0.4, ease: 'back.out(1.6)' }, 10.55);
+    tl.to(barEl, { y: 24, opacity: 0, duration: 0.15, ease: 'power1.in' }, 11.5);
 
     /* ------------------------------ the set: six murals ------------------------------ */
     const M = L.mural, mEl = $('murals');
     const MUR = [['docs', 'Documents'], ['image', 'Images'], ['sound', 'Sound and video'], ['convert', 'Everything else'], ['share', 'Sharing'], ['plugins', 'Plugins']];
     const mw = M.h * 900 / 1117;
+    const k_ = wide ? 1 : 0.6;
+    const MV = [[-30, 10, 8, -6, 1.0, 1.07], [40, 0, 24, -10, 1.02, 1.06], [0, 0, 0, 0, 1.1, 1.0], [-40, 20, -16, 14, 1.0, 1.07], [30, -20, 12, -12, 1.02, 1.08], [0, 0, 28, -6, 1.02, 1.09]];
+    const DXs = [-1, 1, -0.6, 0.6, -1, 1];
     MUR.forEach((m, k) => {
-      const t = 11.6 + k * 0.8;
+      const T = 11.6 + k * 0.8;
       const d = document.createElement('div'); d.className = 'abs blend'; d.id = 'm' + k;
-      css(d, { left: M.cx - mw / 2, top: M.top, width: mw, height: M.h, opacity: 0 });
+      css(d, { left: M.cx - mw / 2 + DXs[k] * M.dx, top: M.top, width: mw, height: M.h, opacity: 0 });
       d.innerHTML = `<img src="assets/${m[0]}.webp" alt="" style="left:0;top:0;width:${mw}px;height:${M.h}px">`;
       mEl.appendChild(d);
-      const lb = document.createElement('div'); lb.className = 'abs'; lb.setAttribute('data-layout-allow-overlap', ''); lb.style.cssText = 'color:#F4F0E8;font-weight:600;letter-spacing:-.02em;line-height:1.1;white-space:nowrap'; lb.id = 'ml' + k; lb.textContent = m[1];
-      css(lb, { left: 0, width: W, textAlign: 'center', top: M.labTop, fontSize: M.lab, opacity: 0 });
+      const lb = document.createElement('div'); lb.className = 'abs'; lb.setAttribute('data-layout-allow-overlap', ''); lb.id = 'ml' + k; lb.textContent = m[1];
+      lb.style.cssText += 'color:#F4F0E8;font-weight:600;letter-spacing:-.02em;line-height:1.1;white-space:nowrap';
       $('mlabels').appendChild(lb);
-      const inT = k === 0 ? 0.15 : 0.15;
-      tl.fromTo(d, { scale: 1.0 }, { scale: 1.06, duration: 0.95, ease: 'none' }, t);
-      tl.to([d, lb], { opacity: 1, duration: inT, ease: 'power1.out' }, t);
-      tl.fromTo(lb, { y: 10 }, { y: 0, duration: 0.4, ease: P3 }, t);
-      tl.to([d, lb], { opacity: 0, duration: 0.15, ease: 'power1.in' }, t + 0.8);
+      css(lb, { left: 0, width: W, textAlign: 'center', top: M.labTop, fontSize: M.lab, opacity: 0 });
+      const v = MV[k];
+      /* the marble cross-dissolves; each label leaves in 3 frames before the next arrives */
+      tl.fromTo(d, { x: v[0] * k_, y: v[2] * k_, scale: v[4] }, { x: v[1] * k_, y: v[3] * k_, scale: v[5], duration: 1.0, ease: 'none' }, T);
+      tl.to(d, { opacity: 1, duration: 0.15, ease: 'power1.out' }, T);
+      tl.to(d, { opacity: 0, duration: 0.15, ease: 'power1.in' }, T + 0.8);
+      const lin = k === 0 ? T + 0.1 : T + 0.1;
+      tl.to(lb, { opacity: 1, duration: 0.1, ease: 'none' }, lin);
+      tl.fromTo(lb, { y: 10 }, { y: 0, duration: 0.4, ease: P3 }, lin);
+      tl.to(lb, { opacity: 0, duration: 0.1, ease: 'none' }, T + 0.8);
     });
 
     /* ------------------------------ silence: Harpocrates ------------------------------ */
@@ -371,6 +417,12 @@
     tl.to(eo, { e: 1, duration: 1.5, ease: P3, onUpdate: updEnd }, 18.4);
     tl.to(eo, { spin: 0.7, duration: 2.4, ease: 'power2.out', onUpdate: updEnd }, 18.4);
 
+    /* alive grain: a new offset of the tile 12 times a second, still for the last 1.2 s */
+    const gr = { f: 0 };
+    const ghash = n => { let x = (n * 2654435761) >>> 0; x ^= x >>> 15; x = Math.imul(x, 2246822519) >>> 0; x ^= x >>> 13; return x / 4294967296; };
+    const updGrain = () => { const n = Math.floor(gr.f + 1e-6); $('grain').style.backgroundPosition = Math.floor(ghash(n + 1) * 160) + 'px ' + Math.floor(ghash(n + 977) * 160) + 'px'; };
+    updGrain();
+    tl.to(gr, { f: 20.8 * 12, duration: 20.8, ease: 'none', onUpdate: updGrain }, 0);
     tl.to({}, { duration: 0.001 }, 21.99);
     window.__timelines[ID] = tl;
     tl.seek(0);
