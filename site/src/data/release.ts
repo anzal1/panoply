@@ -14,6 +14,7 @@ export async function latestRelease(): Promise<Release> {
     const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=5`, { headers });
     if (!res.ok) throw new Error(`GitHub releases answered ${res.status}`);
     const rel = (await res.json()).find((r: any) => !r.draft);
+    if (!rel) throw new Error("no published release in the newest five")
     const sumsAsset = rel.assets.find((a: any) => a.name === "SHA256SUMS");
     const sha: Record<string, string> = {};
     if (sumsAsset) {

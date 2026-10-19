@@ -7,12 +7,13 @@
   var os = /Windows/.test(ua) ? 'win' : /Linux|X11/.test(ua) && !/Android/.test(ua) ? 'linux' : 'mac';
   var arm = /arm64|aarch64/i.test(ua);
   // File names come from the release the site was built against.
-  var PICK = JSON.parse(document.getElementById('release-pick').textContent);
+  var pickEl = document.getElementById('release-pick');
+  var PICK = pickEl ? JSON.parse(pickEl.textContent) : null;
   var NAMES = { mac: 'macOS', win: 'Windows', linux: 'Linux' };
-  var FILE = { mac: PICK.mac, win: PICK.win[arm ? 'arm64' : 'x64'], linux: PICK.linux[arm ? 'arm64' : 'x64'] };
+  var FILE = PICK && { mac: PICK.mac, win: PICK.win[arm ? 'arm64' : 'x64'], linux: PICK.linux[arm ? 'arm64' : 'x64'] };
   // Phones cannot run the app: point them at every download instead of guessing a desktop file.
   var phone = /Android|iPhone|iPad|iPod/.test(ua);
-  document.querySelectorAll('[data-dl]').forEach(function(a){
+  if (PICK) document.querySelectorAll('[data-dl]').forEach(function(a){
     if (phone) { a.textContent = 'Every download'; a.href = '#downloads'; return; }
     a.textContent = 'Download for ' + NAMES[os]; a.href = PICK.base + FILE[os];
   });
@@ -22,11 +23,11 @@
   var CMDS = {
     unix: 'curl -fsSL https://panoply.anzalabidi.dev/install.sh | sh',
     win: 'irm https://panoply.anzalabidi.dev/install.ps1 | iex',
-    brew: 'brew install --cask anzal1/panoply/panoply',
+    brew: 'brew tap anzal1/panoply https://github.com/anzal1/panoply; brew install --cask anzal1/panoply/panoply',
     scoop: 'scoop bucket add panoply https://github.com/anzal1/panoply; scoop install panoply/panoply'
   };
   var itabs = [].slice.call(document.querySelectorAll('.itabs button')), icmd = document.getElementById('icmd');
-  function pickCmd(k){ itabs.forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.cmd === k)); }); icmd.textContent = CMDS[k]; }
+  function pickCmd(k){ if (!icmd) return; itabs.forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.cmd === k)); }); icmd.textContent = CMDS[k]; }
   itabs.forEach(function(b){ b.addEventListener('click', function(){ pickCmd(b.dataset.cmd); }); });
   if (os === 'win' && !phone) pickCmd('win');
 

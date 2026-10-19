@@ -56,7 +56,7 @@ const pick = {
     </div>
   </div>
 </section>
-<script type="application/json" id="release-pick" set:html={JSON.stringify(pick)}></script>
+<script type="application/json" id="release-pick" set:html={JSON.stringify(pick).replace(/</g, "\\u003c")}></script>
 
 <section class="downloads" id="downloads">
   <div class="wrap">

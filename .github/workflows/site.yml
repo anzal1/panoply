@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
     paths: ['site/**', '.github/workflows/site.yml']
-  # A new release changes the download list, its sizes and checksums, so the site rebuilds with it.
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
