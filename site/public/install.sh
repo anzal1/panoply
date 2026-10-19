@@ -320,6 +320,9 @@ install_cli() {
   unpack "$TMP/$ASSET" "$STAGE"
   src=$(payload_dir "$STAGE")
   [ -f "$src/panoply" ] || fail "the archive has no panoply program"
+  # The Linux command line archive of v0.3.0-beta ships panoply without the execute bit (the program in the
+  # macOS archive and in the Linux app archive has it). Set it on the program we are about to link.
+  chmod 755 "$src/panoply"
   swap_in "$src" "$dest"
   rm -rf "$STAGE"
   STAGE=""
@@ -361,6 +364,8 @@ install_linux() {
   unpack "$TMP/$ASSET" "$STAGE"
   src=$(payload_dir "$STAGE")
   [ -f "$src/bin/panoply" ] || fail "the archive has no bin/panoply"
+  chmod 755 "$src/bin/panoply"
+  [ -f "$src/bin/panoply-desktop" ] && chmod 755 "$src/bin/panoply-desktop"
   # The tarball's own install.sh is for copying into a prefix. Here the whole folder stays together (the
   # shipped modules sit next to the programs, which is where Panoply looks) and the commands are linked.
   rm -f "$src/install.sh"
