@@ -2,8 +2,8 @@
 # Filled by packaging/scripts/render_manifests.py from a finished GitHub release. Do not edit the copy in the AUR
 # by hand: render again for the new tag and push PKGBUILD and .SRCINFO together.
 pkgname=panoply-bin
-_pkgver=0.3.0-beta
-pkgver=0.3.0_beta
+_pkgver=0.3.0
+pkgver=0.3.0
 pkgrel=1
 pkgdesc='Every file tool in one fast app: PDF, image, audio and video tools and a file converter, all on your computer'
 arch=('x86_64' 'aarch64')
@@ -19,8 +19,8 @@ conflicts=('panoply')
 options=('!strip' '!debug')
 source_x86_64=("Panoply-$_pkgver-linux-x64.tar.gz::https://github.com/anzal1/panoply/releases/download/v$_pkgver/Panoply-$_pkgver-linux-x64.tar.gz")
 source_aarch64=("Panoply-$_pkgver-linux-arm64.tar.gz::https://github.com/anzal1/panoply/releases/download/v$_pkgver/Panoply-$_pkgver-linux-arm64.tar.gz")
-sha256sums_x86_64=('d11430a33314fc651a165224319005f1f4fe5a7f91e6bed0c5c70f802fe6e362')
-sha256sums_aarch64=('b0f4d7e933165b0f79f47192023af53c469229cc03cd62eed6857c4f738509c7')
+sha256sums_x86_64=('25324a95eb47c13b75b1bed88a2320a45d6831b960af74eca17aa25122087f14')
+sha256sums_aarch64=('65ebf118bc89625f7e79d38ead2f3c32e39fb012ddd789349c956c22a442df6b')
 
 package() {
   # The tarballs call the two architectures x64 and arm64.

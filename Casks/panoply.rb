@@ -5,9 +5,9 @@
 cask "panoply" do
   arch arm: "arm64", intel: "x64"
 
-  version "0.3.0-beta"
-  sha256 arm:   "c6ced559feade569e1450087aa08cec54e62d3fbec16f50e13b4355739d42c54",
-         intel: "d429efe2038332c118bae5cc176ecd14c058a397a5ca85c1f8de6a6fc4a0d705"
+  version "0.3.0"
+  sha256 arm:   "6b00f5595db1f20540242dbf45d342488368381f6b1bf7e8afddf83eef2dec0a",
+         intel: "0e21dd6766ee2da082f0df2cfed3646e202bc58ecf9f3e5cee6cd340a82acee1"
 
   url "https://github.com/anzal1/panoply/releases/download/v#{version}/Panoply-#{version}-macos-#{arch}.zip"
   name "Panoply"

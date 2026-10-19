@@ -68,8 +68,8 @@ modules:
     sources:
       - type: git
         url: https://github.com/anzal1/panoply.git
-        tag: v0.3.0-beta
-        commit: 15258685c511d7efe409b79b032f1fcdd59dfdce
+        tag: v0.3.0
+        commit: ada0e42210521d52125db8d3b774f3a61ff3446d
       - cargo-sources.json
       - type: file
         path: io.github.anzal1.Panoply.metainfo.xml
