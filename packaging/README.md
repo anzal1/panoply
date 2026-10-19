@@ -36,9 +36,9 @@ Release > Run workflow from `main` with "Only warm the build caches" ticked, onc
 | `plan` | ubuntu | version, MSI version, and whether `apps/desktop` is in the workspace |
 | `build` (6 legs) | macos-latest (arm64 and x64 cross), windows-latest, windows-11-arm, ubuntu-22.04, ubuntu-22.04-arm | `panoply` and `panoply-desktop` per target |
 | `modules` | ubuntu | the community modules in `modules/shipped.txt`, built once for wasm32-wasip2 (`tools/build-shipped-modules.sh`) |
-| `package-macos` (arm64, x64) | macos-latest | `.app` in `.zip` and `.dmg` per architecture, ad-hoc signed, not notarized |
+| `package-macos` (arm64, x64) | macos-latest | `.app` in `.zip`, `.tar.xz` and `.dmg` per architecture, ad-hoc signed, not notarized |
 | `package-windows` (x64, arm64) | windows-latest, windows-11-arm | `.zip` and `.msi` (WiX v4), MSI installed, checked and removed on the runner |
-| `package-linux` (x64, arm64) | ubuntu-22.04, ubuntu-22.04-arm | `.tar.gz` and `.AppImage` |
+| `package-linux` (x64, arm64) | ubuntu-22.04, ubuntu-22.04-arm | `.tar.gz`, `.tar.xz` and `.AppImage` |
 | `publish` (tags only) | ubuntu | `SHA256SUMS`, filled manifests, provenance attestation, draft release |
 
 ### Community modules in the bundles
@@ -59,7 +59,7 @@ catalog looks (`panoply_core::modules::search_dirs`):
 
 Each package script refuses to run without the built modules, checks the result (the macOS app and disk
 image, the AppImage, the Windows MSI after it is installed), and runs the packaged `panoply modules` to see
-the three listed and no example. `verify_release.py` checks every `.zip` and `.tar.gz` for exactly the shipped list.
+the three listed and no example. `verify_release.py` checks every `.zip`, `.tar.gz` and `.tar.xz` for exactly the shipped list.
 
 Linux builds on 22.04 so the binaries run on older glibc. Windows builds link the C runtime statically
 (no VC++ redistributable needed).
@@ -72,6 +72,7 @@ Linux builds on 22.04 so the binaries run on older glibc. Windows builds link th
 | `Panoply-V-windows-{x64,arm64}.msi` / `.zip` | installer / portable folder with `panoply-desktop.exe` and `panoply.exe` |
 | `Panoply-V-linux-{x64,arm64}.AppImage` / `.tar.gz` | AppImage / folder with `bin/`, `share/` and `install.sh` |
 | `panoply-cli-V-<platform>.tar.gz` or `.zip` | the command line tool alone (also the MCP server) |
+| `Panoply-V-{macos,linux}-{arm64,x64}.tar.xz`, `panoply-cli-V-{macos,linux}-{arm64,x64}.tar.xz` | the same contents as the `.zip` (macOS app) and `.tar.gz` files, about half the size; made by `packaging/scripts/make_txz.sh` |
 | `SHA256SUMS` | checksums of all of the above |
 | `panoply-package-manifests-V.zip` | the rendered Homebrew, Scoop, winget and Flatpak files |
 

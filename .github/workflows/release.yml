@@ -211,7 +211,7 @@ jobs:
           retention-days: 7
 
   # ------------------------------------------------------------------------------------------------
-  # macOS: Panoply.app in a .zip and a .dmg for each architecture. Unsigned on purpose (no Apple
+  # macOS: Panoply.app in a .zip, a .tar.xz and a .dmg for each architecture. Unsigned on purpose (no Apple
   # Developer account): the app is ad-hoc signed, which Apple Silicon needs, and not notarized.
   # ------------------------------------------------------------------------------------------------
   package-macos:
@@ -234,6 +234,9 @@ jobs:
         run: |
           packaging/scripts/macos-package.sh --version "${{ needs.plan.outputs.version }}" \
             --arch ${{ matrix.arch }} --stage stage --out dist --desktop "${{ needs.plan.outputs.desktop }}"
+      # A .tar.xz beside each .tar.gz and the app .zip: far smaller, and the existing files stay as they are.
+      - name: Add .tar.xz archives
+        run: packaging/scripts/make_txz.sh --dir dist
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pkg-macos-${{ matrix.arch }}
@@ -286,7 +289,7 @@ jobs:
           retention-days: 7
 
   # ------------------------------------------------------------------------------------------------
-  # Linux: tar.gz and AppImage per architecture. No signing needed.
+  # Linux: tar.gz (and a smaller tar.xz) and AppImage per architecture. No signing needed.
   # ------------------------------------------------------------------------------------------------
   package-linux:
     needs: [plan, build, modules]
@@ -310,6 +313,8 @@ jobs:
         run: |
           packaging/scripts/linux-package.sh --version "${{ needs.plan.outputs.version }}" \
             --arch ${{ matrix.arch }} --stage stage --out dist --desktop "${{ needs.plan.outputs.desktop }}"
+      - name: Add .tar.xz archives
+        run: packaging/scripts/make_txz.sh --dir dist
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pkg-linux-${{ matrix.arch }}
@@ -439,12 +444,12 @@ jobs:
           Draft of $TAG. Review, then publish.
 
           **Install**
-          - macOS: the \`.dmg\` or \`.zip\` (\`arm64\` for Apple Silicon, \`x64\` for Intel), or
+          - macOS: the \`.dmg\`, \`.zip\` or the smaller \`.tar.xz\` (\`arm64\` for Apple Silicon, \`x64\` for Intel), or
             \`brew tap anzal1/panoply https://github.com/anzal1/panoply\` then
             \`brew install --cask anzal1/panoply/panoply\`
           - Windows: the \`.msi\` or \`.zip\`, or \`scoop bucket add panoply https://github.com/anzal1/panoply\`
             then \`scoop install panoply/panoply\`
-          - Linux: the \`.AppImage\` or the \`.tar.gz\` (run \`install.sh\` inside)
+          - Linux: the \`.AppImage\`, or the \`.tar.gz\` or smaller \`.tar.xz\` (run \`install.sh\` inside)
           - Command line only: the \`panoply-cli-*\` archives
           - Claude Desktop: the \`panoply-mcp-*.mcpb\` for your system, opened by double click
 
