@@ -20,10 +20,13 @@ const MOMENTS = {
   speed: top('.numbers'),
   privacy: top('.privacy'),
   agents: top('.agent-tile', 68),
+  get: top('.get'),
+  downloads: top('.downloads'),
+  downloads2: top('.extras', 68),
   end: 'document.body.scrollHeight',
 };
 // Every block that is read as one piece must fit in the visible screen under the 52px nav.
-const UNITS = ['.statement p', '.set header', '.tile', '.app header', '.app-stage', '.numbers header', '.stats', '.privacy header', '.privacy figure', '.agent-tile', '.get .wrap > *', '.how .steps', '.screen-bar'];
+const UNITS = ['.statement p', '.set header', '.tile', '.app header', '.app-stage', '.numbers header', '.stats', '.privacy header', '.privacy figure', '.agent-tile', '.get .wrap > *', '.downloads header', '.plat', '.how .steps', '.screen-bar'];
 
 fs.mkdirSync(out, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true, args: ['--hide-scrollbars', '--mute-audio'] });

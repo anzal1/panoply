@@ -1,13 +1,116 @@
+---
+// Install commands first, then every file in the release with its size and checksum, read at build time.
+import { latestRelease, mb, type Asset } from "../data/release";
+
+const rel = await latestRelease();
+const v = rel.version;
+const find = (name: string) => rel.assets.find((a) => a.name === name);
+const files = (prefix: string, plat: string, exts: string[]) =>
+  exts.map((e) => find(`${prefix}-${v}-${plat}.${e}`)).filter(Boolean) as Asset[];
+const label = (a: Asset) => {
+  const ext = a.name.match(/\.(tar\.xz|tar\.gz|[a-z]+)$/i)?.[1] ?? "";
+  return { AppImage: "AppImage", dmg: "Disk image", zip: "Zip", msi: "Installer", "tar.xz": "Tar, xz", "tar.gz": "Tar, gzip", mcpb: "Bundle" }[ext] ?? ext;
+};
+const PLATFORMS = [
+  { id: "mac", name: "macOS", note: "macOS 14 Sonoma or later", rows: [["Apple silicon", "macos-arm64"], ["Intel", "macos-x64"]], exts: ["dmg", "tar.xz", "zip"] },
+  { id: "win", name: "Windows", note: "Windows 10 and 11", rows: [["x64", "windows-x64"], ["Arm", "windows-arm64"]], exts: ["msi", "zip"] },
+  { id: "linux", name: "Linux", note: "Any recent distribution", rows: [["x64", "linux-x64"], ["Arm", "linux-arm64"]], exts: ["AppImage", "tar.xz", "tar.gz"] },
+];
+const PLATS = [["macOS, Apple silicon", "macos-arm64"], ["macOS, Intel", "macos-x64"], ["Windows, x64", "windows-x64"], ["Windows, Arm", "windows-arm64"], ["Linux, x64", "linux-x64"], ["Linux, Arm", "linux-arm64"]];
+const EXTRAS = [
+  { name: "Command line", note: "The panoply command on its own, for scripts and servers.", prefix: "panoply-cli", exts: ["tar.xz", "tar.gz", "zip"] },
+  { name: "For AI agents", note: "One-click MCP bundle for Claude Desktop and other clients.", prefix: "panoply-mcp", exts: ["mcpb"] },
+];
+const date = new Date(rel.published).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const sums = find("SHA256SUMS");
+// What the page's script needs to name and link the right download for each visitor.
+const pick = {
+  base: `https://github.com/${"anzal1/panoply"}/releases/download/${rel.tag}/`,
+  mac: `Panoply-${v}-macos-arm64.dmg`,
+  win: { x64: `Panoply-${v}-windows-x64.msi`, arm64: `Panoply-${v}-windows-arm64.msi` },
+  linux: { x64: `Panoply-${v}-linux-x64.AppImage`, arm64: `Panoply-${v}-linux-arm64.AppImage` },
+  page: rel.url,
+};
+---
 <section class="get" id="get">
   <div class="wrap">
     <div class="dither round" aria-hidden="true" style="left:50%;top:40px;width:720px;height:720px;transform:translateX(-50%)"></div>
     <div class="orbit rv"><img class="icon" src="/product/icon.svg" alt="The Panoply app icon" width="96" height="96"></div>
     <h2 class="h1 grad rv">Take the full set.</h2>
-    <p class="sub rv">Free and open source. macOS, Windows and Linux.</p>
+    <p class="sub rv">Free and open source. <span class="nb">Version {v},</span> <span class="nb">released {date}.</span></p>
     <div class="ctas rv">
-      <a class="pill" data-dl href="https://github.com/anzal1/panoply/releases/tag/v0.3.0-beta">Download for macOS</a>
-      <a class="more" href="https://github.com/anzal1/panoply/releases/tag/v0.3.0-beta">All downloads</a>
+      <a class="pill" data-dl href={rel.url}>Download for macOS</a>
+      <a class="more down" href="#downloads">Every download</a>
     </div>
-    <p class="install">Prefer the terminal? Homebrew, Scoop and AppImage steps are in the <a href="https://github.com/anzal1/panoply#install">install guide</a>.</p>
+    <div class="installer rv" role="group" aria-label="Install from the terminal">
+      <div class="itabs" role="tablist">
+        <button role="tab" aria-selected="true" data-cmd="unix">macOS and Linux</button>
+        <button role="tab" aria-selected="false" data-cmd="win">Windows</button>
+        <button role="tab" aria-selected="false" data-cmd="brew">Homebrew</button>
+        <button role="tab" aria-selected="false" data-cmd="scoop">Scoop</button>
+      </div>
+      <div class="term">
+        <div class="term-head"><span class="ihint">One line. Picks your chip, checks the file, installs in seconds.</span><button type="button" class="copybtn" data-copy="icmd">Copy</button></div>
+        <div class="cmd"><code id="icmd" tabindex="0" aria-label="Install command">curl -fsSL https://panoply.anzalabidi.dev/install.sh | sh</code></div>
+      </div>
+    </div>
+  </div>
+</section>
+<script type="application/json" id="release-pick" set:html={JSON.stringify(pick)}></script>
+
+<section class="downloads" id="downloads">
+  <div class="wrap">
+    <header class="center rv">
+      <span class="eyebrow">Downloads</span>
+      <h2 class="h2 h2s">Every file, for every machine.</h2>
+      <p class="sub">Each one is listed with its size and SHA-256 checksum. Copy a checksum to check a download yourself.</p>
+    </header>
+    <div class="plats">
+      {PLATFORMS.map((p) => (
+        <article class="plat rv" data-os={p.id}>
+          <div class="plat-head"><h3 class="h3">{p.name}</h3><span class="mine-tag">Your system</span></div>
+          <p class="body">{p.note}</p>
+          {p.rows.map(([arch, plat]) => (
+            <div class="arch">
+              <span class="arch-name">{arch}</span>
+              <ul>
+                {files("Panoply", plat, p.exts).map((a) => (
+                  <li>
+                    <a href={a.url} download>{label(a)}<span>{mb(a.size)}</span></a>
+                    {a.sha && <button type="button" class="sha" data-sha={a.sha} aria-label={`Copy the SHA-256 of ${a.name}`} title={a.sha}>SHA</button>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </article>
+      ))}
+    </div>
+    <div class="extras">
+      {EXTRAS.map((x) => (
+        <article class="plat extra rv">
+          <h3 class="h3">{x.name}</h3>
+          <p class="body">{x.note}</p>
+          <ul class="grid6">
+            {PLATS.map(([nm, plat]) => {
+              const a = files(x.prefix, plat, x.exts)[0];
+              return a && (
+                <li>
+                  <a href={a.url} download>{nm}<span>{mb(a.size)}</span></a>
+                  {a.sha && <button type="button" class="sha" data-sha={a.sha} aria-label={`Copy the SHA-256 of ${a.name}`} title={a.sha}>SHA</button>}
+                </li>
+              );
+            })}
+          </ul>
+        </article>
+      ))}
+    </div>
+    <p class="dl-foot">
+      {sums && <a href={sums.url}>SHA256SUMS</a>}
+      <span aria-hidden="true">·</span>
+      <a href={rel.url}>Release notes</a>
+      <span aria-hidden="true">·</span>
+      <a href="https://github.com/anzal1/panoply/releases">Older versions</a>
+    </p>
   </div>
 </section>

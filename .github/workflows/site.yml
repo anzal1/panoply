@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
     paths: ['site/**', '.github/workflows/site.yml']
+  # A new release changes the download list, its sizes and checksums, so the site rebuilds with it.
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -28,6 +31,8 @@ jobs:
       - run: npm ci
         working-directory: site
       - run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         working-directory: site
       - uses: actions/upload-pages-artifact@v3
         with:
