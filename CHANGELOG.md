@@ -4,6 +4,25 @@ All notable changes to Panoply are written here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow semantic versioning, with `-beta`
 marking releases that are still finding their edges.
 
+## v0.3.0 (2026-10-19)
+
+The 0.3 line out of beta: everything in v0.3.0-beta, plus a website, one-line installers and smaller downloads.
+
+### Added
+
+- **Website.** [panoply.anzalabidi.dev](https://panoply.anzalabidi.dev) lists every download with its size and
+  SHA-256, read from the release when the site builds. Publishing a release rebuilds it.
+- **One-line installers.** `curl -fsSL https://panoply.anzalabidi.dev/install.sh | sh` on macOS and Linux, and
+  `irm https://panoply.anzalabidi.dev/install.ps1 | iex` on Windows. They pick the file for your chip, download
+  it over four connections, check it against SHA256SUMS and install without admin rights. Tested on macOS,
+  Ubuntu and Windows (PowerShell 7 and 5.1).
+- **Smaller downloads.** Each release also ships `.tar.xz` archives of the macOS and Linux apps and the command
+  line. The macOS app is 13.3 MB this way, against 31.0 MB as a zip, and the installers pick it.
+
+### Fixed
+
+- The Linux command line archive shipped `panoply` without its execute bit.
+
 ## v0.3.0-beta (2026-10-18)
 
 Panoply for AI agents, PDF redaction that removes the text, zip, a calculator, sharing to nearby devices, noise removal and text to speech.
