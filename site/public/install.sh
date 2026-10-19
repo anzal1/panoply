@@ -24,6 +24,7 @@ STREAMS=4
 TMP=""
 STAGE=""
 OLD=""
+NEWAPP=""
 
 say() { printf '%s\n' "$*"; }
 fail() { printf 'panoply install: %s\n' "$*" >&2; exit 1; }
@@ -34,6 +35,7 @@ cleanup() {
   [ -n "$TMP" ] && rm -rf "$TMP"
   [ -n "$STAGE" ] && rm -rf "$STAGE"
   [ -n "$OLD" ] && rm -rf "$OLD"
+  [ -n "$NEWAPP" ] && rm -rf "$NEWAPP"
   return 0
 }
 
@@ -114,6 +116,37 @@ download() {
   curl -fsSL --retry 3 -o "$out" "$url" || fail "download failed: $url"
 }
 
+cli_dest() {
+  if [ -n "${PANOPLY_APP_DIR:-}" ]; then printf '%s\n' "$PANOPLY_APP_DIR/panoply-cli"; else printf '%s\n' "$HOME/.local/share/panoply-cli"; fi
+}
+
+mac_apps_dir() {
+  if [ -n "${PANOPLY_APP_DIR:-}" ]; then
+    printf '%s\n' "$PANOPLY_APP_DIR"
+  elif [ -w /Applications ]; then
+    printf '%s\n' /Applications
+  else
+    printf '%s\n' "$HOME/Applications"
+  fi
+}
+
+linux_dest() {
+  printf '%s\n' "${PANOPLY_APP_DIR:-$HOME/.local/share/panoply}"
+}
+
+# The install folder is moved aside and deleted when it is replaced, so only touch one that is missing,
+# empty, or already a Panoply install (it holds MARKER). Anything else could be somebody's own files.
+guard_dest() {
+  g_dest=$1
+  g_marker=$2
+  if [ ! -e "$g_dest" ] && [ ! -L "$g_dest" ]; then return 0; fi
+  if [ -d "$g_dest" ] && [ ! -L "$g_dest" ]; then
+    if [ -f "$g_dest/$g_marker" ]; then return 0; fi
+    if [ -z "$(ls -A "$g_dest")" ]; then return 0; fi
+  fi
+  fail "$g_dest exists and is not a Panoply install, pick another folder"
+}
+
 # Replace DEST with SRC. SRC must sit on the same filesystem as DEST, so each step is a rename:
 # the old copy only goes away after the new one is in place.
 swap_in() {
@@ -183,16 +216,24 @@ main() {
   BIN_DIR=${PANOPLY_BIN_DIR:-$HOME/.local/bin}
   CLI_ONLY=${PANOPLY_CLI_ONLY:-0}
 
+  # Refuse early, before anything is downloaded, when the install folder holds somebody else's files.
+  if [ "$CLI_ONLY" = 1 ]; then
+    guard_dest "$(cli_dest)" panoply
+  elif [ "$OS" = macos ]; then
+    guard_dest "$(mac_apps_dir)/Panoply.app" Contents/Info.plist
+  else
+    guard_dest "$(linux_dest)" bin/panoply
+  fi
+
   # Step 1: which release.
-  LISTING=""
   if [ -n "${PANOPLY_VERSION:-}" ]; then
     TAG=$PANOPLY_VERSION
     case "$TAG" in v*) ;; *) TAG="v$TAG" ;; esac
   else
     # Every release is a prerelease for now, so /releases/latest does not work. Read the newest one.
-    json=$(api "https://api.github.com/repos/$REPO/releases?per_page=1") || fail "could not read the release list from GitHub (rate limit? set PANOPLY_VERSION=v0.3.0-beta or GITHUB_TOKEN)"
-    LISTING=$(printf '%s' "$json" | tr -d ' \n')
-    TAG=$(printf '%s' "$LISTING" | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p')
+    # Take the newest one that is not a draft (a token can see drafts, and their downloads answer 404).
+    json=$(api "https://api.github.com/repos/$REPO/releases?per_page=5") || fail "could not read the release list from GitHub (rate limit? set PANOPLY_VERSION=v0.3.0-beta or GITHUB_TOKEN)"
+    TAG=$(printf '%s' "$json" | tr -d ' \n' | grep -oE '"(tag_name":"[^"]*|draft":(true|false))' | awk '/^"tag_name"/{t=$0; sub(/^"tag_name":"/, "", t)} /^"draft":false/{if (t != "") {print t; exit}}')
     [ -n "$TAG" ] || fail "no release found for $REPO"
   fi
   VER=${TAG#v}
@@ -219,7 +260,6 @@ main() {
   for c in $candidates; do
     n=$(( n + 1 ))
     if [ "$OS" = linux ] && [ "${c%.tar.xz}" != "$c" ] && ! command -v xz >/dev/null 2>&1; then continue; fi
-    if [ -n "$LISTING" ] && ! printf '%s' "$LISTING" | grep -qF "\"name\":\"$c\""; then continue; fi
     probe "$BASE/$c" "$TMP/probe.$n" &
     pids="$pids $!"
   done
@@ -271,7 +311,7 @@ main() {
 }
 
 install_cli() {
-  if [ -n "${PANOPLY_APP_DIR:-}" ]; then dest="$PANOPLY_APP_DIR/panoply-cli"; else dest="$HOME/.local/share/panoply-cli"; fi
+  dest=$(cli_dest)
   say "Installing the command line tool to $dest"
   parent=$(dirname "$dest")
   mkdir -p "$parent" || fail "could not create $parent"
@@ -288,13 +328,7 @@ install_cli() {
 }
 
 install_macos() {
-  if [ -n "${PANOPLY_APP_DIR:-}" ]; then
-    apps=$PANOPLY_APP_DIR
-  elif [ -w /Applications ]; then
-    apps=/Applications
-  else
-    apps="$HOME/Applications"
-  fi
+  apps=$(mac_apps_dir)
   mkdir -p "$apps" || fail "could not create $apps"
   say "Installing Panoply.app to $apps"
   STAGE="$apps/.panoply-stage.$$"
@@ -305,10 +339,12 @@ install_macos() {
   # Files fetched by curl carry no quarantine mark, so Gatekeeper stays out of the way. Make sure of it.
   xattr -dr com.apple.quarantine "$src" 2>/dev/null || true
   # Unpacked beside the old copy, then swapped by rename.
-  mv "$src" "$STAGE/../.panoply-new.$$" || fail "could not stage the new copy"
+  NEWAPP="$apps/.panoply-new.$$"
+  mv "$src" "$NEWAPP" || fail "could not stage the new copy"
   rm -rf "$STAGE"
   STAGE=""
-  swap_in "$apps/.panoply-new.$$" "$apps/Panoply.app"
+  swap_in "$NEWAPP" "$apps/Panoply.app"
+  NEWAPP=""
   cli="$apps/Panoply.app/Contents/MacOS/panoply-cli"
   [ -f "$cli" ] || fail "the app has no command line tool at $cli"
   ln -sf "$cli" "$BIN_DIR/panoply"
@@ -316,7 +352,7 @@ install_macos() {
 }
 
 install_linux() {
-  dest=${PANOPLY_APP_DIR:-$HOME/.local/share/panoply}
+  dest=$(linux_dest)
   say "Installing Panoply to $dest"
   parent=$(dirname "$dest")
   mkdir -p "$parent" || fail "could not create $parent"

@@ -55,6 +55,18 @@ function Install-Panoply {
         $dest = Join-Path $env:LOCALAPPDATA 'Programs\Panoply'
     }
 
+    # The install folder is moved aside and deleted when it is replaced, so only touch one that is missing,
+    # empty, or already a Panoply install (it holds panoply.exe). Anything else could be somebody's own files.
+    if (Test-Path -LiteralPath $dest) {
+        $destItem = Get-Item -LiteralPath $dest -Force
+        $isLink = [bool]($destItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint)
+        $isInstall = $destItem.PSIsContainer -and (Test-Path -LiteralPath (Join-Path $dest 'panoply.exe'))
+        $isEmpty = $destItem.PSIsContainer -and -not (Get-ChildItem -LiteralPath $dest -Force | Select-Object -First 1)
+        if ($isLink -or -not ($isInstall -or $isEmpty)) {
+            throw "panoply install: $dest exists and is not a Panoply install, pick another folder"
+        }
+    }
+
     $handler = [System.Net.Http.HttpClientHandler]::new()
     $handler.AllowAutoRedirect = $true
     $client = [System.Net.Http.HttpClient]::new($handler)
@@ -71,7 +83,7 @@ function Install-Panoply {
             $tag = $env:PANOPLY_VERSION
             if (-not $tag.StartsWith('v')) { $tag = 'v' + $tag }
         } else {
-            $apiReq = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Get, "https://api.github.com/repos/$repo/releases?per_page=1")
+            $apiReq = [System.Net.Http.HttpRequestMessage]::new([System.Net.Http.HttpMethod]::Get, "https://api.github.com/repos/$repo/releases?per_page=5")
             $apiReq.Headers.Accept.ParseAdd('application/vnd.github+json')
             if ($env:GITHUB_TOKEN) { $apiReq.Headers.Add('Authorization', "Bearer $($env:GITHUB_TOKEN)") }
             $apiResp = $client.SendAsync($apiReq).Result
@@ -79,7 +91,8 @@ function Install-Panoply {
                 throw 'panoply install: could not read the release list from GitHub (rate limit? set $env:PANOPLY_VERSION = ''v0.3.0-beta'' or $env:GITHUB_TOKEN).'
             }
             $json = $apiResp.Content.ReadAsStringAsync().Result | ConvertFrom-Json
-            $release = @($json)[0]
+            # The newest release that is not a draft (a token can see drafts, and their downloads answer 404).
+            $release = @($json) | Where-Object { -not $_.draft } | Select-Object -First 1
             if (-not $release) { throw "panoply install: no release found for $repo" }
             $tag = $release.tag_name
             $listing = @($release.assets | ForEach-Object { $_.name })
@@ -133,6 +146,7 @@ function Install-Panoply {
                 }
                 [System.Threading.Tasks.Task]::WaitAll([System.Threading.Tasks.Task[]]$headTasks)
                 $copyTasks = @()
+                $partEnds = @()
                 for ($i = 0; $i -lt $streams; $i++) {
                     $resp = $headTasks[$i].Result
                     if ([int]$resp.StatusCode -ne 206) { throw "range request $i answered HTTP $([int]$resp.StatusCode)" }
@@ -141,12 +155,19 @@ function Install-Panoply {
                     $dst = [System.IO.FileStream]::new($archive, 'Open', 'Write', 'ReadWrite')
                     [void]$dst.Seek([long]($i * $chunk), [System.IO.SeekOrigin]::Begin)
                     $files += $dst
+                    $partEnds += [long]([math]::Min(($i + 1) * $chunk, $total))
                     $copyTasks += $src.CopyToAsync($dst)
                 }
                 [System.Threading.Tasks.Task]::WaitAll([System.Threading.Tasks.Task[]]$copyTasks)
+                # The file was pre-sized, so its length proves nothing. A part is complete only when its stream
+                # wrote exactly its own number of bytes (the position ends at the part's end).
+                $allParts = $true
+                for ($i = 0; $i -lt $streams; $i++) {
+                    if ($files[$i].Position -ne $partEnds[$i]) { $allParts = $false }
+                }
                 foreach ($f in $files) { $f.Dispose() }
                 foreach ($r in $responses) { $r.Dispose() }
-                if ((Get-Item $archive).Length -eq $total) { $done = $true }
+                if ($allParts) { $done = $true }
             } catch {
                 foreach ($f in $files) { try { $f.Dispose() } catch { } }
                 foreach ($r in $responses) { try { $r.Dispose() } catch { } }
@@ -224,17 +245,25 @@ function Install-Panoply {
                 $link.Save()
                 Write-Host 'Added the Start Menu shortcut'
             }
-            # User PATH, so `panoply` works in a new terminal.
-            $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-            if (-not $userPath) { $userPath = '' }
+            # User PATH, so `panoply` works in a new terminal. Read the raw value (no %VARS% expanded) and write it
+            # back as an expandable string, so entries such as %USERPROFILE%\bin stay as they were.
+            $envKey = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment')
+            $userPath = ''
+            if ($envKey) {
+                $userPath = [string]$envKey.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+                $envKey.Close()
+            }
             $entries = @($userPath -split ';' | Where-Object { $_ })
             $already = $false
             foreach ($e in $entries) {
-                if ($e.TrimEnd('\') -ieq $dest.TrimEnd('\')) { $already = $true }
+                $expanded = [Environment]::ExpandEnvironmentVariables($e)
+                if ($expanded.TrimEnd('\') -ieq $dest.TrimEnd('\')) { $already = $true }
             }
             if (-not $already) {
                 $newPath = (@($entries) + $dest) -join ';'
-                [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+                Set-ItemProperty -Path 'HKCU:\Environment' -Name Path -Value $newPath -Type ExpandString
+                # Tell running programs the environment changed (deleting a name that does not exist still broadcasts).
+                try { [Environment]::SetEnvironmentVariable('PANOPLY_PATH_REFRESH', $null, 'User') } catch { }
                 Write-Host 'Added the install folder to your user PATH (open a new terminal to use panoply)'
             }
             # This session too.
