@@ -223,7 +223,8 @@ main{overflow-x:hidden;overflow-x:clip}
   .privacy header{grid-area:head;text-align:left;align-self:end}
   .privacy header .sub{margin-left:0}
   .privacy figure{grid-area:fig;margin:0;justify-self:center;align-self:center;max-width:min(620px,calc((var(--screen) - 48px) / 1.241))}
-  .privacy .offline{grid-area:off;justify-content:flex-start;margin-top:28px}
+  .privacy .offline{grid-area:off;justify-content:flex-start;justify-self:start;margin:28px 0 0}
+  .privacy .h2s{font-size:clamp(36px,3.5vw,60px)}
   .privacy .facts{grid-area:facts;align-self:start;margin:36px 0 0;max-width:none}
   .privacy .fact{text-align:left;padding-left:0}
   .privacy .fact svg{margin-left:0}
@@ -280,6 +281,48 @@ main{overflow-x:hidden;overflow-x:clip}
 .get .icon{position:relative;animation:float 6s ease-in-out infinite alternate;width:96px;height:96px;margin-bottom:24px;filter:drop-shadow(0 30px 60px rgba(255,255,255,.08))}
 .install{margin-top:28px;font-size:15px;color:var(--fg2)}
 .install a{color:var(--fg);text-decoration:underline;text-underline-offset:3px}
+/* install command */
+.installer{width:100%;max-width:680px;margin-top:40px;text-align:left}
+.itabs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px}
+.itabs button{border:0;cursor:pointer;min-height:36px;padding:0 14px;border-radius:980px;background:transparent;color:var(--fg2);font:500 14px var(--sf);letter-spacing:-.01em;box-shadow:inset 0 0 0 1px var(--hair);transition:color 200ms ease,background-color 200ms ease,box-shadow 200ms ease}
+.itabs button:hover{color:var(--fg)}
+.itabs button[aria-selected="true"]{background:var(--fg);color:#000;box-shadow:none}
+.installer .term{max-width:none;margin-top:0}
+.installer .cmd code{white-space:nowrap;overflow-x:auto;scrollbar-width:none;overflow-wrap:normal;padding-bottom:2px;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+@media (min-width:735px){.installer .cmd code{-webkit-mask-image:none;mask-image:none}}
+.installer .cmd code::-webkit-scrollbar{display:none}
+.ihint{color:var(--fg2)}
+
+/* every download */
+.downloads .wrap{padding-block:var(--sec)}
+.downloads header{margin-bottom:var(--head)}
+.plats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.plat{background:var(--tile);border-radius:24px;padding:28px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);transition:box-shadow 300ms ease}
+.plat .body{margin:4px 0 18px;font-size:15px}
+.plat-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.plat .h3{font-size:28px}
+.mine-tag{display:none;font-size:12px;font-weight:600;color:var(--ui-green);padding:4px 10px;border-radius:980px;background:rgba(61,213,109,.12)}
+.plat.mine{box-shadow:inset 0 0 0 1px rgba(61,213,109,.35)}
+.plat.mine .mine-tag{display:inline-block}
+.arch{border-top:1px solid var(--hair);padding:14px 0 6px}
+.arch-name{display:block;font-size:13px;font-weight:600;color:var(--fg2);margin-bottom:8px}
+.plat ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.plat li{display:flex;align-items:center;gap:8px}
+.plat li a{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;padding:0 14px;border-radius:12px;background:rgba(255,255,255,.04);font-size:15px;color:var(--fg);transition:background-color 200ms ease}
+.plat li a span{font-size:13px;color:var(--fg2);font-variant-numeric:tabular-nums}
+.plat li a:hover{background:rgba(255,255,255,.09)}
+.sha{flex:none;border:0;cursor:pointer;min-height:40px;min-width:48px;padding:0 10px;border-radius:12px;background:transparent;color:var(--fg3);font:600 11px var(--mono);letter-spacing:.04em;box-shadow:inset 0 0 0 1px var(--hair);transition:color 200ms ease,background-color 200ms ease}
+.sha:hover{color:var(--fg)}
+.sha.ok{color:var(--ui-green);background:rgba(61,213,109,.12)}
+.extras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:20px}
+.grid6{display:grid!important;grid-template-columns:minmax(0,1fr);gap:6px 8px!important}
+@media (min-width:1300px){.grid6{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.dl-foot{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:36px 0 0;font-size:15px;color:var(--fg3)}
+.dl-foot a{color:var(--link)}
+.dl-foot a:hover{text-decoration:underline;text-underline-offset:3px}
+@media (max-width:1068px){.plats{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.extras{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:734px){.plats{grid-template-columns:minmax(0,1fr)}.plat{padding:22px}.installer .cmd code{font-size:12px}}
+
 footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-block:20px 40px;font-size:12px;color:var(--fg3);border-top:1px solid var(--hair)}
 footer a:hover{color:var(--fg2)}
 

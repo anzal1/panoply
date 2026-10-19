@@ -1,30 +1,45 @@
 (function(){
   var root = document.documentElement;
   var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var REL = 'https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/';
 
   // Name the download after the visitor's system.
   var ua = navigator.userAgent;
   var os = /Windows/.test(ua) ? 'win' : /Linux|X11/.test(ua) && !/Android/.test(ua) ? 'linux' : 'mac';
   var arm = /arm64|aarch64/i.test(ua);
-  var FILES = { mac: 'Panoply-0.3.0-beta-macos-arm64.dmg', win: 'Panoply-0.3.0-beta-windows-' + (arm ? 'arm64' : 'x64') + '.msi', linux: 'Panoply-0.3.0-beta-linux-' + (arm ? 'arm64' : 'x64') + '.AppImage' };
+  // File names come from the release the site was built against.
+  var pickEl = document.getElementById('release-pick');
+  var PICK = pickEl ? JSON.parse(pickEl.textContent) : null;
   var NAMES = { mac: 'macOS', win: 'Windows', linux: 'Linux' };
+  var FILE = PICK && { mac: PICK.mac, win: PICK.win[arm ? 'arm64' : 'x64'], linux: PICK.linux[arm ? 'arm64' : 'x64'] };
   // Phones cannot run the app: point them at every download instead of guessing a desktop file.
   var phone = /Android|iPhone|iPad|iPod/.test(ua);
-  document.querySelectorAll('[data-dl]').forEach(function(a){
-    if (phone) { a.textContent = 'All downloads'; return; }
-    a.textContent = 'Download for ' + NAMES[os]; a.href = REL + FILES[os];
+  if (PICK) document.querySelectorAll('[data-dl]').forEach(function(a){
+    if (phone) { a.textContent = 'Every download'; a.href = '#downloads'; return; }
+    a.textContent = 'Download for ' + NAMES[os]; a.href = PICK.base + FILE[os];
   });
+  if (!phone) { var mine = document.querySelector('.plat[data-os="' + os + '"]'); if (mine) mine.classList.add('mine'); }
   if (os !== 'mac' && !phone) document.querySelector('.keys').innerHTML = '<span class="key">Ctrl</span><span class="key">Alt</span><span class="key">Space</span>';
 
+  var CMDS = {
+    unix: 'curl -fsSL https://panoply.anzalabidi.dev/install.sh | sh',
+    win: 'irm https://panoply.anzalabidi.dev/install.ps1 | iex',
+    brew: 'brew tap anzal1/panoply https://github.com/anzal1/panoply; brew install --cask anzal1/panoply/panoply',
+    scoop: 'scoop bucket add panoply https://github.com/anzal1/panoply; scoop install panoply/panoply'
+  };
+  var itabs = [].slice.call(document.querySelectorAll('.itabs button')), icmd = document.getElementById('icmd');
+  function pickCmd(k){ if (!icmd) return; itabs.forEach(function(b){ b.setAttribute('aria-selected', String(b.dataset.cmd === k)); }); icmd.textContent = CMDS[k]; }
+  itabs.forEach(function(b){ b.addEventListener('click', function(){ pickCmd(b.dataset.cmd); }); });
+  if (os === 'win' && !phone) pickCmd('win');
+
+  // Copy that always gives feedback: on a refused clipboard the text is selected and the button says how to copy.
+  function copyText(text, el, btn, label){
+    function done(){ btn.textContent = 'Copied'; btn.classList.add('ok'); setTimeout(function(){ btn.textContent = label; btn.classList.remove('ok'); }, 1600); }
+    function manual(){ if (el) { var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); } btn.textContent = /Mac/.test(ua) ? 'Press \u2318C' : 'Press Ctrl+C'; setTimeout(function(){ btn.textContent = label; }, 2400); }
+    try { navigator.clipboard.writeText(text).then(done, manual); } catch (e) { manual(); }
+  }
+  document.querySelectorAll('.sha').forEach(function(btn){ btn.addEventListener('click', function(){ copyText(btn.dataset.sha, null, btn, 'SHA'); }); });
   document.querySelectorAll('.copybtn').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var el = document.getElementById(btn.dataset.copy);
-      var text = el.dataset.full || el.textContent;
-      function done(){ btn.textContent = 'Copied'; btn.classList.add('ok'); setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1600); }
-      function select(){ var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); }
-      try { navigator.clipboard.writeText(text).then(done, select); } catch (e) { select(); }
-    });
+    btn.addEventListener('click', function(){ var el = document.getElementById(btn.dataset.copy); copyText(el.dataset.full || el.textContent, el, btn, 'Copy'); });
   });
 
   /* ---------- the live command bar ---------- */

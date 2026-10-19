@@ -1,0 +1,18 @@
+name: Rebuild site on release
+
+# A new release changes the download list, its sizes and checksums. The Pages environment only deploys
+# from main, so this starts the normal site build on main instead of building from the tag.
+on:
+  release:
+    types: [published]
+
+permissions:
+  actions: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - run: gh workflow run site.yml --repo "${{ github.repository }}" --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}

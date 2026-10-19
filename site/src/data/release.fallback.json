@@ -1,0 +1,169 @@
+{
+ "tag": "v0.3.0-beta",
+ "version": "0.3.0-beta",
+ "url": "https://github.com/anzal1/panoply/releases/tag/v0.3.0-beta",
+ "published": "2026-10-18T15:48:17Z",
+ "assets": [
+  {
+   "name": "Panoply-0.3.0-beta-linux-arm64.AppImage",
+   "size": 35854856,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-linux-arm64.AppImage",
+   "sha": "92edb14da952a5ed95b139cc078b2d41c1ff43c91c3a1edd9ed9e44e09137b7d"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-linux-arm64.tar.gz",
+   "size": 38348678,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-linux-arm64.tar.gz",
+   "sha": "b0f4d7e933165b0f79f47192023af53c469229cc03cd62eed6857c4f738509c7"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-linux-x64.AppImage",
+   "size": 40032760,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-linux-x64.AppImage",
+   "sha": "373b4ad2d0d1eb86d31089c6ae4cb86c0c136673c2b150eced7fe8242beff453"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-linux-x64.tar.gz",
+   "size": 42891867,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-linux-x64.tar.gz",
+   "sha": "d11430a33314fc651a165224319005f1f4fe5a7f91e6bed0c5c70f802fe6e362"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-macos-arm64.dmg",
+   "size": 34990745,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-macos-arm64.dmg",
+   "sha": "d8d2b34aaad3a0a252e9c0e82c68e938836450b6bcafc3f964f82c9c90cc49e1"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-macos-arm64.zip",
+   "size": 30992822,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-macos-arm64.zip",
+   "sha": "c6ced559feade569e1450087aa08cec54e62d3fbec16f50e13b4355739d42c54"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-macos-x64.dmg",
+   "size": 41037254,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-macos-x64.dmg",
+   "sha": "0727cbad09f4593109726305cba6e6d047b230bc20e3df5883c5732ebba1fb50"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-macos-x64.zip",
+   "size": 36036643,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-macos-x64.zip",
+   "sha": "d429efe2038332c118bae5cc176ecd14c058a397a5ca85c1f8de6a6fc4a0d705"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-windows-arm64.msi",
+   "size": 26906624,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-windows-arm64.msi",
+   "sha": "44b2442319f0f77444150b4598c823ebdd67f80321b7c621fc063ac9b90cae0d"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-windows-arm64.zip",
+   "size": 32236107,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-windows-arm64.zip",
+   "sha": "b9df7dd58344ad982cc2be595d20d7d16fefb2dc4fd863eae74f5e5dce070946"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-windows-x64.msi",
+   "size": 31698944,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-windows-x64.msi",
+   "sha": "87a7ac463056cc4b0e7ba08318a7b481caeda0c19171f8a3765c35cb41a10969"
+  },
+  {
+   "name": "Panoply-0.3.0-beta-windows-x64.zip",
+   "size": 37313482,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-windows-x64.zip",
+   "sha": "f6e03454b4de5ac4f7db81e5cc3926da1189242355f22d399cdc4433cd24b4ac"
+  },
+  {
+   "name": "panoply-cli-0.3.0-beta-linux-arm64.tar.gz",
+   "size": 14290601,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-cli-0.3.0-beta-linux-arm64.tar.gz",
+   "sha": "b49eaa5a0502d3b226210c770726798519fec78dd17d2142d44334616073db8a"
+  },
+  {
+   "name": "panoply-cli-0.3.0-beta-linux-x64.tar.gz",
+   "size": 16257949,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-cli-0.3.0-beta-linux-x64.tar.gz",
+   "sha": "4cbafe157677dd9636e5ed92c8cc6adf320dbf30537b488e776e36479ccce5ed"
+  },
+  {
+   "name": "panoply-cli-0.3.0-beta-macos-arm64.tar.gz",
+   "size": 13839768,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-cli-0.3.0-beta-macos-arm64.tar.gz",
+   "sha": "729b739dccb19953e50532275e54f7896d886dea39b7e63d729871a05bd8a6a2"
+  },
+  {
+   "name": "panoply-cli-0.3.0-beta-macos-x64.tar.gz",
+   "size": 16164072,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-cli-0.3.0-beta-macos-x64.tar.gz",
+   "sha": "aa6a7a06441b4254b5ab8958cde6d492cc09757dc4c27924c7567ec5f9442849"
+  },
+  {
+   "name": "panoply-cli-0.3.0-beta-windows-arm64.zip",
+   "size": 14306803,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-cli-0.3.0-beta-windows-arm64.zip",
+   "sha": "bb8408f5d8f840fb788decd1a52b1d89eee2795fee1edbfacebcaeb5849131b5"
+  },
+  {
+   "name": "panoply-cli-0.3.0-beta-windows-x64.zip",
+   "size": 16691272,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-cli-0.3.0-beta-windows-x64.zip",
+   "sha": "fa2fcb6f1ad64f069eb0c77ad9b35b3245ee98d1a8e20ab563181071d379c796"
+  },
+  {
+   "name": "panoply-mcp-0.3.0-beta-linux-arm64.mcpb",
+   "size": 14479572,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-mcp-0.3.0-beta-linux-arm64.mcpb",
+   "sha": "bb20e5e7a51e9262417fec6fb311b753311e9e777a12303c98745e31a68de503"
+  },
+  {
+   "name": "panoply-mcp-0.3.0-beta-linux-x64.mcpb",
+   "size": 16659268,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-mcp-0.3.0-beta-linux-x64.mcpb",
+   "sha": "8923ef2a4b31412a907ac206b64ab672499e3ebee2a9facd7caa0a646a6f0052"
+  },
+  {
+   "name": "panoply-mcp-0.3.0-beta-macos-arm64.mcpb",
+   "size": 14230124,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-mcp-0.3.0-beta-macos-arm64.mcpb",
+   "sha": "87b1d1fa6c4867926aba32c53bccf4be9c96af05653e0ff935c1b26e0e452595"
+  },
+  {
+   "name": "panoply-mcp-0.3.0-beta-macos-x64.mcpb",
+   "size": 16246661,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-mcp-0.3.0-beta-macos-x64.mcpb",
+   "sha": "4e20a255c331d4c063607623b4812d9d0957de3e011192505212d0fbf4690c00"
+  },
+  {
+   "name": "panoply-mcp-0.3.0-beta-windows-arm64.mcpb",
+   "size": 14449373,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-mcp-0.3.0-beta-windows-arm64.mcpb",
+   "sha": "b0b44967368250ad7e4b292d7b37a92f512d492c7e66dbded9ad4b970ed66c13"
+  },
+  {
+   "name": "panoply-mcp-0.3.0-beta-windows-x64.mcpb",
+   "size": 16998121,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-mcp-0.3.0-beta-windows-x64.mcpb",
+   "sha": "3cdcb2ceee6ed5c8726b2d58e9e38c2e48860f849b555dabc7b11997418b6faa"
+  },
+  {
+   "name": "panoply-package-manifests-0.3.0-beta.zip",
+   "size": 10563,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/panoply-package-manifests-0.3.0-beta.zip",
+   "sha": "8d86442d3b6ac4a2f4bd28fe44c63617aadf8a45f3d1e30e3a1384fa816cc3ab"
+  },
+  {
+   "name": "server.json",
+   "size": 2326,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/server.json",
+   "sha": "2b97c02dc0479169212d14ab89debaec9ca229c86294557a4f0997c813599d49"
+  },
+  {
+   "name": "SHA256SUMS",
+   "size": 2683,
+   "url": "https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/SHA256SUMS"
+  }
+ ]
+}
