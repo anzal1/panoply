@@ -63,9 +63,12 @@ fn speak_reads_a_markdown_file_next_to_it_and_voices_lists_the_os_voices() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// The name and identifier of a listed voice that really renders sound here. A machine may list
-/// voices it cannot speak with (not downloaded, or not usable for synthesis), so each of the
-/// first few listed voices is tried with a short phrase and the first that works is used.
+/// The name and identifier of a listed voice that really renders sound here, and keeps doing so.
+/// A machine may list voices it cannot speak with (not downloaded, or not usable for synthesis).
+/// On a GitHub macOS runner the super-compact voices also come and go between processes while
+/// voice data loads: one process lists and speaks with one, the next cannot find it. So the more
+/// stable families are tried first, super-compact last, and a voice is taken only after it speaks
+/// in two separate processes in a row.
 fn usable_voice() -> (String, String) {
     let (voices, err, ok) = panoply(&["audio", "voices"]);
     assert!(ok, "{err}");
@@ -73,10 +76,7 @@ fn usable_voice() -> (String, String) {
     static CALLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
     let n = CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
     let probe = scratch(&format!("probe{n}"));
-    let mut tried = Vec::new();
-    for line in voices.lines().take(8) {
-        let cols: Vec<&str> = line.split('\t').collect();
-        let (name, id) = (cols[0], cols[3]);
+    let speaks = |id: &str| {
         let (_, _, ok) = panoply(&[
             "audio",
             "speak",
@@ -90,13 +90,32 @@ fn usable_voice() -> (String, String) {
         let spoke = ok
             && panoply_tts::wav_stats(&probe.join("speech.wav")).is_ok_and(|(_, rms)| rms > 0.005);
         let _ = std::fs::remove_file(probe.join("speech.wav"));
-        if spoke {
+        spoke
+    };
+    let rank = |id: &str| match id {
+        _ if id.contains(".super-compact.") => 2,
+        _ if id.contains(".voice.compact.") || id.contains(".speech.synthesis.voice.") => 0,
+        _ => 1,
+    };
+    let mut listed: Vec<(&str, &str)> = voices
+        .lines()
+        .filter_map(|line| {
+            let cols: Vec<&str> = line.split('\t').collect();
+            (cols.len() > 3).then(|| (cols[0], cols[3]))
+        })
+        .collect();
+    // A stable sort keeps the system's order inside each family.
+    listed.sort_by_key(|(_, id)| rank(id));
+    let mut tried = Vec::new();
+    for (name, id) in listed.into_iter().take(12) {
+        if speaks(id) && speaks(id) {
+            println!("voice for the test: {name} ({id})");
             let _ = std::fs::remove_dir_all(&probe);
             return (name.to_string(), id.to_string());
         }
         tried.push(id.to_string());
     }
-    panic!("none of the first listed voices rendered sound: {tried:?}");
+    panic!("none of the listed voices rendered sound twice in a row: {tried:?}");
 }
 
 #[test]
