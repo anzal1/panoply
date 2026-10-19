@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Writes both teaser cuts from teaser.template.html (16:9 and 4:5). Run from anywhere."""
+"""Writes every cut from its template: teaser (22 s) and odyssey (56.9 s), each in 16:9 and 4:5. Run from anywhere."""
 import pathlib
 here = pathlib.Path(__file__).resolve().parent
 drops = here.parent.parent
-tpl = (here / "teaser.template.html").read_text()
-host = (drops / "mcp" / "index.html").read_text()
-for pid, w, h, wide in (("teaser", 1920, 1080, "true"), ("teaser-4x5", 1080, 1350, "false")):
+PROJECTS = (
+    ("teaser.template.html", "teaser", 1920, 1080, "true", 22),
+    ("teaser.template.html", "teaser-4x5", 1080, 1350, "false", 22),
+    ("odyssey.template.html", "odyssey", 1920, 1080, "true", 56.9),
+    ("odyssey.template.html", "odyssey-4x5", 1080, 1350, "false", 56.9),
+)
+for tname, pid, w, h, wide, dur in PROJECTS:
+    tpl = (here / tname).read_text()
     out = tpl.replace("__ID__", pid).replace("__W__", str(w)).replace("__H__", str(h)).replace("__WIDE__", wide)
     (drops / pid / "compositions" / f"{pid}.html").write_text(out)
     idx = f'''<!doctype html>
@@ -21,9 +26,9 @@ for pid, w, h, wide in (("teaser", 1920, 1080, "true"), ("teaser-4x5", 1080, 135
     </style>
   </head>
   <body>
-    <div id="root" data-composition-id="{pid}" data-start="0" data-duration="22" data-width="{w}" data-height="{h}">
+    <div id="root" data-composition-id="{pid}" data-start="0" data-duration="{dur}" data-width="{w}" data-height="{h}">
     <div id="host-{pid}" class="clip" data-composition-id="{pid}" data-composition-src="compositions/{pid}.html"
-         data-start="0.0" data-duration="22" data-track-index="1" data-width="{w}" data-height="{h}"></div>
+         data-start="0.0" data-duration="{dur}" data-track-index="1" data-width="{w}" data-height="{h}"></div>
     </div>
     <script>
       const tl = gsap.timeline({{ paused: true }});

@@ -1,2 +1,2 @@
-drops/teaser,drops/teaser-4x5 looks 30
-# run 8
+drops/odyssey,drops/odyssey-4x5 looks 30
+# run 9

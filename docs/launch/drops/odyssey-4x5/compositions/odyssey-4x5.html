@@ -1,0 +1,603 @@
+<!doctype html>
+<html><head><meta charset="UTF-8"></head><body>
+<template>
+  <style>
+    @font-face{font-family:"Inter";src:url("assets/fonts/Inter-Variable-latin.woff2") format("woff2");font-weight:100 900}
+    #root{position:absolute;inset:0;overflow:hidden;font-family:"Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#F4F0E8;background:#0D0E12}
+    #root *{box-sizing:border-box}
+    #root .abs{position:absolute}
+    #root .dither{position:absolute;pointer-events:none;background-repeat:no-repeat;background-size:100% 100%;image-rendering:pixelated;image-rendering:crisp-edges}
+    #root .g{background:linear-gradient(180deg,#FBF8F2 20%,#B4B2B0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600;letter-spacing:-.02em;line-height:1.04;white-space:nowrap}
+    #root .fm{position:absolute;left:0;top:0;opacity:1}
+    #root .fm img{display:block;width:100%;height:auto}
+    #root .bloom{position:absolute;left:0;top:0;border-radius:50%;background:radial-gradient(circle,rgba(244,240,232,.6) 0%,rgba(244,240,232,.18) 40%,rgba(244,240,232,0) 68%);opacity:0}
+    #root .blend{mix-blend-mode:lighten}
+    #root .blend img{display:block;position:absolute}
+    #grain{position:absolute;inset:0;pointer-events:none;background:url("assets/grain.png") 0 0/160px 160px;opacity:.3;z-index:100}
+
+    /* the command bar, rebuilt from the website's own .bar styles and scaled for video */
+    #bar{position:absolute;border-radius:var(--rad);background:rgba(22,22,28,.97);box-shadow:0 0 0 1.5px rgba(255,255,255,.12),0 50px 120px -30px rgba(0,0,0,.95),0 0 120px rgba(255,255,255,.05);overflow:hidden;text-align:left;letter-spacing:-.01em;color:#EDEDF0;font-size:var(--fs);line-height:1.25;opacity:0;z-index:20}
+    .bar-top{position:absolute;left:0;right:0;top:0;height:var(--bt);display:flex;align-items:center;gap:var(--gap);padding:0 20px 0 var(--padl);border-bottom:1.5px solid rgba(255,255,255,.08)}
+    .bar-top>svg{flex:none;width:var(--ic);height:var(--ic);color:#8B8D96}
+    .q{flex:1;min-width:0;white-space:nowrap;overflow:hidden;display:flex;align-items:center}
+    .q .ph{color:#6F717A}
+    .caret{display:inline-block;flex:none;width:3px;height:1.15em;background:#4C8DFF;margin-left:2px}
+    .fchip{flex:none;display:flex;align-items:center;gap:12px;height:calc(var(--bt) - 30px);padding:0 16px 0 9px;border-radius:14px;background:#24252C;opacity:0}
+    .fchip small{font-size:var(--fs);color:#8B8D96}
+    .fchip i{font-style:normal;color:#6F717A;margin-left:2px}
+    .fi{flex:none;width:var(--fiw);height:var(--fiw);border-radius:11px;display:grid;place-items:center}
+    .fi svg{width:60%;height:60%}
+    .fi.pdf{background:#3A1C22;color:#FF5F67}.fi.img{background:#2E2140;color:#C86BFA}.fi.id{background:#3A2A14;color:#F5A524}
+    .bar-body{position:absolute;left:0;right:0;top:var(--bt);bottom:var(--ft)}
+    .view{position:absolute;inset:0;padding:10px 14px;opacity:0}
+    .sec{color:#7D7F88;padding:12px 14px 8px}
+    .row{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;align-items:center;column-gap:20px;padding:var(--rp) 14px;border-radius:16px}
+    .row b{font-weight:500;white-space:nowrap}
+    .row .d{color:#8B8D96;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .row .k{color:#7D7F88}
+    .row.sel{background:rgba(25,40,61,0);box-shadow:inset 0 0 0 1.5px rgba(76,141,255,.16)}
+    .row.sel .d{color:#AEB1BB}
+    .row.sel.plain{box-shadow:none}
+    .kbd{display:inline-grid;justify-self:end;place-items:center;min-width:calc(var(--fs) * 1.4);height:calc(var(--fs) * 1.2);padding:0 8px;border-radius:9px;background:rgba(255,255,255,.08);color:#8B8D96}
+    .kbd svg{width:.8em;height:.8em}
+    .opts{grid-column:2/4;display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+    .opts span:not(.est){color:#A9ABB3;padding:7px 22px;border-radius:999px;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.16);opacity:0}
+    .opts span:not(.est) b{color:#EDEDF0;font-weight:500;margin-left:10px}
+    .est{color:#3DD56D;white-space:nowrap;opacity:0}
+    .stack .row{grid-template-columns:auto minmax(0,1fr) auto;column-gap:18px}
+    .stack .row .fi{grid-column:1;grid-row:1/span 2}
+    .stack .row b{grid-column:2;grid-row:1}
+    .stack .row .d{grid-column:2;grid-row:2;white-space:normal;line-height:1.2}
+    .stack .row .k,.stack .row .kbd{grid-column:3;grid-row:1/span 2}
+    .stack .opts{grid-column:2;grid-row:3;align-items:center}
+    .stack .est{margin-left:auto}
+    .tall .est{flex-basis:100%;margin-left:0;margin-top:6px}
+    .run{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px}
+    .run b{font-size:var(--fs2);font-weight:600}
+    .prog{width:62%;height:14px;border-radius:7px;background:rgba(255,255,255,.1);overflow:hidden}
+    .prog i{display:block;height:100%;width:100%;background:#0A84FF;transform:scaleX(0);transform-origin:left}
+    .run small{width:62%;display:flex;justify-content:space-between;font-size:var(--fs);color:#8B8D96}
+    .done{padding:28px 30px}
+    .done h4{margin:0;display:flex;align-items:center;gap:16px;font-size:var(--fs2);font-weight:600;line-height:1.15}
+    .done h4 svg{flex:none;width:calc(var(--fs2) * 1.2);height:calc(var(--fs2) * 1.2);color:#3DD56D}
+    .ba{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;margin-top:26px}
+    .ba div{border-radius:18px;background:#202128;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08);padding:16px 24px}
+    .ba small{display:block;font-size:var(--fs);color:#8B8D96}
+    .ba strong{display:block;font-size:var(--big);font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
+    .ba .after strong{color:#3DD56D}
+    .ba>span{color:#6F717A;display:grid}
+    .ba>span svg{width:calc(var(--fs) * 1.4);height:calc(var(--fs) * 1.4)}
+    .done .out{margin-top:24px;color:#8B8D96}
+    .done .out span{display:inline-block;margin-top:10px;padding:10px 20px;border-radius:14px;background:#202128;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.08);color:#EDEDF0}
+    .bar-foot{position:absolute;left:0;right:0;bottom:0;height:var(--ft);border-top:1.5px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:space-between;padding:0 var(--padl);color:#7D7F88}
+    .bar-foot .l{display:flex;align-items:center;gap:14px;white-space:nowrap}
+    .bar-foot .l img{width:calc(var(--fs) * 1.1);height:calc(var(--fs) * 1.1)}
+    .bar-foot .r{display:flex;align-items:center;gap:12px}
+    .tm{font-family:"SF Mono",ui-monospace,Menlo,Consolas,"DejaVu Sans Mono","Liberation Mono",monospace;letter-spacing:-.02em}
+    #root .num{font-weight:600;letter-spacing:-.03em;line-height:1;white-space:nowrap;background:linear-gradient(180deg,#FBF8F2 25%,#B4B2B0 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-align:center}
+    #root .lab{font-weight:600;letter-spacing:-.02em;line-height:1.15;white-space:nowrap;color:#F4F0E8;text-align:center}
+    #tp{position:absolute;border-radius:var(--rad);background:#16161C;box-shadow:0 0 0 1.5px rgba(255,255,255,.12),0 50px 120px -30px rgba(0,0,0,.95);opacity:0}
+  </style>
+
+  <div id="root" data-composition-id="odyssey-4x5" data-width="1080" data-height="1350">
+    <div id="gl" class="dither" style="background-image:url('assets/glow-wide.png');opacity:0;filter:brightness(1.9)"></div>
+    <div id="gr" data-layout-allow-overflow class="dither" style="background-image:url('assets/glow-round.png');opacity:0"></div>
+    <div id="gro" data-layout-allow-overflow class="dither" style="background-image:url('assets/glow-round.png');opacity:0"></div>
+    <div id="ge" data-layout-allow-overflow class="dither" style="background-image:url('assets/glow-wide.png');opacity:0"></div>
+    <div id="bustwrap" data-layout-allow-overflow class="abs blend" style="left:0;top:0;width:1080px;height:1350px"><img id="bust" src="assets/bust.webp" alt=""></div>
+    <div id="forms" class="abs" style="left:0;top:0;width:1080px;height:1350px"></div>
+    <div id="orbit" class="abs" style="left:0;top:0;width:1080px;height:1350px"></div>
+    <div id="bursts" class="abs" style="left:0;top:0;width:1080px;height:1350px"></div>
+    <div id="blooms" class="abs" style="left:0;top:0;width:1080px;height:1350px"></div>
+    <div id="murals" class="abs" style="left:0;top:0;width:1080px;height:1350px"></div>
+    <div id="pmwrap" class="abs" style="left:0;top:0;width:1080px;height:1350px"><div id="pm" class="abs blend" style="opacity:0"><img src="assets/private.webp" alt=""></div><div id="om" class="abs blend" style="opacity:0"><img src="assets/agents.webp" alt=""></div></div>
+    <div id="head" class="abs" style="left:0;top:0;width:1080px;height:1350px"><div id="h1" class="g abs" style="opacity:0"></div><div id="h2" class="g abs" style="opacity:0"></div></div>
+    <div id="bar"></div>
+    <div id="mlabels" class="abs" style="left:0;top:0;width:1080px;height:1350px"></div>
+    <div id="priv" class="abs" style="left:0;top:0;width:1080px;height:1350px"><div id="pt1" class="g abs" style="opacity:0"></div><div id="pt2" class="g abs" style="opacity:0"></div><div id="at1" class="g abs" style="opacity:0"></div><div id="at2" class="g abs" style="opacity:0"></div><div id="atm" class="abs tm" style="opacity:0;white-space:nowrap;color:#F4F0E8;background:#16161C;box-shadow:0 0 0 1.5px rgba(255,255,255,.12);border-radius:16px"></div></div>
+    <div id="nums" class="abs" style="left:0;top:0;width:1080px;height:1350px"></div>
+    <div id="tp"><div id="tpc" class="tm abs" style="color:#EDEDF0;white-space:nowrap"></div><div id="tpo" class="tm abs" style="color:#3DD56D;white-space:nowrap;opacity:0"></div></div>
+    <div id="ringc" class="abs" style="left:0;top:0;width:1080px;height:1350px"></div>
+    <div id="end" class="abs" style="left:0;top:0;width:1080px;height:1350px">
+      <div id="eorbit" class="abs" style="left:0;top:0;width:1080px;height:1350px"></div>
+      <div id="ebloom" class="bloom" style="opacity:0"></div>
+      <img id="eicon" class="abs" src="assets/icon.svg" alt="">
+      <div id="ename" class="g abs">Panoply</div>
+      <div id="etag" class="g abs">Every file tool. One app.</div>
+      <div id="eurl" class="abs" style="color:#F4F0E8;font-weight:500;letter-spacing:-.01em;white-space:nowrap">panoply.anzalabidi.dev</div>
+      <div id="esmall" class="abs" style="color:#8B8D96;font-weight:500;letter-spacing:-.01em;line-height:1.3"></div>
+    </div>
+    <div id="grain"></div>
+  </div>
+
+  <script>
+  (function () {
+    /* ---- every time in the film, measured from the music (retime here, nothing else needs touching) ---- */
+    const CUES = {
+      hit0: 0.25, h1: 2.15, wave2: 3.97, assemble: 6.74, h2: 7.67, hold: 12.0, proof: 16.0,
+      m1: 18.8, enter1: 19.7, reset: 23.4, enter2: 27.1, climax: 30.0,
+      n1: 31.9, n2: 32.88, n3: 33.80, mural: [34.73, 35.66, 36.58, 37.50, 38.43, 39.36],
+      silence: 40.29, agents: 42.13, term: 43.06, install: 44.90, ok: 45.83, breath: 47.0, end: 49.5, bloom: 55.4, still: 55.6, total: 56.9,
+    };
+    /* bar jobs: every step is offsets from these anchors */
+    const J1 = { chip: 16.7, list: 17.0, typeAt: 17.6, match: CUES.m1, enter: CUES.enter1, run: 19.95, result: 21.0, count: 21.15, head: 21.7, out: 23.27 };
+    const J2 = { chip: 23.75, list: 24.05, typeAt: 24.5, match: 25.7, enter: CUES.enter2, run: 27.35, result: 28.3, count: 28.45, head: 28.9, out: 29.95 };
+
+    const ID = 'odyssey-4x5', wide = false;
+    const W = wide ? 1920 : 1080, H = wide ? 1080 : 1350;
+    const $ = id => document.getElementById(id);
+    const tl = gsap.timeline({ paused: true });
+    const css = (el, o) => { const e = typeof el === 'string' ? $(el) : el; for (const k in o) e.style[k] = (typeof o[k] === 'number' && k !== 'opacity' && k !== 'zIndex') ? o[k] + 'px' : o[k]; return e; };
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const P3 = 'power3.out', P2IO = 'power2.inOut';
+    const clamp01 = v => Math.max(0, Math.min(1, v));
+    const rise = (sel, t, y = 24, d = 0.9) => {
+      tl.fromTo(sel, { y }, { y: 0, duration: d, ease: P3 }, t);
+      tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: Math.min(0.6, d), ease: 'power1.out' }, t);
+    };
+    /* a hard cut: opacity to 0 within one frame at time t */
+    const cut = (sel, t) => tl.to(sel, { opacity: 0, duration: 0.001, ease: 'none' }, t);
+    /* old out over 4 frames, then the new one in: the new view lands exactly on landT */
+    const swap = (a, b, landT) => { tl.to(a, { opacity: 0, duration: 0.133, ease: 'none' }, landT - 0.133); tl.to(b, { opacity: 1, duration: 0.133, ease: 'none' }, landT); };
+
+    /* ------------------------------ layout ------------------------------ */
+    const L = wide ? {
+      bust: { FH: 1040, top: 20, cx: 0.66 * W },
+      head: { size: 124, left: 110, rh: 136 },
+      fb: 210, orb: { rx: 430, ry: 330, cy: 540, s: 0.9 },
+      bar: { w: 1700, h: 950, fs: 46, fs2: 54, big: 104, rad: 26, bt: 128, ft: 100, padl: 34, gap: 22, ic: 52, fiw: 64, rp: 14 },
+      mural: { h: 880, top: 10, cx: W / 2, lab: 64, labTop: 915, dx: 70 },
+      priv: { h: 900, top: 90, cx: 0.68 * W, t: { size: 112, left: 140, top: 410, rh: 120 } },
+      owl: { h: 900, top: 90, cx: 0.74 * W, t: { size: 112, left: 140, top: 330, rh: 120 }, term: { size: 40, top: 640, left: 140, padx: 28, pady: 16 } },
+      num: { big: 260, bigTop: 330, lab: 64, labTop: 640 },
+      tp: { left: 110, top: 300, w: 1700, h: 480, rad: 26, fs: 44, cx: 50, cy: 100, oy: 300 },
+      burst: { rx: 780, ry: 380, fb: 230 },
+      ring: 360,
+      end: { icon: 220, cy: 305, rx: 450, ry: 185, fb: 150, name: { size: 120, top: 585 }, tag: { size: 64, top: 730 }, url: { size: 54, top: 828 }, small: { size: 36, top: 940 }, smallLines: ['Free and open source. macOS, Windows and Linux.'] },
+      rest: [[.08,.12],[.30,.10],[.52,.08],[.74,.07],[.92,.14],[.95,.42],[.93,.72],[.78,.9],[.55,.92],[.32,.9],[.10,.88],[.05,.20],[.24,.82],[.44,.82]],
+    } : {
+      bust: { FH: 960, top: 372, cx: 0.5 * W },
+      head: { size: 112, left: 70, top: 136, rh: 122 },
+      fb: 170, orb: { rx: 430, ry: 290, cy: 800, s: 0.8 },
+      bar: { w: 1000, h: 940, fs: 36, fs2: 44, big: 84, rad: 22, bt: 112, ft: 92, padl: 24, gap: 14, ic: 40, fiw: 52, rp: 12 },
+      mural: { h: 1000, top: 40, cx: W / 2, lab: 76, labTop: 1120, dx: 30 },
+      priv: { h: 880, top: 20, cx: 0.5 * W, t: { size: 104, left: 70, top: 930, rh: 112 } },
+      owl: { h: 860, top: 20, cx: 0.5 * W, t: { size: 100, left: 70, top: 930, rh: 106 }, term: { size: 33, top: 1170, left: 70, padx: 22, pady: 14 } },
+      num: { big: 200, bigTop: 520, lab: 46, labTop: 760 },
+      tp: { left: 40, top: 400, w: 1000, h: 600, rad: 22, fs: 34, cx: 40, cy: 80, oy: 400 },
+      burst: { rx: 440, ry: 430, fb: 190 },
+      ring: 300,
+      end: { icon: 200, cy: 400, rx: 400, ry: 190, fb: 150, name: { size: 150, top: 630 }, tag: { size: 66, top: 822 }, url: { size: 54, top: 930 }, small: { size: 34, top: 1090 }, smallLines: ['Free and open source.', 'macOS, Windows and Linux.'] },
+      rest: [[.12,.40],[.88,.40],[.09,.55],[.91,.58],[.12,.74],[.9,.75],[.15,.92],[.5,.94],[.86,.93],[.5,.58],[.3,.43],[.7,.41],[.5,.68],[.3,.83]],
+    };
+    const BH = L.bust.FH, BW = BH * 2200 / 1228, BTOP = L.bust.top, BCX = L.bust.cx;
+    const fx = (u) => BCX - 0.64 * BW + u * BW, fy = (v) => BTOP + v * BH;
+    const CX = W / 2, CY = H / 2;
+    const bustCY = BTOP + 0.5 * BH;
+    const bustShift = wide ? CX - BCX : 0;
+
+    /* ---------------- glow pools ---------------- */
+    css('gl', { width: wide ? 2000 : 1500, height: wide ? 833 : 625, left: W / 2 - (wide ? 1000 : 750), top: (wide ? H / 2 - 416 : H * 0.47 - 312) });
+    gsap.set('#gl', { opacity: 0.95, scale: 0.9 });
+    tl.to('#gl', { opacity: 1, scale: 1, duration: 0.8, ease: 'power2.out' }, 0);
+    tl.to('#gl', { opacity: 0.5, duration: 0.4, ease: 'power1.inOut' }, CUES.proof);
+    tl.to('#gl', { opacity: 1, duration: 0.4, ease: 'power1.out' }, CUES.climax);
+    tl.to('#gl', { opacity: 0.55, duration: 0.3, ease: 'power1.inOut' }, CUES.n1);
+    tl.to('#gl', { opacity: 0, duration: 0.15, ease: 'none' }, CUES.silence - 0.15);
+    tl.to('#gl', { opacity: 0.8, duration: 0.7, ease: 'power1.out' }, CUES.breath);
+    tl.to('#gl', { opacity: 0, duration: 0.2, ease: 'none' }, CUES.end);
+
+    /* ------------------------------ the bust ------------------------------ */
+    css('bust', { left: BCX - 0.64 * BW, top: BTOP, width: BW, height: BH });
+    gsap.set('#bustwrap', { transformOrigin: BCX + 'px ' + bustCY + 'px', opacity: 1 });
+    tl.to('#bustwrap', { scale: 1.05, duration: CUES.proof - CUES.hold, ease: 'sine.inOut' }, CUES.hold);
+    tl.to('#bustwrap', { scale: 0.9, x: bustShift, opacity: 0.3, duration: 0.6, ease: P2IO }, CUES.proof);
+    /* the climax: the bust returns full size and full brightness */
+    tl.to('#bustwrap', { scale: 1.0, x: bustShift, opacity: 1, duration: 0.5, ease: P3 }, CUES.climax);
+    tl.to('#bustwrap', { opacity: 0, duration: 0.2, ease: 'none' }, CUES.n1 - 0.2);
+
+    /* ------------------------------ 14 forms ------------------------------ */
+    const FIDX = [0, 3, 6, 8, 10, 1, 4, 7, 9, 11, 2, 5, 3, 8];
+    const SZ = [1.0, 1.15, .9, 1.05, 1.0, .95, 1.15, 1.0, .9, 1.1, 1.0, .95, 1.05, .9];
+    const R0 = [150, -170, 190, -130, 160, -200, 140, -160, 180, -150, 170, -190, 130, -140];
+    const R1 = [-14, 18, -8, 12, -18, 10, -6, 16, -12, 8, -16, 14, -10, 20];
+    const QS = [0.62, 0.38, -1, 0.5, -1, 0.7, 0.42, -1, 0.56, -1, 0.66, 0.46, -1, -1];
+    const NF = 14;
+    const rightPts = [[.74,.20],[.76,.28],[.73,.36],[.77,.44],[.74,.50],[.76,.58],[.72,.42]];
+    const leftPts = [[.54,.27],[.55,.33],[.54,.45],[.55,.53],[.54,.60],[.55,.64],[.54,.38]];
+    const edgeDist = (dx, dy) => Math.min(dx ? (W / 2) / Math.abs(dx) : 1e9, dy ? (H / 2) / Math.abs(dy) : 1e9);
+    const hdTop = L.head.top !== undefined ? L.head.top : (BTOP + 0.5 * BH - L.head.rh);
+    const HB = { x0: L.head.left - 40, y0: hdTop - 40, x1: L.head.left + 6.6 * L.head.size + 40, y1: hdTop + 2 * L.head.rh + 40 };
+    const avoid = (x, y, hw, hh, mode) => {
+      if (x > HB.x0 - hw && x < HB.x1 + hw && y > HB.y0 - hh && y < HB.y1 + hh) {
+        if (mode === 't') y = HB.y0 - hh; else if (mode === 'b') y = HB.y1 + hh; else x = HB.x1 + hw;
+      }
+      return [x, y];
+    };
+    const fixEl = (el, hw0, mode) => {
+      const sc = gsap.getProperty(el, 'scale'), p = avoid(gsap.getProperty(el, 'x'), gsap.getProperty(el, 'y'), hw0 * sc, hw0 * sc * 0.8, mode);
+      gsap.set(el, { x: p[0], y: p[1] });
+    };
+    const easeF = n => gsap.parseEase(n);
+    const preEase = (q, name) => { const f = easeF(name); return q <= 0 ? f : (t => (f(q + (1 - q) * t) - f(q)) / (1 - f(q))); };
+    const formsEl = $('forms'), blEl = $('blooms');
+    const LAND = [];
+    const A0 = CUES.assemble, REL = A0 - 2.4;   /* the bust's own clock runs 2.4 to 5.0 */
+    let lateRank = 0;
+    for (let i = 0; i < NF; i++) {
+      const w = L.fb * SZ[i];
+      const el = document.createElement('div'); el.className = 'fm'; el.id = 'f' + i;
+      el.innerHTML = `<img src="assets/forms/f${FIDX[i]}.webp" alt="" style="${i >= 12 ? 'transform:scaleX(-1)' : ''}">`;
+      css(el, { width: w }); formsEl.appendChild(el);
+      const rx = L.rest[i][0] * W, ry = L.rest[i][1] * H;
+      let dx = rx - CX, dy = ry - CY; const n = Math.hypot(dx, dy) || 1; dx /= n; dy /= n;
+      const k = edgeDist(dx, dy);
+      const q = Math.max(0, QS[i]);
+      const mode = ry < HB.y0 + 60 ? 't' : (ry > HB.y1 - 60 ? 'b' : 'r');
+      const hw0 = w * 0.5;
+      const farX = CX + dx * (k + 420), farY = CY + dy * (k + 420);
+      const sx = lerp(farX, rx, q), sy = lerp(farY, ry, q);
+      const first = QS[i] >= 0;
+      const delay = first ? 0 : CUES.wave2 + 0.11 * (lateRank++);
+      const dur = first ? 4.0 : 1.6;
+      gsap.set(el, { xPercent: -50, yPercent: -50, transformOrigin: '50% 50%' });
+      tl.fromTo(el, { x: sx, y: sy, scale: lerp(2.7, 1, q), rotation: lerp(R0[i], R1[i], q), filter: 'blur(' + (8 * (1 - q) * (1 - q)).toFixed(2) + 'px)' },
+        { x: rx, y: ry, scale: 1, rotation: R1[i], filter: 'blur(0px)', duration: dur, ease: preEase(q, first ? 'power2.out' : 'power3.out'), onUpdate: () => fixEl(el, hw0, mode) }, delay);
+      /* assembly on the 6.74 hit: curved paths to named points on the fracture line */
+      const pt = (i % 2 === 0 ? rightPts : leftPts)[Math.floor(i / 2)];
+      const lx = fx(pt[0]), ly = fy(pt[1]);
+      const t0 = A0 + i * 0.12, ad = 0.85 + 0.01 * i, arr = t0 + ad;
+      const mx = (rx + lx) / 2, my = (ry + ly) / 2, ddx = lx - rx, ddy = ly - ry, dl = Math.hypot(ddx, ddy) || 1;
+      let off = dl * 0.28 * (i % 2 ? 1 : -1);
+      if (mode !== 'r') { const ny = ddx / dl; off = Math.abs(off) * (mode === 'b' ? 1 : -1) * (ny >= 0 ? 1 : -1); }
+      const cxp = mx + (-ddy / dl) * off, cyp = my + (ddx / dl) * off;
+      const ap = { p: 0 };
+      tl.to(ap, { p: 1, duration: ad, ease: P2IO, onUpdate: () => {
+        const p = ap.p, u = 1 - p;
+        const sc = lerp(1, 0.28, p), pp = avoid(u * u * rx + 2 * u * p * cxp + p * p * lx, u * u * ry + 2 * u * p * cyp + p * p * ly, hw0 * sc, hw0 * sc * 0.8, mode);
+        gsap.set(el, { x: pp[0], y: pp[1], scale: sc, rotation: R1[i] + (i % 2 ? -1 : 1) * 80 * p, opacity: p < 0.86 ? 1 : Math.max(0, 1 - (p - 0.86) / 0.14), filter: 'blur(0px)' });
+      } }, t0);
+      LAND.push({ x: pt[0] * BW, y: pt[1] * BH, arr: arr - REL });
+      const bl = document.createElement('div'); bl.className = 'bloom'; bl.id = 'bl' + i;
+      css(bl, { width: wide ? 75 : 62, height: wide ? 75 : 62 }); blEl.appendChild(bl);
+      gsap.set(bl, { xPercent: -50, yPercent: -50, x: lx, y: ly, scale: 0.3, opacity: 0 });
+      tl.to(bl, { scale: 1.3, opacity: 0.8, duration: 0.04, ease: 'none' }, arr - 0.03);
+      tl.to(bl, { scale: 1.6, opacity: 0, duration: 0.07, ease: 'none' }, arr + 0.01);
+    }
+    const bs = { t: 2.4 }, bustEl = $('bust');
+    const updBust = () => {
+      const t = bs.t;
+      if (t >= 5.0) { bustEl.style.webkitMaskImage = bustEl.style.maskImage = 'none'; bustEl.style.opacity = 1; bustEl.style.filter = 'none'; return; }
+      const RM = 0.3 * BH, g = [];
+      LAND.forEach(l => {
+        const e = clamp01((t - l.arr) / 1.0), r = RM * (1 - Math.pow(1 - e, 3));
+        if (r > 1) g.push(`radial-gradient(circle at ${l.x.toFixed(1)}px ${l.y.toFixed(1)}px,#000 ${(r * 0.5).toFixed(1)}px,rgba(0,0,0,0) ${r.toFixed(1)}px)`);
+      });
+      const f = clamp01((t - 3.9) / 1.0), rf = BH * 0.95 * f * f * (3 - 2 * f);
+      if (rf > 1) g.push(`radial-gradient(circle at ${(0.64 * BW).toFixed(1)}px ${(0.5 * BH).toFixed(1)}px,#000 ${(rf * 0.6).toFixed(1)}px,rgba(0,0,0,0) ${rf.toFixed(1)}px)`);
+      bustEl.style.webkitMaskImage = bustEl.style.maskImage = g.length ? g.join(',') : 'radial-gradient(circle at 0 0,rgba(0,0,0,0) 0,rgba(0,0,0,0) 1px)';
+      const bp = clamp01((t - 3.2) / 1.8);
+      bustEl.style.opacity = 1;
+      bustEl.style.filter = 'blur(' + (4 * (1 - bp) * (1 - bp)).toFixed(2) + 'px)';
+    };
+    updBust();
+    tl.to(bs, { t: 5.0, duration: 2.6, ease: 'none', onUpdate: updBust }, A0);
+
+    /* ------------------------------ headline ------------------------------ */
+    const HD = L.head;
+    ['h1', 'h2'].forEach((id, j) => { css(id, { left: HD.left, top: hdTop + j * HD.rh, fontSize: HD.size }); });
+    $('h1').textContent = 'Every file tool.'; $('h2').textContent = 'One app.';
+    rise('#h1', CUES.h1, 24, 0.9);
+    rise('#h2', CUES.h2, 24, 0.9);
+    tl.to(['#h1', '#h2'], { y: -16, opacity: 0, duration: 0.4, ease: 'power1.in' }, CUES.proof - 0.4);
+
+    /* ------------------------------ five forms peel off and orbit ------------------------------ */
+    const OIDX = [0, 3, 6, 8, 10];
+    const ob = { e: 0, spin: 0, m: 1, cx: BCX };
+    const orbEl = $('orbit'), ors = [];
+    OIDX.forEach((fi, k) => {
+      const el = document.createElement('div'); el.className = 'fm'; el.id = 'o' + k;
+      el.innerHTML = `<img src="assets/forms/f${fi}.webp" alt="">`;
+      css(el, { width: L.fb * 0.95 }); orbEl.appendChild(el); gsap.set(el, { xPercent: -50, yPercent: -50, opacity: 0 }); ors.push(el);
+    });
+    const peelPts = [[.74,.28],[.55,.36],[.76,.5],[.57,.5],[.73,.4]];
+    const updOrbit = () => {
+      ors.forEach((el, k) => {
+        const a = -0.6 + k * (Math.PI * 2 / 5) + ob.spin;
+        const d = Math.sin(a);
+        const ox = ob.cx + L.orb.rx * Math.cos(a), oy = L.orb.cy + L.orb.ry * d * 0.8;
+        const px = fx(peelPts[k][0]), py = fy(peelPts[k][1]);
+        const e = ob.e, s = lerp(0.3, L.orb.s * (1 + 0.16 * d), e);
+        const op = avoid(lerp(px, ox, e), lerp(py, oy, e), L.fb * 0.47 * s, L.fb * 0.4 * s, 'r');
+        gsap.set(el, { x: op[0], y: op[1], scale: s, rotation: 20 * k + ob.spin * 40, opacity: Math.min(1, e * 3) * ob.m, filter: 'blur(' + (Math.max(0, d - 0.45) * 7).toFixed(2) + 'px)' });
+      });
+    };
+    updOrbit();
+    tl.to(ob, { e: 1, duration: 1.1, ease: 'power2.out', onUpdate: updOrbit }, CUES.hold);
+    tl.to(ob, { spin: 2.6, duration: CUES.climax - CUES.hold, ease: 'none', onUpdate: updOrbit }, CUES.hold);
+    tl.to(ob, { m: 0.4, duration: 0.6, ease: 'power1.inOut', onUpdate: updOrbit }, CUES.proof);
+    if (wide) tl.to(ob, { cx: CX, duration: 0.6, ease: P2IO, onUpdate: updOrbit }, CUES.proof);
+    tl.to(ob, { m: 0, duration: 0.3, ease: 'power1.in', onUpdate: updOrbit }, CUES.climax - 0.3);
+
+    /* ------------------------------ the command bar, two jobs ------------------------------ */
+    const B = L.bar;
+    const barEl = $('bar');
+    barEl.classList.add('stack'); if (!wide) barEl.classList.add('tall');
+    ['fs', 'fs2', 'big', 'rad', 'bt', 'ft', 'padl', 'gap', 'ic', 'fiw', 'rp'].forEach(k => barEl.style.setProperty('--' + k, B[k] + 'px'));
+    css(barEl, { left: (W - B.w) / 2, top: (H - B.h) / 2, width: B.w, height: B.h });
+    const ICONS = {
+      pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
+      img: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.6"/><path d="m20 15-4-4-8 8"/></svg>',
+      id: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16h6"/></svg>',
+    };
+    const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m8 12.5 2.7 2.7L16.5 9.5"/></svg>';
+    const RET = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6v6a2 2 0 0 1-2 2H5"/><path d="m9 10-4 4 4 4"/></svg>';
+    const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></svg>';
+    const fi = k => `<span class="fi ${k}">${ICONS[k]}</span>`;
+    const row = (k, name, desc, right) => `<div class="row">${fi(k)}<b>${name}</b><span class="d">${desc}</span><span class="k">${right}</span></div>`;
+    const sel = (k, name, desc, id, plain) => `<div class="row sel${plain ? ' plain' : ''}"${id ? ` id="${id}"` : ''}>${fi(k)}<b>${name}</b><span class="d">${desc}</span><span class="kbd">${RET}</span>`;
+    const REST = `<div class="sec">Suggested</div>${row('img', 'Resize to exact KB', 'Fit a photo to the exact pixels and KB a form or exam portal asks for.', 'Image')}${row('pdf', 'Compress PDF', 'Make this PDF small enough to email or upload.', 'PDF')}${row('id', 'Print sheet', 'Put several copies of this photo on one sheet for the print shop.', 'ID and forms')}`;
+    const JOBS = [
+      { s: '1', k: 'pdf', file: 'Lease.pdf', size: '4.2 MB', ask: 'under 2 mb', tool: 'Compress PDF', desc: 'Make this PDF small enough to email or upload.', forK: 'For this PDF document, best first',
+        opts: [['Target', 'under size'], ['Stay under', '2 MB']], est: '4.2 MB to at most 2 MB',
+        also: [['Split PDF', 'Cut this PDF into parts by page ranges or every N pages.', 'PDF'], ['Merge PDF', 'Put these PDFs in one file.', 'PDF']],
+        head: '4.2 MB to 880 KB, 79% smaller', before: '4.2 MB', v0: 4200, v1: 880, out: 'Lease (compressed).pdf', run: 'Running Compress PDF', T: J1 },
+      { s: '2', k: 'img', file: 'signature.png', size: '67 KB', ask: 'under 50 kb', tool: 'Compress image', desc: 'Make this image smaller without it looking worse, or fit it under a size.', forK: 'For this picture, best first',
+        opts: [['Target', 'under size'], ['Stay under', '50 KB'], ['Format', 'keep']], est: '67 KB to at most 50 KB',
+        also: [['Resize to exact KB', 'Fit a photo to the exact pixels and KB a form or exam portal asks for.', 'Image']],
+        head: '67 KB to 43 KB, 35% smaller', before: '67 KB', v0: 67, v1: 43, out: 'signature (compressed).png', run: 'Running Compress image', T: J2 },
+    ];
+    const fmtV = v => v >= 1000 ? (v / 1000).toFixed(1) + ' MB' : Math.round(v) + ' KB';
+    const viewsHtml = JOBS.map(J => {
+      const s = J.s;
+      const alsoRows = J.also.map(a => row(J.k, a[0], a[1], a[2])).join('');
+      const opts = J.opts.map((o, i) => `<span id="o${i + 1}_${s}">${o[0]}<b>${o[1]}</b></span>`).join('');
+      return `<div class="view" id="v-r${s}" style="opacity:${s === '1' ? 1 : 0}">${REST}</div>
+        <div class="view" id="v-f${s}"><div class="sec">${J.forK}</div>${sel(J.k, J.tool, J.desc, '', true)}</div>${alsoRows}</div>
+        <div class="view" id="v-m${s}"><div class="sec">Best match</div>${sel(J.k, J.tool, J.desc, 'selrow' + s)}<div class="opts">${opts}<span class="est" id="est${s}">${J.est}</span></div></div><div class="sec">Also matches</div>${alsoRows}</div>
+        <div class="view" id="v-u${s}"><div class="run" style="position:absolute;inset:0"><b>${J.run}</b><div class="prog"><i id="progi${s}"></i></div><small><span>${J.file}</span><span id="pct${s}">0%</span></small></div></div>
+        <div class="view done" id="v-d${s}"><h4 id="h4${s}" style="opacity:0"><span id="chk${s}" style="display:grid">${CHECK}</span><span>${J.head}</span></h4><div class="ba"><div><small>Before</small><strong>${J.before}</strong></div><span>${ARROW}</span><div class="after"><small>After</small><strong id="after${s}">${J.before}</strong></div></div><div class="out">Written next to the original<br><span>${J.out}</span></div></div>`;
+    }).join('');
+    barEl.innerHTML = `
+      <div class="bar-top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <div class="q"><span id="typed1"></span><span id="typed2"></span><span class="caret" id="caret"></span><span class="ph" id="ph">Search tools or drop a file</span></div>
+        <div class="fchip" id="fchip1"><span class="fi pdf">${ICONS.pdf}</span><span>Lease.pdf</span><small>4.2 MB</small><i>&times;</i></div>
+        <div class="fchip" id="fchip2"><span class="fi img">${ICONS.img}</span><span>signature.png</span><small>67 KB</small><i>&times;</i></div>
+      </div>
+      <div class="bar-body" data-layout-allow-overlap>${viewsHtml}</div>
+      <div class="bar-foot"><span class="l"><img src="assets/icon.svg" alt="">Panoply <span>&nbsp;Everything runs on this computer</span></span><span class="r">Run <span class="kbd">${RET}</span></span></div>`;
+    css('fchip2', { position: 'absolute', right: 20 });
+    gsap.set(barEl, { y: 220, opacity: 0 });
+    tl.to(barEl, { y: 0, duration: 0.6, ease: P3 }, CUES.proof);
+    tl.to(barEl, { opacity: 1, duration: 0.25, ease: 'power1.out' }, CUES.proof + 0.2);
+    gsap.set(['#fchip1', '#fchip2'], { y: -30, scale: 0.9, opacity: 0 });
+    gsap.set('#typed2', { opacity: 1 });
+
+    JOBS.forEach(J => {
+      const s = J.s, T = J.T;
+      const first = s === '1';
+      /* the file chip drops in, the placeholder changes */
+      tl.to('#fchip' + s, { y: 0, scale: 1, opacity: 1, duration: 0.45, ease: P3 }, T.chip);
+      tl.set('#ph', { textContent: 'What should happen?' }, T.chip);
+      swap('#v-r' + s, '#v-f' + s, T.list);
+      const ty = { n: 0 };
+      tl.set('#ph', { opacity: 0 }, T.typeAt);
+      tl.to(ty, { n: J.ask.length, duration: 0.07 * J.ask.length, ease: 'none', onUpdate: () => { $('typed' + s).textContent = J.ask.slice(0, Math.round(ty.n)); } }, T.typeAt);
+      swap('#v-f' + s, '#v-m' + s, T.match);
+      gsap.set('#selrow' + s, { backgroundColor: 'rgba(25,40,61,0)' });
+      tl.to('#selrow' + s, { backgroundColor: 'rgba(25,40,61,1)', duration: 0.2, ease: 'power1.out' }, T.match);
+      J.opts.forEach((o, i) => {
+        gsap.set('#o' + (i + 1) + '_' + s, { y: 8, opacity: 0, scale: 0.94 });
+        tl.to('#o' + (i + 1) + '_' + s, { y: 0, opacity: 1, scale: 1, duration: 0.3, ease: P3 }, T.match + 0.15 + i * 0.08);
+      });
+      gsap.set('#est' + s, { y: 6 });
+      tl.to('#est' + s, { y: 0, opacity: 1, duration: 0.35, ease: 'power2.out' }, T.match + 0.15 + J.opts.length * 0.08 + 0.05);
+      tl.to('#selrow' + s, { backgroundColor: 'rgba(34,64,106,1)', duration: 0.08, ease: 'power1.out' }, T.enter);
+      tl.to('#selrow' + s, { backgroundColor: 'rgba(25,40,61,1)', duration: 0.12, ease: 'power1.in' }, T.enter + 0.08);
+      tl.set('#caret', { opacity: 0 }, T.enter + 0.2);
+      swap('#v-m' + s, '#v-u' + s, T.run);
+      const pr = { p: 0 };
+      tl.to(pr, { p: 1, duration: 0.8, ease: 'power1.inOut', onUpdate: () => { $('progi' + s).style.transform = 'scaleX(' + pr.p.toFixed(4) + ')'; $('pct' + s).textContent = Math.round(pr.p * 100) + '%'; } }, T.run);
+      swap('#v-u' + s, '#v-d' + s, T.result);
+      gsap.set('#chk' + s, { scale: 0.5, transformOrigin: '50% 50%' });
+      const cnt = { v: J.v0 };
+      tl.to(cnt, { v: J.v1, duration: 0.45, ease: 'power2.out', onUpdate: () => { $('after' + s).textContent = fmtV(cnt.v); } }, T.count);
+      tl.to('#h4' + s, { opacity: 1, duration: 0.12, ease: 'power1.out' }, T.head);
+      tl.to('#chk' + s, { scale: 1, duration: 0.4, ease: 'back.out(1.6)' }, T.head);
+      if (first) {
+        /* the reset: result view and the top bar's chip and text out over 4 frames, then the clean list in */
+        tl.to(['#v-d1'], { opacity: 0, duration: 0.133, ease: 'none' }, T.out);
+        tl.to(['#fchip1', '#typed1'], { opacity: 0, duration: 0.133, ease: 'none' }, T.out);
+        tl.to('#v-r2', { opacity: 1, duration: 0.133, ease: 'none' }, CUES.reset);
+        tl.set('#ph', { textContent: 'Search tools or drop a file' }, CUES.reset);
+        tl.to('#ph', { opacity: 1, duration: 0.133, ease: 'none' }, CUES.reset);
+        tl.set('#caret', { opacity: 1 }, CUES.reset);
+        tl.set('#typed1', { display: 'none' }, CUES.reset);
+      }
+    });
+    /* the bar drops away on the climax */
+    tl.to(barEl, { y: 240, opacity: 0, duration: 0.3, ease: 'power2.in' }, CUES.climax - 0.02);
+
+    /* ------------------------------ climax: all fourteen forms burst outward ------------------------------ */
+    const BU = L.burst, bEl = $('bursts'), bfs = [];
+    for (let i = 0; i < NF; i++) {
+      const el = document.createElement('div'); el.className = 'fm'; el.id = 'b' + i;
+      el.innerHTML = `<img src="assets/forms/f${FIDX[i]}.webp" alt="" style="${i >= 12 ? 'transform:scaleX(-1)' : ''}">`;
+      css(el, { width: BU.fb * SZ[i] }); bEl.appendChild(el); gsap.set(el, { xPercent: -50, yPercent: -50, opacity: 0 }); bfs.push(el);
+    }
+    const bo = { p: 0, spin: 0, m: 1 };
+    const bcx = CX, bcy = bustCY;
+    const updBurst = () => {
+      bfs.forEach((el, i) => {
+        const a = i * (Math.PI * 2 / NF) + 0.35 + bo.spin * (i % 2 ? 1 : 0.8);
+        const d = Math.sin(a), rr = 0.82 + 0.18 * ((i * 5) % 7) / 6;
+        const ox = bcx + BU.rx * rr * Math.cos(a), oy = bcy + BU.ry * rr * d * 0.9;
+        const p = bo.p;
+        gsap.set(el, { x: lerp(bcx, ox, p), y: lerp(bcy, oy, p), scale: lerp(0.25, 0.85 * (1 + 0.28 * d), p), rotation: lerp(R0[i], R1[i] * 3, p) + bo.spin * 30,
+          opacity: Math.min(1, p * 6) * bo.m, filter: 'blur(' + lerp(5, Math.max(0, d - 0.55) * 8, p).toFixed(2) + 'px)' });
+      });
+    };
+    updBurst();
+    tl.to(bo, { p: 1, duration: 1.1, ease: P3, onUpdate: updBurst }, CUES.climax);
+    tl.to(bo, { spin: 0.5, duration: CUES.n1 - CUES.climax, ease: 'none', onUpdate: updBurst }, CUES.climax);
+    tl.to(bo, { m: 0, duration: 0.2, ease: 'none', onUpdate: updBurst }, CUES.n1 - 0.2);
+
+    /* ------------------------------ speed: three numbers on three pulses ------------------------------ */
+    const NM = L.num, nEl = $('nums');
+    const NUMS = [['5 sec', 'to shrink a 300 MB PDF to 137 MB', CUES.n1, CUES.n2], ['0.96 sec', 'to trim a 4.6 GB video', CUES.n2, CUES.n3], ['0.2%', 'character error reading a scan', CUES.n3, CUES.mural[0]]];
+    NUMS.forEach((n, i) => {
+      const a = document.createElement('div'); a.className = 'num abs'; a.id = 'nn' + i; a.textContent = n[0];
+      css(a, { left: 0, width: W, top: NM.bigTop, fontSize: NM.big, opacity: 0 });
+      const b = document.createElement('div'); b.className = 'lab abs'; b.id = 'nl' + i; b.textContent = n[1];
+      css(b, { left: 0, width: W, top: NM.labTop, fontSize: NM.lab, opacity: 0 });
+      nEl.appendChild(a); nEl.appendChild(b);
+      tl.fromTo([a, b], { y: 30 }, { y: 0, duration: 0.5, ease: P3 }, n[2]);
+      tl.to([a, b], { opacity: 1, duration: 0.001, ease: 'none' }, n[2]);
+      cut([a, b], n[3]);
+    });
+
+    /* ------------------------------ the set: six murals on six pulses ------------------------------ */
+    const M = L.mural, mEl = $('murals');
+    const MUR = [['docs', 'Documents'], ['image', 'Images'], ['sound', 'Sound and video'], ['convert', 'Everything else'], ['share', 'Sharing'], ['plugins', 'Plugins']];
+    const mw = M.h * 900 / 1117;
+    const k_ = wide ? 1 : 0.6;
+    const MV = [[-30, 10, 8, -6, 1.0, 1.07], [40, 0, 24, -10, 1.02, 1.06], [0, 0, 0, 0, 1.1, 1.0], [-40, 20, -16, 14, 1.0, 1.07], [30, -20, 12, -12, 1.02, 1.08], [0, 0, 28, -6, 1.02, 1.09]];
+    const DXs = [-1, 1, -0.6, 0.6, -1, 1];
+    MUR.forEach((m, k) => {
+      const T = CUES.mural[k], Tn = k < 5 ? CUES.mural[k + 1] : CUES.silence;
+      const d = document.createElement('div'); d.className = 'abs blend'; d.id = 'm' + k;
+      css(d, { left: M.cx - mw / 2 + DXs[k] * M.dx, top: M.top, width: mw, height: M.h, opacity: 0 });
+      d.innerHTML = `<img src="assets/${m[0]}.webp" alt="" style="left:0;top:0;width:${mw}px;height:${M.h}px">`;
+      mEl.appendChild(d);
+      const lb = document.createElement('div'); lb.className = 'abs'; lb.setAttribute('data-layout-allow-overlap', ''); lb.id = 'ml' + k; lb.textContent = m[1];
+      lb.style.cssText += 'color:#F4F0E8;font-weight:600;letter-spacing:-.02em;line-height:1.1;white-space:nowrap';
+      $('mlabels').appendChild(lb);
+      css(lb, { left: 0, width: W, textAlign: 'center', top: M.labTop, fontSize: M.lab, opacity: 0 });
+      const v = MV[k];
+      tl.fromTo(d, { x: v[0] * k_, y: v[2] * k_, scale: v[4] }, { x: v[1] * k_, y: v[3] * k_, scale: v[5], duration: Tn - T + 0.15, ease: 'none' }, T);
+      tl.to(d, { opacity: 1, duration: 0.15, ease: 'power1.out' }, T);
+      tl.to(d, { opacity: 0, duration: 0.15, ease: 'power1.in' }, Tn - 0.15);
+      /* the label lands on the pulse; the old one left over 3 frames just before */
+      tl.to(lb, { opacity: 1, duration: 0.1, ease: 'none' }, T);
+      tl.fromTo(lb, { y: 10 }, { y: 0, duration: 0.4, ease: P3 }, T);
+      tl.to(lb, { opacity: 0, duration: 0.1, ease: 'none' }, Tn - 0.1);
+    });
+
+    /* ------------------------------ silence: Harpocrates ------------------------------ */
+    const PV = L.priv, pw = PV.h * 900 / 1117;
+    css('pm', { left: PV.cx - pw / 2, top: PV.top, width: pw, height: PV.h });
+    css($('pm').querySelector('img'), { left: 0, top: 0, width: pw, height: PV.h });
+    css('gr', { width: PV.h * 1.5, height: PV.h * 1.5, left: PV.cx - PV.h * 0.75, top: PV.top + PV.h / 2 - PV.h * 0.75 });
+    const PT = PV.t;
+    css('pt1', { left: PT.left, top: PT.top, fontSize: PT.size });
+    css('pt2', { left: PT.left, top: PT.top + PT.rh, fontSize: PT.size });
+    $('pt1').textContent = 'Nothing leaves'; $('pt2').textContent = 'your computer.';
+    tl.fromTo('#gr', { opacity: 0, scale: 0.92 }, { opacity: 0.85, scale: 1, duration: 0.5, ease: 'power2.out' }, CUES.silence - 0.15);
+    tl.to('#pm', { opacity: 1, duration: 0.15, ease: 'power1.out' }, CUES.silence - 0.15);
+    tl.fromTo('#pm', { scale: 1.0 }, { scale: 1.06, duration: CUES.agents - CUES.silence + 0.3, ease: 'none' }, CUES.silence - 0.15);
+    rise('#pt1', CUES.silence, 22, 0.8);
+    rise('#pt2', CUES.silence + 0.08, 22, 0.8);
+    /* hand over to the owl: marble dissolves, Harpocrates' text out in 3 frames, then the owl's text lands */
+    tl.to('#pm', { opacity: 0, duration: 0.15, ease: 'power1.in' }, CUES.agents - 0.13);
+    tl.to('#gr', { opacity: 0, duration: 0.15, ease: 'none' }, CUES.agents - 0.13);
+    tl.to(['#pt1', '#pt2'], { opacity: 0, duration: 0.1, ease: 'none' }, CUES.agents - 0.1);
+
+    /* ------------------------------ agents: Athena's owl ------------------------------ */
+    const OW = L.owl, ow = OW.h * 900 / 1117;
+    css('om', { left: OW.cx - ow / 2, top: OW.top, width: ow, height: OW.h });
+    css($('om').querySelector('img'), { left: 0, top: 0, width: ow, height: OW.h });
+    css('gro', { width: OW.h * 1.5, height: OW.h * 1.5, left: OW.cx - OW.h * 0.75, top: OW.top + OW.h / 2 - OW.h * 0.75 });
+    css('at1', { left: OW.t.left, top: OW.t.top, fontSize: OW.t.size });
+    css('at2', { left: OW.t.left, top: OW.t.top + OW.t.rh, fontSize: OW.t.size });
+    $('at1').textContent = 'Give your agent'; $('at2').textContent = 'the whole set.';
+    css('atm', { left: OW.term.left, top: OW.term.top, fontSize: OW.term.size, padding: OW.term.pady + 'px ' + OW.term.padx + 'px' });
+    $('atm').textContent = 'claude mcp add panoply -- panoply mcp';
+    tl.fromTo('#gro', { opacity: 0, scale: 0.92 }, { opacity: 0.85, scale: 1, duration: 0.5, ease: 'power2.out' }, CUES.agents - 0.13);
+    tl.to('#om', { opacity: 1, duration: 0.15, ease: 'power1.out' }, CUES.agents - 0.13);
+    tl.fromTo('#om', { scale: 1.0 }, { scale: 1.06, duration: CUES.install - CUES.agents + 0.3, ease: 'none' }, CUES.agents - 0.13);
+    rise('#at1', CUES.agents, 22, 0.8);
+    rise('#at2', CUES.agents + 0.08, 22, 0.8);
+    rise('#atm', CUES.term, 18, 0.6);
+    tl.to('#om', { opacity: 0, duration: 0.15, ease: 'power1.in' }, CUES.install - 0.13);
+    tl.to('#gro', { opacity: 0, duration: 0.15, ease: 'none' }, CUES.install - 0.13);
+    tl.to(['#at1', '#at2', '#atm'], { opacity: 0, duration: 0.1, ease: 'none' }, CUES.install - 0.1);
+
+    /* ------------------------------ install: a clean terminal line ------------------------------ */
+    const TP = L.tp;
+    css('tp', { left: TP.left, top: TP.top, width: TP.w, height: TP.h });
+    $('tp').style.setProperty('--rad', TP.rad + 'px');
+    css('tpc', { left: TP.cx, top: TP.cy, fontSize: TP.fs, whiteSpace: 'pre', lineHeight: '1.4' });
+    css('tpo', { left: TP.cx, top: TP.oy, fontSize: TP.fs });
+    const CMD = wide ? '$ curl -fsSL https://panoply.anzalabidi.dev/install.sh | sh' : '$ curl -fsSL https://panoply.anzalabidi.dev/\n  install.sh | sh';
+    $('tpo').textContent = 'Installed Panoply 0.3.0 in 3.4 s';
+    const tt = { n: 0 };
+    tl.to('#tp', { opacity: 1, duration: 0.2, ease: 'power1.out' }, CUES.install);
+    tl.to(tt, { n: CMD.length, duration: CUES.ok - CUES.install - 0.18, ease: 'none', onUpdate: () => { $('tpc').textContent = CMD.slice(0, Math.round(tt.n)); } }, CUES.install);
+    rise('#tpo', CUES.ok, 14, 0.4);
+    tl.to(['#tp', '#tpc', '#tpo'], { opacity: 0, duration: 0.4, ease: 'power1.in' }, CUES.breath);
+
+    /* ------------------------------ the breath: one marble ring ------------------------------ */
+    const rg = document.createElement('div'); rg.className = 'fm'; rg.id = 'ring';
+    rg.innerHTML = '<img src="assets/forms/f0.webp" alt="">'; css(rg, { width: L.ring }); $('ringc').appendChild(rg);
+    gsap.set(rg, { xPercent: -50, yPercent: -50, x: CX, y: CY, opacity: 0 });
+    tl.to(rg, { opacity: 1, duration: 0.7, ease: 'power1.out' }, CUES.breath + 0.4);
+    tl.fromTo(rg, { rotation: -20 }, { rotation: 100, duration: CUES.end - CUES.breath, ease: 'none' }, CUES.breath);
+    tl.to(rg, { opacity: 0, duration: 0.001, ease: 'none' }, CUES.end);
+
+    /* ------------------------------ end card ------------------------------ */
+    const E = L.end, ICX = W / 2, ICY = E.cy;
+    css('eicon', { left: ICX - E.icon / 2, top: ICY - E.icon / 2, width: E.icon, height: E.icon, opacity: 0 });
+    css('ge', { width: wide ? 1400 : 1300, height: wide ? 583 : 542, left: ICX - (wide ? 700 : 650), top: ICY - (wide ? 291 : 271) });
+    const bsz = E.icon * 2.6;
+    css('ebloom', { width: bsz, height: bsz, left: ICX - bsz / 2, top: ICY - bsz / 2 });
+    const lineCss = (id, o, txt) => { css(id, Object.assign({ left: 0, width: W, textAlign: 'center', opacity: 0 }, o)); if (txt !== undefined) $(id).textContent = txt; };
+    lineCss('ename', { top: E.name.top, fontSize: E.name.size });
+    lineCss('etag', { top: E.tag.top, fontSize: E.tag.size });
+    lineCss('eurl', { top: E.url.top, fontSize: E.url.size });
+    lineCss('esmall', { top: E.small.top, fontSize: E.small.size });
+    $('esmall').innerHTML = E.smallLines.join('<br>');
+    tl.fromTo('#ge', { opacity: 0 }, { opacity: 0.75, duration: 0.8, ease: 'power2.out' }, CUES.end);
+    tl.fromTo('#eicon', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.7, ease: P3 }, CUES.end);
+    rise('#ename', CUES.end + 0.15, 24, 0.8);
+    rise('#etag', CUES.end + 0.45, 24, 0.8);
+    rise('#eurl', CUES.end + 0.75, 20, 0.8);
+    rise('#esmall', CUES.end + 1.1, 18, 0.7);
+    const eo = { e: 0, spin: 0 }, eoEl = $('eorbit'), eors = [];
+    OIDX.forEach((fi2, k) => {
+      const el = document.createElement('div'); el.className = 'fm'; el.id = 'e' + k;
+      el.innerHTML = `<img src="assets/forms/f${fi2}.webp" alt="">`;
+      css(el, { width: E.fb }); eoEl.appendChild(el); gsap.set(el, { xPercent: -50, yPercent: -50, opacity: 0 }); eors.push(el);
+    });
+    /* the ring bursts into the five orbiting forms */
+    const updEnd = () => {
+      eors.forEach((el, k) => {
+        const a = -2.2 + k * (Math.PI * 2 / 5) + eo.spin;
+        const d = Math.sin(a);
+        const ox = ICX + E.rx * Math.cos(a), oy = ICY + E.ry * d;
+        const e = eo.e;
+        gsap.set(el, { x: lerp(CX, ox, e), y: lerp(CY, oy, e), scale: lerp(0.5, 0.95 * (1 + 0.12 * d), e), rotation: lerp(-20 + k * 40, 18 * k - 30, e), opacity: Math.min(1, e * 6), filter: 'blur(' + lerp(2, Math.max(0, d - 0.5) * 6, e).toFixed(2) + 'px)' });
+      });
+    };
+    updEnd();
+    tl.to(eo, { e: 1, duration: 1.4, ease: P3, onUpdate: updEnd }, CUES.end);
+    tl.to(eo, { spin: 0.7, duration: CUES.bloom - 0.4 - CUES.end, ease: 'power2.out', onUpdate: updEnd }, CUES.end);
+    /* a soft ivory bloom on the icon, then still */
+    tl.to('#ebloom', { opacity: 0.7, scale: 1.0, duration: 0.1, ease: 'none' }, CUES.bloom);
+    tl.to('#ebloom', { opacity: 0, scale: 1.25, duration: 0.1, ease: 'none' }, CUES.bloom + 0.1);
+    gsap.set('#ebloom', { xPercent: 0, scale: 0.7 });
+
+    /* alive grain at 12 fps, still from the hold */
+    const gr = { f: 0 };
+    const ghash = n => { let x = (n * 2654435761) >>> 0; x ^= x >>> 15; x = Math.imul(x, 2246822519) >>> 0; x ^= x >>> 13; return x / 4294967296; };
+    const updGrain = () => { const n = Math.floor(gr.f + 1e-6); $('grain').style.backgroundPosition = Math.floor(ghash(n + 1) * 160) + 'px ' + Math.floor(ghash(n + 977) * 160) + 'px'; };
+    updGrain();
+    tl.to(gr, { f: CUES.still * 12, duration: CUES.still, ease: 'none', onUpdate: updGrain }, 0);
+    tl.to({}, { duration: 0.001 }, CUES.total - 0.01);
+    window.__timelines[ID] = tl;
+    tl.seek(0);
+  })();
+
+  </script>
+</template>
+</body></html>
