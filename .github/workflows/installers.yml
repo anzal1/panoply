@@ -1,0 +1,170 @@
+name: Installers
+
+# Runs the one-line installers from this checkout (not from the website) against a pinned release, on all three
+# systems, and checks the installed command runs. It never builds Panoply: it only downloads release files.
+on:
+  pull_request:
+    paths: ['site/public/install.*', '.github/workflows/installers.yml']
+  push:
+    branches: [main]
+    paths: ['site/public/install.*', '.github/workflows/installers.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Pull requests cancel their own superseded runs. A run on main is never cancelled.
+concurrency:
+  group: installers-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PANOPLY_VERSION: v0.3.0-beta
+
+jobs:
+  unix:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Full install into temp folders
+        run: |
+          set -eu
+          APP="$(mktemp -d)"; BIN="$(mktemp -d)"; DATA="$(mktemp -d)"
+          PANOPLY_APP_DIR="$APP" PANOPLY_BIN_DIR="$BIN" PANOPLY_DATA_HOME="$DATA" sh site/public/install.sh
+          "$BIN/panoply" --version
+          if [ "$(uname -s)" = Darwin ]; then
+            test -d "$APP/Panoply.app"
+          else
+            test -x "$APP/bin/panoply-desktop"
+            test -f "$DATA/applications/panoply.desktop"
+            grep -q "^Exec=$APP/bin/panoply-desktop" "$DATA/applications/panoply.desktop"
+            test -f "$DATA/icons/hicolor/256x256/apps/panoply.png"
+          fi
+          # A second run replaces the first copy safely.
+          PANOPLY_APP_DIR="$APP" PANOPLY_BIN_DIR="$BIN" PANOPLY_DATA_HOME="$DATA" sh site/public/install.sh
+          "$BIN/panoply" --version
+          # No staging or old-copy folders are left behind.
+          test -z "$(find "$APP" "$(dirname "$APP")" -maxdepth 1 -name '.panoply-*')"
+
+      - name: CLI-only install into temp folders
+        run: |
+          set -eu
+          APP="$(mktemp -d)"; BIN="$(mktemp -d)"
+          PANOPLY_CLI_ONLY=1 PANOPLY_APP_DIR="$APP" PANOPLY_BIN_DIR="$BIN" sh site/public/install.sh
+          "$BIN/panoply" --version
+          test -d "$APP/panoply-cli/modules"
+
+      - name: Newest release is found without a pinned version
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          unset PANOPLY_VERSION
+          APP="$(mktemp -d)"; BIN="$(mktemp -d)"
+          PANOPLY_CLI_ONLY=1 PANOPLY_APP_DIR="$APP" PANOPLY_BIN_DIR="$BIN" sh site/public/install.sh
+          "$BIN/panoply" --version
+
+      - name: A folder that is not a Panoply install is refused and left alone
+        run: |
+          set -eu
+          BIN="$(mktemp -d)"
+          # Full install: Panoply.app (macOS) or the app folder itself (Linux) holds somebody else's file.
+          APP="$(mktemp -d)"
+          if [ "$(uname -s)" = Darwin ]; then KEEP="$APP/Panoply.app/mine.txt"; mkdir "$APP/Panoply.app"; else KEEP="$APP/mine.txt"; fi
+          echo keep >"$KEEP"
+          if PANOPLY_APP_DIR="$APP" PANOPLY_BIN_DIR="$BIN" sh site/public/install.sh 2>"$RUNNER_TEMP/refusal.txt"; then
+            echo "the installer replaced a folder that is not a Panoply install" >&2
+            exit 1
+          fi
+          grep -q "is not a Panoply install, pick another folder" "$RUNNER_TEMP/refusal.txt"
+          test -f "$KEEP"
+          # CLI only: the panoply-cli folder holds somebody else's file.
+          APP2="$(mktemp -d)"
+          mkdir "$APP2/panoply-cli"
+          echo keep >"$APP2/panoply-cli/mine.txt"
+          if PANOPLY_CLI_ONLY=1 PANOPLY_APP_DIR="$APP2" PANOPLY_BIN_DIR="$BIN" sh site/public/install.sh 2>"$RUNNER_TEMP/refusal2.txt"; then
+            echo "the installer replaced a folder that is not a Panoply install" >&2
+            exit 1
+          fi
+          grep -q "is not a Panoply install, pick another folder" "$RUNNER_TEMP/refusal2.txt"
+          test -f "$APP2/panoply-cli/mine.txt"
+          test -z "$(ls -A "$BIN")"
+
+      - name: A bad checksum aborts and installs nothing
+        run: |
+          set -eu
+          APP="$(mktemp -d)"; BIN="$(mktemp -d)"
+          # Corrupt the comparison in a copy of the script, never in the repo.
+          # shellcheck disable=SC2016
+          sed 's|^  got=\$(sha256_of "\$TMP/\$ASSET")|  got=deadbeef|' site/public/install.sh > "$RUNNER_TEMP/bad-install.sh"
+          if PANOPLY_CLI_ONLY=1 PANOPLY_APP_DIR="$APP" PANOPLY_BIN_DIR="$BIN" sh "$RUNNER_TEMP/bad-install.sh"; then
+            echo "the installer accepted a wrong checksum" >&2
+            exit 1
+          fi
+          test -z "$(ls -A "$BIN")"
+
+  windows:
+    name: windows-latest (${{ matrix.shell }})
+    runs-on: windows-latest
+    timeout-minutes: 6
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [pwsh, powershell]
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Full install into a temp folder (run the way irm | iex runs it)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:PANOPLY_APP_DIR = Join-Path $env:RUNNER_TEMP 'panoply-app'
+          Get-Content -Raw site/public/install.ps1 | Invoke-Expression
+          & (Join-Path $env:PANOPLY_APP_DIR 'panoply.exe') --version
+          if ($LASTEXITCODE -ne 0) { throw 'panoply --version failed' }
+          if (-not (Test-Path (Join-Path $env:PANOPLY_APP_DIR 'panoply-desktop.exe'))) { throw 'no desktop exe' }
+          $userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+          if (($userPath -split ';') -notcontains $env:PANOPLY_APP_DIR) { throw 'install folder is not on the user PATH' }
+          $kind = (Get-Item 'HKCU:\Environment').GetValueKind('Path')
+          if ($kind -ne 'ExpandString') { throw "user PATH is $kind, expected ExpandString" }
+          $lnk = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Panoply.lnk'
+          if (-not (Test-Path $lnk)) { throw 'no Start Menu shortcut' }
+          # A second run replaces the first copy.
+          Get-Content -Raw site/public/install.ps1 | Invoke-Expression
+          & (Join-Path $env:PANOPLY_APP_DIR 'panoply.exe') --version
+          if ($LASTEXITCODE -ne 0) { throw 'panoply --version failed after reinstall' }
+
+      - name: CLI-only install into a temp folder
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $env:PANOPLY_CLI_ONLY = '1'
+          $env:PANOPLY_NO_INTEGRATION = '1'
+          $env:PANOPLY_APP_DIR = Join-Path $env:RUNNER_TEMP 'panoply-cli'
+          Get-Content -Raw site/public/install.ps1 | Invoke-Expression
+          & (Join-Path $env:PANOPLY_APP_DIR 'panoply.exe') --version
+          if ($LASTEXITCODE -ne 0) { throw 'panoply --version failed' }
+
+      - name: A folder that is not a Panoply install is refused and left alone
+        run: |
+          $env:PANOPLY_NO_INTEGRATION = '1'
+          $env:PANOPLY_APP_DIR = Join-Path $env:RUNNER_TEMP 'not-panoply'
+          New-Item -ItemType Directory -Path $env:PANOPLY_APP_DIR | Out-Null
+          Set-Content -Path (Join-Path $env:PANOPLY_APP_DIR 'mine.txt') -Value 'keep'
+          $refused = $false
+          try {
+            Get-Content -Raw site/public/install.ps1 | Invoke-Expression
+          } catch {
+            if ($_.Exception.Message -like '*is not a Panoply install, pick another folder*') { $refused = $true } else { throw }
+          }
+          if (-not $refused) { throw 'the installer replaced a folder that is not a Panoply install' }
+          if (-not (Test-Path (Join-Path $env:PANOPLY_APP_DIR 'mine.txt'))) { throw 'the other folder was touched' }

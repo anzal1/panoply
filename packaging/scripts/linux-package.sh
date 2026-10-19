@@ -58,6 +58,8 @@ if [ -d "$STAGE/modules" ]; then MODS=("$STAGE/modules=modules"); MODS_BIN=("$ST
 
 # ---- CLI ------------------------------------------------------------------------------------------
 CLI_NAME="panoply-cli-$VERSION-linux-$ARCH"
+# The archive keeps the file mode, so the program must be executable before it is packed.
+chmod +x "$STAGE/panoply"
 EXTRA=()
 [ -f "$ROOT/THIRD-PARTY-NOTICES.md" ] && EXTRA+=("$ROOT/THIRD-PARTY-NOTICES.md")
 $PY "$HERE/mkarchive.py" "$OUT/$CLI_NAME.tar.gz" "$CLI_NAME" \
