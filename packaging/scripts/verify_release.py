@@ -68,7 +68,8 @@ def main():
             n = names(p)
             if not any(x.endswith("/THIRD-PARTY-NOTICES.md") or x.endswith("/Resources/THIRD-PARTY-NOTICES.md") for x in n):
                 problems.append(f"{f}: no THIRD-PARTY-NOTICES.md")
-            if not any(x.lower().endswith(ICON_SUFFIXES) for x in n):
+            # The command line archives carry no app, so no icon.
+            if not f.startswith("panoply-cli-") and not any(x.lower().endswith(ICON_SUFFIXES) for x in n):
                 problems.append(f"{f}: no app icon")
             want = set(shipped_modules())
             got = module_folders_in(n)
