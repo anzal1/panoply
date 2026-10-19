@@ -29,6 +29,9 @@ function Install-Panoply {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     } catch { }
+    # .NET Framework (Windows PowerShell 5.1) allows only 2 connections per host by default. With 4 range
+    # requests waiting for headers while 2 hold the connections, that would never finish.
+    try { [Net.ServicePointManager]::DefaultConnectionLimit = 16 } catch { }
     Add-Type -AssemblyName System.Net.Http
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -144,7 +147,7 @@ function Install-Panoply {
                     $req.Headers.Range = [System.Net.Http.Headers.RangeHeaderValue]::new($start, $end)
                     $headTasks += $client.SendAsync($req, [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead)
                 }
-                [System.Threading.Tasks.Task]::WaitAll([System.Threading.Tasks.Task[]]$headTasks)
+                if (-not [System.Threading.Tasks.Task]::WaitAll([System.Threading.Tasks.Task[]]$headTasks, 60000)) { throw 'range requests timed out' }
                 $copyTasks = @()
                 $partEnds = @()
                 for ($i = 0; $i -lt $streams; $i++) {
@@ -158,7 +161,7 @@ function Install-Panoply {
                     $partEnds += [long]([math]::Min(($i + 1) * $chunk, $total))
                     $copyTasks += $src.CopyToAsync($dst)
                 }
-                [System.Threading.Tasks.Task]::WaitAll([System.Threading.Tasks.Task[]]$copyTasks)
+                if (-not [System.Threading.Tasks.Task]::WaitAll([System.Threading.Tasks.Task[]]$copyTasks, 300000)) { throw 'download timed out' }
                 # The file was pre-sized, so its length proves nothing. A part is complete only when its stream
                 # wrote exactly its own number of bytes (the position ends at the part's end).
                 $allParts = $true
