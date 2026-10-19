@@ -4,7 +4,8 @@
     verify_release.py --version 0.1.0-beta --dir release
 
 Required (V = version): Panoply-V-macos-{arm64,x64}.{dmg,zip}, Panoply-V-windows-{x64,arm64}.{zip,msi},
-Panoply-V-linux-{x64,arm64}.{tar.gz,AppImage}. Every desktop .zip and .tar.gz must contain
+Panoply-V-linux-{x64,arm64}.{tar.gz,AppImage}, Panoply-V-{macos,linux}-{arm64,x64}.tar.xz and
+panoply-cli-V-{macos,linux}-{arm64,x64}.tar.xz. Every desktop .zip, .tar.gz and .tar.xz must contain
 THIRD-PARTY-NOTICES.md, an app icon (.ico, .icns or .png) and exactly the shipped community modules listed in
 modules/shipped.txt (module.toml and module.wasm each, under modules/ or Resources/modules/). The .dmg, .msi and .AppImage are checked
 where they are built (macos-package.sh, package.ps1, linux-package.sh). Run with `python -I`.
@@ -40,7 +41,7 @@ def names(path: Path):
     if path.suffix == ".zip":
         with zipfile.ZipFile(path) as z:
             return z.namelist()
-    with tarfile.open(path, "r:gz") as t:
+    with tarfile.open(path, "r:*") as t:
         return t.getnames()
 
 
@@ -54,13 +55,16 @@ def main():
         [f"Panoply-{v}-macos-{x}.{e}" for x in ("arm64", "x64") for e in ("dmg", "zip")]
         + [f"Panoply-{v}-windows-{x}.{e}" for x in ("x64", "arm64") for e in ("zip", "msi")]
         + [f"Panoply-{v}-linux-{x}.{e}" for x in ("x64", "arm64") for e in ("tar.gz", "AppImage")]
+        # The smaller .tar.xz twins (make_txz.sh): the app for macOS and Linux, the CLI for both.
+        + [f"Panoply-{v}-{o}-{x}.tar.xz" for o in ("macos", "linux") for x in ("arm64", "x64")]
+        + [f"panoply-cli-{v}-{o}-{x}.tar.xz" for o in ("macos", "linux") for x in ("arm64", "x64")]
     )
     problems = [f"missing {f}" for f in required if not (d / f).is_file()]
     for f in required:
         p = d / f
         if not p.is_file():
             continue
-        if p.name.endswith((".zip", ".tar.gz")):
+        if p.name.endswith((".zip", ".tar.gz", ".tar.xz")):
             n = names(p)
             if not any(x.endswith("/THIRD-PARTY-NOTICES.md") or x.endswith("/Resources/THIRD-PARTY-NOTICES.md") for x in n):
                 problems.append(f"{f}: no THIRD-PARTY-NOTICES.md")
