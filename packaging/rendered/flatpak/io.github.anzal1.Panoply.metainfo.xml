@@ -15,11 +15,11 @@
   <launchable type="desktop-id">io.github.anzal1.Panoply.desktop</launchable>
   <screenshots>
     <screenshot type="default">
-      <image type="source" width="2320" height="1440">https://raw.githubusercontent.com/anzal1/panoply/v0.2.0-beta/apps/desktop/screens/17-app-home-dark.png</image>
+      <image type="source" width="2320" height="1440">https://raw.githubusercontent.com/anzal1/panoply/v0.3.0-beta/apps/desktop/screens/17-app-home-dark.png</image>
       <caption>The home screen</caption>
     </screenshot>
     <screenshot>
-      <image type="source" width="2320" height="1440">https://raw.githubusercontent.com/anzal1/panoply/v0.2.0-beta/apps/desktop/screens/15-app-tool-panel.png</image>
+      <image type="source" width="2320" height="1440">https://raw.githubusercontent.com/anzal1/panoply/v0.3.0-beta/apps/desktop/screens/15-app-tool-panel.png</image>
       <caption>A tool with its options</caption>
     </screenshot>
   </screenshots>
@@ -42,8 +42,8 @@
   </provides>
   <content_rating type="oars-1.1" />
   <releases>
-    <release version="0.2.0-beta" date="2026-10-16">
-      <url type="details">https://github.com/anzal1/panoply/releases/tag/v0.2.0-beta</url>
+    <release version="0.3.0-beta" date="2026-10-18">
+      <url type="details">https://github.com/anzal1/panoply/releases/tag/v0.3.0-beta</url>
     </release>
   </releases>
 </component>

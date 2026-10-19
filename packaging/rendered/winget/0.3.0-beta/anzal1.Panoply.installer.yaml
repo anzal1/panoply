@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
+PackageIdentifier: anzal1.Panoply
+PackageVersion: '0.3.0-beta'
+InstallerLocale: en-US
+InstallerType: wix
+Scope: machine
+UpgradeBehavior: install
+Commands:
+  - panoply
+ReleaseDate: 2026-10-18
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-windows-x64.msi
+    InstallerSha256: 87a7ac463056cc4b0e7ba08318a7b481caeda0c19171f8a3765c35cb41a10969
+    ProductCode: '{677EBC0B-6929-E4CD-5262-703E7F142C18}'
+    AppsAndFeaturesEntries:
+      - DisplayName: Panoply
+        Publisher: Panoply contributors
+        DisplayVersion: '0.3.0.0'
+        ProductCode: '{677EBC0B-6929-E4CD-5262-703E7F142C18}'
+        UpgradeCode: '{56520F04-9601-4D76-8791-E0FF3A922321}'
+        InstallerType: wix
+  - Architecture: arm64
+    InstallerUrl: https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-windows-arm64.msi
+    InstallerSha256: 44b2442319f0f77444150b4598c823ebdd67f80321b7c621fc063ac9b90cae0d
+    ProductCode: '{5BE72A50-0AC5-75A9-D787-95D9E5634E5A}'
+    AppsAndFeaturesEntries:
+      - DisplayName: Panoply
+        Publisher: Panoply contributors
+        DisplayVersion: '0.3.0.0'
+        ProductCode: '{5BE72A50-0AC5-75A9-D787-95D9E5634E5A}'
+        UpgradeCode: '{56520F04-9601-4D76-8791-E0FF3A922321}'
+        InstallerType: wix
+ManifestType: installer
+ManifestVersion: 1.10.0

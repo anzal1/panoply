@@ -1,6 +1,6 @@
 pkgbase = panoply-bin
 	pkgdesc = Every file tool in one fast app: PDF, image, audio and video tools and a file converter, all on your computer
-	pkgver = 0.2.0_beta
+	pkgver = 0.3.0_beta
 	pkgrel = 1
 	url = https://github.com/anzal1/panoply
 	arch = x86_64
@@ -18,13 +18,13 @@ pkgbase = panoply-bin
 	depends = libxkbcommon-x11
 	depends = vulkan-icd-loader
 	depends = wayland
-	provides = panoply=0.2.0_beta
+	provides = panoply=0.3.0_beta
 	conflicts = panoply
 	options = !strip
 	options = !debug
-	source_x86_64 = Panoply-0.2.0-beta-linux-x64.tar.gz::https://github.com/anzal1/panoply/releases/download/v0.2.0-beta/Panoply-0.2.0-beta-linux-x64.tar.gz
-	sha256sums_x86_64 = 41efc43a7c252aec671bfbf3a3e50e9550bfb5c805372a2eed9f0f8091a34f4b
-	source_aarch64 = Panoply-0.2.0-beta-linux-arm64.tar.gz::https://github.com/anzal1/panoply/releases/download/v0.2.0-beta/Panoply-0.2.0-beta-linux-arm64.tar.gz
-	sha256sums_aarch64 = a4e0a66546b5ec80d1983f838362cae75e9dce7a0a48e374d4c53493af78af24
+	source_x86_64 = Panoply-0.3.0-beta-linux-x64.tar.gz::https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-linux-x64.tar.gz
+	sha256sums_x86_64 = d11430a33314fc651a165224319005f1f4fe5a7f91e6bed0c5c70f802fe6e362
+	source_aarch64 = Panoply-0.3.0-beta-linux-arm64.tar.gz::https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-linux-arm64.tar.gz
+	sha256sums_aarch64 = b0f4d7e933165b0f79f47192023af53c469229cc03cd62eed6857c4f738509c7
 
 pkgname = panoply-bin

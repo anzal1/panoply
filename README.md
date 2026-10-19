@@ -7,6 +7,8 @@
 
 <h3 align="center">Every file utility, in one open-source app.<br>It runs on your device and nothing is uploaded.</h3>
 
+<p align="center"><a href="https://panoply.anzalabidi.dev"><b>panoply.anzalabidi.dev</b></a></p>
+
 <p align="center">
   <a href="https://github.com/anzal1/panoply/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/anzal1/panoply/ci.yml?branch=main&label=CI&style=flat-square"></a>
   <a href="https://github.com/anzal1/panoply/releases"><img alt="Latest release" src="https://img.shields.io/github/v/release/anzal1/panoply?include_prereleases&label=release&style=flat-square&labelColor=24272f&color=3a3f4b"></a>
