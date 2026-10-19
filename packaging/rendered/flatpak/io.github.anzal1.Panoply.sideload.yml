@@ -42,12 +42,12 @@ modules:
       - install -Dm644 LICENSE-APACHE /app/share/licenses/io.github.anzal1.Panoply/LICENSE-APACHE
     sources:
       - type: archive
-        url: https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-linux-x64.tar.gz
-        sha256: d11430a33314fc651a165224319005f1f4fe5a7f91e6bed0c5c70f802fe6e362
+        url: https://github.com/anzal1/panoply/releases/download/v0.3.0/Panoply-0.3.0-linux-x64.tar.gz
+        sha256: 25324a95eb47c13b75b1bed88a2320a45d6831b960af74eca17aa25122087f14
         only-arches: [x86_64]
       - type: archive
-        url: https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-linux-arm64.tar.gz
-        sha256: b0f4d7e933165b0f79f47192023af53c469229cc03cd62eed6857c4f738509c7
+        url: https://github.com/anzal1/panoply/releases/download/v0.3.0/Panoply-0.3.0-linux-arm64.tar.gz
+        sha256: 65ebf118bc89625f7e79d38ead2f3c32e39fb012ddd789349c956c22a442df6b
         only-arches: [aarch64]
       - type: file
         path: io.github.anzal1.Panoply.metainfo.xml

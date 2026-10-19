@@ -1,34 +1,34 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.10.0.schema.json
 PackageIdentifier: anzal1.Panoply
-PackageVersion: '0.3.0-beta'
+PackageVersion: '0.3.0'
 InstallerLocale: en-US
 InstallerType: wix
 Scope: machine
 UpgradeBehavior: install
 Commands:
   - panoply
-ReleaseDate: 2026-10-18
+ReleaseDate: 2026-10-19
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-windows-x64.msi
-    InstallerSha256: 87a7ac463056cc4b0e7ba08318a7b481caeda0c19171f8a3765c35cb41a10969
-    ProductCode: '{677EBC0B-6929-E4CD-5262-703E7F142C18}'
+    InstallerUrl: https://github.com/anzal1/panoply/releases/download/v0.3.0/Panoply-0.3.0-windows-x64.msi
+    InstallerSha256: ee8b9bb46989f982a9537410705c05ee4266231d46ed55c26f6162fd99085a20
+    ProductCode: '{9B3AD019-D7EF-D5EE-8AB6-63B75EE15661}'
     AppsAndFeaturesEntries:
       - DisplayName: Panoply
         Publisher: Panoply contributors
         DisplayVersion: '0.3.0.0'
-        ProductCode: '{677EBC0B-6929-E4CD-5262-703E7F142C18}'
+        ProductCode: '{9B3AD019-D7EF-D5EE-8AB6-63B75EE15661}'
         UpgradeCode: '{56520F04-9601-4D76-8791-E0FF3A922321}'
         InstallerType: wix
   - Architecture: arm64
-    InstallerUrl: https://github.com/anzal1/panoply/releases/download/v0.3.0-beta/Panoply-0.3.0-beta-windows-arm64.msi
-    InstallerSha256: 44b2442319f0f77444150b4598c823ebdd67f80321b7c621fc063ac9b90cae0d
-    ProductCode: '{5BE72A50-0AC5-75A9-D787-95D9E5634E5A}'
+    InstallerUrl: https://github.com/anzal1/panoply/releases/download/v0.3.0/Panoply-0.3.0-windows-arm64.msi
+    InstallerSha256: b2e325e3c238db5dca3c7e6514aa690acef053411a8645d72633b99a1abac855
+    ProductCode: '{A3E58088-2518-1880-C926-56E907EC6EDC}'
     AppsAndFeaturesEntries:
       - DisplayName: Panoply
         Publisher: Panoply contributors
         DisplayVersion: '0.3.0.0'
-        ProductCode: '{5BE72A50-0AC5-75A9-D787-95D9E5634E5A}'
+        ProductCode: '{A3E58088-2518-1880-C926-56E907EC6EDC}'
         UpgradeCode: '{56520F04-9601-4D76-8791-E0FF3A922321}'
         InstallerType: wix
 ManifestType: installer
