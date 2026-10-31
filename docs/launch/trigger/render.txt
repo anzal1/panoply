@@ -1,2 +1,2 @@
 drops/exam-kb,drops/exam-kb-4x5 looks 60
-# run 7: clean cut to the result, no double exposure
+# run 8: preset card stays inside the 4x5 frame
