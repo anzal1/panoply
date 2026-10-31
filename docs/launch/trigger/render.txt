@@ -1,1 +1,2 @@
 drops/exam-kb,drops/exam-kb-4x5 looks 60
+# run 2: 29.4 KB with the 1024-byte basis stated
