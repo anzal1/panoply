@@ -1,2 +1,2 @@
 drops/exam-kb,drops/exam-kb-4x5 looks 60
-# run 3: size labels under the photos, smaller stat numbers
+# run 4: smaller size numbers, nothing clipped in 4x5
