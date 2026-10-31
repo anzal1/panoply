@@ -9,76 +9,85 @@
     #root .fill{position:absolute;inset:0}
     #root .mono{font-family:"Geist Mono",ui-monospace,monospace}
     #root .h1{font-weight:700;letter-spacing:-0.04em;line-height:1}
-    #examkb45-pwords{position:absolute;left:0;right:0;top:50%;margin-top:-450px;height:900px;text-align:center;font-size:104px}
-    #examkb45-pwords .row{display:block;height:300px;line-height:150px;white-space:nowrap}
-    #examkb45-pwords .bad{color:#ff6961}
+    .hd{position:absolute;left:0;right:0;top:80px;text-align:center;font-size:112px;line-height:1.04;opacity:0}
+    .hd.on{opacity:1}
     #examkb45-blue{background:#2d6cdf;clip-path:inset(0 100% 0 0)}
-    .cam{position:absolute;inset:0}
-    .hd{position:absolute;left:0;right:0;top:70px;height:120px;line-height:120px;text-align:center;white-space:nowrap;font-size:100px;opacity:0}
-    .ph{position:absolute;border-radius:20px;overflow:hidden;background:#f1f2f5;box-shadow:0 0 0 1.5px rgba(255,255,255,.25),0 40px 110px rgba(8,24,70,.5);opacity:0}
-    .ph img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;display:block}
-    .num{position:absolute;text-align:center;opacity:0;line-height:1.05}
-    .num b{display:block;font-size:68px;font-weight:700;letter-spacing:-0.04em;white-space:nowrap}
-    .num span{display:block;margin-top:10px;font-size:50px;font-weight:600;letter-spacing:-0.02em;color:rgba(255,255,255,.88);white-space:nowrap}
-    .ctr{position:absolute;text-align:center;opacity:0}
-    .ctr .k{font-size:50px;font-weight:600;color:rgba(255,255,255,.8);letter-spacing:-0.01em}
-    .ctr .pn{margin-top:14px;font-size:84px;font-weight:700;letter-spacing:-0.04em;line-height:1.02}
-    .ctr .lim{margin-top:6px;font-size:112px;font-weight:700;letter-spacing:-0.04em;line-height:1;white-space:nowrap}
-    .ctr .ar{width:0px;height:0px;margin:0px auto 0;display:block}
-    .ctr .ar svg{width:100%;height:100%;display:block}
-    .stat{position:absolute;text-align:center;opacity:0}
-    .stat .n{font-size:150px;font-weight:700;letter-spacing:-0.05em;line-height:1;white-space:nowrap}
-    .stat .l{margin-top:18px;font-size:62px;font-weight:600;letter-spacing:-0.025em;line-height:1.12;color:rgba(255,255,255,.96);text-wrap:balance}
-    .stat .s{margin-top:18px;font-size:46px;font-weight:500;color:rgba(255,255,255,.78)}
-    .rule{position:absolute;background:rgba(255,255,255,.28);opacity:0}
+    .card{position:absolute;background:#f1f2f5;color:#1d1d1f;border-radius:34px;box-shadow:0 0 0 1.5px rgba(255,255,255,.25),0 40px 110px rgba(8,24,70,.5);transform-origin:0 0}
+    #examkb45-form{left:60px;top:380px;width:1200px;height:640px;transform:scale(0.8)}
+    #examkb45-form .lab{position:absolute;left:60px;top:44px;font-size:60px;font-weight:600;color:#4a4a52;letter-spacing:-0.02em}
+    #examkb45-form .rule{position:absolute;left:60px;top:124px;font-size:76px;font-weight:700;letter-spacing:-0.035em;white-space:nowrap}
+    #examkb45-form .sep{position:absolute;left:60px;right:60px;top:268px;height:3px;background:#d6d6d7}
+    #examkb45-form .thumb{position:absolute;left:60px;top:320px;width:208px;height:260px;border-radius:18px;overflow:hidden}
+    #examkb45-form .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    #examkb45-form .fn{position:absolute;left:310px;top:330px;font-size:60px;font-weight:600;color:#4a4a52}
+    #examkb45-size{position:absolute;left:310px;top:410px;font-size:150px;font-weight:700;letter-spacing:-0.045em;line-height:1;color:#1d1d1f}
+    #examkb45-stamp{position:absolute;right:60px;top:392px;height:104px;padding:0 36px;line-height:104px;border-radius:52px;background:#e5342b;color:#fff;font-size:62px;font-weight:700;letter-spacing:-0.02em;opacity:0}
+    #examkb45-form2{left:40px;top:400px;width:1400px;height:600px;transform:scale(0.714)}
+    #examkb45-form2 .lab{position:absolute;left:60px;top:44px;font-size:64px;font-weight:600;color:#4a4a52;letter-spacing:-0.02em}
+    #examkb45-field{position:absolute;left:60px;right:60px;top:150px;height:190px;border:6px solid #0a84ff;border-radius:30px;background:#fff}
+    #examkb45-typed{position:absolute;left:40px;top:0;height:178px;line-height:178px;font-family:"Geist Mono",monospace;font-size:100px;font-weight:600;color:#1d1d1f;white-space:nowrap;letter-spacing:-0.04em}
+    #examkb45-caret{display:inline-block;width:8px;height:104px;background:#0a84ff;vertical-align:middle;margin-left:6px;opacity:0}
+    #examkb45-form2 .mod{position:absolute;left:60px;top:432px;font-size:64px;font-weight:600;color:#4a4a52;letter-spacing:-0.02em}
+    #examkb45-run{position:absolute;right:60px;top:392px;width:330px;height:140px;border-radius:36px;background:#0072ef;color:#fff;font-size:88px;font-weight:700;letter-spacing:-0.03em;text-align:center;line-height:140px}
+    #examkb45-ph{position:absolute;left:380px;top:330px;width:320px;height:400px;opacity:0}
+    #examkb45-phs{position:absolute;inset:0;transform-origin:50% 50%}
+    #examkb45-phs div{position:absolute;inset:0;border-radius:24px;overflow:hidden;background:#f1f2f5;box-shadow:0 0 0 1.5px rgba(255,255,255,.25),0 40px 110px rgba(8,24,70,.5)}
+    #examkb45-phs img{width:100%;height:100%;object-fit:cover;display:block}
+    #examkb45-pha{opacity:0}
+    #examkb45-fits{position:absolute;left:0px;width:1080px;justify-content:center;top:770px;display:flex;align-items:center;gap:26px;opacity:0;transform-origin:50% 50%}
+    #examkb45-fits i{width:96px;height:96px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+    #examkb45-fits i svg{width:62%;height:62%;stroke:#2d6cdf;fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+    #examkb45-fits b{font-size:84px;font-weight:700;letter-spacing:-0.035em;white-space:nowrap}
+    #examkb45-cnt{position:absolute;left:0px;top:880px;height:170px;width:1080px;text-align:center;font-size:170px;font-weight:700;letter-spacing:-0.05em;line-height:1;opacity:0}
+    #examkb45-cnt span{position:absolute;left:0;top:0;width:100%;text-align:inherit;white-space:nowrap}
+    #examkb45-dims{position:absolute;left:0px;width:1080px;text-align:center;top:1060px;font-size:84px;font-weight:700;letter-spacing:-0.035em;opacity:0}
+    #examkb45-done{position:absolute;left:0px;top:1170px;width:1080px;text-align:center;font-size:54px;font-weight:600;letter-spacing:-0.025em;line-height:1.12;color:rgba(255,255,255,.95);opacity:0}
     #examkb45-efan{position:absolute;left:380px;top:170px;width:320px;height:320px;opacity:0}
     #examkb45-efan svg{width:100%;height:100%;display:block;overflow:visible}
     #examkb45-ename{position:absolute;left:0;right:0;top:520px;text-align:center;font-size:170px;opacity:0}
-    #examkb45-eline{position:absolute;left:70px;right:70px;top:760px;text-align:center;font-size:66px;font-weight:500;letter-spacing:-0.025em;line-height:1.12;color:rgba(255,255,255,.9);opacity:0;text-wrap:balance}
-    #examkb45-eurl{position:absolute;left:0;right:0;top:1000px;text-align:center;font-size:42px;color:rgba(255,255,255,.92);letter-spacing:-0.01em;opacity:0}
+    #examkb45-eline{position:absolute;left:50px;right:50px;top:760px;text-align:center;font-size:76px;font-weight:600;letter-spacing:-0.03em;line-height:1.1;opacity:0}
+    #examkb45-epre{position:absolute;left:50px;right:50px;top:870px;text-align:center;font-size:64px;font-weight:600;letter-spacing:-0.03em;color:rgba(255,255,255,.92);opacity:0}
+    #examkb45-eurl{position:absolute;left:0;right:0;top:1090px;text-align:center;font-size:42px;color:rgba(255,255,255,.92);letter-spacing:-0.01em;opacity:0}
     #examkb45-grain{position:absolute;left:0;top:0;width:1080px;height:1350px;pointer-events:none;opacity:.08;mix-blend-mode:soft-light}
   </style>
   <div id="root" data-composition-id="examkb45" data-width="1080" data-height="1350">
-    <div id="examkb45-gmid" class="fill" style="background:#0c0c0f"></div>
-    <div id="examkb45-pain" class="fill">
-      <div id="examkb45-pwords" class="h1">
-        <div class="row" id="examkb45-r1">The form wants<br>a photo</div>
-        <div class="row" id="examkb45-r2">under 250 KB<br>and 630 x 810.</div>
-        <div class="row bad" id="examkb45-r3" style="opacity:0">Yours is 2.0 MB<br>and 3684 x 4605.</div>
+    <div class="fill" style="background:#0c0c0f"></div>
+    <div id="examkb45-s1" class="fill">
+      <div id="examkb45-h1" class="hd h1 on" style="color:#fff">Photo too big<br>for the form.</div>
+      <div id="examkb45-form" class="card">
+        <div class="lab">Upload your photo</div>
+        <div class="rule">Max 250 KB, 630 x 810 px</div>
+        <div class="sep"></div>
+        <div class="thumb"><img src="assets/photos/before.jpg" alt=""></div>
+        <div class="fn">photo.jpg</div>
+        <div id="examkb45-size">2.0 MB</div>
+        <div id="examkb45-stamp">Too large</div>
       </div>
     </div>
     <div id="examkb45-blue" class="fill"></div>
-
-    <div id="examkb45-camA" class="cam">
-      <div id="examkb45-hA" class="hd h1">Pick the preset.</div>
-      <div id="examkb45-bA" class="ph" style="left:60px;top:230px;width:400px;height:500px"><img src="assets/photos/before.jpg" alt=""></div>
-      <div id="examkb45-bnA" class="num" style="left:20px;top:750px;width:480px"><b>2.0 MB</b><span>3684 x 4605 px</span></div>
-      <div id="examkb45-cA" class="ctr" style="left:40px;top:960px;width:1000px"><div class="k mono">Preset</div><div class="pn">Passport Seva photo</div><div class="ar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg></div><div class="lim">10 to 250 KB</div></div>
-      <div id="examkb45-aA" class="ph" style="left:620px;top:230px;width:400px;height:500px"><img src="assets/photos/after-seva.jpg" alt=""></div>
-      <div id="examkb45-anA" class="num" style="left:540px;top:750px;width:520px"><b>207,947 bytes</b><span>630 x 810 px</span></div>
+    <div id="examkb45-s2" class="fill" style="transform-origin:540px 700px">
+      <div id="examkb45-h2" class="hd h1">Pick the preset.</div>
+      <div id="examkb45-c2"><div id="examkb45-form2" class="card">
+        <div class="lab">Exam or portal preset</div>
+        <div id="examkb45-field"><div id="examkb45-typed"></div></div>
+        <div class="mod">Resize to exact KB</div>
+        <div id="examkb45-run">Run</div>
+      </div></div>
     </div>
-
-    <div id="examkb45-camB" class="cam">
-      <div id="examkb45-hB" class="hd h1">A tighter one.</div>
-      <div id="examkb45-bB" class="ph" style="left:60px;top:230px;width:400px;height:500px"><img src="assets/photos/before-b.jpg" alt=""></div>
-      <div id="examkb45-bnB" class="num" style="left:20px;top:750px;width:480px"><b>2.0 MB</b><span>3684 x 4605 px</span></div>
-      <div id="examkb45-cB" class="ctr" style="left:40px;top:960px;width:1000px"><div class="k mono">Preset</div><div class="pn">PAN card photo</div><div class="ar"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></svg></div><div class="lim">Under 30 KB</div></div>
-      <div id="examkb45-aB" class="ph" style="left:620px;top:230px;width:400px;height:500px"><img src="assets/photos/after-pan.jpg" alt=""></div>
-      <div id="examkb45-anB" class="num" style="left:540px;top:750px;width:520px"><b>29.4 KB</b><span>468 x 585 px</span></div>
-    </div>
-    <div id="examkb45-camE" class="cam">
-      <div id="examkb45-hE" class="hd h1">The numbers.</div>
-      <div id="examkb45-s1" class="stat" style="left:40px;top:300px;width:1000px"><div class="n">207,947</div><div class="l">bytes, inside 10 to 250 KB</div><div class="s mono">Passport Seva run</div></div>
-      <div id="examkb45-s2" class="stat" style="left:40px;top:640px;width:1000px"><div class="n">29.4 KB</div><div class="l">under 30 KB, 1 KB = 1024 bytes</div><div class="s mono">PAN card run</div></div>
-      <div id="examkb45-s3" class="stat" style="left:40px;top:980px;width:1000px"><div class="n">15</div><div class="l">exam and portal presets</div><div class="s mono">each with its source</div></div>
-      <div id="examkb45-ru1" class="rule" style="left:340px;top:560px;width:400px;height:2px"></div>
-      <div id="examkb45-ru2" class="rule" style="left:340px;top:900px;width:400px;height:2px"></div>
+    <div id="examkb45-s3" class="fill">
+      <div id="examkb45-h3" class="hd h1">Same photo.<br>Exact size.</div>
+      <div id="examkb45-ph"><div id="examkb45-phs"><div id="examkb45-phb"><img src="assets/photos/before-b.jpg" alt=""></div><div id="examkb45-pha" style="position:absolute;inset:0"><img src="assets/photos/after-seva.jpg" alt=""></div></div></div>
+      <div id="examkb45-fits"><i><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><b>Fits 250 KB</b></div>
+      <div id="examkb45-cnt"></div>
+      <div id="examkb45-dims">630 x 810 px</div>
+      <div id="examkb45-done">Done in under 0.1 s. On your computer.</div>
     </div>
     <div id="examkb45-end">
       <div id="examkb45-endcam" class="fill">
         <div id="examkb45-efan"></div>
         <div id="examkb45-ename" class="h1">Panoply</div>
-        <div id="examkb45-eline">Free. Open source. Runs on your computer.</div>
+        <div id="examkb45-eline">Free, local, open source.</div>
+        <div id="examkb45-epre">15 exam and portal presets</div>
         <div id="examkb45-eurl" class="mono">github.com/anzal1/panoply</div>
       </div>
     </div>
@@ -86,75 +95,76 @@
   </div>
   <script>
   (function () {
-    const F = 1 / 60;
     const $ = id => document.getElementById(id);
     const tl = gsap.timeline({ paused: true });
-    const XO = 'expo.out', P2I = 'power2.in', P1O = 'power1.out';
+    const XO = 'expo.out', P1O = 'power1.out';
     const enter = (sel, t, o = {}) => {
-      const d = o.dur || 0.5;
-      tl.fromTo(sel, { x: o.x || 0, y: o.y === undefined ? 26 : o.y, scale: o.s || 1 }, { x: 0, y: 0, scale: 1, duration: d, ease: XO }, t);
+      tl.fromTo(sel, { x: o.x || 0, y: o.y === undefined ? 26 : o.y, scale: o.s || 1 }, { x: 0, y: 0, scale: 1, duration: o.dur || 0.5, ease: XO }, t);
       tl.fromTo(sel, { opacity: 0 }, { opacity: 1, duration: o.fade || 0.25, ease: P1O }, t);
     };
     const drift = (sel, t0, t1, from, to) => tl.fromTo(sel, { scale: from }, { scale: to, duration: t1 - t0, ease: 'none' }, t0);
     const xout = (sel, t, d) => tl.to(sel, { opacity: 0, duration: d || 0.25, ease: 'power1.inOut' }, t);
 
-    /* 1. pain: line 1 and 2 are on frame 0, line 3 builds, all three hold 2.8 s before the wipe */
-    enter('#examkb45-r3', 1.0, { y: 30 });
-    drift('#examkb45-pwords', 0, 4.7, 1, 1.03);
-    tl.fromTo('#examkb45-blue', { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.6, ease: 'power3.inOut' }, 4.1);
-    tl.set('#examkb45-pain', { opacity: 0 }, 4.71);
+    /* ---- 1. the problem (0 to 3.2 s): caption and form are on frame 0, the red stamp lands at 1.2 s */
+    drift('#examkb45-s1', 0, 3.6, 1, 1.04);
+    tl.fromTo('#examkb45-stamp', { opacity: 0, scale: 1.25 }, { opacity: 1, scale: 1, duration: 0.35, ease: XO }, 1.2);
+    tl.fromTo('#examkb45-size', { color: '#1d1d1f' }, { color: '#e5342b', duration: 0.3, ease: 'none' }, 1.2);
+    tl.fromTo('#examkb45-blue', { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.6, ease: 'power3.inOut' }, 3.0);
+    tl.set('#examkb45-s1', { opacity: 0 }, 3.61);
 
-    /* 2. Passport Seva preset: before, preset, after. complete at 6.0 s, held to 8.3 s */
-    enter('#examkb45-hA', 4.45, { y: 34 });
-    enter('#examkb45-bA', 4.5, { y: 40, s: 1.03, dur: 0.7 });
-    enter('#examkb45-bnA', 4.75, { y: 24 });
-    enter('#examkb45-anA', 5.7, { y: 24 });
-    enter('#examkb45-cA', 5.0, { y: 30 });
-    enter('#examkb45-aA', 5.45, { y: 40, s: 1.03, dur: 0.7 });
-    drift('#examkb45-camA', 4.45, 8.5, 1, 1.025);
-    xout('#examkb45-camA', 8.3, 0.2);
+    /* ---- 2. the action (3.5 to 6.4 s): type the preset, press Run */
+    enter('#examkb45-h2', 3.5, { y: 34 });
+    enter('#examkb45-c2', 3.6, { y: 40, s: 1.03, dur: 0.7 });
+    const word = 'passport-seva-photo';
+    $('examkb45-typed').innerHTML = [...word].map((c, i) => `<span id="examkb45-ch${i}" style="display:none">${c}</span>`).join('') + '<i id="examkb45-caret"></i>';
+    [...word].forEach((c, i) => tl.set('#examkb45-ch' + i, { display: 'inline' }, 3.95 + i * 0.085));
+    tl.fromTo('#examkb45-caret', { opacity: 1 }, { opacity: 0, duration: 0.01, repeat: 12, yoyo: true, repeatDelay: 0.22 }, 3.7);
+    tl.set('#examkb45-caret', { opacity: 0 }, 5.7);
+    tl.fromTo('#examkb45-run', { scale: 1 }, { scale: 1.06, duration: 0.5, ease: 'power2.inOut' }, 5.75);
+    tl.to('#examkb45-run', { scale: 0.95, duration: 0.1, ease: 'power2.in' }, 6.3);
+    tl.to('#examkb45-run', { scale: 1, duration: 0.15, ease: XO }, 6.4);
+    drift('#examkb45-s2', 3.5, 6.6, 1, 1.12);
+    xout('#examkb45-s2', 6.4, 0.2);
 
-    /* 3. a tighter preset on the same photo. complete at 9.8 s, held to 11.6 s */
-    enter('#examkb45-hB', 8.25, { y: 34 });
-    enter('#examkb45-bB', 8.3, { y: 40, s: 1.03, dur: 0.7 });
-    enter('#examkb45-bnB', 8.55, { y: 24 });
-    enter('#examkb45-anB', 9.45, { y: 24 });
-    enter('#examkb45-cB', 8.75, { y: 30 });
-    enter('#examkb45-aB', 9.2, { y: 40, s: 1.03, dur: 0.7 });
-    drift('#examkb45-camB', 8.25, 11.8, 1, 1.025);
-    xout('#examkb45-camB', 11.6, 0.2);
+    /* ---- 3. the result (6.4 to 10.3 s): the size runs down, lands on 207.9 KB at 7.6 s */
+    enter('#examkb45-h3', 6.4, { y: 34 });
+    enter('#examkb45-ph', 6.45, { y: 30, dur: 0.6 });
+    enter('#examkb45-cnt', 6.45, { y: 30 });
+    const T0 = 6.65, T1 = 7.6, N = 30, A = 2036.304, B = 207.947;
+    const e3 = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    const fmt = v => v >= 1000 ? (v / 1000).toFixed(1) + ' MB' : v.toFixed(1) + ' KB';
+    let html = '';
+    for (let k = 0; k <= N; k++) { const v = A * Math.pow(B / A, e3(k / N)); html += `<span id="examkb45-n${k}" style="opacity:${k === 0 ? 1 : 0}">${k === N ? '207.9 KB' : fmt(v)}</span>`; }
+    $('examkb45-cnt').innerHTML = html;
+    for (let k = 1; k <= N; k++) { const t = T0 + (T1 - T0) * k / N; tl.set('#examkb45-n' + (k - 1), { opacity: 0 }, t); tl.set('#examkb45-n' + k, { opacity: 1 }, t); }
+    tl.fromTo('#examkb45-phs', { scale: 1 }, { scale: 0.62, duration: T1 - T0, ease: 'power3.inOut' }, T0);
+    tl.fromTo('#examkb45-phb', { opacity: 1 }, { opacity: 0, duration: 0.2, ease: 'none' }, T1 - 0.1);
+    tl.fromTo('#examkb45-pha', { opacity: 0 }, { opacity: 1, duration: 0.2, ease: 'none' }, T1 - 0.1);
+    tl.fromTo('#examkb45-fits', { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.45, ease: XO }, T1);
+    enter('#examkb45-dims', T1 + 0.1, { y: 24 });
+    enter('#examkb45-done', T1 + 0.5, { y: 24 });
+    drift('#examkb45-s3', 6.4, 10.4, 1, 1.03);
+    xout('#examkb45-s3', 10.3, 0.2);
 
-    /* 4. the numbers, complete at 12.9 s, held to 14.4 s */
-    enter('#examkb45-hE', 11.5, { y: 30 });
-    enter('#examkb45-s1', 11.85, { y: 34 });
-    enter('#examkb45-s2', 12.25, { y: 34 });
-    enter('#examkb45-s3', 12.65, { y: 34 });
-    tl.fromTo('#examkb45-ru1', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, 12.0);
-    tl.fromTo('#examkb45-ru2', { opacity: 0 }, { opacity: 1, duration: 0.3, ease: P1O }, 12.4);
-    drift('#examkb45-camE', 11.5, 14.6, 1, 1.02);
-    xout('#examkb45-camE', 14.4, 0.2);
-
-    /* 5. end card at 14.6 s, same blue; URL shows from 15.15 s, 1.85 s then the clip ends at 17 s */
-    const CARD = 'M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z';
-    const PIVOT = '272.788 612.197';
-    $('examkb45-efan').innerHTML = `<svg viewBox="0 0 544 544" fill="none"><path id="examkb45-f-l" d="${CARD}" fill="rgba(255,255,255,.42)"/><path id="examkb45-f-r" d="${CARD}" fill="rgba(255,255,255,.62)"/><path id="examkb45-f-c" d="${CARD}" fill="#ffffff"/></svg>`;
-    gsap.set(['#examkb45-f-l', '#examkb45-f-r'], { svgOrigin: PIVOT });
-    const E0 = 14.6;
+    /* ---- 4. end card (10.45 s), same blue */
+    $('examkb45-efan').innerHTML = `<svg viewBox="0 0 544 544" fill="none"><path id="examkb45-f-l" d="M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z" fill="rgba(255,255,255,.42)"/><path id="examkb45-f-r" d="M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z" fill="rgba(255,255,255,.62)"/><path id="examkb45-f-c" d="M316.414 65.569C331.243 65.569 338.657 65.569 344.722 67.279A45.552 45.552 0 0 1 376.199 98.757C377.909 104.821 377.909 112.235 377.909 127.065L377.909 382.508C377.909 397.338 377.909 404.752 376.199 410.816A45.552 45.552 0 0 1 344.722 442.294C338.657 444.004 331.243 444.004 316.414 444.004L229.163 444.004C214.334 444.004 206.919 444.004 200.855 442.294A45.552 45.552 0 0 1 169.378 410.816C167.668 404.752 167.668 397.338 167.668 382.508L167.668 127.065C167.668 112.235 167.668 104.821 169.378 98.757A45.552 45.552 0 0 1 200.855 67.279C206.919 65.569 214.334 65.569 229.163 65.569Z" fill="#ffffff"/></svg>`;
+    gsap.set(['#examkb45-f-l', '#examkb45-f-r'], { svgOrigin: '272.788 612.197' });
+    const E0 = 10.45;
     enter('#examkb45-efan', E0, { y: 24, s: 0.92, dur: 0.6 });
     tl.fromTo('#examkb45-f-l', { rotation: 0 }, { rotation: -20, duration: 0.7, ease: XO }, E0);
     tl.fromTo('#examkb45-f-r', { rotation: 0 }, { rotation: 20, duration: 0.7, ease: XO }, E0);
     enter('#examkb45-ename', E0 + 0.1, { y: 40, dur: 0.6 });
     enter('#examkb45-eline', E0 + 0.45, { y: 26 });
-    enter('#examkb45-eurl', E0 + 0.55, { y: 20 });
-    tl.fromTo('#examkb45-endcam', { scale: 1.03 }, { scale: 1, duration: 1.6, ease: 'power2.out' }, E0);
+    enter('#examkb45-epre', E0 + 0.9, { y: 26 });
+    enter('#examkb45-eurl', E0 + 1.3, { y: 20 });
+    tl.fromTo('#examkb45-endcam', { scale: 1.03 }, { scale: 1, duration: 1.8, ease: 'power2.out' }, E0);
 
     (function () {
-      const c = $('examkb45-grain'), g = c.getContext('2d'), d = g.createImageData(480, 270);
+      const c = $('examkb45-grain'), g = c.getContext('2d'), d = g.createImageData(480, 600);
       let s = 12345; const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
       for (let i = 0; i < d.data.length; i += 4) { const v = 128 + (r() - 0.5) * 90; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
       g.putImageData(d, 0, 0);
     })();
-
     window.__timelines["examkb45"] = tl;
   })();
   </script>
