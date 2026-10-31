@@ -315,8 +315,8 @@ main{overflow-x:hidden;overflow-x:clip}
 .sha:hover{color:var(--fg)}
 .sha.ok{color:var(--ui-green);background:rgba(61,213,109,.12)}
 .extras{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:20px}
-.grid6{display:grid!important;grid-template-columns:minmax(0,1fr);gap:6px 8px!important}
-@media (min-width:1300px){.grid6{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.grid6{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:6px 8px!important}
+.grid6 li a{white-space:nowrap}
 .dl-foot{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:36px 0 0;font-size:15px;color:var(--fg3)}
 .dl-foot a{color:var(--link)}
 .dl-foot a:hover{text-decoration:underline;text-underline-offset:3px}
