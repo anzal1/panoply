@@ -41,7 +41,7 @@
     #examkb45-cnt{position:absolute;left:0px;top:880px;height:170px;width:1080px;text-align:center;font-size:170px;font-weight:700;letter-spacing:-0.05em;line-height:1;opacity:0}
     #examkb45-cnt span{position:absolute;left:0;top:0;width:100%;text-align:inherit;white-space:nowrap}
     #examkb45-dims{position:absolute;left:0px;width:1080px;text-align:center;top:1060px;font-size:84px;font-weight:700;letter-spacing:-0.035em;opacity:0}
-    #examkb45-done{position:absolute;left:0px;top:1170px;width:1080px;text-align:center;font-size:54px;font-weight:600;letter-spacing:-0.025em;line-height:1.12;color:rgba(255,255,255,.95);opacity:0}
+    #examkb45-done{position:absolute;left:0px;top:1170px;width:1080px;text-align:center;font-size:54px;font-weight:600;letter-spacing:-0.025em;line-height:1.12;text-wrap:balance;color:rgba(255,255,255,.95);opacity:0}
     #examkb45-efan{position:absolute;left:380px;top:170px;width:320px;height:320px;opacity:0}
     #examkb45-efan svg{width:100%;height:100%;display:block;overflow:visible}
     #examkb45-ename{position:absolute;left:0;right:0;top:520px;text-align:center;font-size:170px;opacity:0}
@@ -124,12 +124,12 @@
     tl.to('#examkb45-run', { scale: 0.95, duration: 0.1, ease: 'power2.in' }, 6.3);
     tl.to('#examkb45-run', { scale: 1, duration: 0.15, ease: XO }, 6.4);
     drift('#examkb45-s2', 3.5, 6.6, 1, 1.12);
-    xout('#examkb45-s2', 6.4, 0.2);
+    xout('#examkb45-s2', 6.4, 0.14);
 
     /* ---- 3. the result (6.4 to 10.3 s): the size runs down, lands on 207.9 KB at 7.6 s */
-    enter('#examkb45-h3', 6.4, { y: 34 });
-    enter('#examkb45-ph', 6.45, { y: 30, dur: 0.6 });
-    enter('#examkb45-cnt', 6.45, { y: 30 });
+    enter('#examkb45-h3', 6.56, { y: 34 });
+    enter('#examkb45-ph', 6.58, { y: 30, dur: 0.6 });
+    enter('#examkb45-cnt', 6.58, { y: 30 });
     const T0 = 6.65, T1 = 7.6, N = 30, A = 2036.304, B = 207.947;
     const e3 = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
     const fmt = v => v >= 1000 ? (v / 1000).toFixed(1) + ' MB' : v.toFixed(1) + ' KB';
