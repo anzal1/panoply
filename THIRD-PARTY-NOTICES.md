@@ -184,15 +184,15 @@ printed in section 3.3. GPUI itself (the `gpui-pre` crates) is Apache-2.0 and is
 | cpubits | 0.1.1 | MIT OR Apache-2.0 |
 | cpufeatures | 0.2.17 | MIT OR Apache-2.0 |
 | cpufeatures | 0.3.1 | MIT OR Apache-2.0 |
-| cranelift-assembler-x64 | 0.136.3 | Apache-2.0 WITH LLVM-exception |
-| cranelift-bforest | 0.136.3 | Apache-2.0 WITH LLVM-exception |
-| cranelift-bitset | 0.136.3 | Apache-2.0 WITH LLVM-exception |
-| cranelift-codegen | 0.136.3 | Apache-2.0 WITH LLVM-exception |
-| cranelift-codegen-shared | 0.136.3 | Apache-2.0 WITH LLVM-exception |
-| cranelift-control | 0.136.3 | Apache-2.0 WITH LLVM-exception |
-| cranelift-entity | 0.136.3 | Apache-2.0 WITH LLVM-exception |
-| cranelift-frontend | 0.136.3 | Apache-2.0 WITH LLVM-exception |
-| cranelift-native | 0.136.3 | Apache-2.0 WITH LLVM-exception |
+| cranelift-assembler-x64 | 0.136.5 | Apache-2.0 WITH LLVM-exception |
+| cranelift-bforest | 0.136.5 | Apache-2.0 WITH LLVM-exception |
+| cranelift-bitset | 0.136.5 | Apache-2.0 WITH LLVM-exception |
+| cranelift-codegen | 0.136.5 | Apache-2.0 WITH LLVM-exception |
+| cranelift-codegen-shared | 0.136.5 | Apache-2.0 WITH LLVM-exception |
+| cranelift-control | 0.136.5 | Apache-2.0 WITH LLVM-exception |
+| cranelift-entity | 0.136.5 | Apache-2.0 WITH LLVM-exception |
+| cranelift-frontend | 0.136.5 | Apache-2.0 WITH LLVM-exception |
+| cranelift-native | 0.136.5 | Apache-2.0 WITH LLVM-exception |
 | crc32fast | 1.5.2 | MIT OR Apache-2.0 |
 | crossbeam-channel | 0.5.17 | MIT OR Apache-2.0 |
 | crossbeam-deque | 0.8.8 | MIT OR Apache-2.0 |
@@ -557,8 +557,8 @@ printed in section 3.3. GPUI itself (the `gpui-pre` crates) is Apache-2.0 and is
 | profiling-procmacros | 1.0.18 | MIT OR Apache-2.0 |
 | pulldown-cmark | 0.13.4 | MIT |
 | pulldown-cmark-escape | 0.11.0 | MIT |
-| pulley-interpreter | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| pulley-macros | 49.0.3 | Apache-2.0 WITH LLVM-exception |
+| pulley-interpreter | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| pulley-macros | 49.0.5 | Apache-2.0 WITH LLVM-exception |
 | pulp | 0.22.3 | MIT |
 | pulp-wasm-simd-flag | 0.1.1 | MIT |
 | pxfm | 0.1.30 | BSD-3-Clause OR Apache-2.0 |
@@ -616,7 +616,7 @@ printed in section 3.3. GPUI itself (the `gpui-pre` crates) is Apache-2.0 and is
 | rustix-linux-procfs | 0.1.1 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT |
 | rustls | 0.23.46 | Apache-2.0 OR ISC OR MIT |
 | rustls-pki-types | 1.15.1 | MIT OR Apache-2.0 |
-| rustls-webpki | 0.103.15 | ISC |
+| rustls-webpki | 0.103.16 | ISC |
 | rustversion | 1.0.23 | MIT OR Apache-2.0 |
 | rustybuzz | 0.20.1 | MIT |
 | ryu | 1.0.23 | Apache-2.0 OR BSL-1.0 |
@@ -701,7 +701,7 @@ printed in section 3.3. GPUI itself (the `gpui-pre` crates) is Apache-2.0 and is
 | tiny-skia-path | 0.11.4 | BSD-3-Clause |
 | tinystr | 0.8.4 | Unicode-3.0 |
 | tinyvec | 1.13.3 | Zlib OR Apache-2.0 OR MIT |
-| tokio | 1.53.2 | MIT |
+| tokio | 1.54.1 | MIT |
 | tokio-macros | 2.7.2 | MIT |
 | tokio-rustls | 0.26.6 | MIT OR Apache-2.0 |
 | toml | 0.9.12+spec-1.1.0 | MIT OR Apache-2.0 |
@@ -763,21 +763,21 @@ printed in section 3.3. GPUI itself (the `gpui-pre` crates) is Apache-2.0 and is
 | wasmparser | 0.258.3 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT |
 | wasmparser | 0.259.0 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT |
 | wasmprinter | 0.258.3 | Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT |
-| wasmtime | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-environ | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-component-macro | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-component-util | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-core | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-cranelift | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-fiber | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-jit-debug | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-jit-icache-coherence | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-unwinder | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-versioned-export-macros | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-winch | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-internal-wit-bindgen | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-wasi | 49.0.3 | Apache-2.0 WITH LLVM-exception |
-| wasmtime-wasi-io | 49.0.3 | Apache-2.0 WITH LLVM-exception |
+| wasmtime | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-environ | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-component-macro | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-component-util | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-core | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-cranelift | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-fiber | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-jit-debug | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-jit-icache-coherence | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-unwinder | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-versioned-export-macros | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-winch | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-internal-wit-bindgen | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-wasi | 49.0.5 | Apache-2.0 WITH LLVM-exception |
+| wasmtime-wasi-io | 49.0.5 | Apache-2.0 WITH LLVM-exception |
 | wayland-backend | 0.3.17 | MIT |
 | wayland-client | 0.31.15 | MIT |
 | wayland-cursor | 0.31.14 | MIT |
@@ -805,7 +805,7 @@ printed in section 3.3. GPUI itself (the `gpui-pre` crates) is Apache-2.0 and is
 | winapi-i686-pc-windows-gnu | 0.4.0 | MIT/Apache-2.0 |
 | winapi-util | 0.1.11 | Unlicense OR MIT |
 | winapi-x86_64-pc-windows-gnu | 0.4.0 | MIT/Apache-2.0 |
-| winch-codegen | 49.0.3 | Apache-2.0 WITH LLVM-exception |
+| winch-codegen | 49.0.5 | Apache-2.0 WITH LLVM-exception |
 | windows | 0.57.0 | MIT OR Apache-2.0 |
 | windows | 0.58.0 | MIT OR Apache-2.0 |
 | windows | 0.61.3 | MIT OR Apache-2.0 |
@@ -952,7 +952,7 @@ These crates declare their license in `Cargo.toml` but their published package h
 - block 0.1.6: MIT. Authors: Steven Sheldon.
 - block2 0.5.1: MIT. Authors: Steven Sheldon, Mads Marquart <mads@marquart.dk>.
 - block2 0.6.2: MIT. Authors: Mads Marquart <mads@marquart.dk>.
-- cranelift-assembler-x64 0.136.3: Apache-2.0 WITH LLVM-exception. Authors: not listed.
+- cranelift-assembler-x64 0.136.5: Apache-2.0 WITH LLVM-exception. Authors: not listed.
 - dispatch 0.2.0: MIT. Authors: Steven Sheldon.
 - dispatch2 0.3.1: Zlib OR Apache-2.0 OR MIT. Authors: Mads Marquart <mads@marquart.dk>, Mary <mary@mary.zone>.
 - dwrote 0.11.5: MPL-2.0. Authors: The Servo Project Developers, Vladimir Vukicevic <vladimir@pobox.com>.
@@ -1011,7 +1011,7 @@ These crates declare their license in `Cargo.toml` but their published package h
 - spirv 0.4.0+sdk-1.4.341.0: Apache-2.0. Authors: Lei Zhang <antiagainst@gmail.com>.
 - svg_fmt 0.4.5: MIT/Apache-2.0. Authors: Nicolas Silva <nical@fastmail.com>.
 - taffy 0.13.0: MIT. Authors: Alice Cecile <alice.i.cecile@gmail.com>, Johnathan Kelley <jkelleyrtp@gmail.com>, Nico Burns <nico@nicoburns.com>.
-- wasmtime-internal-core 49.0.3: Apache-2.0 WITH LLVM-exception. Authors: The Wasmtime Project Developers.
+- wasmtime-internal-core 49.0.5: Apache-2.0 WITH LLVM-exception. Authors: The Wasmtime Project Developers.
 - zune-inflate 0.2.54: MIT OR Apache-2.0 OR Zlib. Authors: not listed.
 
 For the MIT crates in this list the license is the standard MIT text, with the copyright holders being the authors named above (or the project named in the crate's repository):
@@ -1516,7 +1516,7 @@ Used by: windows 0.57.0, windows 0.58.0, windows 0.61.3, windows 0.62.2, windows
 
 #### License text 5
 
-Used by: ambient-authority 0.0.2, cap-primitives 4.0.3, cranelift-bforest 0.136.3, cranelift-bitset 0.136.3, cranelift-codegen 0.136.3, cranelift-codegen-shared 0.136.3, cranelift-control 0.136.3, cranelift-entity 0.136.3, cranelift-frontend 0.136.3, cranelift-native 0.136.3, fs-set-times 0.20.3, io-extras 0.19.0, io-lifetimes 2.0.4, io-lifetimes 3.0.1, linux-raw-sys 0.12.1, pulley-interpreter 49.0.3, pulley-macros 49.0.3, regalloc2 0.15.2, rustix 1.1.5, rustix-linux-procfs 0.1.1, target-lexicon 0.13.5, wasi 0.11.1+wasi-snapshot-preview1, wasip2 1.0.4+wasi-0.2.12, wasm-encoder 0.258.3, wasm-encoder 0.259.0, wasm-metadata 0.258.3, wasm-metadata 0.259.0, wasmparser 0.258.3, wasmparser 0.259.0, wasmprinter 0.258.3, wasmtime 49.0.3, wasmtime-environ 49.0.3, wasmtime-internal-component-macro 49.0.3, wasmtime-internal-component-util 49.0.3, wasmtime-internal-cranelift 49.0.3, wasmtime-internal-fiber 49.0.3, wasmtime-internal-jit-debug 49.0.3, wasmtime-internal-jit-icache-coherence 49.0.3, wasmtime-internal-unwinder 49.0.3, wasmtime-internal-versioned-export-macros 49.0.3, wasmtime-internal-winch 49.0.3, wasmtime-internal-wit-bindgen 49.0.3, wasmtime-wasi 49.0.3, wasmtime-wasi-io 49.0.3, winch-codegen 49.0.3, winx 0.36.4, wit-bindgen 0.57.1, wit-bindgen 0.62.0, wit-bindgen-core 0.62.0, wit-bindgen-rust 0.62.0, wit-bindgen-rust-macro 0.62.0, wit-component 0.258.3, wit-component 0.259.0, wit-parser 0.258.3, wit-parser 0.259.0
+Used by: ambient-authority 0.0.2, cap-primitives 4.0.3, cranelift-bforest 0.136.5, cranelift-bitset 0.136.5, cranelift-codegen 0.136.5, cranelift-codegen-shared 0.136.5, cranelift-control 0.136.5, cranelift-entity 0.136.5, cranelift-frontend 0.136.5, cranelift-native 0.136.5, fs-set-times 0.20.3, io-extras 0.19.0, io-lifetimes 2.0.4, io-lifetimes 3.0.1, linux-raw-sys 0.12.1, pulley-interpreter 49.0.5, pulley-macros 49.0.5, regalloc2 0.15.2, rustix 1.1.5, rustix-linux-procfs 0.1.1, target-lexicon 0.13.5, wasi 0.11.1+wasi-snapshot-preview1, wasip2 1.0.4+wasi-0.2.12, wasm-encoder 0.258.3, wasm-encoder 0.259.0, wasm-metadata 0.258.3, wasm-metadata 0.259.0, wasmparser 0.258.3, wasmparser 0.259.0, wasmprinter 0.258.3, wasmtime 49.0.5, wasmtime-environ 49.0.5, wasmtime-internal-component-macro 49.0.5, wasmtime-internal-component-util 49.0.5, wasmtime-internal-cranelift 49.0.5, wasmtime-internal-fiber 49.0.5, wasmtime-internal-jit-debug 49.0.5, wasmtime-internal-jit-icache-coherence 49.0.5, wasmtime-internal-unwinder 49.0.5, wasmtime-internal-versioned-export-macros 49.0.5, wasmtime-internal-winch 49.0.5, wasmtime-internal-wit-bindgen 49.0.5, wasmtime-wasi 49.0.5, wasmtime-wasi-io 49.0.5, winch-codegen 49.0.5, winx 0.36.4, wit-bindgen 0.57.1, wit-bindgen 0.62.0, wit-bindgen-core 0.62.0, wit-bindgen-rust 0.62.0, wit-bindgen-rust-macro 0.62.0, wit-component 0.258.3, wit-component 0.259.0, wit-parser 0.258.3, wit-parser 0.259.0
 
 ````text
                                  Apache License
@@ -21143,7 +21143,7 @@ DEALINGS IN THE SOFTWARE.
 
 #### License text 350
 
-Used by: rustls-webpki 0.103.15
+Used by: rustls-webpki 0.103.16
 
 ````text
 Except as otherwise noted, this project is licensed under the following
@@ -21960,7 +21960,7 @@ SOFTWARE.
 
 #### License text 377
 
-Used by: tokio 1.53.2
+Used by: tokio 1.54.1
 
 ````text
 MIT License
