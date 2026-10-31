@@ -57,6 +57,9 @@ const ld = [
     </main>
     <Footer />
     <script type="module" src={`/tools/app/${script}.js`}></script>
+    <script is:inline>
+      (function () { var n = document.querySelector('.nav'); if (!n) return; var f = function () { n.classList.toggle('solid', scrollY > 8); }; addEventListener('scroll', f, { passive: true }); f(); })();
+    </script>
   </body>
 </html>
 <style is:global>

@@ -1,4 +1,5 @@
 // Shared tool shell: nav, header, drop zone with a cheap preview, options slot, run button, result card.
+import { keepFullLabels } from './fulllabel.js';
 export const $ = (s, r = document) => r.querySelector(s);
 export const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
 export const fmtBytes = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + ' MB' : n >= 1e3 ? (n / 1e3).toFixed(1) + ' KB' : n + ' B';
@@ -21,7 +22,7 @@ export function nav(current) {
 }
 // cfg: { id, title, sub, accept, options: html, run(file, ui) -> { blob, name, lines[], hint } , onReady(root) }
 export function tool(cfg) {
-  registerOffline(); nav(cfg.id);
+  registerOffline(); nav(cfg.id); keepFullLabels();
   if (!document.querySelector('[data-keep]')) { document.title = `${cfg.title} | Panoply`; $('#h1').textContent = cfg.title; $('#sub').textContent = cfg.sub; }
   const file = $('#file'); file.accept = cfg.accept || 'image/*'; if (cfg.multiple) file.multiple = true;
   $('#opts').innerHTML = cfg.options || ''; if (!cfg.options) $('#opts').hidden = true;
@@ -57,7 +58,7 @@ export function tool(cfg) {
       if (outUrl) URL.revokeObjectURL(outUrl);
       outUrl = URL.createObjectURL(r.blob); const pv = r.preview === false || cfg.pdf || (cfg.accept || '').includes('video') ? '' : await thumb(r.blob, !!r.checker);
       const inSize = Array.isArray(f) ? f.reduce((a, x) => a + x.size, 0) : f.size, smaller = r.blob.size < inSize, pct = Math.round(Math.abs(1 - r.blob.size / inSize) * 100);
-      $('#result').innerHTML = `<div class="card"><div class="big ${r.bad ? 'bad' : 'tok'}">${r.title ? esc(r.title) + ' ' : ''}${fmtBytes(r.blob.size)} <span class="kb">${r.delta === false ? '' : `from ${fmtBytes(inSize)}, ${pct}% ${smaller ? 'smaller' : 'larger'}`}</span></div>
+      $('#result').innerHTML = `<div class="card"><div class="big ${r.bad ? 'bad' : 'tok'}">${r.title ? esc(r.title) + ' ' : ''}${fmtBytes(r.blob.size)} <span class="kb">${r.delta === false ? '' : (!smaller && pct === 0 ? 'Already as small as it gets' : `from ${fmtBytes(inSize)}, ${pct}% ${smaller ? 'smaller' : 'larger'}`)}</span></div>
         <div class="meta">${(r.lines || []).map((l) => `<span>${esc(l)}</span>`).join('')}<span>${(r.ms / 1000).toFixed(2)} s</span></div>${r.hint ? `<p class="hint">${esc(r.hint)}</p>` : ''}${r.html || ''}
         ${pv || srcUrl ? `<div class="cmp">${srcUrl ? `<figure><img src="${srcUrl}" alt="Original"><figcaption>Original</figcaption></figure>` : ''}${pv ? `<figure${r.checker ? ' class="checker"' : ''}><img src="${pv}" alt="Result"><figcaption>Result</figcaption></figure>` : ''}</div>` : ''}
         ${r.noDownload ? '' : `<a class="dl" href="${outUrl}" download="${esc(r.name)}">Download ${esc(r.name.split('.').pop().toUpperCase())}${r.dlNote ? ' (' + esc(r.dlNote) + ')' : ''}</a>`}</div>`;

@@ -1,8 +1,9 @@
 // Resize to exact KB: the preset list, the worker pool search and the result card (the page markup comes from the site).
 import { run, presets, ready } from '../engine.js';
+import { keepFullLabels } from '../fulllabel.js';
 const $ = (s) => document.querySelector(s);
 let file = null, srcUrl = null, outUrl = null, busy = false;
-window.__bench = {};
+window.__bench = {}; keepFullLabels();
 const CUSTOM = '__custom';
 const fmt = (n) => n.toLocaleString('en-US');
 const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
@@ -17,7 +18,7 @@ function updatePreset() {
 function enable() { $('#go').disabled = busy || !file; }
 const groups = {}; presets.forEach((p) => (groups[p.authority.split(',')[0]] ||= []).push(p));
 $('#preset').innerHTML = Object.entries(groups).map(([g, ps]) => `<optgroup label="${esc(g)}">${ps.map((p) => {
-  return `<option value="${p.id}">${esc(p.field[0].toUpperCase() + p.field.slice(1))}: ${esc(p.form.length > 46 ? p.form.slice(0, 44) + '...' : p.form)}</option>`;
+  return `<option value="${p.id}">${esc(p.field[0].toUpperCase() + p.field.slice(1))}: ${esc(p.form)}</option>`;
 }).join('')}</optgroup>`).join('') + `<option value="${CUSTOM}">Custom size and KB</option>`;
 $('#preset').disabled = true; updatePreset();
 ready.then(() => { $('#preset').disabled = false; const want = document.querySelector('[data-preset]'); if (want && presets.some((x) => x.id === want.dataset.preset)) { $('#preset').value = want.dataset.preset; updatePreset(); } window.__bench.ready = performance.now(); enable(); });
