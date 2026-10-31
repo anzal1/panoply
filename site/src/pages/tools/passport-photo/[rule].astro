@@ -1,0 +1,24 @@
+---
+import ToolLayout from "../../../layouts/ToolLayout.astro";
+import ToolApp from "../../../components/ToolApp.astro";
+import { tools } from "../../../data/tools";
+import rules from "../../../data/passport-rules.json";
+export function getStaticPaths() { return rules.map((r) => ({ params: { rule: r.id }, props: { r } })); }
+const { r } = Astro.props;
+const base = tools.find((t) => t.slug === "passport-photo")!;
+const where = r.country_name || r.country;
+const doc = r.document === "visa" ? "visa" : "passport";
+const size = `${r.width_mm} x ${r.height_mm} mm`;
+const head = r.head_min_pct ? `, head ${r.head_min_pct} to ${r.head_max_pct} percent of the frame` : r.head_min_mm ? `, head ${r.head_min_mm} to ${r.head_max_mm} mm` : "";
+const h1 = `${where} ${doc} photo`;
+const title = `${where} ${doc} photo maker (${size}) online | Panoply`;
+const description = `Make a ${where} ${doc} photo of ${size}${head} in your browser, with pass, warn and fail checks and a print sheet. Nothing is uploaded.`;
+const note = r.status === "verified" ? "The rule was checked against the official source." : r.status === "conflict" ? "Sources disagree on this rule, so the stricter reading is used. Check the authority's current page." : "This rule is marked as possibly out of date. Check the authority's current page.";
+const faq: [string, string][] = [
+  [`What size is a ${where} ${doc} photo?`, `${size}${r.width_px ? `, ${r.width_px} x ${r.height_px} px for upload` : ""}${head}. ${note}`],
+  ...base.faq,
+];
+---
+<ToolLayout title={title} description={description} path={`/tools/passport-photo/${r.id}/`} script="passport" slug="passport-photo" faq={faq} steps={base.steps} intro={`${r.name}: ${size}${head}, background ${r.background}. ${note} ${base.intro}`} appName={h1}>
+  <ToolApp h1={h1} sub={`${size}${head}`} drop={base.drop} dataset={{ rule: r.id }} />
+</ToolLayout>

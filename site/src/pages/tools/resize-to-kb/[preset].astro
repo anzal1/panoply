@@ -1,0 +1,26 @@
+---
+import ToolLayout from "../../../layouts/ToolLayout.astro";
+import ToolApp from "../../../components/ToolApp.astro";
+import KbOptions from "../../../components/KbOptions.astro";
+import { tools } from "../../../data/tools";
+import presets from "../../../data/exam-presets.json";
+export function getStaticPaths() { return presets.map((p) => ({ params: { preset: p.id }, props: { p } })); }
+const { p } = Astro.props;
+const base = tools.find((t) => t.slug === "resize-to-kb")!;
+const field = p.field === "signature" ? "signature" : p.field === "thumb" ? "thumb impression" : p.field;
+const who = p.authority.split(",")[0].replace(/\s*\(.*$/, "");
+const size = p.width_px ? `${p.width_px} x ${p.height_px} px` : p.physical_mm ? `${p.physical_mm[0]} x ${p.physical_mm[1]} mm` : "any size";
+const kb = p.max_bytes_claimed ? `${p.min_bytes_claimed || 0} to ${p.max_bytes_claimed} KB` : "no size limit";
+const h1 = `Resize a ${field} for ${who}`;
+const title = `${who} ${field}: resize to ${kb} online | Panoply`;
+const description = `Make your ${field} meet the ${who} rule (${size}, ${kb}) in your browser. Runs on your device, nothing is uploaded. ${p.status === "verified" ? "Rule checked against the official notice." : p.status === "conflict" ? "Sources disagree on this rule, so check the portal." : "This rule may be out of date, check the portal."}`;
+const note = p.status === "verified" ? "This rule was checked against the official notice." : p.status === "conflict" ? "Sources disagree on this rule. The tool keeps the file inside the limit under both readings of a KB, and you should still check the portal." : "This rule is marked as possibly out of date. Check the portal before you upload.";
+const faq: [string, string][] = [
+  ["What does this rule ask for?", `${who}, ${p.form}: a ${field} of ${size}, ${kb}. ${note}`],
+  ["Is my photo uploaded?", "No. The resizing runs in your browser and the page works offline once it has loaded."],
+  ...base.faq.slice(1, 2),
+];
+---
+<ToolLayout title={title} description={description} path={`/tools/resize-to-kb/${p.id}/`} script="resize-to-kb" slug="resize-to-kb" faq={faq} steps={base.steps} intro={`${p.form}. The ${who} portal asks for a ${field} of ${size} and ${kb}. ${note} The tool finds the best JPEG quality that lands inside the limit and shows the real size before you download.`} appName={h1}>
+  <ToolApp h1={h1} sub={`${size}, ${kb}`} drop={base.drop} dataset={{ preset: p.id }}><KbOptions /></ToolApp>
+</ToolLayout>

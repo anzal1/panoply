@@ -1,0 +1,55 @@
+---
+import "../../styles/global.css";
+import ToolNav from "../../components/ToolNav.astro";
+import Footer from "../../components/Footer.astro";
+import { tools, groups } from "../../data/tools";
+import presets from "../../data/exam-presets.json";
+import rules from "../../data/passport-rules.json";
+const title = "Free photo, PDF and video tools that run in your browser | Panoply";
+const description = "Resize photos to an exact KB, make passport photos, remove backgrounds, merge and compress PDFs, read text from scans and more. Everything runs on your device and nothing is uploaded.";
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title><meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/product/icon.svg" /><link rel="canonical" href="https://panoply.anzalabidi.dev/tools/" />
+    <meta name="theme-color" content="#0D0E12" />
+    <meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:image" content="https://panoply.anzalabidi.dev/og.png" />
+  </head>
+  <body class="tool-page">
+    <ToolNav />
+    <main>
+      <div class="wrap narrow">
+        <h1 class="h2s" style="margin:0">Tools that run on your device</h1>
+        <p class="sub">The same engines as the Panoply desktop app, compiled for your browser. Your files are never uploaded, and each tool works offline after its first use.</p>
+        {groups.map((g) => (
+          <section class="tp-text" style="max-width:none">
+            <h2>{g}</h2>
+            <div class="tgrid">{tools.filter((t) => t.group === g).map((t) => <a class="tcard" href={`/tools/${t.slug}/`}><b>{t.h1}</b><span>{t.sub}</span></a>)}</div>
+          </section>
+        ))}
+        <section class="tp-text" style="max-width:none">
+          <h2>Exam and portal photo sizes</h2>
+          <ul class="tp-links">{presets.map((p) => <li><a href={`/tools/resize-to-kb/${p.id}/`}>{p.authority.split(",")[0].replace(/\s*\(.*$/, "")} {p.field}</a></li>)}</ul>
+        </section>
+        <section class="tp-text" style="max-width:none">
+          <h2>Passport and visa photo rules</h2>
+          <ul class="tp-links">{rules.map((r) => <li><a href={`/tools/passport-photo/${r.id}/`}>{r.country_name || r.country} {r.document}</a></li>)}</ul>
+        </section>
+      </div>
+    </main>
+    <Footer />
+  </body>
+</html>
+<style is:global>
+  .tool-page main { padding-top: 76px; padding-bottom: 40px; }
+  .tool-page .tp-text h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 36px 0 10px; color: var(--fg); }
+  .tool-page .tp-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+  .tool-page .tp-links a { color: var(--link); font-size: 16px; }
+  .tgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .tcard { display: block; background: var(--tile); border: 1px solid var(--hair); border-radius: 12px; padding: 16px; }
+  .tcard b { display: block; font-size: 16px; font-weight: 600; color: var(--fg); }
+  .tcard span { display: block; font-size: 14px; line-height: 1.4; color: var(--fg2); margin-top: 4px; }
+  @media (hover: hover) and (pointer: fine) { .tcard:hover { border-color: var(--fg3); } }
+</style>

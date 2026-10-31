@@ -4,10 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "npm run build:tools && astro build",
     "preview": "astro preview",
     "shots": "node scripts/shots.mjs",
-    "audit": "node scripts/audit.mjs"
+    "audit": "node scripts/audit.mjs",
+    "build:tools": "node ../web/app/build.mjs --out public/tools/app --sw public/tools/sw.js"
   },
   "dependencies": {
     "astro": "^7.4.0",
