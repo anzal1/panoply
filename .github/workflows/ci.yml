@@ -113,7 +113,7 @@ jobs:
           components: clippy
       - if: runner.os == 'Linux'
         uses: ./.github/actions/linux-libs
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: clippy-${{ matrix.os }}
           save-if: ${{ github.ref == 'refs/heads/main' }}
@@ -154,13 +154,13 @@ jobs:
           targets: wasm32-wasip2
       - if: runner.os == 'Linux'
         uses: ./.github/actions/linux-libs
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           shared-key: test-${{ matrix.os }}
           # A failing test must not throw away a 15 minute build.
           cache-on-failure: true
           save-if: ${{ matrix.shard == 1 && (github.ref == 'refs/heads/main') }}
-      - uses: taiki-e/install-action@1168f6810a3cb30a3514bf5756a3b7f0422c6df8 # v2.87.28
+      - uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.88.0
         with:
           tool: nextest
 
@@ -171,7 +171,7 @@ jobs:
           path: tests/corpus/cache
           key: corpus-${{ runner.os }}-${{ hashFiles('tests/corpus/*.toml', 'tests/corpus/*.py') }}
       - if: steps.corpus.outputs.cache-hit != 'true'
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
       - name: Fetch and generate the test corpus

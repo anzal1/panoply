@@ -101,7 +101,7 @@ jobs:
         env:
           ONLY: ${{ inputs.only }}
         run: ./.github/scripts/desktop-journeys-windows.ps1 -Dir dl -Out out -Only "$env:ONLY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: journeys-windows
@@ -143,7 +143,7 @@ jobs:
           PY: ${{ runner.temp }}/jv/bin/python
           ONLY: ${{ inputs.only }}
         run: bash ./.github/scripts/desktop-journeys-linux.sh dl out "$ONLY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: journeys-linux
