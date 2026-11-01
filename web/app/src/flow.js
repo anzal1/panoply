@@ -27,7 +27,7 @@ export function mirrorStatus() {
 // Quick-pick chips (a radio group). items: [[id, label]], returns { get, set }. The last pick is remembered on this device.
 export function chips(host, items, { key, label, onPick, none }) {
   const el = document.createElement('div'); el.className = 'chips'; el.setAttribute('role', 'radiogroup'); el.setAttribute('aria-label', label);
-  el.innerHTML = items.map(([id, t]) => `<button type="button" role="radio" aria-checked="false" data-id="${esc(id)}">${esc(t)}</button>`).join('') + (none ? `<button type="button" class="more" data-more>${esc(none)}</button>` : '');
+  el.innerHTML = items.map(([id, t]) => `<button type="button" role="radio" aria-checked="false" data-id="${esc(id)}">${esc(t)}</button>`).join('') + (none ? `<button type="button" class="chip-more" data-more>${esc(none)}</button>` : '');
   host.before(el); let cur = '';
   const set = (id, fire = true) => { cur = id; el.querySelectorAll('[role=radio]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.id === id))); if (key && id) store(key, id); if (fire && onPick) onPick(id); };
   el.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.more !== undefined) { onPick && onPick('', true); return; } set(b.dataset.id); });

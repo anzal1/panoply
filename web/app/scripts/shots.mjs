@@ -37,7 +37,7 @@ for (const scheme of ['dark']) for (const [w, h] of sizes) for (const entry of p
     await page.waitForFunction(() => { const s = document.querySelector('#preset'); return !s || !s.disabled; });
     await page.screenshot({ path: path.join(dir, `${tag}-empty.png`) });
     const auto = await page.evaluate(() => document.querySelector('.tool-app').classList.contains('auto'));
-    if (auto) { await page.evaluate(() => { const t = document.querySelector('#tune'); if (t) { t.open = true; document.querySelector('.tool-app').classList.add('more'); } }); await setup(page); await page.setInputFiles('#file', inputFor(pg)); }
+    if (auto) { await page.evaluate(() => { const t = document.querySelector('#tune'); if (t) { t.open = true; document.querySelector('.tool-app').classList.add('show-tune'); } }); await setup(page); await page.setInputFiles('#file', inputFor(pg)); }
     else { await page.setInputFiles('#file', inputFor(pg)); await page.waitForTimeout(isPdf || kind ? 600 : 0); await setup(page); await page.waitForFunction(() => { const g = document.querySelector('#go'); return g && !g.disabled; }, null, { timeout: 60000 }); await page.click('#go'); }
     await page.waitForSelector('#result .rcard, #result .card.bad', { timeout: 120000 }); await page.waitForFunction(() => new Promise((ok) => { let y = scrollY, n = 0; const t = setInterval(() => { n = scrollY === y ? n + 1 : 0; y = scrollY; if (n >= 4) { clearInterval(t); ok(true); } }, 100); }), null, { timeout: 15000 }).catch(() => {}); // the result scrolls into view; wait for it to stop
     await page.evaluate(() => { const t = document.querySelector('#tune'); if (t) t.open = false; }); await page.waitForTimeout(400);

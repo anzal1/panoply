@@ -37,7 +37,7 @@ function apply() {
   examChips.set(exam, false); const t = target(); if (t) { store('panoply-kb-exam', exam); picked = true; $('#preset').value = t; updatePreset(); maybeRun(); }
 }
 const kindChips = chips($('#drop'), [['photo', 'Photo'], ['signature', 'Signature']], { key: 'panoply-kb-kind', label: 'Photo or signature', onPick: (id) => { kind = id; apply(); } });
-const examChips = chips($('#drop'), Object.entries(EXAMS).map(([id, v]) => [id, v[0]]), { label: 'What it is for', none: 'More', onPick: (id, more) => { if (more) { root.classList.add('more'); tune.open = true; return $('#preset').focus(); } exam = id; apply(); } });
+const examChips = chips($('#drop'), Object.entries(EXAMS).map(([id, v]) => [id, v[0]]), { label: 'What it is for', none: 'More', onPick: (id, more) => { if (more) { root.classList.add('show-tune'); tune.open = true; return $('#preset').focus(); } exam = id; apply(); } });
 kindChips.set(kind, false); if (exam) { examChips.set(exam, false); const t = target(); if (t) { picked = true; $('#preset').value = t; updatePreset(); } }
 examChips.disable((id) => !EXAMS[id][kind === 'photo' ? 1 : 2]);
 $('#preset').addEventListener('change', () => { picked = true; exam = ''; examChips.set('', false); });
