@@ -1,0 +1,13 @@
+# The browser build of Panoply's engines: small wasm crates that reuse the desktop code (panoply-pdf, the vision, OCR, ID and
+# loudness pipelines, copied or forked where the desktop crate pulls in native-only dependencies). Not part of the main workspace.
+[workspace]
+members = ["crates/pdf", "crates/vision", "crates/ocr", "crates/id", "crates/media"]
+exclude = ["crates/panoply-pdf-web"]
+resolver = "3"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

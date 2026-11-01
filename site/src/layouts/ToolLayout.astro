@@ -1,0 +1,90 @@
+---
+import "../styles/global.css";
+import ToolNav from "../components/ToolNav.astro";
+import Footer from "../components/Footer.astro";
+import { tools, groups } from "../data/tools";
+interface Props { title: string; description: string; path: string; script: string; slug: string; faq?: [string, string][]; steps?: string[]; intro?: string; appName?: string }
+const { title, description, path, script, slug, faq = [], steps = [], intro = "", appName = title } = Astro.props;
+const url = `https://panoply.anzalabidi.dev${path}`;
+const related = tools.filter((t) => t.slug !== slug).slice(0, 8);
+const ld = [
+  { "@context": "https://schema.org", "@type": "WebApplication", name: appName, url, description, applicationCategory: "MultimediaApplication", operatingSystem: "Any", offers: { "@type": "Offer", price: "0", priceCurrency: "USD" }, isAccessibleForFree: true },
+  ...(faq.length ? [{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }] : []),
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/product/icon.svg" />
+    <link rel="canonical" href={url} />
+    <meta name="theme-color" content="#0D0E12" />
+    <meta property="og:type" content="website" /><meta property="og:site_name" content="Panoply" /><meta property="og:url" content={url} />
+    <meta property="og:title" content={title} /><meta property="og:description" content={description} />
+    <meta property="og:image" content="https://panoply.anzalabidi.dev/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/tools/app/tools.css" />
+    {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}
+    <!-- GitHub Pages cannot send COOP and COEP, so a service worker adds them for /tools/ and the page reloads once. If that is not
+         possible every tool still works, single-threaded. -->
+    <script is:inline>
+      (function () {
+        if (window.crossOriginIsolated || !("serviceWorker" in navigator)) return;
+        var k = "panoply-coi";
+        navigator.serviceWorker.register("/tools/sw.js", { scope: "/tools/" }).then(function () { return navigator.serviceWorker.ready; }).then(function () {
+          if (navigator.serviceWorker.controller || sessionStorage.getItem(k)) return;
+          sessionStorage.setItem(k, "1");
+          var t = setTimeout(function () { location.reload(); }, 1500);
+          navigator.serviceWorker.addEventListener("controllerchange", function () { clearTimeout(t); location.reload(); });
+        }).catch(function () {});
+      })();
+    </script>
+  </head>
+  <body class="tool-page">
+    <ToolNav />
+    <main>
+      <div class="wrap narrow col">
+        <p class="crumbs"><a href="/tools/">Tools</a> <span aria-hidden="true">/</span> <span>{appName}</span></p>
+        <slot />
+        <details class="tp-details">
+          <summary>Details</summary>
+          {intro && <section class="tp-text"><h2>About this tool</h2><p>{intro}</p></section>}
+          {steps.length > 0 && <section class="tp-text"><h2>How it works</h2><ol>{steps.map((s) => <li>{s}</li>)}</ol></section>}
+          {faq.length > 0 && <section class="tp-text"><h2>Questions</h2>{faq.map(([q, a]) => <details><summary>{q}</summary><p>{a}</p></details>)}</section>}
+        </details>
+        <section class="tp-text"><ul class="tp-links">{related.map((t) => <li><a href={`/tools/${t.slug}/`}>{t.h1}</a></li>)}<li><a href="/tools/">See all tools</a></li></ul></section>
+      </div>
+    </main>
+    <Footer />
+    <script type="module" src={`/tools/app/${script}.js`}></script>
+    <script is:inline>
+      (function () { var n = document.querySelector('.nav'); if (!n) return; var f = function () { n.classList.toggle('solid', scrollY > 8); }; addEventListener('scroll', f, { passive: true }); f(); })();
+    </script>
+  </body>
+</html>
+<style is:global>
+  .tool-page main { padding-top: 76px; padding-bottom: 40px; }
+  .tool-page .crumbs { font-size: 13px; color: var(--fg3); margin: 0 0 8px; }
+  .tool-page .crumbs a { color: var(--fg2); text-decoration: underline; text-underline-offset: 3px; }
+  .tool-page .crumbs a:hover { color: var(--fg); }
+  .tool-page .tp-text { max-width: 600px; margin: 56px auto 0; }
+  .tool-page .tp-text h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 10px; color: var(--fg); }
+  .tool-page .tp-text p, .tool-page .tp-text li, .tool-page .tp-text summary { font-size: 16px; line-height: 1.5; color: var(--fg2); }
+  .tool-page .tp-text ol { padding-left: 20px; margin: 0; }
+  .tool-page .tp-text details { border-top: 1px solid var(--hair); padding: 12px 0; }
+  .tool-page .tp-text summary { cursor: pointer; color: var(--fg); }
+  .tool-page .tp-text details p { margin: 8px 0 0; }
+  .tool-page .tp-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+  .tool-page .tp-links a { color: var(--link); }
+  .tool-page .tool-app { padding-top: 8px; }
+  .tool-page .wrap.col { max-width: 600px; padding-left: 0; padding-right: 0; }
+  .tool-page .wrap.col > .crumbs, .tool-page .wrap.col > .tp-details, .tool-page .wrap.col > .tp-text { padding-left: 16px; padding-right: 16px; }
+  .tool-page .tp-details { margin-top: 32px; border-top: 1px solid var(--hair); }
+  .tool-page .tp-details > summary { cursor: pointer; padding: 14px 0; font-size: 15px; font-weight: 600; color: var(--fg2); list-style: none; }
+  .tool-page .tp-details > summary::after { content: "+"; float: right; color: var(--fg3); }
+  .tool-page .tp-details[open] > summary::after { content: "\2212"; }
+  .tool-page .tp-details > summary::-webkit-details-marker { display: none; }
+</style>

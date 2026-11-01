@@ -1,0 +1,11 @@
+---
+import ToolLayout from "../../layouts/ToolLayout.astro";
+import ToolApp from "../../components/ToolApp.astro";
+import KbOptions from "../../components/KbOptions.astro";
+import { tools } from "../../data/tools";
+export function getStaticPaths() { return tools.map((t) => ({ params: { tool: t.slug }, props: { t } })); }
+const { t } = Astro.props;
+---
+<ToolLayout title={`${t.title} | Panoply`} description={t.description} path={`/tools/${t.slug}/`} script={t.script} slug={t.slug} faq={t.faq} steps={t.steps} intro={t.intro} appName={t.h1}>
+  <ToolApp h1={t.h1} sub={t.sub} drop={t.drop} slug={t.slug}>{t.slug === "resize-to-kb" && <KbOptions />}</ToolApp>
+</ToolLayout>

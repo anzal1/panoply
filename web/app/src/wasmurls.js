@@ -1,0 +1,11 @@
+import mozjpeg from '@jsquash/jpeg/codec/enc/mozjpeg_enc.wasm';
+import webp from '@jsquash/webp/codec/enc/webp_enc.wasm';
+import webpSimd from '@jsquash/webp/codec/enc/webp_enc_simd.wasm';
+import avif from '@jsquash/avif/codec/enc/avif_enc.wasm';
+import avifMt from '@jsquash/avif/codec/enc/avif_enc_mt.wasm';
+import png from '@jsquash/png/codec/pkg/squoosh_png_bg.wasm';
+import oxi from '@jsquash/oxipng/codec/pkg/squoosh_oxipng_bg.wasm';
+import oxiMt from '@jsquash/oxipng/codec/pkg-parallel/squoosh_oxipng_bg.wasm';
+import resize from '@jsquash/resize/lib/resize/pkg/squoosh_resize_bg.wasm';
+export const urls = { 'mozjpeg_enc.wasm': mozjpeg, 'webp_enc.wasm': webp, 'webp_enc_simd.wasm': webpSimd, 'avif_enc.wasm': avif, 'avif_enc_mt.wasm': avifMt };
+export const png_ = png, oxi_ = oxi, oxiMt_ = oxiMt, resize_ = resize;

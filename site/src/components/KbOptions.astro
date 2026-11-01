@@ -1,0 +1,12 @@
+---
+// The options of the resize-to-KB tool (its preset list is filled in by the bundle).
+---
+<label for="preset">Exam or portal preset</label>
+<select id="preset" disabled><option>Loading...</option></select>
+<p class="spec" id="presetHint"></p>
+<p class="hint warn" id="presetWarn" hidden></p>
+<div id="custom" hidden>
+  <div class="trow"><div><label for="cw">Width (px)</label><input id="cw" type="number" min="1" max="10000" inputmode="numeric" /></div><div><label for="ch">Height (px)</label><input id="ch" type="number" min="1" max="10000" inputmode="numeric" /></div></div>
+  <div class="trow"><div><label for="cmin">Smallest (KB)</label><input id="cmin" type="number" min="0" value="0" inputmode="decimal" /></div><div><label for="cmax">Largest (KB)</label><input id="cmax" type="number" min="1" value="50" inputmode="decimal" /></div></div>
+  <p class="hint">Leave width and height empty to keep the photo's shape. KB counts 1000 bytes, and the file stays inside the window under 1024 as well.</p>
+</div>
