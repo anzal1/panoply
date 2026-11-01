@@ -1,4 +1,4 @@
-import { tool, $, baseName, esc } from '../shell.js';
+import { tool, fold, $, baseName, esc } from '../shell.js';
 import { aiWorker } from '../aiclient.js';
 import { process } from '../imgclient.js';
 import { MODELS, isCached } from '../ai/models.js';
@@ -18,6 +18,6 @@ tool({
     const fmt = f.type === 'image/jpeg' ? 'jpeg' : f.type === 'image/webp' ? 'webp' : 'png';
     const e = await process({ raw: { data: r.data, w: r.w, h: r.h }, out: { fmt, q: 92, level: 1, bg: [255, 255, 255], fast: true } });
     const list = `<ul class="found">${r.regions.map((x) => `<li>${esc(x.kind === 'stamp' ? 'date stamp' : x.kind)} at the ${esc(x.where)} (${Math.round(100 * x.w / r.w)}% x ${Math.round(100 * x.h / r.h)}% of the picture)</li>`).join('')}</ul>`;
-    return { blob: new Blob([e.bytes], { type: e.type }), name: `${baseName(f.name)}-clean.${e.ext}`, delta: false, title: `${r.regions.length} mark${r.regions.length === 1 ? '' : 's'} removed`, html: list, lines: [`${r.changed ? r.changed.toFixed(2) + '% of the picture changed' : 'blur fill'}`, 'pixels outside the mask are unchanged', r.faces ? `${r.faces} face${r.faces === 1 ? '' : 's'} protected` : ''].filter(Boolean), hint: r.spared ? `${r.spared} spot${r.spared === 1 ? '' : 's'} on a face ${r.spared === 1 ? 'was' : 'were'} left alone.` : '' };
+    return { blob: new Blob([e.bytes], { type: e.type }), name: `${baseName(f.name)}-clean.${e.ext}`, delta: false, title: `${r.regions.length} mark${r.regions.length === 1 ? '' : 's'} removed`, html: fold("What was found", list), lines: [`${r.changed ? r.changed.toFixed(2) + '% of the picture changed' : 'blur fill'}`, 'pixels outside the mask are unchanged', r.faces ? `${r.faces} face${r.faces === 1 ? '' : 's'} protected` : ''].filter(Boolean), hint: r.spared ? `${r.spared} spot${r.spared === 1 ? '' : 's'} on a face ${r.spared === 1 ? 'was' : 'were'} left alone.` : '' };
   },
 });

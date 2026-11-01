@@ -1,4 +1,4 @@
-import { tool, $, baseName, esc } from '../shell.js';
+import { tool, fold, $, baseName, esc } from '../shell.js';
 import { aiWorker } from '../aiclient.js';
 import { process } from '../imgclient.js';
 import { idCall } from '../idclient.js';
@@ -56,6 +56,6 @@ tool({
       sheetHtml = `<a class="dl" style="margin-top:12px" download="${esc(baseName(f.name))}-${rule.id}-sheet.jpg" href="${URL.createObjectURL(new Blob([jpegDensity(j.bytes, dpi)], { type: 'image/jpeg' }))}">Download the print sheet (${sh.info.photos} photos)</a>`;
     }
     const list = `<ul class="found" style="list-style:none;padding:0;margin-top:12px">${rep.checks.map((c) => `<li style="margin-top:6px"><b class="${tint[c.status]}">${esc(c.status)}</b> ${esc(c.label)}: ${esc(c.detail)}${c.fixed ? ' (fixed)' : ''}</li>`).join('')}</ul>${rep.unchecked.length ? `<p class="hint">Not checked, please look yourself: ${esc(rep.unchecked.join(', '))}</p>` : ''}<p class="hint">This meets the published rule as read here. It does not promise the authority accepts the photo. Source: ${esc(rule.authority || rule.source_url)}.</p>`;
-    return { blob: new Blob([bytes], { type: 'image/jpeg' }), name: `${baseName(f.name)}-${rule.id}-${main.w}x${main.h}.jpg`, delta: false, bad: overall === 'fail', title: `${overall}:`, lines: [`${main.w} x ${main.h} px`, rule.name, r.usedModel ? 'AI cut-out used' : 'plain backdrop cut', `${(r.lap.faces / 1000).toFixed(1)} s to find the face`], html: list + sheetHtml };
+    return { blob: new Blob([bytes], { type: 'image/jpeg' }), name: `${baseName(f.name)}-${rule.id}-${main.w}x${main.h}.jpg`, delta: false, bad: overall === 'fail', title: `${overall}:`, lines: [`${main.w} x ${main.h} px`, rule.name, r.usedModel ? 'AI cut-out used' : 'plain backdrop cut', `${(r.lap.faces / 1000).toFixed(1)} s to find the face`], html: sheetHtml + fold(`${rep.checks.filter((c) => c.status === 'pass').length} of ${rep.checks.length} checks pass`, list) };
   },
 });

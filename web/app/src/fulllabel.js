@@ -13,3 +13,16 @@ export function keepFullLabels(root = '#opts') {
   document.addEventListener('change', (e) => e.target.matches && e.target.matches(`${root} select`) && fullLabel(e.target));
   addEventListener('resize', all); setInterval(all, 1000); setTimeout(all, 0);
 }
+
+// Notes under the options (model sizes, licences, disclaimers) live in one collapsed disclosure instead of on screen.
+export function foldNotes(root = '#opts') {
+  const run = () => {
+    const box = document.querySelector(root); if (!box) return;
+    const hs = [...box.querySelectorAll('.hint')].filter((h) => !h.closest('.tinfo'));
+    if (!hs.length) return;
+    let d = box.querySelector(':scope > .tinfo');
+    if (!d) { d = document.createElement('details'); d.className = 'tinfo'; d.innerHTML = '<summary>Notes</summary>'; box.append(d); }
+    hs.forEach((h) => d.append(h));
+  };
+  new MutationObserver(run).observe(document.querySelector(root) || document.body, { childList: true, subtree: true }); run();
+}

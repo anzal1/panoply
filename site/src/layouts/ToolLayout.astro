@@ -49,10 +49,13 @@ const ld = [
       <div class="wrap narrow">
         <p class="crumbs"><a href="/tools/">Tools</a> <span aria-hidden="true">/</span> <span>{appName}</span></p>
         <slot />
-        {intro && <section class="tp-text"><h2>About this tool</h2><p>{intro}</p></section>}
-        {steps.length > 0 && <section class="tp-text"><h2>How it works</h2><ol>{steps.map((s) => <li>{s}</li>)}</ol></section>}
-        {faq.length > 0 && <section class="tp-text"><h2>Questions</h2>{faq.map(([q, a]) => <details><summary>{q}</summary><p>{a}</p></details>)}</section>}
-        <section class="tp-text"><h2>More tools</h2><ul class="tp-links">{related.map((t) => <li><a href={`/tools/${t.slug}/`}>{t.h1}</a></li>)}<li><a href="/tools/">See all tools</a></li></ul></section>
+        <details class="tp-details">
+          <summary>Details</summary>
+          {intro && <section class="tp-text"><h2>About this tool</h2><p>{intro}</p></section>}
+          {steps.length > 0 && <section class="tp-text"><h2>How it works</h2><ol>{steps.map((s) => <li>{s}</li>)}</ol></section>}
+          {faq.length > 0 && <section class="tp-text"><h2>Questions</h2>{faq.map(([q, a]) => <details><summary>{q}</summary><p>{a}</p></details>)}</section>}
+        </details>
+        <section class="tp-text"><ul class="tp-links">{related.map((t) => <li><a href={`/tools/${t.slug}/`}>{t.h1}</a></li>)}<li><a href="/tools/">See all tools</a></li></ul></section>
       </div>
     </main>
     <Footer />
@@ -77,4 +80,9 @@ const ld = [
   .tool-page .tp-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
   .tool-page .tp-links a { color: var(--link); }
   .tool-page .tool-app { padding-top: 8px; }
+  .tool-page .tp-details { margin-top: 32px; border-top: 1px solid var(--hair); }
+  .tool-page .tp-details > summary { cursor: pointer; padding: 14px 0; font-size: 15px; font-weight: 600; color: var(--fg2); list-style: none; }
+  .tool-page .tp-details > summary::after { content: "+"; float: right; color: var(--fg3); }
+  .tool-page .tp-details[open] > summary::after { content: "\2212"; }
+  .tool-page .tp-details > summary::-webkit-details-marker { display: none; }
 </style>

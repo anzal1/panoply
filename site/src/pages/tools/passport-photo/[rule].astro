@@ -20,5 +20,5 @@ const faq: [string, string][] = [
 ];
 ---
 <ToolLayout title={title} description={description} path={`/tools/passport-photo/${r.id}/`} script="passport" slug="passport-photo" faq={faq} steps={base.steps} intro={`${r.name}: ${size}${head}, background ${r.background}. ${note} ${base.intro}`} appName={h1}>
-  <ToolApp h1={h1} sub={`${size}${head}`} drop={base.drop} dataset={{ rule: r.id }} />
+  <ToolApp h1={h1} sub={`${size}${head}`} drop={base.drop} slug="passport-photo" dataset={{ rule: r.id }} />
 </ToolLayout>

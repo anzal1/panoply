@@ -5,7 +5,7 @@ tool({
   options: `<div class="field"><label for="target">Target</label><select id="target"><option value="smallest">Smallest that still looks good</option><option value="quality">Fixed picture quality</option><option value="under">Under a size</option></select></div>
     <div id="qw" hidden>${slider('q', 'JPEG quality', 1, 100, 75)}</div>
     <div class="field" id="uw" hidden><label for="under">At most (MB)</label><input id="under" type="number" min="0.01" step="0.1" value="1" inputmode="decimal"></div>
-    <div class="field"><label for="dpi">Highest picture resolution (DPI, 0 chooses for you)</label><input id="dpi" type="number" min="0" max="1200" value="0" inputmode="numeric"></div>
+    <div class="field"><label for="dpi">Picture resolution, DPI (0 = automatic)</label><input id="dpi" type="number" min="0" max="1200" value="0" inputmode="numeric"></div>
     <label class="chk"><input type="checkbox" id="gray">Turn colour pictures gray</label>
     <label class="chk"><input type="checkbox" id="meta">Remove document information and XMP</label>
     <label class="chk"><input type="checkbox" id="att">Remove embedded files</label>

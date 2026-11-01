@@ -1,7 +1,8 @@
 // Shared tool shell: nav, header, drop zone with a cheap preview, options slot, run button, result card.
-import { keepFullLabels } from './fulllabel.js';
+import { keepFullLabels, foldNotes } from './fulllabel.js';
 export const $ = (s, r = document) => r.querySelector(s);
 export const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+export const fold = (label, html) => `<details class="tinfo"><summary>${label}</summary>${html}</details>`;
 export const fmtBytes = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + ' MB' : n >= 1e3 ? (n / 1e3).toFixed(1) + ' KB' : n + ' B';
 export const TOOLS = [['resize-to-kb', 'Resize to exact KB'], ['resize', 'Resize'], ['compress', 'Compress'], ['convert', 'Convert'], ['strip-metadata', 'Remove metadata'], ['pdf-merge', 'Merge PDF'], ['pdf-split', 'Split PDF'], ['pdf-organize', 'Organize PDF'], ['pdf-compress', 'Compress PDF'], ['pdf-to-images', 'PDF to pictures'], ['remove-background', 'Remove background'], ['ocr', 'Read text'], ['upscale', 'Upscale'], ['erase', 'Erase objects'], ['remove-watermark', 'Remove watermark'], ['ocr-pdf', 'Searchable PDF'], ['passport-photo', 'Passport photo'], ['signature', 'Signature cleaner'], ['print-sheet', 'Print sheet'], ['images-to-pdf', 'Pictures to PDF'], ['media', 'Video and audio']];
 export async function thumb(f, keepAlpha = false) {
@@ -13,7 +14,7 @@ export async function thumb(f, keepAlpha = false) {
 }
 export function registerOffline() {
   if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.register(new URL('../sw.js', import.meta.url), { scope: '../' }).then(() => navigator.serviceWorker.ready).then(() => { const p = document.querySelector('.priv'); if (p && !p.dataset.off) { p.dataset.off = 1; p.textContent += ' Works offline once it has loaded.'; } }).catch(() => {});
+  navigator.serviceWorker.register(new URL('../sw.js', import.meta.url), { scope: '../' }).then(() => navigator.serviceWorker.ready).then(() => { 0 }).catch(() => {});
 }
 export function nav(current) {
   const n = $('#nav'); if (!n) return;
@@ -22,7 +23,7 @@ export function nav(current) {
 }
 // cfg: { id, title, sub, accept, options: html, run(file, ui) -> { blob, name, lines[], hint } , onReady(root) }
 export function tool(cfg) {
-  registerOffline(); nav(cfg.id); keepFullLabels();
+  registerOffline(); nav(cfg.id); keepFullLabels(); foldNotes();
   if (!document.querySelector('[data-keep]')) { document.title = `${cfg.title} | Panoply`; $('#h1').textContent = cfg.title; $('#sub').textContent = cfg.sub; }
   const file = $('#file'); file.accept = cfg.accept || 'image/*'; if (cfg.multiple) file.multiple = true;
   $('#opts').innerHTML = cfg.options || ''; if (!cfg.options) $('#opts').hidden = true;
@@ -58,10 +59,12 @@ export function tool(cfg) {
       if (outUrl) URL.revokeObjectURL(outUrl);
       outUrl = URL.createObjectURL(r.blob); const pv = r.preview === false || cfg.pdf || (cfg.accept || '').includes('video') ? '' : await thumb(r.blob, !!r.checker);
       const inSize = Array.isArray(f) ? f.reduce((a, x) => a + x.size, 0) : f.size, smaller = r.blob.size < inSize, pct = Math.round(Math.abs(1 - r.blob.size / inSize) * 100);
+      const cmp = pv || srcUrl ? `<div class="cmp">${srcUrl ? `<figure><img src="${srcUrl}" alt="Original"><figcaption>Original</figcaption></figure>` : ''}${pv ? `<figure${r.checker ? ' class="checker"' : ''}><img src="${pv}" alt="Result"><figcaption>Result</figcaption></figure>` : ''}</div>` : '';
+      const more = `<div class="meta">${(r.lines || []).map((l) => `<span>${esc(l)}</span>`).join('')}<span>${(r.ms / 1000).toFixed(2)} s</span></div>${r.hint ? `<p class="hint">${esc(r.hint)}</p>` : ''}`;
       $('#result').innerHTML = `<div class="card"><div class="big ${r.bad ? 'bad' : 'tok'}">${r.title ? esc(r.title) + ' ' : ''}${fmtBytes(r.blob.size)} <span class="kb">${r.delta === false ? '' : (!smaller && pct === 0 ? 'Already as small as it gets' : `from ${fmtBytes(inSize)}, ${pct}% ${smaller ? 'smaller' : 'larger'}`)}</span></div>
-        <div class="meta">${(r.lines || []).map((l) => `<span>${esc(l)}</span>`).join('')}<span>${(r.ms / 1000).toFixed(2)} s</span></div>${r.hint ? `<p class="hint">${esc(r.hint)}</p>` : ''}${r.html || ''}
-        ${pv || srcUrl ? `<div class="cmp">${srcUrl ? `<figure><img src="${srcUrl}" alt="Original"><figcaption>Original</figcaption></figure>` : ''}${pv ? `<figure${r.checker ? ' class="checker"' : ''}><img src="${pv}" alt="Result"><figcaption>Result</figcaption></figure>` : ''}</div>` : ''}
-        ${r.noDownload ? '' : `<a class="dl" href="${outUrl}" download="${esc(r.name)}">Download ${esc(r.name.split('.').pop().toUpperCase())}${r.dlNote ? ' (' + esc(r.dlNote) + ')' : ''}</a>`}</div>`;
+        ${cmp}${r.html || ''}
+        ${r.noDownload ? '' : `<a class="dl" href="${outUrl}" download="${esc(r.name)}">Download ${esc(r.name.split('.').pop().toUpperCase())}${r.dlNote ? ' (' + esc(r.dlNote) + ')' : ''}</a>`}
+        ${fold('Details', more)}</div>`;
     } catch (e) { $('#result').innerHTML = `<div class="card bad" role="alert">${esc(e.message)}</div>`; }
     busy = false; go.textContent = cfg.cta || 'Get the file'; enable();
   };

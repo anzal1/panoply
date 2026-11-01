@@ -1,16 +1,22 @@
 ---
 // The markup the tool bundles in public/tools/app expect (ids and classes come from web/app/src/shell.js). `keep` tells the bundle
 // that this page already carries its own title and heading, so it leaves them alone.
-interface Props { h1: string; sub: string; drop: [string, string]; dataset?: Record<string, string> }
-const { h1, sub, drop, dataset = {} } = Astro.props;
+interface Props { h1: string; sub: string; drop: [string, string]; slug?: string; dataset?: Record<string, string> }
+const { h1, sub, drop, slug = "", dataset = {} } = Astro.props;
+const oneLine = (sub.match(/^.*?[.!?](?=\s|$)/) || [sub])[0];
+const model = ["upscale", "remove-background", "erase", "remove-watermark", "ocr", "ocr-pdf", "passport-photo"].includes(slug);
 const data = Object.fromEntries(Object.entries(dataset).map(([k, v]) => [`data-${k}`, v]));
 ---
 <div class="tool-app" data-keep {...data}>
-  <header><h1 id="h1">{h1}</h1><p class="tsub" id="sub">{sub}</p></header>
+  <header><h1 id="h1">{h1}</h1><p class="tsub" id="sub">{oneLine}</p></header>
   <button id="drop" type="button"><strong>{drop[0]}</strong>{drop[1]}</button>
   <input id="file" type="file" hidden />
   <section class="card" aria-label="Options"><div id="opts"><slot /></div><button class="tgo" id="go" disabled>Get the file</button></section>
   <section id="result" aria-live="polite"></section>
-  <p class="priv">Your files stay on this device. No upload, no account.</p>
+  <ul class="trust" aria-label="Privacy">
+    <li><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 015 0v2"/></svg>On your device</li>
+    <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6.5a9 9 0 0112 0M4.3 9a5.6 5.6 0 017.4 0M8 12.2h.01"/><path d="M3 3l10 10"/></svg>Works offline</li>
+    {model && <li><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8M4.8 7.2L8 10.4l3.2-3.2M3 13h10"/></svg>One-time model</li>}
+  </ul>
   <noscript><p class="priv">This tool needs JavaScript. Everything runs in your browser, nothing is uploaded.</p></noscript>
 </div>
