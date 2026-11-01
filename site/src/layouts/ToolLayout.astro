@@ -46,7 +46,7 @@ const ld = [
   <body class="tool-page">
     <ToolNav />
     <main>
-      <div class="wrap narrow">
+      <div class="wrap narrow col">
         <p class="crumbs"><a href="/tools/">Tools</a> <span aria-hidden="true">/</span> <span>{appName}</span></p>
         <slot />
         <details class="tp-details">
@@ -80,6 +80,8 @@ const ld = [
   .tool-page .tp-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
   .tool-page .tp-links a { color: var(--link); }
   .tool-page .tool-app { padding-top: 8px; }
+  .tool-page .wrap.col { max-width: 600px; padding-left: 0; padding-right: 0; }
+  .tool-page .wrap.col > .crumbs, .tool-page .wrap.col > .tp-details, .tool-page .wrap.col > .tp-text { padding-left: 16px; padding-right: 16px; }
   .tool-page .tp-details { margin-top: 32px; border-top: 1px solid var(--hair); }
   .tool-page .tp-details > summary { cursor: pointer; padding: 14px 0; font-size: 15px; font-weight: 600; color: var(--fg2); list-style: none; }
   .tool-page .tp-details > summary::after { content: "+"; float: right; color: var(--fg3); }
