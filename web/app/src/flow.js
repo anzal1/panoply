@@ -41,3 +41,14 @@ export function actions({ tune, onSettings, onNew }) {
   d.onclick = (e) => { const a = e.target.closest('[data-a]'); if (!a) return; a.dataset.a === 'new' ? onNew() : onSettings(); };
   return d;
 }
+
+// One plain sentence and a next step for whatever a worker threw. The raw text stays out of sight.
+export function plainError(e, { pdf = false } = {}) {
+  const m = String((e && e.message) || e || '');
+  if (/password|encrypt/i.test(m)) return 'This PDF is locked with a password. Remove the lock and try again.';
+  if (/memory|alloc|RangeError|too large|too big/i.test(m)) return 'That file is too big for this device. Try a smaller one.';
+  if (/fetch|network|offline|sha|integrity|model.*(load|download)|load.*model/i.test(m)) return "The model couldn't download. Check your connection and try again.";
+  if (/decod|invalid|corrupt|unsupported|malformed|parse|not an? (image|pdf)|could not (open|read)/i.test(m)) return pdf ? "We couldn't open that PDF. It may be damaged. Try another copy." : "We couldn't open that file. Try a JPG, PNG or WebP.";
+  if (m.length <= 140 && /^[A-Z"].*[.!?]$/.test(m)) return m;
+  return pdf ? "That PDF didn't work. Try another copy." : "That file didn't work. Try another one, or a smaller one.";
+}

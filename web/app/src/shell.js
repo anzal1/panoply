@@ -1,6 +1,6 @@
 // Shared tool shell: nav, header, drop zone with a cheap preview, options slot, run button, result card.
 import { keepFullLabels, foldNotes } from './fulllabel.js';
-import { app, setWorking, setDone, reveal, mirrorStatus, actions } from './flow.js';
+import { app, setWorking, setDone, reveal, mirrorStatus, actions, plainError } from './flow.js';
 export const $ = (s, r = document) => r.querySelector(s);
 export const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
 export const fold = (label, html) => `<details class="tinfo"><summary>${label}</summary>${html}</details>`;
@@ -38,15 +38,17 @@ export function tool(cfg) {
     if (cfg.options) { tune = document.createElement('details'); tune.className = 'tinfo tune'; tune.id = 'tune'; tune.innerHTML = '<summary>Tune</summary>'; $('#result').after(tune); tune.append($('#opts')); }
   }
   const isOk = (x) => cfg.pdf ? (x.type === 'application/pdf' || /\.pdf$/i.test(x.name)) : cfg.accept && cfg.accept.includes('video') ? /^(video|audio)\//.test(x.type) || /\.(mp4|mov|m4v|webm|mkv|mp3|m4a|wav|ogg|flac|aac)$/i.test(x.name) : x.type.startsWith('image/');
+  const reject = () => { setDone(false); $('#result').innerHTML = `<div class="card bad" role="alert">${cfg.pdf ? 'That is not a PDF. Choose a PDF file.' : (cfg.accept || '').includes('video') ? 'We cannot play that file. Try an MP4, MOV, WebM or MP3.' : 'That is not a picture. Choose a JPG, PNG or WebP.'}</div>`; };
   const docIcon = '<span id="thumb" class="doc" aria-hidden="true">PDF</span>';
   async function pick(x) {
     if (cfg.multiple) {
-      const add = [...(x.length === undefined ? [x] : x)].filter(isOk); if (!add.length) return;
+      const add = [...(x.length === undefined ? [x] : x)].filter(isOk); if (!add.length) return reject();
       f = [...(Array.isArray(f) ? f : []), ...add]; ++token; $('#result').innerHTML = '';
       drop.classList.add('has'); root.classList.add('has'); drop.innerHTML = `${docIcon}<span><strong>${f.length} file${f.length === 1 ? '' : 's'}</strong>Tap to add more files.</span>`;
       enable(); cfg.onFile && cfg.onFile(f, (nf) => { f = nf; drop.querySelector('strong').textContent = `${f.length} file${f.length === 1 ? '' : 's'}`; enable(); }); return;
     }
-    if (!x || !isOk(x)) return;
+    if (!x) return;
+    if (!isOk(x)) return reject();
     f = x; const my = ++token; if (srcUrl) URL.revokeObjectURL(srcUrl); srcUrl = '';
     drop.classList.add('has'); root.classList.add('has'); drop.innerHTML = `${cfg.pdf || (cfg.accept || '').includes('video') ? docIcon.replace('PDF', cfg.pdf ? 'PDF' : 'MEDIA') : '<span id="thumb"></span>'}<span><strong>${esc(x.name)}</strong><span id="finfo">${fmtBytes(x.size)}</span>. Tap to choose another.</span>`;
     $('#result').innerHTML = ''; enable(); cfg.onFile && cfg.onFile(x);
@@ -76,14 +78,14 @@ export function tool(cfg) {
       const more = `<div class="meta">${(r.lines || []).map((l) => `<span>${esc(l)}</span>`).join('')}<span>${(r.ms / 1000).toFixed(2)} s</span></div>${r.hint ? `<p class="hint">${esc(r.hint)}</p>` : ''}`;
       const one = r.single && pv;
       const cmp2 = one ? `<div class="cmp one"><figure${r.checker ? ' class="checker"' : ''}><img id="rimg" src="${pv}" alt="Result"></figure>${srcUrl ? '<button type="button" class="lnk hold">Hold to see the original</button>' : ''}</div>` : cmp;
-      $('#result').innerHTML = `<div class="card rcard"><div class="big ${r.bad ? 'bad' : 'tok'}">${r.title ? esc(r.title) + ' ' : ''}${fmtBytes(r.blob.size)} <span class="kb">${r.delta === false ? '' : (!smaller && pct === 0 ? 'Already as small as it gets' : `from ${fmtBytes(inSize)}, ${pct}% ${smaller ? 'smaller' : 'larger'}`)}</span></div>
+      $('#result').innerHTML = `<div class="card rcard"><div class="where">${esc($('#h1').textContent)}</div><div class="big ${r.bad ? 'bad' : 'tok'}">${r.title ? esc(r.title) + ' ' : ''}${fmtBytes(r.blob.size)} <span class="kb">${r.delta === false ? '' : (!smaller && pct === 0 ? 'Already as small as it gets' : `from ${fmtBytes(inSize)}, ${pct}% ${smaller ? 'smaller' : 'larger'}`)}</span></div>
         ${r.noDownload ? '' : `<a class="dl" href="${outUrl}" download="${esc(r.name)}">Download ${esc(r.name.split('.').pop().toUpperCase())}${r.dlNote ? ' (' + esc(r.dlNote) + ')' : ''}</a>`}
         ${cmp2}${r.html || ''}
         ${fold('Details', more)}</div>`;
       const card = $('#result .rcard'); card.insertBefore(actions({ tune: !!tune, onSettings: () => { setDone(false); scrollTo({ top: 0 }); }, onNew: reset }), card.querySelector('.tinfo'));
       const hold = $('#result .hold'); if (hold) { const img = $('#rimg'), show = (o) => { img.src = o ? srcUrl : pv; }; hold.onpointerdown = () => show(true); ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach((t) => hold.addEventListener(t, () => show(false))); hold.onkeydown = (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); show(true); } }; hold.onkeyup = () => show(false); }
       const was = root.classList.contains('done'); setDone(true); if (!was) reveal();
-    } catch (e) { setDone(false); $('#result').innerHTML = `<div class="card bad" role="alert">${esc(e.message)}</div>`; }
+    } catch (e) { setDone(false); $('#result').innerHTML = `<div class="card bad" role="alert">${esc(plainError(e, { pdf: !!cfg.pdf }))}</div>`; }
     busy = false; setWorking(false); go.textContent = cfg.cta || 'Get the file'; enable();
     if (again) { again = false; maybeRun(); }
   }

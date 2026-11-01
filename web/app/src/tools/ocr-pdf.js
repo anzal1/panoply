@@ -1,4 +1,5 @@
 import { tool, $, esc, baseName, fmtBytes, nav } from '../shell.js';
+import { plainError } from '../flow.js';
 import { aiWorker } from '../aiclient.js';
 import { renderCall } from '../renderclient.js';
 import { pdfJob } from '../pdfclient.js';
@@ -13,7 +14,7 @@ tool({
     <label class="chk"><input type="checkbox" id="txt">Also save the text as a file</label>
     <p class="hint" id="mnote">First use downloads the text models once (about 16 MB, Apache-2.0) and keeps them on this device. Pages that already have text are copied and not read.</p>`,
   onReady() { Promise.all(['ppocr_det', 'ppocr_en'].map(isCached)).then((c) => { if (c.every(Boolean)) $('#mnote').textContent = 'The models are already on this device. Pages that already have text are copied and not read. Nothing is uploaded.'; }); },
-  async onFile(f) { opened = null; try { await open(f); $('#finfo').textContent = `${total} pages, ${fmtBytes(f.size)}`; } catch (e) { $('#finfo').textContent = e.message; } },
+  async onFile(f) { opened = null; try { await open(f); $('#finfo').textContent = `${total} pages, ${fmtBytes(f.size)}`; } catch (e) { $('#finfo').textContent = plainError(e, { pdf: true }); } },
   async run(f) {
     await open(f); const btn = $('#go'), dpi = Math.min(400, Math.max(150, +$('#dpi').value || 300));
     const plan = (await pdfJob({ kind: 'ocrplan', files: [f] })).plan;

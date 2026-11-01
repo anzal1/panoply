@@ -1,4 +1,5 @@
 import { tool, $, slider, bindSlider, baseName, fmtBytes } from '../shell.js';
+import { plainError } from '../flow.js';
 import { renderCall } from '../renderclient.js';
 import { process } from '../imgclient.js';
 import { pdfJob } from '../pdfclient.js';
@@ -12,7 +13,7 @@ tool({
     <div class="field"><label for="pages">Pages</label><input id="pages" type="text" placeholder="All, or 1-3, 7, 9-" autocomplete="off" spellcheck="false"></div>
     <div class="field" id="pww" hidden><label for="pw">Password</label><input id="pw" type="text" autocomplete="off"></div>`,
   onReady() { bindSlider('q'); $('#fmt').onchange = () => ($('#qw').hidden = $('#fmt').value !== 'jpeg'); },
-  async onFile(f) { opened = null; try { await open(f); $('#finfo').textContent = `${total} pages, ${fmtBytes(f.size)}`; } catch (e) { $('#finfo').textContent = e.message; if (/password/i.test(e.message)) $('#pww').hidden = false; } },
+  async onFile(f) { opened = null; try { await open(f); $('#finfo').textContent = `${total} pages, ${fmtBytes(f.size)}`; } catch (e) { $('#finfo').textContent = plainError(e, { pdf: true }); if (/password/i.test(e.message)) $('#pww').hidden = false; } },
   async run(f) {
     await open(f, $('#pw').value || undefined);
     const dpi = Math.min(600, Math.max(36, +$('#dpi').value || 150)), fmt = $('#fmt').value, text = $('#pages').value.trim();

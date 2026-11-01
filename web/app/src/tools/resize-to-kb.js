@@ -2,7 +2,7 @@
 import { run, presets, ready } from '../engine.js';
 import { keepFullLabels, foldNotes } from '../fulllabel.js';
 import { fold } from '../shell.js';
-import { app, setWorking, setDone, reveal, mirrorStatus, chips, actions, store } from '../flow.js';
+import { app, setWorking, setDone, reveal, mirrorStatus, chips, actions, store, plainError } from '../flow.js';
 const $ = (s) => document.querySelector(s);
 let file = null, srcUrl = null, outUrl = null, busy = false;
 window.__bench = {}; keepFullLabels(); foldNotes();
@@ -29,7 +29,7 @@ const root = app(), initialDrop = $('#drop').innerHTML; root.classList.add('auto
 let picked = !!document.querySelector('[data-preset]'), kind = store('panoply-kb-kind') || 'photo', exam = store('panoply-kb-exam') || '', again = false, timer = 0;
 $('#go').closest('section').hidden = true;
 const tune = document.createElement('details'); tune.className = 'tinfo tune'; tune.id = 'tune'; tune.innerHTML = '<summary>Tune</summary>'; $('#result').after(tune); tune.append($('#opts'));
-const EXAMS = { ssc: ['SSC', 'ssc-photo', 'ssc-signature'], upsc: ['UPSC', 'upsc-photo', 'upsc-signature'], rrb: ['RRB', 'rrb-photo', 'rrb-signature'], pan: ['PAN', 'pan-nsdl-photo', 'pan-nsdl-signature'], passport: ['India passport', 'passport-seva-photo', ''] };
+const EXAMS = { ssc: ['SSC', 'ssc-photo', 'ssc-signature'], upsc: ['UPSC', 'upsc-photo', 'upsc-signature'], neet: ['NEET', 'neet-photo', 'neet-signature'], jee: ['JEE', 'jee-photo', 'jee-signature'], ibps: ['IBPS', 'ibps-photo', 'ibps-signature'], rrb: ['RRB', 'rrb-photo', 'rrb-signature'], pan: ['PAN', 'pan-nsdl-photo', 'pan-nsdl-signature'], passport: ['India passport', 'passport-seva-photo', ''] };
 if (!EXAMS[exam]) exam = ''; if (kind !== 'signature') kind = 'photo';
 const target = () => (EXAMS[exam] || [])[kind === 'photo' ? 1 : 2] || '';
 function apply() {
@@ -48,9 +48,8 @@ function show(m) {
   outUrl = URL.createObjectURL(new Blob([m.bytes], { type: 'image/jpeg' }));
   const i = m.info, n = m.bytes.length, max = i.hi || Math.max(n * 1.2, i.lo * 1.2), pct = (v) => Math.min(100, (v / max) * 100);
   const name = $('#preset').value === CUSTOM ? 'custom' : $('#preset').value;
-  $('#result').innerHTML = `<div class="card rcard"><div class="big ${i.in_window ? 'tok' : 'bad'}">${fmt(n)} bytes <span class="kb">(${(n / 1000).toFixed(2)} KB)</span></div>
+  $('#result').innerHTML = `<div class="card rcard"><div class="where">${esc($('#h1').textContent)}</div><div class="big ${i.in_window ? 'tok' : 'bad'}">${fmt(n)} bytes <span class="kb">(${(n / 1000).toFixed(2)} KB)</span></div>
     <a class="dl" href="${outUrl}" download="panoply-${name}.jpg">Download JPEG</a>
-    <div class="gauge" role="img" aria-label="${i.in_window ? 'Inside' : 'Outside'} the allowed size"><i style="left:${pct(i.lo)}%;right:${100 - pct(i.hi || max)}%"></i><b style="left:calc(${pct(n)}% - 1px)"></b></div>
     <div class="cmp"><figure>${srcUrl ? `<img src="${srcUrl}" alt="Original">` : ''}<figcaption>Original, ${i.srcW} x ${i.srcH}</figcaption></figure><figure><img src="${outUrl}" alt="Result" width="${i.width}" height="${i.height}"><figcaption>Result</figcaption></figure></div>
     ${fold('Details', `    <div class="meta"><span>Allowed ${i.lo ? fmt(i.lo) : '0'} to ${i.hi ? fmt(i.hi) : 'no limit'} bytes</span><span>${i.width} x ${i.height} px</span><span>Quality ${i.quality}</span><span>${(m.ms / 1000).toFixed(2)} s</span></div>    ${i.reducedFrom ? `<p class="hint">The picture was reduced from ${i.reducedFrom[0]} x ${i.reducedFrom[1]} to ${i.width} x ${i.height} pixels so a good quality fits ${fmt(i.hi)} bytes.</p>` : ''}${i.padded_shape ? '<p class="hint">The photo is a different shape than the target, so it was padded with white instead of cropped.</p>' : ''}${i.padded_by ? `<p class="hint">The picture is too simple to reach the minimum on its own, so ${fmt(i.padded_by)} bytes of padding were added.</p>` : ''}`)}</div>`;
   const card = $('#result .rcard'); card.insertBefore(actions({ tune: true, onNew: reset }), card.querySelector('.tinfo'));
@@ -88,7 +87,7 @@ async function doRun() {
   if (busy || !file) return;
   busy = true; enable(); setWorking(true); $('#go').innerHTML = '<span class="spin"></span>Working';
   try { const m = await run(args(file, $('#preset').value)); window.__bench.last = m; show(m); }
-  catch (e) { setDone(false); $('#result').innerHTML = `<div class="card bad" role="alert">${esc(e.message)}</div>`; }
+  catch (e) { setDone(false); $('#result').innerHTML = `<div class="card bad" role="alert">${esc(plainError(e))}</div>`; }
   busy = false; setWorking(false); $('#go').textContent = 'Get the file'; enable();
   if (again) { again = false; maybeRun(); }
 }
