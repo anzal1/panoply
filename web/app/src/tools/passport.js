@@ -1,4 +1,5 @@
 import { tool, fold, $, baseName, esc } from '../shell.js';
+import { chips, store, app } from '../flow.js';
 import { aiWorker } from '../aiclient.js';
 import { process } from '../imgclient.js';
 import { idCall } from '../idclient.js';
@@ -16,7 +17,10 @@ function window_(r) {
   if (r.min_kb != null || r.max_kb != null) return eng.window_({ min_bytes_claimed: r.min_kb || 0, max_bytes_claimed: r.max_kb || 0, unit_claimed: 'KB', kb_basis: r.kb_basis || 'unknown' });
   return [0, 0];
 }
+let chosenRule = '';
+const MAIN = [['in-passport', 'India'], ['us-passport', 'US'], ['uk-passport', 'UK'], ['schengen-visa', 'Schengen'], ['ca-passport', 'Canada'], ['au-passport', 'Australia']];
 tool({
+  auto: true, ready: () => !!chosenRule,
   id: 'passport-photo', title: 'Passport and visa photo', sub: 'Crops, straightens and whitens your photo to the rules of a country, measures it against those rules, and lands the file inside the portal\'s size limit. Pass, warn or fail for every check.', cta: 'Make the photo',
   options: `<div class="field"><label for="rule">Country and document</label><select id="rule" disabled><option>Loading...</option></select><p class="hint" id="rhint"></p></div>
     <div class="field"><label for="face">Which face, if there is more than one</label><select id="face"><option value="0">Choose for me</option><option value="1">1, from the left</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
@@ -33,6 +37,10 @@ tool({
     $('#rule').innerHTML = rules.map((x) => `<option value="${x.id}">${esc(x.country_name || x.country)}: ${esc(x.document)} (${x.width_mm} x ${x.height_mm} mm)</option>`).join('');
     const want = document.querySelector('[data-rule]'), guess = (navigator.language || '').split('-')[1] || ''; const g = want ? rules.find((x) => x.id === want.dataset.rule) : rules.find((x) => x.country === guess.toUpperCase() && x.document === 'passport'); if (g) $('#rule').value = g.id;
     $('#rule').disabled = false;
+    const KEY = 'panoply-passport-rule', saved = store(KEY); chosenRule = want && g ? g.id : saved && rules.some((x) => x.id === saved) ? saved : '';
+    const fl = chips($('#drop'), MAIN.filter(([id]) => rules.some((x) => x.id === id)), { key: KEY, label: 'Country and document', none: 'More', onPick: (id, more) => { if (more) { app().classList.add('more'); $('#tune').open = true; return $('#rule').focus(); } chosenRule = id; $('#rule').value = id; $('#rule').dispatchEvent(new Event('change')); window.__tool && window.__tool.maybeRun(); } });
+    if (chosenRule) { $('#rule').value = chosenRule; if (MAIN.some(([id]) => id === chosenRule)) fl.set(chosenRule, false); }
+    $('#rule').addEventListener('change', () => { chosenRule = $('#rule').value; store(KEY, chosenRule); fl.set(MAIN.some(([id]) => id === chosenRule) ? chosenRule : '', false); });
     const upd = () => { const x = rules.find((y) => y.id === $('#rule').value); $('#rhint').textContent = x ? `${x.width_px ? x.width_px + ' x ' + x.height_px + ' px, ' : ''}${x.min_kb != null || x.max_kb != null || x.size_preset ? 'size limit applies, ' : ''}background ${x.background}. ${x.status === 'conflict' ? 'Sources disagree on this rule; the stricter reading is used.' : x.status === 'stale' ? 'This rule may be out of date. Check the authority.' : ''}` : ''; }; $('#rule').onchange = upd; upd();
     Promise.all([isCached('yunet')]).then((c) => { if (c.every(Boolean)) $('#mnote').textContent = 'The face model is already on this device. Nothing is uploaded.'; });
   },

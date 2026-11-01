@@ -8,7 +8,7 @@ import { loadModel } from './ai/models.js';
 ort.env.logLevel = 'error';
 ort.env.wasm.wasmPaths = new URL('./ort/', import.meta.url).href;
 ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 4) - 1)) : 1;
-let session = null, ep = '';
+let session = null, ep = '', last = null; // the last photo's pixels and mask, so a new background does not run the model again
 const ready = init({ module_or_path: visUrl });
 const MAX_PIXELS = 24_000_000;
 
@@ -29,10 +29,14 @@ onmessage = async (e) => {
   const m = e.data, lap = {}; let t = performance.now(); const tick = (k) => { const n = performance.now(); lap[k] = n - t; t = n; };
   try {
     await ready; const s = await getSession((p, cached) => postMessage({ id: m.id, progress: p, cached })); tick('model');
-    const src = await decode(m.blob); tick('decode');
-    const side = m.side || 1024, input = isnet_prep(src.data, src.w, src.h, side); tick('prep');
-    const out = await s.run({ input: new ort.Tensor('float32', input, [1, 3, side, side]) }, ['output']); tick('infer');
-    const map = out.output.data;
+    const side = m.side || 1024; let src, map, input;
+    if (m.key && last && last.key === m.key && last.side === side) { ({ src, map } = last); lap.decode = 0; lap.prep = 0; lap.infer = 0; t = performance.now(); }
+    else {
+      last = null; src = await decode(m.blob); tick('decode');
+      input = isnet_prep(src.data, src.w, src.h, side); tick('prep');
+      const out = await s.run({ input: new ort.Tensor('float32', input, [1, 3, side, side]) }, ['output']); tick('infer');
+      map = out.output.data; if (m.key) last = { key: m.key, side, src, map: new Float32Array(map) };
+    }
     const look = { transparent: 0, color: 1, blur: 2 }[m.look] ?? 0, c = m.bg || [255, 255, 255];
     const rgba = isnet_finish(map, side, src.data, src.w, src.h, look, c[0], c[1], c[2], m.blur ?? 30, m.refine !== false, m.decontaminate !== false); tick('refine+compose');
     postMessage({ id: m.id, w: src.w, h: src.h, data: rgba, lap, ep, shrunk: src.shrunk, fw: src.fw, fh: src.fh, ...(m.debug ? { input, map: new Float32Array(map) } : {}) }, [rgba.buffer]);

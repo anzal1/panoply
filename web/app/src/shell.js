@@ -1,5 +1,6 @@
 // Shared tool shell: nav, header, drop zone with a cheap preview, options slot, run button, result card.
 import { keepFullLabels, foldNotes } from './fulllabel.js';
+import { app, setWorking, setDone, reveal, mirrorStatus, actions } from './flow.js';
 export const $ = (s, r = document) => r.querySelector(s);
 export const esc = (s) => String(s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
 export const fold = (label, html) => `<details class="tinfo"><summary>${label}</summary>${html}</details>`;
@@ -30,30 +31,42 @@ export function tool(cfg) {
   let f = null, srcUrl = '', outUrl = '', busy = false, token = 0;
   const go = $('#go'); go.textContent = cfg.cta || 'Get the file';
   const enable = () => (go.disabled = busy || !f || (cfg.multiple && f.length < (cfg.min || 1)));
-  const drop = $('#drop');
+  const drop = $('#drop'), root = app(), initialDrop = drop.innerHTML; root.classList.toggle('auto', !!cfg.auto); mirrorStatus();
+  let tune = null, again = false, timer = 0;
+  if (cfg.auto) { // runs on drop; the options live in a Tune disclosure that re-runs the job when something changes
+    go.closest('section').hidden = true;
+    if (cfg.options) { tune = document.createElement('details'); tune.className = 'tinfo tune'; tune.id = 'tune'; tune.innerHTML = '<summary>Tune</summary>'; $('#result').after(tune); tune.append($('#opts')); }
+  }
   const isOk = (x) => cfg.pdf ? (x.type === 'application/pdf' || /\.pdf$/i.test(x.name)) : cfg.accept && cfg.accept.includes('video') ? /^(video|audio)\//.test(x.type) || /\.(mp4|mov|m4v|webm|mkv|mp3|m4a|wav|ogg|flac|aac)$/i.test(x.name) : x.type.startsWith('image/');
   const docIcon = '<span id="thumb" class="doc" aria-hidden="true">PDF</span>';
   async function pick(x) {
     if (cfg.multiple) {
       const add = [...(x.length === undefined ? [x] : x)].filter(isOk); if (!add.length) return;
       f = [...(Array.isArray(f) ? f : []), ...add]; ++token; $('#result').innerHTML = '';
-      drop.classList.add('has'); drop.innerHTML = `${docIcon}<span><strong>${f.length} file${f.length === 1 ? '' : 's'}</strong>Tap to add more files.</span>`;
+      drop.classList.add('has'); root.classList.add('has'); drop.innerHTML = `${docIcon}<span><strong>${f.length} file${f.length === 1 ? '' : 's'}</strong>Tap to add more files.</span>`;
       enable(); cfg.onFile && cfg.onFile(f, (nf) => { f = nf; drop.querySelector('strong').textContent = `${f.length} file${f.length === 1 ? '' : 's'}`; enable(); }); return;
     }
     if (!x || !isOk(x)) return;
     f = x; const my = ++token; if (srcUrl) URL.revokeObjectURL(srcUrl); srcUrl = '';
-    drop.classList.add('has'); drop.innerHTML = `${cfg.pdf || (cfg.accept || '').includes('video') ? docIcon.replace('PDF', cfg.pdf ? 'PDF' : 'MEDIA') : '<span id="thumb"></span>'}<span><strong>${esc(x.name)}</strong><span id="finfo">${fmtBytes(x.size)}</span>. Tap to choose another.</span>`;
+    drop.classList.add('has'); root.classList.add('has'); drop.innerHTML = `${cfg.pdf || (cfg.accept || '').includes('video') ? docIcon.replace('PDF', cfg.pdf ? 'PDF' : 'MEDIA') : '<span id="thumb"></span>'}<span><strong>${esc(x.name)}</strong><span id="finfo">${fmtBytes(x.size)}</span>. Tap to choose another.</span>`;
     $('#result').innerHTML = ''; enable(); cfg.onFile && cfg.onFile(x);
-    if (cfg.pdf || (cfg.accept || '').includes('video')) return;
+    if (cfg.pdf || (cfg.accept || '').includes('video')) return maybeRun();
     const u = await thumb(x); if (my !== token) return; srcUrl = u; if (u) $('#thumb').outerHTML = `<img id="thumb" src="${u}" alt="">`;
+    maybeRun();
   }
   drop.onclick = () => file.click(); file.onchange = (e) => { pick(cfg.multiple ? e.target.files : e.target.files[0]); file.value = ''; };
   ['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
   ['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
   drop.addEventListener('drop', (e) => pick(cfg.multiple ? e.dataTransfer.files : e.dataTransfer.files[0]));
   addEventListener('paste', (e) => { const l = [...e.clipboardData.files]; if (l.length) pick(cfg.multiple ? l : l[0]); });
-  go.onclick = async () => {
-    busy = true; enable(); go.innerHTML = '<span class="spin"></span>Working'; const t0 = performance.now();
+  const reset = () => { f = null; ++token; if (srcUrl) URL.revokeObjectURL(srcUrl); srcUrl = ''; drop.classList.remove('has'); drop.innerHTML = initialDrop; $('#result').innerHTML = ''; setDone(false); root.classList.remove('has'); enable(); cfg.onReset && cfg.onReset(); scrollTo(0, 0); };
+  const ready = () => !!f && !busy && (!cfg.multiple || f.length >= (cfg.min || 1)) && (!cfg.ready || cfg.ready());
+  const maybeRun = () => { if (cfg.auto && ready()) run(); };
+  if (tune) ['input', 'change'].forEach((t) => tune.addEventListener(t, () => { clearTimeout(timer); timer = setTimeout(() => (busy ? (again = true) : maybeRun()), 350); }));
+  go.onclick = () => run();
+  async function run() {
+    if (busy || !f) return;
+    busy = true; enable(); setWorking(true); go.innerHTML = '<span class="spin"></span>Working'; const t0 = performance.now();
     try {
       const r = await cfg.run(f); r.ms = performance.now() - t0; window.__last = r;
       if (outUrl) URL.revokeObjectURL(outUrl);
@@ -61,14 +74,20 @@ export function tool(cfg) {
       const inSize = Array.isArray(f) ? f.reduce((a, x) => a + x.size, 0) : f.size, smaller = r.blob.size < inSize, pct = Math.round(Math.abs(1 - r.blob.size / inSize) * 100);
       const cmp = pv || srcUrl ? `<div class="cmp">${srcUrl ? `<figure><img src="${srcUrl}" alt="Original"><figcaption>Original</figcaption></figure>` : ''}${pv ? `<figure${r.checker ? ' class="checker"' : ''}><img src="${pv}" alt="Result"><figcaption>Result</figcaption></figure>` : ''}</div>` : '';
       const more = `<div class="meta">${(r.lines || []).map((l) => `<span>${esc(l)}</span>`).join('')}<span>${(r.ms / 1000).toFixed(2)} s</span></div>${r.hint ? `<p class="hint">${esc(r.hint)}</p>` : ''}`;
-      $('#result').innerHTML = `<div class="card"><div class="big ${r.bad ? 'bad' : 'tok'}">${r.title ? esc(r.title) + ' ' : ''}${fmtBytes(r.blob.size)} <span class="kb">${r.delta === false ? '' : (!smaller && pct === 0 ? 'Already as small as it gets' : `from ${fmtBytes(inSize)}, ${pct}% ${smaller ? 'smaller' : 'larger'}`)}</span></div>
-        ${cmp}${r.html || ''}
+      const one = r.single && pv;
+      const cmp2 = one ? `<div class="cmp one"><figure${r.checker ? ' class="checker"' : ''}><img id="rimg" src="${pv}" alt="Result"></figure>${srcUrl ? '<button type="button" class="lnk hold">Hold to see the original</button>' : ''}</div>` : cmp;
+      $('#result').innerHTML = `<div class="card rcard"><div class="big ${r.bad ? 'bad' : 'tok'}">${r.title ? esc(r.title) + ' ' : ''}${fmtBytes(r.blob.size)} <span class="kb">${r.delta === false ? '' : (!smaller && pct === 0 ? 'Already as small as it gets' : `from ${fmtBytes(inSize)}, ${pct}% ${smaller ? 'smaller' : 'larger'}`)}</span></div>
         ${r.noDownload ? '' : `<a class="dl" href="${outUrl}" download="${esc(r.name)}">Download ${esc(r.name.split('.').pop().toUpperCase())}${r.dlNote ? ' (' + esc(r.dlNote) + ')' : ''}</a>`}
+        ${cmp2}${r.html || ''}
         ${fold('Details', more)}</div>`;
-    } catch (e) { $('#result').innerHTML = `<div class="card bad" role="alert">${esc(e.message)}</div>`; }
-    busy = false; go.textContent = cfg.cta || 'Get the file'; enable();
-  };
-  cfg.onReady && cfg.onReady(); window.__tool = { pick: (x) => pick(x), run: () => go.click() };
+      const card = $('#result .rcard'); card.insertBefore(actions({ tune: !!tune, onSettings: () => { setDone(false); scrollTo({ top: 0 }); }, onNew: reset }), card.querySelector('.tinfo'));
+      const hold = $('#result .hold'); if (hold) { const img = $('#rimg'), show = (o) => { img.src = o ? srcUrl : pv; }; hold.onpointerdown = () => show(true); ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach((t) => hold.addEventListener(t, () => show(false))); hold.onkeydown = (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); show(true); } }; hold.onkeyup = () => show(false); }
+      const was = root.classList.contains('done'); setDone(true); if (!was) reveal();
+    } catch (e) { setDone(false); $('#result').innerHTML = `<div class="card bad" role="alert">${esc(e.message)}</div>`; }
+    busy = false; setWorking(false); go.textContent = cfg.cta || 'Get the file'; enable();
+    if (again) { again = false; maybeRun(); }
+  }
+  cfg.onReady && cfg.onReady(); window.__tool = { pick: (x) => pick(x), run: () => go.click(), maybeRun, state: () => ({ f, busy }) };
 }
 export function slider(id, label, min, max, val, fmt = (v) => v) {
   return `<div class="field"><label for="${id}">${label} <span class="trv" id="${id}v">${fmt(val)}</span></label><input id="${id}" type="range" min="${min}" max="${max}" value="${val}"></div>`;
