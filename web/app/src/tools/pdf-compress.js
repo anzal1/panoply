@@ -1,6 +1,7 @@
 import { tool, $, slider, bindSlider, fmtBytes } from '../shell.js';
 import { pdfJob } from '../pdfclient.js';
 tool({
+  auto: true,
   id: 'pdf-compress', title: 'Compress a PDF', sub: 'Make a PDF small enough to email or upload. Pictures are recoded only while they still look the same.', cta: 'Compress', pdf: true, accept: 'application/pdf',
   options: `<div class="field"><label for="target">Target</label><select id="target"><option value="smallest">Smallest that still looks good</option><option value="quality">Fixed picture quality</option><option value="under">Under a size</option></select></div>
     <div id="qw" hidden>${slider('q', 'JPEG quality', 1, 100, 75)}</div>

@@ -1,7 +1,7 @@
 import { tool, fold, $, esc, baseName } from '../shell.js';
 import { strip } from '../strip.js';
 tool({
-  id: 'strip-metadata', title: 'Remove photo metadata', sub: 'Strip location, camera and edit history. The picture itself is not touched or re-encoded.', cta: 'Remove metadata',
+  id: 'strip-metadata', auto: true, title: 'Remove photo metadata', sub: 'Strip location, camera and edit history. The picture itself is not touched or re-encoded.', cta: 'Remove metadata',
   options: `<label class="chk"><input type="checkbox" id="icc" checked>Keep the colour profile (colours stay accurate)</label><p class="hint">The orientation is kept, so the photo does not turn sideways.</p>`,
   async run(f) {
     const r = strip(new Uint8Array(await f.arrayBuffer()), $('#icc').checked);

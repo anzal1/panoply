@@ -21,7 +21,7 @@ await import('./fetch-models.mjs').then((m) => m.default && m.default(path.join(
 function scopeCss(css) {
   const out = []; let i = 0;
   const readBlock = (str, start) => { let d = 0, j = start; for (; j < str.length; j++) { if (str[j] === '{') d++; else if (str[j] === '}') { d--; if (d === 0) return j; } } return str.length - 1; };
-  const pre = (sel) => sel.split(',').map((x) => x.trim()).filter(Boolean).map((x) => { if (x === ':root' || x === 'html' || x === 'body') return '.tool-app'; if (x === '*') return '.tool-app *'; if (x === 'main') return '.tool-app'; return x.startsWith('[hidden]') ? '.tool-app [hidden]' : '.tool-app ' + x; }).join(',');
+  const pre = (sel) => sel.split(',').map((x) => x.trim()).filter(Boolean).map((x) => { if (x === ':root' || x === 'html' || x === 'body') return '.tool-app'; if (x.startsWith('.tool-app')) return x; if (x === '*') return '.tool-app *'; if (x === 'main') return '.tool-app'; return x.startsWith('[hidden]') ? '.tool-app [hidden]' : '.tool-app ' + x; }).join(',');
   const walkCss = (str) => { const res = []; let k = 0; while (k < str.length) { const open = str.indexOf('{', k); if (open < 0) break; const head = str.slice(k, open).trim(), close = readBlock(str, open), body = str.slice(open + 1, close);
       if (head.startsWith('@media')) { if (/prefers-color-scheme:\s*(dark|light)/.test(head)) { /* the site is dark only */ } else res.push(head + '{' + walkCss(body) + '}'); }
       else if (head.startsWith('@keyframes')) res.push(head + '{' + body + '}');

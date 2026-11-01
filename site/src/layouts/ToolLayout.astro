@@ -5,6 +5,7 @@ import Footer from "../components/Footer.astro";
 import { tools, groups } from "../data/tools";
 interface Props { title: string; description: string; path: string; script: string; slug: string; faq?: [string, string][]; steps?: string[]; intro?: string; appName?: string }
 const { title, description, path, script, slug, faq = [], steps = [], intro = "", appName = title } = Astro.props;
+const threads = ["upscale", "remove-background", "erase", "remove-watermark", "ocr", "ocr-pdf", "passport-photo"].includes(slug);
 const url = `https://panoply.anzalabidi.dev${path}`;
 const related = tools.filter((t) => t.slug !== slug).slice(0, 8);
 const ld = [
@@ -30,16 +31,19 @@ const ld = [
     {ld.map((o) => <script type="application/ld+json" set:html={JSON.stringify(o)} />)}
     <!-- GitHub Pages cannot send COOP and COEP, so a service worker adds them for /tools/ and the page reloads once. If that is not
          possible every tool still works, single-threaded. -->
-    <script is:inline>
+    <script is:inline define:vars={{ threads }}>
       (function () {
         if (window.crossOriginIsolated || !("serviceWorker" in navigator)) return;
         var k = "panoply-coi";
+        // Only the model tools gain from threads. They reload once on a first visit; the page stays hidden until then so nothing flashes.
+        var reload = threads && !navigator.serviceWorker.controller && !sessionStorage.getItem(k);
+        if (reload) { document.documentElement.classList.add("coi-wait"); setTimeout(function () { document.documentElement.classList.remove("coi-wait"); }, 4000); }
         navigator.serviceWorker.register("/tools/sw.js", { scope: "/tools/" }).then(function () { return navigator.serviceWorker.ready; }).then(function () {
-          if (navigator.serviceWorker.controller || sessionStorage.getItem(k)) return;
+          if (!reload) return;
           sessionStorage.setItem(k, "1");
           var t = setTimeout(function () { location.reload(); }, 1500);
           navigator.serviceWorker.addEventListener("controllerchange", function () { clearTimeout(t); location.reload(); });
-        }).catch(function () {});
+        }).catch(function () { document.documentElement.classList.remove("coi-wait"); });
       })();
     </script>
   </head>
@@ -80,6 +84,7 @@ const ld = [
   .tool-page .tp-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
   .tool-page .tp-links a { color: var(--link); }
   .tool-page .tool-app { padding-top: 8px; }
+  html.coi-wait .tool-page main, html.coi-wait .tool-page .nav { visibility: hidden; }
   .tool-page .wrap.col { max-width: 600px; padding-left: 0; padding-right: 0; }
   .tool-page .wrap.col > .crumbs, .tool-page .wrap.col > .tp-details, .tool-page .wrap.col > .tp-text { padding-left: 16px; padding-right: 16px; }
   .tool-page .tp-details { margin-top: 32px; border-top: 1px solid var(--hair); }
