@@ -7,7 +7,7 @@ let last = '';
 document.addEventListener('click', (e) => { const b = e.target.closest('[data-copy]'); if (!b) return; navigator.clipboard.writeText(last).then(() => { b.textContent = 'Copied'; setTimeout(() => (b.textContent = 'Copy text'), 1500); }); });
 const need = ['ppocr_det', 'ppocr_en'];
 tool({
-  id: 'ocr', title: 'Read text from a photo', sub: 'PP-OCRv5 runs on your device and finds every line of text, in reading order.', cta: 'Read the text',
+  id: 'ocr', auto: true, title: 'Read text from a photo', sub: 'PP-OCRv5 runs on your device and finds every line of text, in reading order.', cta: 'Read the text',
   options: `<div class="field"><label for="script">Language</label><select id="script"><option value="en">English</option><option value="latin">French, German, Spanish, Portuguese, Italian and other Latin scripts</option><option value="devanagari">Hindi, Marathi, Nepali (Devanagari) and English</option></select></div>
     <label class="chk"><input type="checkbox" id="brk">Keep line breaks as they are in the picture</label>
     <p class="hint" id="mnote">First use downloads the text models once (about 16 MB for English, Apache-2.0) and keeps them on this device.</p>`,

@@ -83,3 +83,31 @@ input[type=color]{height:40px;width:72px;padding:3px 4px;border:1px solid var(--
 .tinfo>summary::-webkit-details-marker{display:none}.tinfo>summary::after{content:"+";color:var(--ink3)}.tinfo[open]>summary::after{content:"\2212"}
 .spec{font-size:13px;line-height:18px;color:var(--ink2);margin:8px 0 0}
 .advice{margin:12px 0 0;font-size:14px;line-height:20px;color:var(--ink2)}.advice b{color:var(--ink)}
+
+/* Page states: the form collapses into the result, and the status line shows model downloads. */
+#status{display:none;margin-top:16px;font-size:13px;line-height:18px;color:var(--ink2)}
+.tool-app.working #status:not(:empty){display:block}
+#status p{margin:8px 0 0}#status b{color:var(--ink);font-weight:550}#status span:last-child{font-variant-numeric:tabular-nums}
+#status .bar{height:4px;border-radius:2px;background:var(--field);overflow:hidden;border:1px solid var(--hair)}
+#status .bar i{display:block;height:100%;background:var(--accent);transform-origin:left;transition:transform .2s cubic-bezier(.23,1,.32,1)}
+.tool-app:not(.done) .rcard{display:none}
+.tool-app.done #drop,.tool-app.done header,.tool-app.done .card[aria-label=Options],.tool-app.done .chips{display:none}
+.tool-app.done #result{margin-top:0}
+.tool-app.done.working #result{opacity:.5;pointer-events:none;transition:opacity .2s}
+.tool-app.auto:not(.has) .tune{display:none}
+.rcard a.dl{background:var(--accent);color:var(--on-accent);border-color:var(--accent);margin-top:12px}
+@media(hover:hover) and (pointer:fine){.rcard a.dl:hover{filter:brightness(1.08)}}
+.racts{display:flex;gap:16px;margin-top:12px}
+button.lnk{background:none;border:0;padding:0;min-height:44px;color:var(--ink2);font:inherit;font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--hair)}
+@media(hover:hover) and (pointer:fine){button.lnk:hover{color:var(--ink)}}
+.cmp.one{flex-direction:column;align-items:center;gap:0}.cmp.one figure{width:100%}.cmp.one img{max-height:min(420px,52vh)}.cmp.one .hold{min-height:44px;touch-action:none;-webkit-touch-callout:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chips button{min-height:36px;padding:0 14px;border-radius:18px;border:1px solid var(--hair);background:var(--card);color:var(--ink);font:inherit;font-size:13px;cursor:pointer;transition:transform .16s cubic-bezier(.23,1,.32,1),background .16s,border-color .16s}
+.chips button:active{transform:scale(.97)}.chips button[aria-checked=true]{border-color:var(--accent);background:var(--tint)}.chips button:disabled{opacity:.4;cursor:default}
+.chips .chip-more{color:var(--ink2)}
+@media(hover:hover) and (pointer:fine){.chips button:hover{border-color:var(--accent)}}
+@media(prefers-reduced-motion:reduce){.chips button,#status .bar i,.tool-app.done.working #result{transition:none}}
+.tool-app.auto.show-tune .tune{display:block}
+
+.where{font-size:12px;line-height:16px;color:var(--ink3);margin-bottom:8px}
+@media(min-width:900px){.tool-app.done #result,.tool-app.done .tune{margin-inline:-80px}.tool-app.done .tune{padding-inline:16px}.tool-app.done .cmp img{max-height:min(420px,50vh)}.tool-app.done .cmp.one img{max-height:min(600px,64vh)}}

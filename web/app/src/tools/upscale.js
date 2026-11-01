@@ -5,7 +5,7 @@ import { MODELS, isCached } from '../ai/models.js';
 const up = aiWorker(() => new URL('./upscale-worker.js', import.meta.url));
 window.__upscale = up;
 tool({
-  id: 'upscale', title: 'Upscale a photo', sub: 'Real-ESRGAN makes small or soft pictures 2 or 4 times bigger and sharper, tile by tile with no seams.', cta: 'Upscale',
+  id: 'upscale', auto: true, title: 'Upscale a photo', sub: 'Real-ESRGAN makes small or soft pictures 2 or 4 times bigger and sharper, tile by tile with no seams.', cta: 'Upscale',
   options: `<div class="field"><label for="scale">Scale</label><select id="scale"><option value="0">Automatic (4x for small pictures, 2x otherwise)</option><option value="2">2x</option><option value="4">4x</option></select></div>
     <div class="field"><label for="fmt">Save as</label><select id="fmt"><option value="auto">Same as the original (PNG for anything else)</option><option value="png">PNG</option><option value="jpeg">JPEG</option></select></div>
     <p class="hint" id="mnote">First use downloads the ${MODELS.esrgan.name} (${(MODELS.esrgan.size / 1e6).toFixed(0)} MB, ${MODELS.esrgan.license}) once and keeps it on this device.</p>`,
