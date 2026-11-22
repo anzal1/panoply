@@ -43,7 +43,7 @@ serde_json.workspace = true
 gpui = { package = "gpui-pre", version = "=0.3.9" }
 gpui_platform = { package = "gpui-pre-platform", version = "=0.3.9", features = ["font-kit", "runtime_shaders"] }
 gpui-base = { path = "patches/gpui-base" }
-global-hotkey = "0.8"
+global-hotkey = "0.9"
 futures = "0.3"
 # The share engine runs the LocalSend node on its own runtime, started only while the Share screen is open
 # or receiving is on. Same features panoply-share already pulls in.
@@ -59,7 +59,7 @@ libc = "0.2"
 # The notification-area icon that keeps the background app visible and quittable on Windows
 # (MIT OR Apache-2.0; it only pulls in muda, crossbeam-channel and windows-sys).
 [target.'cfg(windows)'.dependencies]
-tray-icon = { version = "0.25", default-features = false }
+tray-icon = { version = "0.26", default-features = false }
 raw-window-handle = "0.6"
 
 # gpui-pre-linux ships with both display backends off unless asked (its `default` is dropped by
@@ -68,7 +68,7 @@ raw-window-handle = "0.6"
 [target.'cfg(target_os = "linux")'.dependencies]
 gpui_platform = { package = "gpui-pre-platform", version = "=0.3.9", features = ["x11", "wayland"] }
 # Keyboard focus for the command bar on X11 (see platform::x11_take_focus). Same version GPUI uses.
-x11rb = { version = "0.13", default-features = false }
+x11rb = { version = "0.14", default-features = false }
 raw-window-handle = "0.6"
 
 [target.'cfg(target_os = "macos")'.dependencies]
