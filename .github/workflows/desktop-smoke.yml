@@ -97,7 +97,7 @@ jobs:
       - name: Install, launch, screenshot, close
         shell: powershell
         run: ./.github/scripts/desktop-smoke-windows.ps1 -Dir dl -Out out
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: desktop-smoke-windows
@@ -133,7 +133,7 @@ jobs:
             fontconfig strace fonts-dejavu-core fonts-noto-core fonts-noto-color-emoji fonts-cantarell
       - name: Launch, screenshot, close
         run: bash ./.github/scripts/desktop-smoke-linux.sh dl out
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: desktop-smoke-linux
